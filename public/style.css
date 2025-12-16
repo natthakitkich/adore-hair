@@ -10,23 +10,30 @@
   --stroke:rgba(255,255,255,.08);
   --shadow:0 10px 30px rgba(0,0,0,.35);
 }
+
 *{box-sizing:border-box}
+
 body{
   margin:0;
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
-  background: radial-gradient(1200px 700px at 15% 10%, #1a2b5a 0%, transparent 60%),
-              radial-gradient(900px 600px at 90% 20%, #3b1b5a 0%, transparent 55%),
-              var(--bg);
+  background:
+    radial-gradient(1200px 700px at 15% 10%, #1a2b5a 0%, transparent 60%),
+    radial-gradient(900px 600px at 90% 20%, #3b1b5a 0%, transparent 55%),
+    var(--bg);
   color:var(--text);
 }
+
 .hidden{display:none !important}
+
 .row{display:flex; gap:10px; align-items:center}
 .between{justify-content:space-between}
-.muted{color:var(--muted)}
-.msg{font-size:13px}
-.msg.ok{color:var(--ok)}
-.msg.err{color:var(--danger)}
-label{display:block; margin:0 0 6px 2px; color:var(--muted); font-size:13px}
+
+label{
+  display:block;
+  margin:0 0 6px 2px;
+  color:var(--muted);
+  font-size:13px;
+}
 
 input, select{
   width:100%;
@@ -47,6 +54,7 @@ input, select{
   font-weight:900;
   cursor:pointer;
 }
+
 .ghost{
   background:transparent;
   color:var(--text);
@@ -56,6 +64,11 @@ input, select{
   cursor:pointer;
 }
 
+.msg{font-size:13px}
+.msg.ok{color:var(--ok)}
+.msg.err{color:var(--danger)}
+.muted{color:var(--muted)}
+
 .topbar{
   padding:18px 22px;
   display:flex;
@@ -63,17 +76,21 @@ input, select{
   align-items:center;
   border-bottom:1px solid var(--stroke);
   background:rgba(0,0,0,.2);
-  position:sticky; top:0;
+  position:sticky;
+  top:0;
   backdrop-filter: blur(10px);
   z-index:5;
 }
+
 .brand{display:flex; gap:12px; align-items:center}
+
 .avatar{
   width:40px;height:40px;border-radius:12px;
   display:flex;align-items:center;justify-content:center;
   background:linear-gradient(90deg, var(--accent), var(--accent2));
   font-weight:900;color:#061022;
 }
+
 .title{font-weight:900}
 .subtitle{font-size:12px; color:var(--muted)}
 
@@ -83,6 +100,7 @@ input, select{
 .wrap{width:min(1100px, 95vw); margin:18px auto 48px auto}
 
 .tabs{display:flex; gap:10px; margin-top:14px}
+
 .tab{
   flex:1;
   border-radius:14px;
@@ -93,6 +111,7 @@ input, select{
   cursor:pointer;
   font-weight:900;
 }
+
 .tab.active{
   outline:2px solid rgba(110,231,255,.35);
   background:rgba(110,231,255,.12);
@@ -112,9 +131,11 @@ input, select{
   grid-template-columns: 1fr 1fr;
   gap:12px;
 }
+
 .full{grid-column: 1 / -1}
 
 .summary{display:flex; gap:12px; flex-wrap:wrap}
+
 .box{
   border:1px solid var(--stroke);
   background:rgba(0,0,0,.18);
@@ -122,11 +143,14 @@ input, select{
   padding:12px;
   min-width:140px;
 }
+
 .box.grow{flex:1}
+
 .big{font-size:24px; font-weight:900}
 .big.small{font-size:16px}
 
 .tableWrap{overflow:auto; margin-top:12px}
+
 table{width:100%; border-collapse:collapse; font-size:13px}
 th, td{padding:10px; border-bottom:1px solid var(--stroke); vertical-align:top}
 th{color:var(--muted); text-align:left; font-weight:900}
@@ -138,10 +162,12 @@ th{color:var(--muted); text-align:left; font-weight:900}
   font-weight:900;
   border:1px solid var(--stroke);
 }
+
 .badge.male{background:rgba(110,231,255,.14)}
 .badge.female{background:rgba(167,139,250,.16)}
 
 .actionsBtn{display:flex; gap:8px}
+
 .smallBtn{
   border-radius:10px;
   padding:6px 10px;
@@ -150,6 +176,7 @@ th{color:var(--muted); text-align:left; font-weight:900}
   color:var(--text);
   cursor:pointer;
 }
+
 .smallBtn.danger{border-color:rgba(255,92,122,.4); color:var(--danger)}
 .smallBtn.edit{border-color:rgba(110,231,255,.35)}
 
@@ -160,6 +187,7 @@ th{color:var(--muted); text-align:left; font-weight:900}
   z-index:999;
   padding:20px;
 }
+
 .modal{
   width:min(560px, 95vw);
   background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
@@ -168,9 +196,91 @@ th{color:var(--muted); text-align:left; font-weight:900}
   box-shadow:var(--shadow);
   overflow:hidden;
 }
+
 .modalHead{
   display:flex; gap:12px; align-items:center;
   padding:16px;
   border-bottom:1px solid var(--stroke);
 }
+
 .modalBody{padding:16px}
+
+/* ===== Calendar Month View ===== */
+.calBox{
+  margin: 14px 0 18px;
+  padding: 14px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.calHeader{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.calHeader button{
+  width: 38px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(0,0,0,0.15);
+  color: #fff;
+  cursor: pointer;
+}
+
+.calTitle{
+  font-weight: 900;
+  letter-spacing: 0.3px;
+}
+
+.calGridHead{
+  display:grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  opacity: 0.75;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.calGrid{
+  display:grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+}
+
+.calDay{
+  position: relative;
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(0,0,0,0.12);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor: pointer;
+  user-select:none;
+}
+
+.calDay.muted{
+  opacity: 0.25;
+  cursor: default;
+}
+
+.calDay.hasBooking{
+  border-color: rgba(0,255,120,0.35);
+  box-shadow: 0 0 0 2px rgba(0,255,120,0.10) inset;
+}
+
+.calDay .dot{
+  position:absolute;
+  right: 8px;
+  bottom: 7px;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(0,255,120,0.95);
+}
