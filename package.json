@@ -1,14 +1,12 @@
 {
-  "name": "adore-hair",
-  "version": "1.0.0",
+  "name": "adore-hair-queue",
   "type": "module",
-  "main": "server.js",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.1",
+    "express": "^4.19.2",
+    "express-session": "^1.18.0"
+  },
   "scripts": {
     "start": "node server.js"
-  },
-  "dependencies": {
-    "@supabase/supabase-js": "^2.45.4",
-    "express": "^4.19.2",
-    "express-session": "^1.17.3"
   }
 }
