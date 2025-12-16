@@ -22,7 +22,7 @@ body{
 }
 
 .hidden{display:none !important}
-.row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+.row{display:flex; gap:10px; align-items:center}
 .between{justify-content:space-between}
 .muted{color:var(--muted)}
 .msg{font-size:13px}
@@ -79,7 +79,8 @@ input, select{
 }
 .title{font-weight:900}
 .subtitle{font-size:12px; color:var(--muted)}
-.topActions{display:flex; gap:12px; align-items:center}
+.topActions{display:flex; gap:12px; align-items:flex-end}
+.dateWrap .label{font-size:12px; color:var(--muted); margin:0 0 6px 2px}
 
 .wrap{width:min(1100px, 95vw); margin:18px auto 48px auto}
 
@@ -142,7 +143,6 @@ th{color:var(--muted); text-align:left; font-weight:900}
 .badge.male{background:rgba(110,231,255,.14)}
 .badge.female{background:rgba(167,139,250,.16)}
 
-.actionsBtn{display:flex; gap:8px}
 .smallBtn{
   border-radius:10px;
   padding:6px 10px;
@@ -154,77 +154,93 @@ th{color:var(--muted); text-align:left; font-weight:900}
 .smallBtn.danger{border-color:rgba(255,92,122,.4); color:var(--danger)}
 .smallBtn.edit{border-color:rgba(110,231,255,.35)}
 
-/* overlay เข้มขึ้น +50% */
+/* =========================
+   ✅ Overlay + Modal (Login / Calendar)
+   ========================= */
 .overlay{
   position:fixed; inset:0;
-  background:rgba(0,0,0,.82);
-  display:grid; place-items:center;
+  /* ทึบขึ้น ~50% ตามที่ขอ */
+  background:rgba(0,0,0,.78);
+  display:grid;
+  place-items:center;
   z-index:999;
   padding:20px;
 }
+
 .modal{
-  width:min(560px, 95vw);
-  background:linear-gradient(180deg, rgba(20,20,25,.92), rgba(12,12,16,.92));
-  border:1px solid rgba(255,255,255,.14);
+  width:min(520px, 92vw);
+  background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
+  border:1px solid var(--stroke);
   border-radius:16px;
   box-shadow:var(--shadow);
   overflow:hidden;
 }
+
 .modalHead{
-  display:flex; gap:12px; align-items:center;
+  display:flex;
+  gap:12px;
+  align-items:center;
   padding:16px;
-  border-bottom:1px solid rgba(255,255,255,.12);
+  border-bottom:1px solid var(--stroke);
 }
-.modalBody{padding:16px}
 
-.title2{font-weight:900; font-size:16px}
-.subtitle2{color:var(--muted); font-size:12px; margin-top:4px}
+.modalBody{
+  padding:16px;
+}
 
-/* Date picker */
-.dpWeek{
-  display:grid;
-  grid-template-columns:repeat(7,1fr);
-  gap:8px;
-  color:var(--muted);
-  font-size:12px;
-  margin-bottom:8px;
+/* ✅ จัด login ทุกอย่างให้อยู่กลาง */
+.loginCenter{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
   text-align:center;
+  gap:12px;
 }
+
+/* ✅ ช่องกรอกแคบลง เหมาะมือถือ ไม่ต้องเลื่อนข้าง */
+.loginCenter input{
+  width:min(320px, 85vw);
+}
+
+.loginCenter .row{
+  justify-content:center;
+  flex-wrap:wrap;
+}
+
+/* ===== DatePicker (ถ้ามี) ===== */
 .dpGrid{
   display:grid;
-  grid-template-columns:repeat(7,1fr);
+  grid-template-columns: repeat(7, 1fr);
   gap:8px;
 }
-.dayCell{
+.dpWeek{
+  text-align:center;
+  font-size:12px;
+  color:var(--muted);
+  padding:6px 0;
+}
+.dpCell{
   border:1px solid var(--stroke);
   background:rgba(0,0,0,.18);
-  border-radius:14px;
-  height:44px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
-  position:relative;
+  color:var(--text);
+  border-radius:12px;
+  padding:10px 0;
 }
-.dayCell.dim{
-  opacity:.35;
-  cursor:default;
-}
-.dayCell .dot{
-  position:absolute;
-  width:22px; height:22px;
-  border-radius:999px;
-  background:rgba(44,255,156,.35);
-  outline:2px solid rgba(44,255,156,.35);
-  display:none;
-}
-.dayCell.has .dot{ display:block; }
-.dayCell .num{
-  position:relative;
-  font-weight:900;
-}
-.dayCell:hover{ background:rgba(110,231,255,.08); }
+.dpBlank{opacity:.25}
+.dpDay{cursor:pointer}
+.dpDay:hover{background:rgba(110,231,255,.10)}
+.dpDay.today{outline:2px solid rgba(110,231,255,.35)}
+.dpDay.active{outline:2px solid rgba(167,139,250,.35)}
 
-@media (max-width: 720px){
-  .grid{grid-template-columns:1fr}
+/* ✅ วงกลมเขียววันมีคิว */
+.dpDay.marked{
+  position:relative;
+}
+.dpDay.marked::after{
+  content:"";
+  position:absolute;
+  width:10px;height:10px;
+  border-radius:999px;
+  background:var(--ok);
+  right:10px; top:10px;
 }
