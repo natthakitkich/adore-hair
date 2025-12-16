@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Adore hair — Queue</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">A</div>
+      <div>
+        <div class="title">Adore hair</div>
+        <div class="subtitle">Owner Queue • 13:00–22:00 • แยกชาย/หญิง</div>
+      </div>
+    </div>
+
+    <div class="rightbar">
+      <div class="datebox">
+        <label for="date">เลือกวัน</label>
+        <input id="date" type="date" />
+      </div>
+      <button class="btn" id="logoutBtn" type="button">Logout</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <div class="tabs">
+        <button class="tab active" data-tab="male">ตัดผมผู้ชาย</button>
+        <button class="tab" data-tab="female">ทำผมผู้หญิง</button>
+      </div>
+
+      <form id="bookingForm" class="form">
+        <div class="grid">
+          <div>
+            <label>ชื่อผู้จอง</label>
+            <input id="name" placeholder="เช่น คุณนัท" autocomplete="name" required />
+          </div>
+
+          <div>
+            <label>เบอร์โทร</label>
+            <input id="phone" placeholder="เช่น 09xxxxxxxx" inputmode="tel" autocomplete="tel" required />
+          </div>
+
+          <div>
+            <label>เวลา</label>
+            <select id="time" required></select>
+          </div>
+
+          <div>
+            <label>ทำอะไร</label>
+            <input id="service" placeholder="เช่น ตัดผม / ทำสี / สระ+ไดร์" required />
+          </div>
+
+          <div class="full">
+            <label>หมายเหตุ (ถ้ามี)</label>
+            <input id="note" placeholder="เช่น แจ้งช่าง / เลื่อนเวลาได้ / ลูกค้า VIP" />
+          </div>
+        </div>
+
+        <div class="row">
+          <button class="btn primary" id="submitBtn" type="submit">+ จองคิว</button>
+          <button class="btn" id="cancelEditBtn" type="button" style="display:none;">ยกเลิกแก้ไข</button>
+          <button class="btn" id="refreshBtn" type="button">รีเฟรช</button>
+          <div id="msg" class="msg"></div>
+        </div>
+      </form>
+    </section>
+
+    <section class="card">
+      <div class="cardhead">
+        <div>
+          <div class="h">สรุปคิววันนี้</div>
+          <div class="muted" id="summaryHint">—</div>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="k">ผู้ชาย</div>
+          <div class="v" id="countMale">0</div>
+        </div>
+        <div class="stat">
+          <div class="k">ผู้หญิง</div>
+          <div class="v" id="countFemale">0</div>
+        </div>
+        <div class="stat">
+          <div class="k">รวม</div>
+          <div class="v" id="countTotal">0</div>
+        </div>
+      </div>
+
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr>
+              <th>เวลา</th>
+              <th>ประเภท</th>
+              <th>ชื่อ</th>
+              <th>ทำอะไร</th>
+              <th>หมายเหตุ</th>
+              <th>โทร</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="list"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <div id="loginOverlay" class="overlay" style="display:none;">
+    <div class="modal">
+      <div class="modalTitle">Adore hair</div>
+      <div class="modalSub">ใส่ PIN เพื่อเข้าใช้งาน (Owner-only)</div>
+
+      <input id="pin" class="pin" type="password" inputmode="numeric" placeholder="PIN" />
+      <button class="btn primary" id="loginBtn" type="button">เข้าสู่ระบบ</button>
+
+      <div id="loginMsg" class="msg"></div>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
