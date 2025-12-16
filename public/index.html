@@ -2,35 +2,35 @@
 <html lang="th">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Adore hair studio</title>
-  <link rel="stylesheet" href="/style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Adore hair — Queue</title>
+  <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
 
-  <!-- LOGIN OVERLAY -->
-  <div id="loginOverlay" class="overlay hidden">
+  <!-- LOGIN OVERLAY (ต้องล็อกอินก่อน) -->
+  <div id="loginOverlay" class="overlay">
     <div class="modal">
       <div class="modalHead">
         <div class="avatar">A</div>
         <div>
-          <div class="title2">Adore hair</div>
-          <div class="subtitle2">กรุณาใส่ PIN เพื่อเข้าสู่ระบบ</div>
+          <div class="title">Adore hair</div>
+          <div class="subtitle">Owner Queue • 13:00–22:00 • แยกชาย/หญิง</div>
         </div>
       </div>
       <div class="modalBody">
-        <label for="pin">PIN</label>
-        <input id="pin" inputmode="numeric" placeholder="เช่น 1234" />
-        <div class="row" style="margin-top:12px; justify-content:center;">
-          <button id="loginBtn" class="primary">Login</button>
+        <label>PIN</label>
+        <div class="row">
+          <input id="pin" type="password" inputmode="numeric" placeholder="กรอก PIN" />
+          <button id="loginBtn" class="primary" type="button">เข้าสู่ระบบ</button>
         </div>
-        <div id="loginMsg" class="msg" style="margin-top:10px; text-align:center;"></div>
+        <div id="loginMsg" class="msg"></div>
       </div>
     </div>
   </div>
 
-  <!-- TOPBAR -->
-  <div class="topbar">
+  <!-- TOP BAR -->
+  <header class="topbar">
     <div class="brand">
       <div class="avatar">A</div>
       <div>
@@ -44,73 +44,92 @@
         <div class="label">เลือกวัน</div>
         <input id="date" type="date" />
       </div>
-      <button id="logoutBtn" class="ghost">Logout</button>
+      <button id="logoutBtn" class="ghost" type="button">Logout</button>
     </div>
-  </div>
+  </header>
 
-  <div class="wrap">
+  <main class="wrap">
+
     <!-- Tabs -->
     <div class="tabs">
-      <button class="tab active" id="tabMale" data-cat="male">ตัดผมผู้ชาย</button>
-      <button class="tab" id="tabFemale" data-cat="female">ทำผมหญิง</button>
+      <button class="tab active" data-tab="male" type="button">ตัดผมผู้ชาย</button>
+      <button class="tab" data-tab="female" type="button">ทำผมผู้หญิง</button>
     </div>
 
+    <!-- ✅ Calendar Month View -->
+    <section class="calBox">
+      <div class="calHeader">
+        <button id="calPrev" type="button">‹</button>
+        <div id="calTitle" class="calTitle">-</div>
+        <button id="calNext" type="button">›</button>
+      </div>
+
+      <div class="calGridHead">
+        <div>อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div>ส</div>
+      </div>
+
+      <div id="calGrid" class="calGrid"></div>
+    </section>
+
     <!-- Booking Form -->
-    <div class="panel">
+    <section class="panel">
       <form id="bookingForm">
         <div class="grid">
           <div>
-            <label for="name">ชื่อลูกค้า</label>
-            <input id="name" required placeholder="เช่น คุณบีม" />
+            <label>ชื่อลูกค้า</label>
+            <input id="name" type="text" placeholder="เช่น คุณบีม" required />
           </div>
 
           <div>
-            <label for="phone">เบอร์โทร (ไม่ใส่ก็ได้)</label>
-            <input id="phone" placeholder="เช่น 09xxxxxxxx" />
+            <label>เบอร์โทร</label>
+            <input id="phone" type="tel" placeholder="เช่น 09xxxxxxxx" required />
           </div>
 
           <div>
-            <label for="time">เวลา</label>
+            <label>เวลา</label>
             <select id="time" required></select>
           </div>
 
           <div>
-            <label for="service">ทำอะไร (ไม่ใส่ก็ได้)</label>
-            <input id="service" placeholder="เช่น สระ+ไดร์ / ทำสี / ตัด" />
+            <label>ทำอะไร</label>
+            <input id="service" type="text" placeholder="เช่น ตัดผม / รองทรง / สระ+ตัด" required />
           </div>
 
           <div class="full">
-            <label for="note">หมายเหตุ (ถ้ามี)</label>
-            <input id="note" placeholder="เช่น ไม่เอาด้านข้างมาก / ทำสีโทนน้ำตาล" />
+            <label>หมายเหตุ (ถ้ามี)</label>
+            <input id="note" type="text" placeholder="เช่น ไม่เอาสั้นมาก / ทำสีโทนน้ำตาล" />
           </div>
         </div>
 
-        <div class="row" style="margin-top:12px;">
-          <button class="primary" type="submit">บันทึกการจอง</button>
-          <button class="ghost" type="button" id="resetBtn">รีเฟรช</button>
-          <div id="msg" class="msg" style="margin-left:auto;"></div>
+        <div class="row between">
+          <div class="row">
+            <button id="submitBtn" type="submit" class="primary">บันทึกการจอง</button>
+            <button id="cancelEditBtn" type="button" class="ghost hidden">ยกเลิกแก้ไข</button>
+            <button id="refreshBtn" type="button" class="ghost">รีเฟรช</button>
+          </div>
+          <div id="msg" class="msg"></div>
         </div>
       </form>
-    </div>
+    </section>
 
-    <!-- Summary -->
-    <div class="panel">
+    <!-- Summary + Table -->
+    <section class="panel">
       <div class="summary">
         <div class="box">
           <div class="muted">ผู้ชาย</div>
-          <div class="big" id="countMale">0</div>
+          <div id="countMale" class="big">0</div>
         </div>
         <div class="box">
           <div class="muted">ผู้หญิง</div>
-          <div class="big" id="countFemale">0</div>
+          <div id="countFemale" class="big">0</div>
         </div>
         <div class="box">
           <div class="muted">รวม</div>
-          <div class="big" id="countTotal">0</div>
+          <div id="countTotal" class="big">0</div>
         </div>
         <div class="box grow">
           <div class="muted">สรุปของวัน</div>
-          <div class="big small" id="daySummary">-</div>
+          <div id="summaryHint" class="big small">-</div>
         </div>
       </div>
 
@@ -130,9 +149,10 @@
           <tbody id="list"></tbody>
         </table>
       </div>
-    </div>
-  </div>
+    </section>
 
-  <script src="/app.js"></script>
+  </main>
+
+  <script src="./app.js"></script>
 </body>
 </html>
