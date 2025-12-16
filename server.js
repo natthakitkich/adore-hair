@@ -23,7 +23,7 @@ app.use(
   })
 );
 
-// ====== SIMPLE PERSIST (JSON FILE) ======
+// ====== PERSIST (JSON FILE) ======
 const DATA_DIR = path.join(__dirname, "data");
 const DATA_FILE = path.join(DATA_DIR, "bookings.json");
 
@@ -51,11 +51,9 @@ function writeDB(db) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(db, null, 2));
 }
 
-// ====== TIMES (13:00–22:00, ทุก 1 ชั่วโมง) ======
+// ====== TIMES (13:00–22:00, every hour) ======
 const TIMES = [];
-for (let h = 13; h <= 22; h++) {
-  TIMES.push(`${String(h).padStart(2, "0")}:00`);
-}
+for (let h = 13; h <= 22; h++) TIMES.push(`${String(h).padStart(2, "0")}:00`);
 
 // ====== AUTH ======
 app.get("/api/me", (req, res) => {
@@ -81,7 +79,7 @@ function guard(req, res, next) {
   next();
 }
 
-// ====== META (ไม่ต้อง guard เพื่อให้ dropdown เวลาไม่ว่าง) ======
+// ====== META (no guard so time dropdown always loads) ======
 app.get("/api/meta", (req, res) => {
   res.json({ times: TIMES });
 });
@@ -90,7 +88,9 @@ app.get("/api/meta", (req, res) => {
 app.get("/api/summary", guard, (req, res) => {
   const date = String(req.query.date || "");
   const db = readDB();
-  const list = db.bookings.filter(b => b.date === date);
+  const list = db.bookings
+    .filter(b => b.date === date)
+    .sort((a, b) => String(a.time).localeCompare(String(b.time)));
 
   res.json({
     counts: {
@@ -102,11 +102,10 @@ app.get("/api/summary", guard, (req, res) => {
   });
 });
 
-// ====== MONTH SUMMARY (สำหรับปฏิทิน) ======
+// ====== MONTH SUMMARY (for monthly table) ======
 app.get("/api/month", guard, (req, res) => {
   const year = Number(req.query.year);
   const month = Number(req.query.month); // 1-12
-
   if (!year || !month || month < 1 || month > 12) {
     return res.status(400).json({ error: "bad year/month" });
   }
@@ -115,20 +114,29 @@ app.get("/api/month", guard, (req, res) => {
   const prefix = `${year}-${mm}-`;
 
   const db = readDB();
-  const counts = {}; // counts[day] = จำนวนคิววันนั้น
+
+  // per day summary: { [YYYY-MM-DD]: { male, female, total } }
+  const byDate = {};
 
   for (const b of db.bookings) {
     if (typeof b.date !== "string") continue;
     if (!b.date.startsWith(prefix)) continue;
 
-    const day = Number(b.date.slice(8, 10));
-    counts[day] = (counts[day] || 0) + 1;
+    if (!byDate[b.date]) byDate[b.date] = { male: 0, female: 0, total: 0 };
+    if (b.category === "male") byDate[b.date].male += 1;
+    else byDate[b.date].female += 1;
+    byDate[b.date].total += 1;
   }
 
-  res.json({ year, month, counts });
+  // return sorted list
+  const list = Object.entries(byDate)
+    .map(([date, counts]) => ({ date, counts }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  res.json({ year, month, list });
 });
 
-// ====== CREATE BOOKING (กันซ้ำเฉพาะประเภทเดียวกันในวัน+เวลาเดียวกัน) ======
+// ====== CREATE BOOKING (no duplicate for same date+time+category) ======
 app.post("/api/bookings", guard, (req, res) => {
   const payload = req.body || {};
   const date = String(payload.date || "");
@@ -147,23 +155,13 @@ app.post("/api/bookings", guard, (req, res) => {
   }
 
   const db = readDB();
-
   const dup = db.bookings.find(b => b.date === date && b.time === time && b.category === category);
   if (dup) return res.status(409).json({ error: "time already booked for this category" });
 
-  const newBooking = {
-    id: db.id++,
-    date,
-    category,
-    time,
-    name,
-    phone,
-    service,
-    note
-  };
-
+  const newBooking = { id: db.id++, date, category, time, name, phone, service, note };
   db.bookings.push(newBooking);
   writeDB(db);
+
   res.json({ ok: true, booking: newBooking });
 });
 
@@ -198,6 +196,7 @@ app.put("/api/bookings/:id", guard, (req, res) => {
 
   db.bookings[idx] = { id: bookingId, date, category, time, name, phone, service, note };
   writeDB(db);
+
   res.json({ ok: true, booking: db.bookings[idx] });
 });
 
@@ -216,9 +215,6 @@ app.delete("/api/bookings/:id", guard, (req, res) => {
 
 // ====== STATIC ======
 app.use(express.static(path.join(__dirname, "public")));
-
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
-});
+app.get("*", (req, res) => res.sendFile(path.join(__dirname, "public", "index.html")));
 
 app.listen(PORT, () => console.log("Server running on port", PORT));
