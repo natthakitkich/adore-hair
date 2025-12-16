@@ -1,11 +1,8 @@
 document.addEventListener("DOMContentLoaded", () => {
   const $ = (s) => document.querySelector(s);
 
-  // screens
-  const loginScreen = $("#loginScreen");
-  const appScreen = $("#appScreen");
-
-  // login
+  // login overlay
+  const loginOverlay = $("#loginOverlay");
   const pinEl = $("#pin");
   const loginBtn = $("#loginBtn");
   const loginMsg = $("#loginMsg");
@@ -43,13 +40,14 @@ document.addEventListener("DOMContentLoaded", () => {
     return `${yyyy}-${mm}-${dd}`;
   }
 
-  function setLoginMsg(text, type = "") {
-    loginMsg.className = "msg " + (type || "");
-    loginMsg.textContent = text || "";
-  }
   function setMsg(text, type = "") {
     msgEl.className = "msg " + (type || "");
     msgEl.textContent = text || "";
+  }
+
+  function setLoginMsg(text, type = "") {
+    loginMsg.className = "msg " + (type || "");
+    loginMsg.textContent = text || "";
   }
 
   function categoryLabel(cat) {
@@ -65,31 +63,25 @@ document.addEventListener("DOMContentLoaded", () => {
     let data = {};
     try { data = await res.json(); } catch { data = {}; }
 
-    if (!res.ok) {
-      throw new Error(data?.error || `HTTP ${res.status}`);
-    }
+    if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
     return data;
   }
 
-  function showLogin() {
-    loginScreen.classList.remove("hidden");
-    appScreen.classList.add("hidden");
-  }
-
-  function showApp() {
-    loginScreen.classList.add("hidden");
-    appScreen.classList.remove("hidden");
-  }
-
-  async function ensureAuthOrShowLogin() {
+  async function ensureAuth() {
     try {
       await api("/api/me");
-      showApp();
+      loginOverlay.classList.add("hidden");
       return true;
     } catch {
-      showLogin();
+      loginOverlay.classList.remove("hidden");
       return false;
     }
+  }
+
+  async function loadMeta() {
+    const meta = await api("/api/meta");
+    TIMES = meta.times || [];
+    renderTimeOptions();
   }
 
   function renderTimeOptions() {
@@ -100,12 +92,6 @@ document.addEventListener("DOMContentLoaded", () => {
       opt.textContent = t;
       timeEl.appendChild(opt);
     }
-  }
-
-  async function loadMetaAndTimes() {
-    const meta = await api("/api/meta");
-    TIMES = meta.times || [];
-    renderTimeOptions();
   }
 
   function escapeHtml(s) {
@@ -204,10 +190,10 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
           await api(`/api/bookings/${id}`, { method: "DELETE" });
           if (editId === id) exitEditMode();
-          setMsg("ลบคิวแล้ว", "ok");
+          setMsg("ลบคิวแล้ว ✅", "ok");
           await refresh();
         } catch (e) {
-          if (e.message === "unauthorized") await ensureAuthOrShowLogin();
+          if (e.message === "unauthorized") await ensureAuth();
           setMsg(e.message, "err");
         }
       });
@@ -230,7 +216,7 @@ document.addEventListener("DOMContentLoaded", () => {
     renderList(sum.detail || []);
   }
 
-  // ====== EVENTS ======
+  // ===== EVENTS =====
   document.querySelectorAll(".tab").forEach(btn => {
     btn.addEventListener("click", () => setActiveTab(btn.dataset.tab));
   });
@@ -238,16 +224,12 @@ document.addEventListener("DOMContentLoaded", () => {
   loginBtn.addEventListener("click", async () => {
     setLoginMsg("");
     try {
-      await api("/api/login", {
-        method: "POST",
-        body: JSON.stringify({ pin: pinEl.value })
-      });
-
+      await api("/api/login", { method: "POST", body: JSON.stringify({ pin: pinEl.value }) });
       pinEl.value = "";
       setLoginMsg("เข้าสู่ระบบสำเร็จ ✅", "ok");
 
-      showApp();
-      await loadMetaAndTimes();
+      loginOverlay.classList.add("hidden");
+      await loadMeta();
       await refresh();
     } catch (e) {
       setLoginMsg(e.message, "err");
@@ -260,31 +242,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
   logoutBtn.addEventListener("click", async () => {
     try { await api("/api/logout", { method: "POST" }); }
-    finally {
-      showLogin();
-      setMsg("");
-      setLoginMsg("");
-    }
+    finally { loginOverlay.classList.remove("hidden"); }
   });
 
   refreshBtn.addEventListener("click", async () => {
     setMsg("");
-    try {
-      await refresh();
-      setMsg("อัปเดตแล้ว ✅", "ok");
-    } catch (e) {
-      if (e.message === "unauthorized") await ensureAuthOrShowLogin();
-      setMsg(e.message, "err");
-    }
+    try { await refresh(); setMsg("อัปเดตแล้ว ✅", "ok"); }
+    catch (e) { if (e.message === "unauthorized") await ensureAuth(); setMsg(e.message, "err"); }
   });
 
   dateEl.addEventListener("change", async () => {
     setMsg("");
     try { await refresh(); }
-    catch (e) {
-      if (e.message === "unauthorized") await ensureAuthOrShowLogin();
-      setMsg(e.message, "err");
-    }
+    catch (e) { if (e.message === "unauthorized") await ensureAuth(); setMsg(e.message, "err"); }
   });
 
   cancelEditBtn.addEventListener("click", () => exitEditMode());
@@ -315,27 +285,23 @@ document.addEventListener("DOMContentLoaded", () => {
         renderTimeOptions();
         setActiveTab(currentCategory);
       }
-
       await refresh();
     } catch (e) {
-      if (e.message === "unauthorized") await ensureAuthOrShowLogin();
+      if (e.message === "unauthorized") await ensureAuth();
       setMsg(e.message, "err");
     }
   });
 
-  // ====== INIT ======
+  // ===== INIT =====
   (async function init() {
-    // default
     dateEl.value = todayLocalYYYYMMDD();
     setActiveTab("male");
 
-    // MUST login first
-    const authed = await ensureAuthOrShowLogin();
+    const authed = await ensureAuth();
     if (authed) {
-      await loadMetaAndTimes();
+      await loadMeta();
       await refresh();
     } else {
-      // no auth -> show login, and prevent time usage
       timeEl.innerHTML = `<option value="">กรุณาเข้าสู่ระบบก่อน</option>`;
     }
   })();
