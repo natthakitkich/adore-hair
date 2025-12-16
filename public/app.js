@@ -19,6 +19,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const refreshBtn = $("#refreshBtn");
   const msgEl = $("#msg");
   const listEl = $("#list");
+  
+  const calGrid = $("#calGrid");
+  const calTitle = $("#calTitle");
+  const calPrev = $("#calPrev");
+  const calNext = $("#calNext");
 
   const countMale = $("#countMale");
   const countFemale = $("#countFemale");
