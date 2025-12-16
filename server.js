@@ -49,9 +49,9 @@ function writeDB(db) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(db, null, 2));
 }
 
-// ====== TIMES (9 options: 13:00–21:00) ======
+// ====== TIMES (10 options: 13:00–22:00) ======
 const TIMES = [];
-for (let h = 13; h <= 21; h++) TIMES.push(`${String(h).padStart(2, "0")}:00`);
+for (let h = 13; h <= 22; h++) TIMES.push(`${String(h).padStart(2, "0")}:00`);
 
 // ====== AUTH ======
 app.get("/api/me", (req, res) => {
