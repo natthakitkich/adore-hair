@@ -186,3 +186,62 @@ th{color:var(--muted); text-align:left; font-weight:900}
 /* clickable month rows */
 tr.clickRow{cursor:pointer}
 tr.clickRow:hover{background:rgba(110,231,255,.08)}
+/* ================================
+   LOGIN UI OVERRIDE (Mobile Friendly)
+   ================================ */
+
+.modal {
+  max-width: 420px;
+  width: 100%;
+}
+
+.modalBody .row {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+}
+
+/* ช่องกรอก PIN */
+#pin {
+  width: 100%;
+  max-width: 260px;
+  margin: 0 auto;
+  text-align: center;
+  font-size: 18px;
+  letter-spacing: 2px;
+  padding: 14px;
+}
+
+/* ปุ่ม Login สีทึบ ชัด */
+#loginBtn {
+  width: 100%;
+  max-width: 260px;
+  margin: 0 auto;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 900;
+
+  background: linear-gradient(90deg, #38bdf8, #6366f1);
+  color: #020617;
+  border: none;
+  box-shadow:
+    0 6px 18px rgba(99,102,241,0.45),
+    0 0 0 1px rgba(255,255,255,0.15) inset;
+}
+
+#loginBtn:active {
+  transform: translateY(1px);
+  box-shadow: 0 3px 10px rgba(99,102,241,0.4);
+}
+
+#loginMsg {
+  text-align: center;
+  margin-top: 8px;
+}
+
+/* มือถือจอเตี้ย */
+@media (max-height: 700px) {
+  .modal {
+    margin-top: 10vh;
+  }
+}
