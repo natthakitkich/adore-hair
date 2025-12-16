@@ -1,14 +1,12 @@
 document.addEventListener("DOMContentLoaded", () => {
   const $ = (s) => document.querySelector(s);
 
-  // login overlay
   const loginOverlay = $("#loginOverlay");
   const pinEl = $("#pin");
   const loginBtn = $("#loginBtn");
   const loginMsg = $("#loginMsg");
   const logoutBtn = $("#logoutBtn");
 
-  // form
   const dateEl = $("#date");
   const nameEl = $("#name");
   const phoneEl = $("#phone");
@@ -22,7 +20,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const msgEl = $("#msg");
   const listEl = $("#list");
 
-  // summary
   const countMale = $("#countMale");
   const countFemale = $("#countFemale");
   const countTotal = $("#countTotal");
@@ -44,7 +41,6 @@ document.addEventListener("DOMContentLoaded", () => {
     msgEl.className = "msg " + (type || "");
     msgEl.textContent = text || "";
   }
-
   function setLoginMsg(text, type = "") {
     loginMsg.className = "msg " + (type || "");
     loginMsg.textContent = text || "";
@@ -59,10 +55,8 @@ document.addEventListener("DOMContentLoaded", () => {
       headers: { "Content-Type": "application/json" },
       ...opts
     });
-
     let data = {};
     try { data = await res.json(); } catch { data = {}; }
-
     if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
     return data;
   }
@@ -78,7 +72,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  async function loadMeta() {
+  async function loadMetaAlways() {
+    // /api/meta ตอนนี้ไม่ต้อง guard แล้ว
     const meta = await api("/api/meta");
     TIMES = meta.times || [];
     renderTimeOptions();
@@ -94,15 +89,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  function escapeHtml(s) {
-    return String(s ?? "")
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
-  }
-
   function setActiveTab(cat) {
     currentCategory = cat;
     document.querySelectorAll(".tab")
@@ -111,6 +97,15 @@ document.addEventListener("DOMContentLoaded", () => {
     serviceEl.placeholder = cat === "male"
       ? "เช่น ตัดผม / รองทรง / สระ+ตัด"
       : "เช่น สระ+ไดร์ / ทำสี / ยืด / ดัด";
+  }
+
+  function escapeHtml(s) {
+    return String(s ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
   }
 
   function enterEditMode(b) {
@@ -155,7 +150,6 @@ document.addEventListener("DOMContentLoaded", () => {
     for (const b of detail) {
       const tr = document.createElement("tr");
       const badgeClass = b.category === "male" ? "male" : "female";
-
       tr.innerHTML = `
         <td><b>${b.time}</b></td>
         <td><span class="badge ${badgeClass}">${categoryLabel(b.category)}</span></td>
@@ -165,8 +159,8 @@ document.addEventListener("DOMContentLoaded", () => {
         <td><a href="tel:${escapeHtml(b.phone)}" style="color:var(--accent)">${escapeHtml(b.phone)}</a></td>
         <td>
           <div class="actionsBtn">
-            <button class="smallBtn edit" data-id="${b.id}">แก้ไข</button>
-            <button class="smallBtn danger del" data-id="${b.id}">ลบ</button>
+            <button class="smallBtn edit" data-id="${b.id}" type="button">แก้ไข</button>
+            <button class="smallBtn danger del" data-id="${b.id}" type="button">ลบ</button>
           </div>
         </td>
       `;
@@ -216,7 +210,7 @@ document.addEventListener("DOMContentLoaded", () => {
     renderList(sum.detail || []);
   }
 
-  // ===== EVENTS =====
+  // ===== UI events =====
   document.querySelectorAll(".tab").forEach(btn => {
     btn.addEventListener("click", () => setActiveTab(btn.dataset.tab));
   });
@@ -227,9 +221,7 @@ document.addEventListener("DOMContentLoaded", () => {
       await api("/api/login", { method: "POST", body: JSON.stringify({ pin: pinEl.value }) });
       pinEl.value = "";
       setLoginMsg("เข้าสู่ระบบสำเร็จ ✅", "ok");
-
       loginOverlay.classList.add("hidden");
-      await loadMeta();
       await refresh();
     } catch (e) {
       setLoginMsg(e.message, "err");
@@ -288,7 +280,13 @@ document.addEventListener("DOMContentLoaded", () => {
       await refresh();
     } catch (e) {
       if (e.message === "unauthorized") await ensureAuth();
-      setMsg(e.message, "err");
+
+      // ข้อความ error ให้เข้าใจง่าย
+      if (e.message === "time already booked for this category") {
+        setMsg("เวลานี้ถูกจองแล้ว (ในประเภทเดียวกัน) ❌", "err");
+      } else {
+        setMsg(e.message, "err");
+      }
     }
   });
 
@@ -297,12 +295,16 @@ document.addEventListener("DOMContentLoaded", () => {
     dateEl.value = todayLocalYYYYMMDD();
     setActiveTab("male");
 
-    const authed = await ensureAuth();
-    if (authed) {
-      await loadMeta();
-      await refresh();
-    } else {
-      timeEl.innerHTML = `<option value="">กรุณาเข้าสู่ระบบก่อน</option>`;
+    // โหลดเวลาให้เสมอ (แก้ปัญหา select ว่าง)
+    try {
+      await loadMetaAlways();
+    } catch (e) {
+      timeEl.innerHTML = `<option value="">โหลดเวลาไม่สำเร็จ</option>`;
+      setMsg("โหลดเวลาไม่สำเร็จ: " + e.message, "err");
     }
+
+    // เช็ค login แล้วค่อยโหลดรายการของวัน
+    const authed = await ensureAuth();
+    if (authed) await refresh();
   })();
 });
