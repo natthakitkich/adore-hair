@@ -1,3 +1,4 @@
+document.addEventListener('DOMContentLoaded', () => {
 const $ = (s) => document.querySelector(s);
 
 const dateEl = $("#date");
@@ -262,3 +263,4 @@ async function refresh() {
   const authed = await ensureAuth();
   if (authed) await refresh();
 })();
+});
