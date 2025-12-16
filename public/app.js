@@ -49,7 +49,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const d = new Date();
     const yyyy = d.getFullYear();
     const mm = String(d.getMonth() + 1).padStart(2, "0");
-    return `${yyyy}-${mm}`; // type="month"
+    return `${yyyy}-${mm}`;
   }
 
   function setMsg(text, type = "") {
@@ -339,11 +339,20 @@ document.addEventListener("DOMContentLoaded", () => {
         setMsg("แก้ไขคิวสำเร็จ ✅", "ok");
         exitEditMode();
       } else {
-        await api("/api/bookings", { method: "POST", body: JSON.stringify(payload) });
+        // ✅ สำคัญ: รับค่า response เพื่อเอา booking.id ไปสร้างไฟล์ .ics
+        const res = await api("/api/bookings", { method: "POST", body: JSON.stringify(payload) });
         setMsg("บันทึกการจองสำเร็จ ✅", "ok");
         formEl.reset();
         renderTimeOptions();
         setActiveTab(currentCategory);
+
+        // ===== เด้งถามเพิ่ม Calendar iPhone =====
+        const wantCalendar = confirm(
+          "บันทึกคิวเรียบร้อยแล้ว\n\nต้องการเพิ่มนัดหมายนี้ลงในปฏิทินของ iPhone ไหม?"
+        );
+        if (wantCalendar && res?.booking?.id) {
+          window.location.href = `/api/calendar/${res.booking.id}`;
+        }
       }
 
       await refreshDay();
@@ -369,7 +378,7 @@ document.addEventListener("DOMContentLoaded", () => {
     monthPick.value = yyyymmOfNow();
     setActiveTab("male");
 
-    // load time options always (fix empty dropdown)
+    // load time options always
     try {
       await loadMetaAlways();
     } catch (e) {
