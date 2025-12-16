@@ -435,7 +435,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!payload.time) return setMsg("กรุณาเลือกเวลา", "err");
         if (!payload.name) return setMsg("กรุณากรอกชื่อลูกค้า", "err");
-        // ✅ phone ไม่บังคับแล้ว
         if (!payload.service) return setMsg("กรุณากรอกทำอะไร", "err");
 
         try {
@@ -466,9 +465,15 @@ document.addEventListener("DOMContentLoaded", () => {
           await refresh();
           await refreshMonth();
 
-          // ถ้าคุณยังใช้ iPhone calendar flow อยู่ (server.js ตอนนี้ตั้งเป็น 501)
-          // const add = confirm("บันทึกคิวแล้ว ✅\nต้องการเพิ่มลงปฏิทิน iPhone ไหม?");
-          // if (add && r?.booking?.id) window.location.href = `/api/calendar/${r.booking.id}`;
+          // ✅ ✅ ✅ เพิ่มตรงนี้: เด้งถามเพิ่ม Calendar ทันที
+          const wantCalendar = confirm(
+            "บันทึกคิวเรียบร้อยแล้ว ✅\n\nต้องการเพิ่มนัดหมายนี้ลงใน iPhone/iPad Calendar ไหม?"
+          );
+
+          if (wantCalendar && r?.booking?.id) {
+            // เปิดไฟล์ .ics → iOS จะเด้งหน้า Add to Calendar
+            window.location.href = `/api/calendar/${r.booking.id}`;
+          }
         } catch (e) {
           if (e.message === "unauthorized") await ensureAuth();
           setMsg(e.message, "err");
