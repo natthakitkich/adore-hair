@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
   const $ = (s) => document.querySelector(s);
 
-  // ====== Elements ======
+  // ===== Elements =====
   const dateEl = $("#date");
   const nameEl = $("#name");
   const phoneEl = $("#phone");
@@ -31,7 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let TIMES = [];
   let editId = null;
 
-  // ====== Helpers ======
+  // ===== Utils =====
   function todayLocalYYYYMMDD() {
     const d = new Date();
     const yyyy = d.getFullYear();
@@ -93,20 +93,17 @@ document.addEventListener("DOMContentLoaded", () => {
       .replaceAll('"', "&quot;")
       .replaceAll("'", "&#039;");
   }
-  function escapeAttr(s) {
-    return escapeHtml(s);
-  }
+  function escapeAttr(s) { return escapeHtml(s); }
 
   function setActiveTab(cat) {
     currentCategory = cat;
-    document
-      .querySelectorAll(".tab")
-      .forEach((t) => t.classList.toggle("active", t.dataset.tab === cat));
+    document.querySelectorAll(".tab").forEach(t =>
+      t.classList.toggle("active", t.dataset.tab === cat)
+    );
 
-    serviceEl.placeholder =
-      cat === "male"
-        ? "เช่น ตัดผม / รองทรง / สระ+ตัด"
-        : "เช่น สระ+ไดร์ / ทำสี / ยืด / ดัด";
+    serviceEl.placeholder = cat === "male"
+      ? "เช่น ตัดผม / รองทรง / สระ+ตัด"
+      : "เช่น สระ+ไดร์ / ทำสี / ยืด / ดัด";
   }
 
   function enterEditMode(b) {
@@ -114,9 +111,9 @@ document.addEventListener("DOMContentLoaded", () => {
     dateEl.value = b.date;
     setActiveTab(b.category);
     timeEl.value = b.time;
-    nameEl.value = b.name;
-    phoneEl.value = b.phone;
-    serviceEl.value = b.service;
+    nameEl.value = b.name || "";
+    phoneEl.value = b.phone || "";
+    serviceEl.value = b.service || "";
     noteEl.value = b.note || "";
 
     submitBtn.textContent = "บันทึกการแก้ไข";
@@ -132,8 +129,11 @@ document.addEventListener("DOMContentLoaded", () => {
     setMsg("");
 
     const keepDate = dateEl.value;
+    const keepCategory = currentCategory;
+
     formEl.reset();
     dateEl.value = keepDate;
+    setActiveTab(keepCategory);
     renderTimeOptions();
   }
 
@@ -155,9 +155,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <td>${escapeHtml(b.name)}</td>
         <td>${escapeHtml(b.service)}</td>
         <td>${escapeHtml(b.note || "")}</td>
-        <td><a href="tel:${escapeAttr(b.phone)}" style="color:var(--accent)">${escapeHtml(
-        b.phone
-      )}</a></td>
+        <td><a href="tel:${escapeAttr(b.phone)}" style="color:var(--accent)">${escapeHtml(b.phone)}</a></td>
         <td class="actionsBtn">
           <button class="smallBtn edit" data-id="${b.id}">แก้ไข</button>
           <button class="smallBtn danger" data-id="${b.id}">ลบ</button>
@@ -166,19 +164,22 @@ document.addEventListener("DOMContentLoaded", () => {
       listEl.appendChild(tr);
     }
 
-    listEl.querySelectorAll(".smallBtn.edit").forEach((btn) => {
+    // edit
+    listEl.querySelectorAll(".smallBtn.edit").forEach(btn => {
       btn.addEventListener("click", () => {
         const id = Number(btn.getAttribute("data-id"));
-        const found = detail.find((x) => x.id === id);
+        const found = detail.find(x => Number(x.id) === id);
         if (found) enterEditMode(found);
       });
     });
 
-    listEl.querySelectorAll(".smallBtn.danger").forEach((btn) => {
+    // delete
+    listEl.querySelectorAll(".smallBtn.danger").forEach(btn => {
       btn.addEventListener("click", async () => {
         const id = Number(btn.getAttribute("data-id"));
         if (!id) return;
         if (!confirm("ยืนยันลบคิวนี้?")) return;
+
         try {
           await api(`/api/bookings/${id}`, { method: "DELETE" });
           if (editId === id) exitEditMode();
@@ -202,71 +203,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const d = new Date(date + "T00:00:00");
     summaryHint.textContent = d.toLocaleDateString("th-TH", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric"
+      weekday: "long", year: "numeric", month: "long", day: "numeric"
     });
 
-    renderList(sum.detail);
+    renderList(sum.detail || []);
   }
 
-  // ===== iPhone Calendar (ICS) - Bangkok time (no timezone bug) =====
-  function pad2(n) {
-    return String(n).padStart(2, "0");
-  }
-  function formatICSLocal(dt) {
-    return (
-      dt.getFullYear() +
-      pad2(dt.getMonth() + 1) +
-      pad2(dt.getDate()) +
-      "T" +
-      pad2(dt.getHours()) +
-      pad2(dt.getMinutes()) +
-      "00"
-    );
-  }
-  function makeIcsBangkok({ title, date, time, durationMin = 60, notes = "" }) {
-    const [y, m, d] = date.split("-").map(Number);
-    const [hh, mm] = time.split(":").map(Number);
-
-    // ✅ local time safe for Safari/iOS
-    const start = new Date(y, m - 1, d, hh, mm, 0);
-    const end = new Date(start.getTime() + durationMin * 60000);
-
-    const dtstamp = formatICSLocal(new Date());
-    const dtstart = formatICSLocal(start);
-    const dtend = formatICSLocal(end);
-    const uid = `${Date.now()}-${Math.random().toString(16).slice(2)}@adore-hair`;
-
-    return [
-      "BEGIN:VCALENDAR",
-      "VERSION:2.0",
-      "PRODID:-//Adore Hair//Queue//TH",
-      "CALSCALE:GREGORIAN",
-      "METHOD:PUBLISH",
-      "BEGIN:VEVENT",
-      `UID:${uid}`,
-      `DTSTAMP:${dtstamp}`,
-      `DTSTART;TZID=Asia/Bangkok:${dtstart}`,
-      `DTEND;TZID=Asia/Bangkok:${dtend}`,
-      `SUMMARY:${title}`,
-      `DESCRIPTION:${notes.replace(/\n/g, "\\n")}`,
-      "END:VEVENT",
-      "END:VCALENDAR"
-    ].join("\r\n");
-  }
-
-  // ===== INIT =====
+  // ===== Init =====
   (async function init() {
+    // ตั้งค่า default
     dateEl.value = todayLocalYYYYMMDD();
+    setActiveTab("male");
     submitBtn.textContent = "บันทึกการจอง";
     cancelEditBtn.style.display = "none";
 
-    // tabs
-    document
-      .querySelectorAll(".tab")
-      .forEach((btn) => btn.addEventListener("click", () => setActiveTab(btn.dataset.tab)));
+    // bind tabs
+    document.querySelectorAll(".tab").forEach(btn =>
+      btn.addEventListener("click", () => setActiveTab(btn.dataset.tab))
+    );
 
     // login
     loginBtn.addEventListener("click", async () => {
@@ -280,7 +234,7 @@ document.addEventListener("DOMContentLoaded", () => {
         loginOverlay.style.display = "none";
         pinEl.value = "";
 
-        // after login: load meta times + refresh
+        // โหลด meta + refresh หลัง login
         const meta = await api("/api/meta");
         TIMES = meta.times || [];
         renderTimeOptions();
@@ -295,33 +249,22 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     logoutBtn.addEventListener("click", async () => {
-      try {
-        await api("/api/logout", { method: "POST" });
-      } finally {
-        loginOverlay.style.display = "grid";
-      }
+      try { await api("/api/logout", { method: "POST" }); }
+      finally { loginOverlay.style.display = "grid"; }
     });
 
-    // actions
+    // refresh button
     refreshBtn.addEventListener("click", async () => {
       setMsg("");
-      try {
-        await refresh();
-        setMsg("อัปเดตแล้ว", "ok");
-      } catch (e) {
-        if (e.message === "unauthorized") await ensureAuth();
-        setMsg(e.message, "err");
-      }
+      try { await refresh(); setMsg("อัปเดตแล้ว", "ok"); }
+      catch (e) { if (e.message === "unauthorized") await ensureAuth(); setMsg(e.message, "err"); }
     });
 
+    // date change
     dateEl.addEventListener("change", async () => {
       setMsg("");
-      try {
-        await refresh();
-      } catch (e) {
-        if (e.message === "unauthorized") await ensureAuth();
-        setMsg(e.message, "err");
-      }
+      try { await refresh(); }
+      catch (e) { if (e.message === "unauthorized") await ensureAuth(); setMsg(e.message, "err"); }
     });
 
     cancelEditBtn.addEventListener("click", () => exitEditMode());
@@ -341,6 +284,11 @@ document.addEventListener("DOMContentLoaded", () => {
         note: noteEl.value.trim()
       };
 
+      // basic validate
+      if (!payload.time) return setMsg("กรุณาเลือกเวลา", "err");
+      if (!payload.name) return setMsg("กรุณากรอกชื่อลูกค้า", "err");
+      if (!payload.phone) return setMsg("กรุณากรอกเบอร์โทร", "err");
+
       try {
         if (editId) {
           await api(`/api/bookings/${editId}`, {
@@ -353,54 +301,39 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
-        await api("/api/bookings", {
+        const r = await api("/api/bookings", {
           method: "POST",
           body: JSON.stringify(payload)
         });
 
         setMsg("จองคิวสำเร็จ ✅", "ok");
-        await refresh();
 
-        // ✅ Ask add to iPhone Calendar
-        const ok = confirm("จองคิวสำเร็จ ✅\nต้องการเพิ่มลงปฏิทิน iPhone ไหม?");
-        if (ok) {
-          const title =
-            `${currentCategory === "male" ? "ตัดผมผู้ชาย" : "ทำผมผู้หญิง"} – Adore hair`;
-
-          const notes =
-`ลูกค้า: ${payload.name}
-บริการ: ${payload.service || "-"}
-โทร: ${payload.phone || "-"}
-หมายเหตุ: ${payload.note || "-"}`;
-
-          const ics = makeIcsBangkok({
-            title,
-            date: payload.date,
-            time: payload.time,
-            durationMin: 60,
-            notes
-          });
-
-          const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
-          const url = URL.createObjectURL(blob);
-          window.location.href = url;
-          setTimeout(() => URL.revokeObjectURL(url), 15000);
-        }
-
-        // reset form (keep date, keep time list)
+        // reset form แต่คงวัน + คงแท็บ
         const keepDate = dateEl.value;
+        const keepCat = currentCategory;
         formEl.reset();
         dateEl.value = keepDate;
+        setActiveTab(keepCat);
         renderTimeOptions();
+
+        await refresh();
+
+        // ✅ เด้งถามเพิ่มลง iPhone Calendar ไหม (เปิด .ics จาก server)
+        const add = confirm("บันทึกคิวแล้ว ✅\nต้องการเพิ่มลงปฏิทิน iPhone ไหม?");
+        if (add && r?.booking?.id) {
+          // ถ้าอยากให้เปิดแท็บใหม่ ให้เปลี่ยนเป็น window.open(...)
+          window.location.href = `/api/calendar/${r.booking.id}`;
+        }
       } catch (e) {
         if (e.message === "unauthorized") await ensureAuth();
         setMsg(e.message, "err");
       }
     });
 
-    // First gate: must login first
+    // ===== boot: show login first =====
     const authed = await ensureAuth();
     if (authed) {
+      // ต้องโหลด meta ก่อน ไม่งั้น dropdown เวลาเป็นว่าง
       const meta = await api("/api/meta");
       TIMES = meta.times || [];
       renderTimeOptions();
