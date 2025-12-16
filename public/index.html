@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Adore hair — Queue</title>
+  <title>Adore hair studio — Queue</title>
   <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
@@ -13,14 +13,14 @@
     <div class="modal">
       <div class="modalHead">
         <div class="avatar">A</div>
-        <div class="loginHeadText">
+        <div>
           <div class="title">Adore hair</div>
           <div class="subtitle">Owner Queue • 13:00–22:00 • แยกชาย/หญิง</div>
         </div>
       </div>
       <div class="modalBody">
         <label>PIN</label>
-        <div class="row loginRow">
+        <div class="row">
           <input id="pin" type="password" inputmode="numeric" placeholder="กรอก PIN" />
           <button id="loginBtn" class="primary" type="button">เข้าสู่ระบบ</button>
         </div>
@@ -55,20 +55,8 @@
       <button class="tab active" data-tab="male" type="button">ตัดผมผู้ชาย</button>
       <button class="tab" data-tab="female" type="button">ทำผมผู้หญิง</button>
     </div>
-<section class="calBox">
-  <div class="calHeader">
-    <button id="calPrev" type="button">‹</button>
-    <div id="calTitle" class="calTitle">-</div>
-    <button id="calNext" type="button">›</button>
-  </div>
 
-  <div class="calGridHead">
-    <div>อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div>ส</div>
-  </div>
-
-  <div id="calGrid" class="calGrid"></div>
-</section>
-    <!-- Monthly Summary Table -->
+    <!-- ✅ Monthly Summary Table -->
     <section class="panel">
       <div class="row between">
         <div>
@@ -110,8 +98,8 @@
           </div>
 
           <div>
-            <label>เบอร์โทร (ไม่กรอกก็ได้)</label>
-            <input id="phone" type="tel" placeholder="เช่น 09xxxxxxxx" />
+            <label>เบอร์โทร</label>
+            <input id="phone" type="tel" placeholder="เช่น 09xxxxxxxx" required />
           </div>
 
           <div>
@@ -120,8 +108,8 @@
           </div>
 
           <div>
-            <label>ทำอะไร (ไม่กรอกก็ได้)</label>
-            <input id="service" type="text" placeholder="เช่น ตัดผม / รองทรง / สระ+ตัด" />
+            <label>ทำอะไร</label>
+            <input id="service" type="text" placeholder="เช่น ตัดผม / รองทรง / สระ+ตัด" required />
           </div>
 
           <div class="full">
