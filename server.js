@@ -1,6 +1,7 @@
 import express from "express";
 import session from "express-session";
 import path from "path";
+import fs from "fs";
 import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -18,8 +19,43 @@ app.use(
     secret: process.env.SESSION_SECRET || "adore-secret",
     resave: false,
     saveUninitialized: false,
+    cookie: { sameSite: "lax" }
   })
 );
+
+// ====== SIMPLE PERSIST (JSON FILE) ======
+const DATA_DIR = path.join(__dirname, "data");
+const DATA_FILE = path.join(DATA_DIR, "bookings.json");
+
+function ensureDBFile() {
+  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+  if (!fs.existsSync(DATA_FILE)) {
+    fs.writeFileSync(DATA_FILE, JSON.stringify({ id: 1, bookings: [] }, null, 2));
+  }
+}
+function readDB() {
+  ensureDBFile();
+  try {
+    const raw = fs.readFileSync(DATA_FILE, "utf-8");
+    const db = JSON.parse(raw);
+    return {
+      id: Number(db.id || 1),
+      bookings: Array.isArray(db.bookings) ? db.bookings : []
+    };
+  } catch {
+    return { id: 1, bookings: [] };
+  }
+}
+function writeDB(db) {
+  ensureDBFile();
+  fs.writeFileSync(DATA_FILE, JSON.stringify(db, null, 2));
+}
+
+// ====== TIMES (13:00–22:00, ทุก 1 ชั่วโมง) ======
+const TIMES = [];
+for (let h = 13; h <= 22; h++) {
+  TIMES.push(`${String(h).padStart(2, "0")}:00`);
+}
 
 // ====== AUTH ======
 app.get("/api/me", (req, res) => {
@@ -28,7 +64,8 @@ app.get("/api/me", (req, res) => {
 });
 
 app.post("/api/login", (req, res) => {
-  if (req.body.pin === PIN) {
+  const pin = String(req.body?.pin ?? "");
+  if (pin === String(PIN)) {
     req.session.auth = true;
     return res.json({ ok: true });
   }
@@ -44,148 +81,144 @@ function guard(req, res, next) {
   next();
 }
 
-// ====== DATA (in-memory) ======
-// ถ้าคุณย้ายไป Supabase แล้ว ส่วนนี้จะเปลี่ยนเป็น query DB แทน
-let bookings = [];
-let id = 1;
-
-// ====== TIMES ======
-// 13:00 ถึง 22:00 ทุก 1 ชั่วโมง (รวม 10 ตัวเลือก)
-const TIMES = [];
-for (let h = 13; h <= 22; h++) {
-  TIMES.push(`${String(h).padStart(2, "0")}:00`);
-}
-
-// ====== API ======
-app.get("/api/meta", guard, (req, res) => {
+// ====== META (ไม่ต้อง guard เพื่อให้ dropdown เวลาไม่ว่าง) ======
+app.get("/api/meta", (req, res) => {
   res.json({ times: TIMES });
 });
 
-// summary ของวันนั้น
+// ====== SUMMARY BY DATE ======
 app.get("/api/summary", guard, (req, res) => {
-  const date = req.query.date;
-  const list = bookings.filter((b) => b.date === date);
+  const date = String(req.query.date || "");
+  const db = readDB();
+  const list = db.bookings.filter(b => b.date === date);
 
   res.json({
     counts: {
-      male: list.filter((b) => b.category === "male").length,
-      female: list.filter((b) => b.category === "female").length,
-      total: list.length,
+      male: list.filter(b => b.category === "male").length,
+      female: list.filter(b => b.category === "female").length,
+      total: list.length
     },
-    detail: list,
+    detail: list
   });
 });
 
-// ✅ ปฏิทินรายเดือน: ส่งกลับ "วันที่ที่มีคิวอย่างน้อย 1 รายการ"
+// ====== MONTH SUMMARY (สำหรับปฏิทิน) ======
 app.get("/api/month", guard, (req, res) => {
-  const ym = String(req.query.ym || ""); // "YYYY-MM"
-  if (!/^\d{4}-\d{2}$/.test(ym)) {
-    return res.status(400).json({ error: "bad ym (use YYYY-MM)" });
+  const year = Number(req.query.year);
+  const month = Number(req.query.month); // 1-12
+
+  if (!year || !month || month < 1 || month > 12) {
+    return res.status(400).json({ error: "bad year/month" });
   }
 
-  const daysSet = new Set();
-  for (const b of bookings) {
-    if (typeof b.date === "string" && b.date.startsWith(ym + "-")) {
-      const dd = Number(b.date.slice(8, 10));
-      if (!Number.isNaN(dd)) daysSet.add(dd);
-    }
+  const mm = String(month).padStart(2, "0");
+  const prefix = `${year}-${mm}-`;
+
+  const db = readDB();
+  const counts = {}; // counts[day] = จำนวนคิววันนั้น
+
+  for (const b of db.bookings) {
+    if (typeof b.date !== "string") continue;
+    if (!b.date.startsWith(prefix)) continue;
+
+    const day = Number(b.date.slice(8, 10));
+    counts[day] = (counts[day] || 0) + 1;
   }
-  const days = [...daysSet].sort((a, b) => a - b);
-  res.json({ ym, days });
+
+  res.json({ year, month, counts });
 });
 
-// create booking
+// ====== CREATE BOOKING (กันซ้ำเฉพาะประเภทเดียวกันในวัน+เวลาเดียวกัน) ======
 app.post("/api/bookings", guard, (req, res) => {
   const payload = req.body || {};
   const date = String(payload.date || "");
-  const category = String(payload.category || "");
+  const category = payload.category === "female" ? "female" : "male";
   const time = String(payload.time || "");
-  const name = String(payload.name || "");
-  const phone = String(payload.phone || ""); // ✅ optional
-  const service = String(payload.service || "");
-  const note = String(payload.note || "");
+  const name = String(payload.name || "").trim();
+  const phone = String(payload.phone || "").trim();
+  const service = String(payload.service || "").trim();
+  const note = String(payload.note || "").trim();
 
-  if (!date || !category || !time || !name || !service) {
-    return res.status(400).json({ error: "missing required fields" });
+  if (!date || !time || !name || !phone || !service) {
+    return res.status(400).json({ error: "missing fields" });
   }
   if (!TIMES.includes(time)) {
     return res.status(400).json({ error: "invalid time" });
   }
-  if (!["male", "female"].includes(category)) {
-    return res.status(400).json({ error: "invalid category" });
-  }
 
-  // กันจองซ้ำ "เวลาเดียวกัน + ประเภทเดียวกัน + วันเดียวกัน"
-  const dup = bookings.find(
-    (b) => b.date === date && b.category === category && b.time === time
-  );
-  if (dup) {
-    return res.status(409).json({ error: "time already booked for this category" });
-  }
+  const db = readDB();
 
-  const booking = {
-    id: id++,
+  const dup = db.bookings.find(b => b.date === date && b.time === time && b.category === category);
+  if (dup) return res.status(409).json({ error: "time already booked for this category" });
+
+  const newBooking = {
+    id: db.id++,
     date,
     category,
     time,
     name,
     phone,
     service,
-    note,
+    note
   };
-  bookings.push(booking);
-  res.json({ ok: true, booking });
+
+  db.bookings.push(newBooking);
+  writeDB(db);
+  res.json({ ok: true, booking: newBooking });
 });
 
-// update booking
+// ====== UPDATE BOOKING ======
 app.put("/api/bookings/:id", guard, (req, res) => {
-  const bid = Number(req.params.id);
-  const idx = bookings.findIndex((b) => Number(b.id) === bid);
+  const bookingId = Number(req.params.id);
+  const payload = req.body || {};
+
+  const date = String(payload.date || "");
+  const category = payload.category === "female" ? "female" : "male";
+  const time = String(payload.time || "");
+  const name = String(payload.name || "").trim();
+  const phone = String(payload.phone || "").trim();
+  const service = String(payload.service || "").trim();
+  const note = String(payload.note || "").trim();
+
+  if (!bookingId) return res.status(400).json({ error: "bad id" });
+  if (!date || !time || !name || !phone || !service) return res.status(400).json({ error: "missing fields" });
+  if (!TIMES.includes(time)) return res.status(400).json({ error: "invalid time" });
+
+  const db = readDB();
+  const idx = db.bookings.findIndex(b => b.id === bookingId);
   if (idx < 0) return res.status(404).json({ error: "not found" });
 
-  const payload = req.body || {};
-  const date = String(payload.date || "");
-  const category = String(payload.category || "");
-  const time = String(payload.time || "");
-  const name = String(payload.name || "");
-  const phone = String(payload.phone || "");
-  const service = String(payload.service || "");
-  const note = String(payload.note || "");
-
-  if (!date || !category || !time || !name || !service) {
-    return res.status(400).json({ error: "missing required fields" });
-  }
-  if (!TIMES.includes(time)) return res.status(400).json({ error: "invalid time" });
-  if (!["male", "female"].includes(category)) {
-    return res.status(400).json({ error: "invalid category" });
-  }
-
-  // กันชนกับคิวอื่น (ยกเว้นตัวเอง)
-  const dup = bookings.find(
-    (b) => Number(b.id) !== bid && b.date === date && b.category === category && b.time === time
+  const dup = db.bookings.find(b =>
+    b.id !== bookingId &&
+    b.date === date &&
+    b.time === time &&
+    b.category === category
   );
   if (dup) return res.status(409).json({ error: "time already booked for this category" });
 
-  bookings[idx] = { id: bid, date, category, time, name, phone, service, note };
-  res.json({ ok: true, booking: bookings[idx] });
+  db.bookings[idx] = { id: bookingId, date, category, time, name, phone, service, note };
+  writeDB(db);
+  res.json({ ok: true, booking: db.bookings[idx] });
 });
 
-// delete booking
+// ====== DELETE BOOKING ======
 app.delete("/api/bookings/:id", guard, (req, res) => {
-  const bid = Number(req.params.id);
-  bookings = bookings.filter((b) => Number(b.id) !== bid);
-  res.json({ ok: true });
-});
+  const bookingId = Number(req.params.id);
+  const db = readDB();
+  const before = db.bookings.length;
 
-// ✅ กันหน้า iPhone error "Cannot GET /api/calendar/1"
-// (ถ้าคุณยังไม่อยากใช้ calendar ตอนนี้ ปล่อยไว้เฉยๆได้)
-app.get("/api/calendar/:id", guard, (req, res) => {
-  return res.status(501).json({ error: "calendar not enabled yet" });
+  db.bookings = db.bookings.filter(b => b.id !== bookingId);
+  if (db.bookings.length === before) return res.status(404).json({ error: "not found" });
+
+  writeDB(db);
+  res.json({ ok: true });
 });
 
 // ====== STATIC ======
 app.use(express.static(path.join(__dirname, "public")));
 
-app.listen(PORT, () => {
-  console.log("Server running on port", PORT);
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
+
+app.listen(PORT, () => console.log("Server running on port", PORT));
