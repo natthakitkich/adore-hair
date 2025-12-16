@@ -56,12 +56,15 @@ document.addEventListener("DOMContentLoaded", () => {
     msgEl.className = "msg " + (type || "");
     msgEl.textContent = text || "";
   }
+
   function setLoginMsg(text, type = "") {
     loginMsg.className = "msg " + (type || "");
     loginMsg.textContent = text || "";
   }
 
-  function categoryLabel(cat) { return cat === "male" ? "ผู้ชาย" : "ผู้หญิง"; }
+  function categoryLabel(cat) {
+    return cat === "male" ? "ผู้ชาย" : "ผู้หญิง";
+  }
 
   async function api(path, opts = {}) {
     const res = await fetch(path, {
@@ -339,11 +342,26 @@ document.addEventListener("DOMContentLoaded", () => {
         setMsg("แก้ไขคิวสำเร็จ ✅", "ok");
         exitEditMode();
       } else {
-        await api("/api/bookings", { method: "POST", body: JSON.stringify(payload) });
+        // ✅ แก้เฉพาะจุดนี้: ต้องเก็บ res เพื่อเอา booking.id ไปเรียก .ics
+        const res = await api("/api/bookings", {
+          method: "POST",
+          body: JSON.stringify(payload)
+        });
+
         setMsg("บันทึกการจองสำเร็จ ✅", "ok");
         formEl.reset();
         renderTimeOptions();
         setActiveTab(currentCategory);
+
+        // ===== 🔔 ถามเพิ่มปฏิทินทันที =====
+        const wantCalendar = confirm(
+          "บันทึกคิวเรียบร้อยแล้ว\n\nต้องการเพิ่มนัดหมายนี้ลงในปฏิทินของ iPhone ไหม?"
+        );
+
+        if (wantCalendar && res?.booking?.id) {
+          // เปิดไฟล์ .ics → iPhone จะเด้งหน้า Calendar ให้ทันที
+          window.location.href = `/api/calendar/${res.booking.id}`;
+        }
       }
 
       await refreshDay();
