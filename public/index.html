@@ -8,8 +8,8 @@
 </head>
 <body>
 
-  <!-- LOGIN OVERLAY (ล็อกอินก่อนเสมอ) -->
-  <div id="loginOverlay" class="overlay hidden">
+  <!-- LOGIN OVERLAY -->
+  <div id="loginOverlay" class="overlay">
     <div class="modal">
       <div class="modalHead">
         <div class="avatar">A</div>
@@ -18,20 +18,17 @@
           <div class="subtitle">Owner Queue • 13:00–22:00 • แยกชาย/หญิง</div>
         </div>
       </div>
-
       <div class="modalBody">
         <label>PIN</label>
         <div class="row">
           <input id="pin" type="password" inputmode="numeric" placeholder="กรอก PIN" />
-          <button id="loginBtn" class="primary">เข้าสู่ระบบ</button>
+          <button id="loginBtn" class="primary" type="button">เข้าสู่ระบบ</button>
         </div>
         <div id="loginMsg" class="msg"></div>
-        <div class="hint">* ตั้งค่าได้ที่ Render Environment: <b>ADORE_PIN</b></div>
       </div>
     </div>
   </div>
 
-  <!-- APP -->
   <header class="topbar">
     <div class="brand">
       <div class="avatar">A</div>
@@ -46,18 +43,16 @@
         <div class="label">เลือกวัน</div>
         <input id="date" type="date" />
       </div>
-      <button id="logoutBtn" class="ghost">Logout</button>
+      <button id="logoutBtn" class="ghost" type="button">Logout</button>
     </div>
   </header>
 
   <main class="wrap">
-    <!-- Tabs -->
     <div class="tabs">
-      <button class="tab active" data-tab="male">ตัดผมผู้ชาย</button>
-      <button class="tab" data-tab="female">ทำผมผู้หญิง</button>
+      <button class="tab active" data-tab="male" type="button">ตัดผมผู้ชาย</button>
+      <button class="tab" data-tab="female" type="button">ทำผมผู้หญิง</button>
     </div>
 
-    <!-- Form -->
     <section class="panel">
       <form id="bookingForm">
         <div class="grid">
@@ -98,7 +93,6 @@
       </form>
     </section>
 
-    <!-- Summary -->
     <section class="panel">
       <div class="summary">
         <div class="box">
