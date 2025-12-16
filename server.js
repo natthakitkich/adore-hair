@@ -79,7 +79,7 @@ function guard(req, res, next) {
   next();
 }
 
-// ====== META (no guard so time dropdown always loads) ======
+// ====== META (no guard, time dropdown always loads) ======
 app.get("/api/meta", (req, res) => {
   res.json({ times: TIMES });
 });
@@ -114,8 +114,6 @@ app.get("/api/month", guard, (req, res) => {
   const prefix = `${year}-${mm}-`;
 
   const db = readDB();
-
-  // per day summary: { [YYYY-MM-DD]: { male, female, total } }
   const byDate = {};
 
   for (const b of db.bookings) {
@@ -128,7 +126,6 @@ app.get("/api/month", guard, (req, res) => {
     byDate[b.date].total += 1;
   }
 
-  // return sorted list
   const list = Object.entries(byDate)
     .map(([date, counts]) => ({ date, counts }))
     .sort((a, b) => a.date.localeCompare(b.date));
@@ -162,6 +159,7 @@ app.post("/api/bookings", guard, (req, res) => {
   db.bookings.push(newBooking);
   writeDB(db);
 
+  // ✅ สำคัญ: ต้องส่ง booking.id กลับไปให้ frontend
   res.json({ ok: true, booking: newBooking });
 });
 
@@ -211,6 +209,51 @@ app.delete("/api/bookings/:id", guard, (req, res) => {
 
   writeDB(db);
   res.json({ ok: true });
+});
+
+// ====== CALENDAR (.ics) EXPORT ======
+app.get("/api/calendar/:id", guard, (req, res) => {
+  const bookingId = Number(req.params.id);
+  const db = readDB();
+  const b = db.bookings.find(x => x.id === bookingId);
+  if (!b) return res.status(404).send("Not found");
+
+  const start = new Date(`${b.date}T${b.time}:00`);
+  const end = new Date(start.getTime() + 60 * 60 * 1000); // 1 hour
+
+  function toICSDate(d) {
+    return d.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+  }
+
+  const safe = (s) =>
+    String(s ?? "")
+      .replaceAll("\\", "\\\\")
+      .replaceAll("\n", "\\n")
+      .replaceAll(",", "\\,");
+
+  const summary = `${b.category === "male" ? "ตัดผมผู้ชาย" : "ทำผมผู้หญิง"} – Adore hair`;
+  const desc = `ลูกค้า: ${safe(b.name)}\\nบริการ: ${safe(b.service)}\\nโทร: ${safe(b.phone)}${b.note ? `\\nหมายเหตุ: ${safe(b.note)}` : ""}`;
+
+  const ics = `
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Adore Hair//Queue//TH
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+UID:adore-${b.id}@adore-hair
+DTSTAMP:${toICSDate(new Date())}
+DTSTART:${toICSDate(start)}
+DTEND:${toICSDate(end)}
+SUMMARY:${safe(summary)}
+DESCRIPTION:${desc}
+LOCATION:Adore hair
+END:VEVENT
+END:VCALENDAR
+`.trim();
+
+  res.setHeader("Content-Type", "text/calendar; charset=utf-8");
+  res.setHeader("Content-Disposition", `attachment; filename=adore-hair-${b.date}-${b.time}.ics`);
+  res.send(ics);
 });
 
 // ====== STATIC ======
