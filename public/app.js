@@ -28,15 +28,21 @@ document.addEventListener("DOMContentLoaded", () => {
   const countTotal = $("#countTotal");
   const summaryHint = $("#summaryHint");
 
-  // ===== Monthly table =====
-  const monthPick = $("#monthPick");
-  const monthRefreshBtn = $("#monthRefreshBtn");
-  const monthListEl = $("#monthList");
+  // ===== Calendar month view =====
+  const calGrid = $("#calGrid");
+  const calTitle = $("#calTitle");
+  const calPrev = $("#calPrev");
+  const calNext = $("#calNext");
 
   let currentCategory = "male";
   let TIMES = [];
   let editId = null;
 
+  // calendar state
+  let calYear = null;
+  let calMonth = null; // 1-12
+
+  // ---------------- helpers ----------------
   function todayLocalYYYYMMDD() {
     const d = new Date();
     const yyyy = d.getFullYear();
@@ -45,18 +51,14 @@ document.addEventListener("DOMContentLoaded", () => {
     return `${yyyy}-${mm}-${dd}`;
   }
 
-  function yyyymmOfNow() {
-    const d = new Date();
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, "0");
-    return `${yyyy}-${mm}`;
-  }
-
   function setMsg(text, type = "") {
+    if (!msgEl) return;
     msgEl.className = "msg " + (type || "");
     msgEl.textContent = text || "";
   }
+
   function setLoginMsg(text, type = "") {
+    if (!loginMsg) return;
     loginMsg.className = "msg " + (type || "");
     loginMsg.textContent = text || "";
   }
@@ -70,8 +72,10 @@ document.addEventListener("DOMContentLoaded", () => {
       headers: { "Content-Type": "application/json" },
       ...opts
     });
+
     let data = {};
     try { data = await res.json(); } catch { data = {}; }
+
     if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
     return data;
   }
@@ -79,21 +83,23 @@ document.addEventListener("DOMContentLoaded", () => {
   async function ensureAuth() {
     try {
       await api("/api/me");
-      loginOverlay.classList.add("hidden");
+      if (loginOverlay) loginOverlay.classList.add("hidden");
       return true;
     } catch {
-      loginOverlay.classList.remove("hidden");
+      if (loginOverlay) loginOverlay.classList.remove("hidden");
       return false;
     }
   }
 
   async function loadMetaAlways() {
+    // /api/meta ควรเปิดให้เรียกได้เพื่อให้ dropdown เวลาไม่ว่าง
     const meta = await api("/api/meta");
     TIMES = meta.times || [];
     renderTimeOptions();
   }
 
   function renderTimeOptions() {
+    if (!timeEl) return;
     timeEl.innerHTML = "";
     for (const t of TIMES) {
       const opt = document.createElement("option");
@@ -117,41 +123,44 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll(".tab")
       .forEach(t => t.classList.toggle("active", t.dataset.tab === cat));
 
+    if (!serviceEl) return;
     serviceEl.placeholder = cat === "male"
-      ? "เช่น ตัดผม / รองทรง / สระ+ตัด (ไม่กรอกก็ได้)"
-      : "เช่น สระ+ไดร์ / ทำสี / ยืด / ดัด (ไม่กรอกก็ได้)";
+      ? "เช่น ตัดผม / รองทรง / สระ+ตัด"
+      : "เช่น สระ+ไดร์ / ทำสี / ยืด / ดัด";
   }
 
   function enterEditMode(b) {
     editId = b.id;
-    dateEl.value = b.date;
+    if (dateEl) dateEl.value = b.date;
     setActiveTab(b.category);
-    timeEl.value = b.time;
-    nameEl.value = b.name;
-    phoneEl.value = b.phone || "";
-    serviceEl.value = b.service || "";
-    noteEl.value = b.note || "";
+    if (timeEl) timeEl.value = b.time;
+    if (nameEl) nameEl.value = b.name;
+    if (phoneEl) phoneEl.value = b.phone;
+    if (serviceEl) serviceEl.value = b.service;
+    if (noteEl) noteEl.value = b.note || "";
 
-    submitBtn.textContent = "บันทึกการแก้ไข";
-    cancelEditBtn.classList.remove("hidden");
+    if (submitBtn) submitBtn.textContent = "บันทึกการแก้ไข";
+    if (cancelEditBtn) cancelEditBtn.classList.remove("hidden");
     setMsg(`กำลังแก้ไขคิว ${b.time} (${categoryLabel(b.category)})`);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   function exitEditMode() {
     editId = null;
-    submitBtn.textContent = "บันทึกการจอง";
-    cancelEditBtn.classList.add("hidden");
+    if (submitBtn) submitBtn.textContent = "บันทึกการจอง";
+    if (cancelEditBtn) cancelEditBtn.classList.add("hidden");
     setMsg("");
 
-    const keepDate = dateEl.value;
-    formEl.reset();
-    dateEl.value = keepDate;
+    const keepDate = dateEl ? dateEl.value : todayLocalYYYYMMDD();
+    if (formEl) formEl.reset();
+    if (dateEl) dateEl.value = keepDate;
+
     renderTimeOptions();
     setActiveTab(currentCategory);
   }
 
   function renderList(detail) {
+    if (!listEl) return;
     listEl.innerHTML = "";
 
     if (!detail.length) {
@@ -165,17 +174,13 @@ document.addEventListener("DOMContentLoaded", () => {
       const tr = document.createElement("tr");
       const badgeClass = b.category === "male" ? "male" : "female";
 
-      const phoneCell = b.phone
-        ? `<a href="tel:${escapeHtml(b.phone)}" style="color:var(--accent)">${escapeHtml(b.phone)}</a>`
-        : `<span style="color:var(--muted)">-</span>`;
-
       tr.innerHTML = `
         <td><b>${escapeHtml(b.time)}</b></td>
         <td><span class="badge ${badgeClass}">${categoryLabel(b.category)}</span></td>
         <td>${escapeHtml(b.name)}</td>
-        <td>${escapeHtml(b.service || "")}</td>
+        <td>${escapeHtml(b.service)}</td>
         <td>${escapeHtml(b.note || "")}</td>
-        <td>${phoneCell}</td>
+        <td><a href="tel:${escapeHtml(b.phone)}" style="color:var(--accent)">${escapeHtml(b.phone)}</a></td>
         <td>
           <div class="actionsBtn">
             <button class="smallBtn edit" data-id="${b.id}" type="button">แก้ไข</button>
@@ -204,8 +209,8 @@ document.addEventListener("DOMContentLoaded", () => {
           await api(`/api/bookings/${id}`, { method: "DELETE" });
           if (editId === id) exitEditMode();
           setMsg("ลบคิวแล้ว ✅", "ok");
-          await refreshDay();
-          await refreshMonth();
+          await refresh();
+          await renderCalendar(calYear, calMonth);
         } catch (e) {
           if (e.message === "unauthorized") await ensureAuth();
           setMsg(e.message, "err");
@@ -214,187 +219,254 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  async function refreshDay() {
-    const date = dateEl.value;
+  async function refresh() {
+    const date = dateEl ? dateEl.value : todayLocalYYYYMMDD();
     const sum = await api(`/api/summary?date=${encodeURIComponent(date)}`);
 
-    countMale.textContent = sum.counts.male ?? 0;
-    countFemale.textContent = sum.counts.female ?? 0;
-    countTotal.textContent = sum.counts.total ?? 0;
+    if (countMale) countMale.textContent = sum.counts.male ?? 0;
+    if (countFemale) countFemale.textContent = sum.counts.female ?? 0;
+    if (countTotal) countTotal.textContent = sum.counts.total ?? 0;
 
-    const d = new Date(date + "T00:00:00");
-    summaryHint.textContent = d.toLocaleDateString("th-TH", {
-      weekday: "long", year: "numeric", month: "long", day: "numeric"
-    });
+    if (summaryHint) {
+      const d = new Date(date + "T00:00:00");
+      summaryHint.textContent = d.toLocaleDateString("th-TH", {
+        weekday: "long", year: "numeric", month: "long", day: "numeric"
+      });
+    }
 
     renderList(sum.detail || []);
   }
 
-  function renderMonthTable(list) {
-    monthListEl.innerHTML = "";
+  // ---------------- calendar month view ----------------
+  function monthTitleTH(year, month1to12) {
+    const d = new Date(year, month1to12 - 1, 1);
+    return d.toLocaleDateString("th-TH", { month: "long", year: "numeric" });
+  }
 
-    if (!list.length) {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `<td colspan="4" style="color:var(--muted)">เดือนนี้ยังไม่มีคิว</td>`;
-      monthListEl.appendChild(tr);
-      return;
+  function daysInMonth(year, month1to12) {
+    return new Date(year, month1to12, 0).getDate();
+  }
+
+  function firstDow(year, month1to12) {
+    return new Date(year, month1to12 - 1, 1).getDay(); // 0=Sun
+  }
+
+  async function loadMonthSummary(year, month) {
+    return await api(`/api/month?year=${year}&month=${month}`);
+  }
+
+  async function renderCalendar(year, month) {
+    // ถ้า index.html ยังไม่ใส่ปฏิทิน ก็ไม่ต้องทำอะไร (กันพัง)
+    if (!calGrid || !calTitle || !calPrev || !calNext) return;
+
+    calTitle.textContent = monthTitleTH(year, month);
+    calGrid.innerHTML = "";
+
+    const sum = await loadMonthSummary(year, month);
+    const counts = sum.counts || {};
+
+    const start = firstDow(year, month);
+    const total = daysInMonth(year, month);
+
+    // เติมช่องว่างก่อนวันแรก
+    for (let i = 0; i < start; i++) {
+      const cell = document.createElement("div");
+      cell.className = "calDay muted";
+      calGrid.appendChild(cell);
     }
 
-    for (const row of list) {
-      const tr = document.createElement("tr");
-      tr.className = "clickRow";
-      tr.innerHTML = `
-        <td><b>${escapeHtml(row.date)}</b></td>
-        <td>${row.counts.male ?? 0}</td>
-        <td>${row.counts.female ?? 0}</td>
-        <td><b>${row.counts.total ?? 0}</b></td>
-      `;
-      tr.addEventListener("click", async () => {
-        dateEl.value = row.date;
+    // วาดวันในเดือน
+    for (let day = 1; day <= total; day++) {
+      const cell = document.createElement("div");
+      const has = (counts[day] || 0) > 0;
+
+      cell.className = "calDay" + (has ? " hasBooking" : "");
+      cell.textContent = String(day);
+
+      if (has) {
+        const dot = document.createElement("div");
+        dot.className = "dot";
+        cell.appendChild(dot);
+      }
+
+      cell.addEventListener("click", async () => {
+        const mm = String(month).padStart(2, "0");
+        const dd = String(day).padStart(2, "0");
+        if (dateEl) dateEl.value = `${year}-${mm}-${dd}`;
         setMsg("");
+
         try {
-          await refreshDay();
-          window.scrollTo({ top: 0, behavior: "smooth" });
+          await refresh();
         } catch (e) {
           if (e.message === "unauthorized") await ensureAuth();
           setMsg(e.message, "err");
         }
+
+        window.scrollTo({ top: 0, behavior: "smooth" });
       });
-      monthListEl.appendChild(tr);
+
+      calGrid.appendChild(cell);
     }
   }
 
-  async function refreshMonth() {
-    const ym = monthPick.value;
-    const [y, m] = ym.split("-").map(Number);
-    const data = await api(`/api/month?year=${y}&month=${m}`);
-    renderMonthTable(data.list || []);
-  }
-
-  // ===== events =====
+  // ---------------- events ----------------
   document.querySelectorAll(".tab").forEach(btn => {
     btn.addEventListener("click", () => setActiveTab(btn.dataset.tab));
   });
 
-  loginBtn.addEventListener("click", async () => {
-    setLoginMsg("");
-    try {
-      await api("/api/login", { method: "POST", body: JSON.stringify({ pin: pinEl.value }) });
-      pinEl.value = "";
-      setLoginMsg("เข้าสู่ระบบสำเร็จ ✅", "ok");
-      loginOverlay.classList.add("hidden");
+  if (loginBtn) {
+    loginBtn.addEventListener("click", async () => {
+      setLoginMsg("");
+      try {
+        await api("/api/login", { method: "POST", body: JSON.stringify({ pin: pinEl?.value || "" }) });
+        if (pinEl) pinEl.value = "";
+        setLoginMsg("เข้าสู่ระบบสำเร็จ ✅", "ok");
+        if (loginOverlay) loginOverlay.classList.add("hidden");
 
-      await refreshDay();
-      await refreshMonth();
-    } catch (e) {
-      setLoginMsg(e.message, "err");
-    }
-  });
-
-  pinEl.addEventListener("keydown", (ev) => {
-    if (ev.key === "Enter") loginBtn.click();
-  });
-
-  logoutBtn.addEventListener("click", async () => {
-    try { await api("/api/logout", { method: "POST" }); }
-    finally { loginOverlay.classList.remove("hidden"); }
-  });
-
-  refreshBtn.addEventListener("click", async () => {
-    setMsg("");
-    try { await refreshDay(); setMsg("อัปเดตแล้ว ✅", "ok"); }
-    catch (e) { if (e.message === "unauthorized") await ensureAuth(); setMsg(e.message, "err"); }
-  });
-
-  monthRefreshBtn.addEventListener("click", async () => {
-    setMsg("");
-    try { await refreshMonth(); setMsg("อัปเดตตารางรายเดือนแล้ว ✅", "ok"); }
-    catch (e) { if (e.message === "unauthorized") await ensureAuth(); setMsg(e.message, "err"); }
-  });
-
-  monthPick.addEventListener("change", async () => {
-    setMsg("");
-    try { await refreshMonth(); }
-    catch (e) { if (e.message === "unauthorized") await ensureAuth(); setMsg(e.message, "err"); }
-  });
-
-  dateEl.addEventListener("change", async () => {
-    setMsg("");
-    try { await refreshDay(); }
-    catch (e) { if (e.message === "unauthorized") await ensureAuth(); setMsg(e.message, "err"); }
-  });
-
-  cancelEditBtn.addEventListener("click", () => exitEditMode());
-
-  formEl.addEventListener("submit", async (ev) => {
-    ev.preventDefault();
-    setMsg("");
-
-    const payload = {
-      date: dateEl.value,
-      category: currentCategory,
-      time: timeEl.value,
-      name: nameEl.value.trim(),
-      phone: phoneEl.value.trim(),      // ✅ optional
-      service: serviceEl.value.trim(),  // ✅ optional
-      note: noteEl.value.trim()
-    };
-
-    try {
-      if (editId) {
-        await api(`/api/bookings/${editId}`, { method: "PUT", body: JSON.stringify(payload) });
-        setMsg("แก้ไขคิวสำเร็จ ✅", "ok");
-        exitEditMode();
-      } else {
-        const r = await api("/api/bookings", { method: "POST", body: JSON.stringify(payload) });
-        setMsg("บันทึกการจองสำเร็จ ✅", "ok");
-
-        // ✅ เด้งถามเพิ่มลง iPhone/iPad Calendar ไหม (ไม่ว่ากดอะไร “คิวถูกบันทึกแล้ว”)
-        const add = confirm("บันทึกคิวแล้ว ✅\nต้องการเพิ่มลงปฏิทิน (Calendar) ไหม?");
-        if (add && r?.booking?.id) {
-          // เปิดไฟล์ .ics (iOS จะเด้งหน้า Add to Calendar)
-          window.location.href = `/api/calendar/${r.booking.id}`;
-        }
-
-        formEl.reset();
-        renderTimeOptions();
-        setActiveTab(currentCategory);
+        await refresh();
+        await renderCalendar(calYear, calMonth);
+      } catch (e) {
+        setLoginMsg(e.message, "err");
       }
+    });
+  }
 
-      await refreshDay();
-      await refreshMonth();
-    } catch (e) {
-      if (e.message === "unauthorized") await ensureAuth();
+  if (pinEl) {
+    pinEl.addEventListener("keydown", (ev) => {
+      if (ev.key === "Enter") loginBtn?.click();
+    });
+  }
 
-      if (e.message === "time already booked for this category") {
-        setMsg("เวลานี้ถูกจองแล้ว (ในประเภทเดียวกัน) ❌", "err");
-      } else if (e.message === "missing fields") {
-        setMsg("กรอกข้อมูลให้ครบก่อนนะ (อย่างน้อย: ชื่อ + วัน + เวลา) ❌", "err");
-      } else if (e.message === "invalid time") {
-        setMsg("เวลาไม่ถูกต้อง ❌", "err");
-      } else {
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", async () => {
+      try { await api("/api/logout", { method: "POST" }); }
+      finally { if (loginOverlay) loginOverlay.classList.remove("hidden"); }
+    });
+  }
+
+  if (refreshBtn) {
+    refreshBtn.addEventListener("click", async () => {
+      setMsg("");
+      try {
+        await refresh();
+        setMsg("อัปเดตแล้ว ✅", "ok");
+        await renderCalendar(calYear, calMonth);
+      } catch (e) {
+        if (e.message === "unauthorized") await ensureAuth();
         setMsg(e.message, "err");
       }
-    }
-  });
+    });
+  }
 
-  // ===== init =====
+  if (dateEl) {
+    dateEl.addEventListener("change", async () => {
+      setMsg("");
+      try { await refresh(); }
+      catch (e) {
+        if (e.message === "unauthorized") await ensureAuth();
+        setMsg(e.message, "err");
+      }
+    });
+  }
+
+  if (cancelEditBtn) {
+    cancelEditBtn.addEventListener("click", () => exitEditMode());
+  }
+
+  if (formEl) {
+    formEl.addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      setMsg("");
+
+      const payload = {
+        date: dateEl?.value || todayLocalYYYYMMDD(),
+        category: currentCategory,
+        time: timeEl?.value || "",
+        name: nameEl?.value?.trim() || "",
+        phone: phoneEl?.value?.trim() || "",
+        service: serviceEl?.value?.trim() || "",
+        note: noteEl?.value?.trim() || ""
+      };
+
+      try {
+        if (editId) {
+          await api(`/api/bookings/${editId}`, { method: "PUT", body: JSON.stringify(payload) });
+          setMsg("แก้ไขคิวสำเร็จ ✅", "ok");
+          exitEditMode();
+        } else {
+          await api("/api/bookings", { method: "POST", body: JSON.stringify(payload) });
+          setMsg("บันทึกการจองสำเร็จ ✅", "ok");
+          formEl.reset();
+          renderTimeOptions();
+          setActiveTab(currentCategory);
+        }
+
+        await refresh();
+        await renderCalendar(calYear, calMonth);
+      } catch (e) {
+        if (e.message === "unauthorized") await ensureAuth();
+
+        if (e.message === "time already booked for this category") {
+          setMsg("เวลานี้ถูกจองแล้ว (ในประเภทเดียวกัน) ❌", "err");
+        } else if (e.message === "missing fields") {
+          setMsg("กรอกข้อมูลให้ครบก่อนนะ ❌", "err");
+        } else if (e.message === "invalid time") {
+          setMsg("เวลาไม่ถูกต้อง ❌", "err");
+        } else {
+          setMsg(e.message, "err");
+        }
+      }
+    });
+  }
+
+  // calendar month navigation buttons
+  if (calPrev) {
+    calPrev.addEventListener("click", async () => {
+      calMonth -= 1;
+      if (calMonth < 1) { calMonth = 12; calYear -= 1; }
+      try { await renderCalendar(calYear, calMonth); } catch {}
+    });
+  }
+
+  if (calNext) {
+    calNext.addEventListener("click", async () => {
+      calMonth += 1;
+      if (calMonth > 12) { calMonth = 1; calYear += 1; }
+      try { await renderCalendar(calYear, calMonth); } catch {}
+    });
+  }
+
+  // ---------------- init ----------------
   (async function init() {
-    dateEl.value = todayLocalYYYYMMDD();
-    monthPick.value = yyyymmOfNow();
+    // set default date & tab
+    if (dateEl) dateEl.value = todayLocalYYYYMMDD();
     setActiveTab("male");
 
+    // init month
+    const now = new Date();
+    calYear = now.getFullYear();
+    calMonth = now.getMonth() + 1;
+
+    // load time options (so dropdown never empty)
     try {
       await loadMetaAlways();
     } catch (e) {
-      timeEl.innerHTML = `<option value="">โหลดเวลาไม่สำเร็จ</option>`;
+      if (timeEl) timeEl.innerHTML = `<option value="">โหลดเวลาไม่สำเร็จ</option>`;
       setMsg("โหลดเวลาไม่สำเร็จ: " + e.message, "err");
     }
 
+    // require auth to see data
     const authed = await ensureAuth();
     if (authed) {
-      await refreshDay();
-      await refreshMonth();
+      try {
+        await refresh();
+        await renderCalendar(calYear, calMonth);
+      } catch (e) {
+        setMsg(e.message, "err");
+      }
+    } else {
+      // still show calendar shell (optional) but won't load counts (API guarded)
+      // we do nothing here; after login, renderCalendar will load.
     }
   })();
 });
