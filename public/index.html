@@ -1,35 +1,129 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8" />
-  <title>Adore Hair Queue</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Adore hair — Queue</title>
+  <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
 
-<div id="loginOverlay">
-  <div class="loginBox">
-    <h2>เข้าสู่ระบบ</h2>
-    <input id="pin" placeholder="PIN" />
-    <button id="loginBtn">เข้าสู่ระบบ</button>
-    <div id="loginMsg"></div>
-  </div>
-</div>
+  <!-- LOGIN SCREEN (must login first) -->
+  <section id="loginScreen" class="screen">
+    <div class="card">
+      <h1>Adore hair</h1>
+      <p class="muted">กรอก PIN เพื่อเข้าสู่ระบบ</p>
 
-<h1>Adore Hair</h1>
+      <div class="row">
+        <input id="pin" type="password" inputmode="numeric" placeholder="PIN" />
+        <button id="loginBtn" class="primary">เข้าสู่ระบบ</button>
+      </div>
 
-<form id="bookingForm">
-  <select id="time"></select>
-  <input id="name" placeholder="ชื่อ" required />
-  <input id="phone" placeholder="เบอร์โทร" required />
-  <input id="service" placeholder="ทำอะไร" required />
-  <button id="submitBtn">บันทึกการจอง</button>
-</form>
+      <div id="loginMsg" class="msg"></div>
+      <p class="hint muted">* ตั้งค่า PIN ได้ที่ Render Environment: <b>ADORE_PIN</b></p>
+    </div>
+  </section>
 
-<table>
-  <tbody id="list"></tbody>
-</table>
+  <!-- APP SCREEN -->
+  <section id="appScreen" class="screen hidden">
+    <header class="topbar">
+      <div class="brand">
+        <div class="avatar">A</div>
+        <div>
+          <div class="title">Adore hair</div>
+          <div class="subtitle muted">Owner Queue • 13:00–22:00 • แยกชาย/หญิง</div>
+        </div>
+      </div>
 
-<script src="app.js"></script>
+      <div class="actions">
+        <label class="muted">เลือกวัน</label>
+        <input id="date" type="date" />
+        <button id="logoutBtn" class="ghost">Logout</button>
+      </div>
+    </header>
+
+    <main class="wrap">
+      <div class="tabs">
+        <button class="tab active" data-tab="male">ตัดผมผู้ชาย</button>
+        <button class="tab" data-tab="female">ทำผมผู้หญิง</button>
+      </div>
+
+      <form id="bookingForm" class="panel">
+        <div class="grid">
+          <div>
+            <label>ชื่อลูกค้า</label>
+            <input id="name" type="text" placeholder="เช่น คุณบีม" required />
+          </div>
+          <div>
+            <label>เบอร์โทร</label>
+            <input id="phone" type="tel" placeholder="เช่น 09xxxxxxxx" required />
+          </div>
+
+          <div>
+            <label>เวลา</label>
+            <select id="time" required></select>
+          </div>
+          <div>
+            <label>ทำอะไร</label>
+            <input id="service" type="text" placeholder="เช่น ตัดผม / รองทรง / สระ+ตัด" required />
+          </div>
+
+          <div class="full">
+            <label>หมายเหตุ (ถ้ามี)</label>
+            <input id="note" type="text" placeholder="เช่น ไม่เอาสั้นมาก / ทำสีโทนน้ำตาล" />
+          </div>
+        </div>
+
+        <div class="row between">
+          <div class="row">
+            <button id="submitBtn" type="submit" class="primary">บันทึกการจอง</button>
+            <button id="cancelEditBtn" type="button" class="ghost hidden">ยกเลิกแก้ไข</button>
+            <button id="refreshBtn" type="button" class="ghost">รีเฟรช</button>
+          </div>
+          <div id="msg" class="msg"></div>
+        </div>
+      </form>
+
+      <section class="panel">
+        <div class="summary">
+          <div class="box">
+            <div class="muted">ผู้ชาย</div>
+            <div id="countMale" class="big">0</div>
+          </div>
+          <div class="box">
+            <div class="muted">ผู้หญิง</div>
+            <div id="countFemale" class="big">0</div>
+          </div>
+          <div class="box">
+            <div class="muted">รวม</div>
+            <div id="countTotal" class="big">0</div>
+          </div>
+          <div class="box grow">
+            <div class="muted">สรุปของวัน</div>
+            <div id="summaryHint" class="big small">-</div>
+          </div>
+        </div>
+
+        <div class="tableWrap">
+          <table>
+            <thead>
+              <tr>
+                <th>เวลา</th>
+                <th>ประเภท</th>
+                <th>ชื่อ</th>
+                <th>ทำอะไร</th>
+                <th>หมายเหตุ</th>
+                <th>โทร</th>
+                <th>จัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="list"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </section>
+
+  <script src="./app.js"></script>
 </body>
 </html>
