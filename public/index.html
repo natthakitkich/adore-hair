@@ -29,6 +29,7 @@
     </div>
   </div>
 
+  <!-- TOP BAR -->
   <header class="topbar">
     <div class="brand">
       <div class="avatar">A</div>
@@ -48,24 +49,46 @@
   </header>
 
   <main class="wrap">
+
+    <!-- Tabs -->
     <div class="tabs">
-      <section class="calBox">
-  <div class="calHeader">
-    <button id="calPrev" type="button">‹</button>
-    <div id="calTitle" class="calTitle">-</div>
-    <button id="calNext" type="button">›</button>
-  </div>
-
-  <div class="calGridHead">
-    <div>อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div>ส</div>
-  </div>
-
-  <div id="calGrid" class="calGrid"></div>
-</section>
       <button class="tab active" data-tab="male" type="button">ตัดผมผู้ชาย</button>
       <button class="tab" data-tab="female" type="button">ทำผมผู้หญิง</button>
     </div>
 
+    <!-- ✅ Monthly Summary Table -->
+    <section class="panel">
+      <div class="row between">
+        <div>
+          <div class="title2">ตารางรวมรายเดือน</div>
+          <div class="subtitle2">กดที่แถววัน เพื่อไปดูรายละเอียดของวันนั้น</div>
+        </div>
+
+        <div class="row">
+          <div class="monthWrap">
+            <div class="label">เดือน</div>
+            <input id="monthPick" type="month" />
+          </div>
+          <button id="monthRefreshBtn" type="button" class="ghost">รีเฟรชเดือน</button>
+        </div>
+      </div>
+
+      <div class="tableWrap">
+        <table>
+          <thead>
+            <tr>
+              <th>วันที่</th>
+              <th>ผู้ชาย</th>
+              <th>ผู้หญิง</th>
+              <th>รวม</th>
+            </tr>
+          </thead>
+          <tbody id="monthList"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Booking Form -->
     <section class="panel">
       <form id="bookingForm">
         <div class="grid">
@@ -106,6 +129,7 @@
       </form>
     </section>
 
+    <!-- Summary + Daily List -->
     <section class="panel">
       <div class="summary">
         <div class="box">
@@ -143,6 +167,7 @@
         </table>
       </div>
     </section>
+
   </main>
 
   <script src="./app.js"></script>
