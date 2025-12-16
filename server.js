@@ -101,7 +101,29 @@ app.get("/api/summary", guard, (req, res) => {
     detail: list
   });
 });
+app.get("/api/month", guard, (req, res) => {
+  const year = Number(req.query.year);
+  const month = Number(req.query.month); // 1-12
 
+  if (!year || !month || month < 1 || month > 12) {
+    return res.status(400).json({ error: "bad year/month" });
+  }
+
+  const mm = String(month).padStart(2, "0");
+  const prefix = `${year}-${mm}-`; // YYYY-MM-
+
+  const counts = {}; // counts[day] = จำนวนคิวของวันนั้น
+
+  for (const b of bookings) {
+    if (typeof b.date !== "string") continue;
+    if (!b.date.startsWith(prefix)) continue;
+
+    const day = Number(b.date.slice(8, 10));
+    counts[day] = (counts[day] || 0) + 1;
+  }
+
+  res.json({ year, month, counts });
+});
 // ====== MONTH SUMMARY (for monthly table) ======
 app.get("/api/month", guard, (req, res) => {
   const year = Number(req.query.year);
