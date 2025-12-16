@@ -8,6 +8,9 @@
   --ok:#2cff9c;
   --stroke:rgba(255,255,255,.08);
   --shadow:0 10px 30px rgba(0,0,0,.35);
+
+  --green:#2cff9c;
+  --greenBg: rgba(44,255,156,.18);
 }
 
 *{box-sizing:border-box}
@@ -155,93 +158,85 @@ th{color:var(--muted); text-align:left; font-weight:900}
 .smallBtn.danger{border-color:rgba(255,92,122,.4); color:var(--danger)}
 .smallBtn.edit{border-color:rgba(110,231,255,.35)}
 
+/* ===== Login overlay (ทึบขึ้น ~50%) ===== */
 .overlay{
   position:fixed; inset:0;
-  background:rgba(0,0,0,.55);
+  background:rgba(0,0,0,.80); /* เดิม .55 -> ทึบขึ้น */
   display:grid; place-items:center;
   z-index:999;
   padding:20px;
 }
 .modal{
-  width:min(560px, 95vw);
-  background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
-  border:1px solid var(--stroke);
+  width:min(520px, 95vw);
+  background:linear-gradient(180deg, rgba(15,18,30,.92), rgba(10,12,22,.88));
+  border:1px solid rgba(255,255,255,.12);
   border-radius:16px;
-  box-shadow:var(--shadow);
+  box-shadow:0 18px 60px rgba(0,0,0,.55);
   overflow:hidden;
 }
 .modalHead{
   display:flex; gap:12px; align-items:center;
   padding:16px;
-  border-bottom:1px solid var(--stroke);
+  border-bottom:1px solid rgba(255,255,255,.10);
 }
 .modalBody{padding:16px}
 
-/* ===== Monthly summary header ===== */
 .title2{font-weight:900; font-size:16px}
 .subtitle2{color:var(--muted); font-size:12px; margin-top:4px}
 
-.monthWrap .label{font-size:12px; color:var(--muted); margin:0 0 6px 2px}
-
-/* clickable month rows */
-tr.clickRow{cursor:pointer}
-tr.clickRow:hover{background:rgba(110,231,255,.08)}
-/* ================================
-   LOGIN UI OVERRIDE (Mobile Friendly)
-   ================================ */
-
-.modal {
-  max-width: 420px;
-  width: 100%;
+/* ===== Calendar month ===== */
+.calWeekHead{
+  margin-top:12px;
+  display:grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap:8px;
+  color:var(--muted);
+  font-size:12px;
+  text-align:center;
+}
+.calGrid{
+  margin-top:8px;
+  display:grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap:8px;
+}
+.calCell{
+  position:relative;
+  aspect-ratio: 1 / 1;
+  border-radius:14px;
+  border:1px solid var(--stroke);
+  background:rgba(0,0,0,.14);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  user-select:none;
+}
+.calCell.mutedDay{
+  opacity:.35;
+  cursor:default;
+}
+.calNum{
+  font-weight:900;
+  width:38px;height:38px;
+  border-radius:999px;
+  display:flex;align-items:center;justify-content:center;
+}
+.calCell.hasBookings .calNum{
+  background: var(--greenBg);
+  border:1px solid rgba(44,255,156,.55);
+  color: var(--green);
+}
+.calCell.selected{
+  outline:2px solid rgba(110,231,255,.35);
+  background:rgba(110,231,255,.10);
 }
 
-.modalBody .row {
-  flex-direction: column;
-  align-items: stretch;
-  gap: 12px;
-}
-
-/* ช่องกรอก PIN */
-#pin {
-  width: 100%;
-  max-width: 260px;
-  margin: 0 auto;
-  text-align: center;
-  font-size: 18px;
-  letter-spacing: 2px;
-  padding: 14px;
-}
-
-/* ปุ่ม Login สีทึบ ชัด */
-#loginBtn {
-  width: 100%;
-  max-width: 260px;
-  margin: 0 auto;
-  padding: 14px;
-  font-size: 16px;
-  font-weight: 900;
-
-  background: linear-gradient(90deg, #38bdf8, #6366f1);
-  color: #020617;
-  border: none;
-  box-shadow:
-    0 6px 18px rgba(99,102,241,0.45),
-    0 0 0 1px rgba(255,255,255,0.15) inset;
-}
-
-#loginBtn:active {
-  transform: translateY(1px);
-  box-shadow: 0 3px 10px rgba(99,102,241,0.4);
-}
-
-#loginMsg {
-  text-align: center;
-  margin-top: 8px;
-}
-
-/* มือถือจอเตี้ย */
-@media (max-height: 700px) {
-  .modal {
-    margin-top: 10vh;
-  }
+/* ===== Mobile tweaks ===== */
+@media (max-width: 720px){
+  .grid{grid-template-columns: 1fr}
+  .topbar{flex-direction:column; align-items:flex-start; gap:12px}
+  .topActions{width:100%; justify-content:space-between}
+  .row{flex-wrap:wrap}
+  input, select{padding:11px}
 }
