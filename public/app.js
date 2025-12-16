@@ -49,14 +49,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const d = new Date();
     const yyyy = d.getFullYear();
     const mm = String(d.getMonth() + 1).padStart(2, "0");
-    return `${yyyy}-${mm}`; // type="month"
+    return `${yyyy}-${mm}`;
   }
 
   function setMsg(text, type = "") {
     msgEl.className = "msg " + (type || "");
     msgEl.textContent = text || "";
   }
-
   function setLoginMsg(text, type = "") {
     loginMsg.className = "msg " + (type || "");
     loginMsg.textContent = text || "";
@@ -119,8 +118,8 @@ document.addEventListener("DOMContentLoaded", () => {
       .forEach(t => t.classList.toggle("active", t.dataset.tab === cat));
 
     serviceEl.placeholder = cat === "male"
-      ? "เช่น ตัดผม / รองทรง / สระ+ตัด"
-      : "เช่น สระ+ไดร์ / ทำสี / ยืด / ดัด";
+      ? "เช่น ตัดผม / รองทรง / สระ+ตัด (ไม่กรอกก็ได้)"
+      : "เช่น สระ+ไดร์ / ทำสี / ยืด / ดัด (ไม่กรอกก็ได้)";
   }
 
   function enterEditMode(b) {
@@ -129,8 +128,8 @@ document.addEventListener("DOMContentLoaded", () => {
     setActiveTab(b.category);
     timeEl.value = b.time;
     nameEl.value = b.name;
-    phoneEl.value = b.phone;
-    serviceEl.value = b.service;
+    phoneEl.value = b.phone || "";
+    serviceEl.value = b.service || "";
     noteEl.value = b.note || "";
 
     submitBtn.textContent = "บันทึกการแก้ไข";
@@ -165,13 +164,18 @@ document.addEventListener("DOMContentLoaded", () => {
     for (const b of detail) {
       const tr = document.createElement("tr");
       const badgeClass = b.category === "male" ? "male" : "female";
+
+      const phoneCell = b.phone
+        ? `<a href="tel:${escapeHtml(b.phone)}" style="color:var(--accent)">${escapeHtml(b.phone)}</a>`
+        : `<span style="color:var(--muted)">-</span>`;
+
       tr.innerHTML = `
         <td><b>${escapeHtml(b.time)}</b></td>
         <td><span class="badge ${badgeClass}">${categoryLabel(b.category)}</span></td>
         <td>${escapeHtml(b.name)}</td>
-        <td>${escapeHtml(b.service)}</td>
+        <td>${escapeHtml(b.service || "")}</td>
         <td>${escapeHtml(b.note || "")}</td>
-        <td><a href="tel:${escapeHtml(b.phone)}" style="color:var(--accent)">${escapeHtml(b.phone)}</a></td>
+        <td>${phoneCell}</td>
         <td>
           <div class="actionsBtn">
             <button class="smallBtn edit" data-id="${b.id}" type="button">แก้ไข</button>
@@ -261,7 +265,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function refreshMonth() {
-    const ym = monthPick.value; // YYYY-MM
+    const ym = monthPick.value;
     const [y, m] = ym.split("-").map(Number);
     const data = await api(`/api/month?year=${y}&month=${m}`);
     renderMonthTable(data.list || []);
@@ -331,8 +335,8 @@ document.addEventListener("DOMContentLoaded", () => {
       category: currentCategory,
       time: timeEl.value,
       name: nameEl.value.trim(),
-      phone: phoneEl.value.trim(),
-      service: serviceEl.value.trim(),
+      phone: phoneEl.value.trim(),      // ✅ optional
+      service: serviceEl.value.trim(),  // ✅ optional
       note: noteEl.value.trim()
     };
 
@@ -342,26 +346,19 @@ document.addEventListener("DOMContentLoaded", () => {
         setMsg("แก้ไขคิวสำเร็จ ✅", "ok");
         exitEditMode();
       } else {
-        // ✅ แก้เฉพาะจุดนี้: ต้องเก็บ res เพื่อเอา booking.id ไปเรียก .ics
-        const res = await api("/api/bookings", {
-          method: "POST",
-          body: JSON.stringify(payload)
-        });
-
+        const r = await api("/api/bookings", { method: "POST", body: JSON.stringify(payload) });
         setMsg("บันทึกการจองสำเร็จ ✅", "ok");
+
+        // ✅ เด้งถามเพิ่มลง iPhone/iPad Calendar ไหม (ไม่ว่ากดอะไร “คิวถูกบันทึกแล้ว”)
+        const add = confirm("บันทึกคิวแล้ว ✅\nต้องการเพิ่มลงปฏิทิน (Calendar) ไหม?");
+        if (add && r?.booking?.id) {
+          // เปิดไฟล์ .ics (iOS จะเด้งหน้า Add to Calendar)
+          window.location.href = `/api/calendar/${r.booking.id}`;
+        }
+
         formEl.reset();
         renderTimeOptions();
         setActiveTab(currentCategory);
-
-        // ===== 🔔 ถามเพิ่มปฏิทินทันที =====
-        const wantCalendar = confirm(
-          "บันทึกคิวเรียบร้อยแล้ว\n\nต้องการเพิ่มนัดหมายนี้ลงในปฏิทินของ iPhone ไหม?"
-        );
-
-        if (wantCalendar && res?.booking?.id) {
-          // เปิดไฟล์ .ics → iPhone จะเด้งหน้า Calendar ให้ทันที
-          window.location.href = `/api/calendar/${res.booking.id}`;
-        }
       }
 
       await refreshDay();
@@ -372,7 +369,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (e.message === "time already booked for this category") {
         setMsg("เวลานี้ถูกจองแล้ว (ในประเภทเดียวกัน) ❌", "err");
       } else if (e.message === "missing fields") {
-        setMsg("กรอกข้อมูลให้ครบก่อนนะ ❌", "err");
+        setMsg("กรอกข้อมูลให้ครบก่อนนะ (อย่างน้อย: ชื่อ + วัน + เวลา) ❌", "err");
       } else if (e.message === "invalid time") {
         setMsg("เวลาไม่ถูกต้อง ❌", "err");
       } else {
@@ -387,7 +384,6 @@ document.addEventListener("DOMContentLoaded", () => {
     monthPick.value = yyyymmOfNow();
     setActiveTab("male");
 
-    // load time options always (fix empty dropdown)
     try {
       await loadMetaAlways();
     } catch (e) {
