@@ -115,9 +115,7 @@ app.get("/api/month", guard, (req, res) => {
 
   const db = readDB();
 
-  // per day summary: { [YYYY-MM-DD]: { male, female, total } }
   const byDate = {};
-
   for (const b of db.bookings) {
     if (typeof b.date !== "string") continue;
     if (!b.date.startsWith(prefix)) continue;
@@ -128,7 +126,6 @@ app.get("/api/month", guard, (req, res) => {
     byDate[b.date].total += 1;
   }
 
-  // return sorted list
   const list = Object.entries(byDate)
     .map(([date, counts]) => ({ date, counts }))
     .sort((a, b) => a.date.localeCompare(b.date));
@@ -143,11 +140,17 @@ app.post("/api/bookings", guard, (req, res) => {
   const category = payload.category === "female" ? "female" : "male";
   const time = String(payload.time || "");
   const name = String(payload.name || "").trim();
+
+  // ✅ phone optional
   const phone = String(payload.phone || "").trim();
+
+  // ✅ service optional (ตามที่คุณต้องการ)
   const service = String(payload.service || "").trim();
+
   const note = String(payload.note || "").trim();
 
-  if (!date || !time || !name || !phone || !service) {
+  // ✅ บังคับแค่ date/time/name (service+phone ไม่บังคับแล้ว)
+  if (!date || !time || !name) {
     return res.status(400).json({ error: "missing fields" });
   }
   if (!TIMES.includes(time)) {
@@ -174,12 +177,19 @@ app.put("/api/bookings/:id", guard, (req, res) => {
   const category = payload.category === "female" ? "female" : "male";
   const time = String(payload.time || "");
   const name = String(payload.name || "").trim();
+
+  // ✅ phone optional
   const phone = String(payload.phone || "").trim();
+
+  // ✅ service optional
   const service = String(payload.service || "").trim();
+
   const note = String(payload.note || "").trim();
 
   if (!bookingId) return res.status(400).json({ error: "bad id" });
-  if (!date || !time || !name || !phone || !service) return res.status(400).json({ error: "missing fields" });
+
+  // ✅ บังคับแค่ date/time/name
+  if (!date || !time || !name) return res.status(400).json({ error: "missing fields" });
   if (!TIMES.includes(time)) return res.status(400).json({ error: "invalid time" });
 
   const db = readDB();
@@ -211,6 +221,72 @@ app.delete("/api/bookings/:id", guard, (req, res) => {
 
   writeDB(db);
   res.json({ ok: true });
+});
+
+// ====== CALENDAR (.ics) ======
+function icsEscape(s) {
+  return String(s ?? "")
+    .replaceAll("\\", "\\\\")
+    .replaceAll(";", "\\;")
+    .replaceAll(",", "\\,")
+    .replaceAll("\r\n", "\\n")
+    .replaceAll("\n", "\\n");
+}
+function toICSLocalDT(dateYYYYMMDD, timeHHMM) {
+  // YYYY-MM-DD + HH:MM  -> YYYYMMDDTHHMM00
+  const ymd = dateYYYYMMDD.replaceAll("-", "");
+  const hm = timeHHMM.replaceAll(":", "");
+  return `${ymd}T${hm}00`;
+}
+function addHoursHHMM(timeHHMM, hoursToAdd = 1) {
+  const [h, m] = timeHHMM.split(":").map(Number);
+  const total = h * 60 + m + hoursToAdd * 60;
+  const nh = Math.floor(total / 60) % 24;
+  const nm = total % 60;
+  return `${String(nh).padStart(2, "0")}:${String(nm).padStart(2, "0")}`;
+}
+
+app.get("/api/calendar/:id", guard, (req, res) => {
+  const id = Number(req.params.id);
+  const db = readDB();
+  const b = db.bookings.find(x => x.id === id);
+  if (!b) return res.status(404).send("not found");
+
+  // ตั้งเป็นเวลาประเทศไทยแบบชัวร์ ๆ (ไม่โดน UTC shift)
+  const tz = "Asia/Bangkok";
+  const dtStart = toICSLocalDT(b.date, b.time);
+  const dtEnd = toICSLocalDT(b.date, addHoursHHMM(b.time, 1));
+
+  const title =
+    (b.category === "female" ? "ทำผมผู้หญิง" : "ตัดผมผู้ชาย") + " — Adore hair";
+
+  const descLines = [
+    `ลูกค้า: ${b.name || "-"}`,
+    `บริการ: ${b.service || "-"}`,
+    `โทร: ${b.phone || "-"}`,
+    `หมายเหตุ: ${b.note || "-"}`
+  ].join("\n");
+
+  const ics = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Adore Hair//Queue//TH",
+    "CALSCALE:GREGORIAN",
+    "METHOD:PUBLISH",
+    "BEGIN:VEVENT",
+    `UID:adore-${b.id}@queue`,
+    `DTSTAMP:${toICSLocalDT(b.date, "00:00")}Z`,
+    `SUMMARY:${icsEscape(title)}`,
+    `DESCRIPTION:${icsEscape(descLines)}`,
+    `DTSTART;TZID=${tz}:${dtStart}`,
+    `DTEND;TZID=${tz}:${dtEnd}`,
+    "END:VEVENT",
+    "END:VCALENDAR"
+  ].join("\r\n");
+
+  res.setHeader("Content-Type", "text/calendar; charset=utf-8");
+  res.setHeader("Content-Disposition", `attachment; filename="adore-booking-${b.id}.ics"`);
+  res.send(ics);
 });
 
 // ====== STATIC ======
