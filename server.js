@@ -2,15 +2,28 @@ import express from "express";
 import session from "express-session";
 import path from "path";
 import { fileURLToPath } from "url";
+import { createClient } from "@supabase/supabase-js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 10000;
-const PIN = process.env.ADORE_PIN || "1234";
 
-// ไทย = UTC+7 (ใช้แก้เวลาเพี้ยนใน iPhone Calendar)
+// ===== CONFIG =====
+const PIN = process.env.ADORE_PIN || "1234";
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+  console.error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in environment variables");
+}
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+  auth: { persistSession: false }
+});
+
+// ไทย = UTC+7 (แก้เวลา iPhone calendar เพี้ยน)
 const TZ_OFFSET_HOURS = 7;
 
 app.use(express.json());
@@ -52,11 +65,6 @@ function guard(req, res, next) {
   next();
 }
 
-// ===== DATA (in-memory) =====
-// หมายเหตุ: ถ้ารีสตาร์ทเซิร์ฟเวอร์ข้อมูลจะหาย (ถ้าจะให้ถาวรต้องต่อ DB เช่น Supabase)
-let bookings = [];
-let id = 1;
-
 // ===== TIMES (every 1 hour 13:00 - 22:00) =====
 const TIMES = [];
 for (let h = 13; h <= 22; h++) TIMES.push(`${String(h).padStart(2, "0")}:00`);
@@ -74,11 +82,10 @@ function escapeICS(text = "") {
     .replaceAll(";", "\\;");
 }
 
-// แปลง "YYYY-MM-DD" + "HH:MM" (เวลาไทย) -> UTC Z สำหรับ ICS
+// dateStr YYYY-MM-DD + timeStr HH:MM (เวลาไทย) -> UTC Z สำหรับ ICS
 function toUtcZFromThai(dateStr, timeStr) {
   const [y, m, d] = dateStr.split("-").map(Number);
   const [hh, mm] = timeStr.split(":").map(Number);
-
   const utc = new Date(Date.UTC(y, m - 1, d, hh - TZ_OFFSET_HOURS, mm, 0));
   const YYYY = utc.getUTCFullYear();
   const MM = pad2(utc.getUTCMonth() + 1);
@@ -91,9 +98,7 @@ function toUtcZFromThai(dateStr, timeStr) {
 
 function addHoursToThaiTimeStr(timeStr, hoursToAdd) {
   const h = Number(timeStr.slice(0, 2));
-  const nh = h + hoursToAdd;
-  // ใช้งานจริงร้านปิด 22:00 ดังนั้นจบในวันเดียวพอ
-  return `${pad2(nh)}:00`;
+  return `${pad2(h + hoursToAdd)}:00`;
 }
 
 // ===== API =====
@@ -101,136 +106,211 @@ app.get("/api/meta", guard, (req, res) => {
   res.json({ times: TIMES });
 });
 
-app.get("/api/summary", guard, (req, res) => {
-  const date = String(req.query.date || "");
-  const list = bookings
-    .filter((b) => b.date === date)
-    .sort((a, b) => (a.time > b.time ? 1 : -1));
+app.get("/api/summary", guard, async (req, res) => {
+  try {
+    const date = String(req.query.date || "");
+    const { data, error } = await supabase
+      .from("bookings")
+      .select("*")
+      .eq("date", date)
+      .order("time", { ascending: true });
 
-  res.json({
-    counts: {
-      male: list.filter((b) => b.category === "male").length,
-      female: list.filter((b) => b.category === "female").length,
-      total: list.length
-    },
-    detail: list
-  });
-});
+    if (error) return res.status(500).json({ error: error.message });
 
-// เดือนที่มีคิว -> ส่งกลับ list ของวันที่แบบ YYYY-MM-DD
-app.get("/api/month", guard, (req, res) => {
-  const month = String(req.query.month || ""); // YYYY-MM
-  if (!/^\d{4}-\d{2}$/.test(month)) return res.status(400).json({ error: "bad month" });
-
-  const days = new Set();
-  for (const b of bookings) {
-    if (String(b.date || "").startsWith(month + "-")) days.add(b.date);
+    const list = data || [];
+    res.json({
+      counts: {
+        male: list.filter((b) => b.category === "male").length,
+        female: list.filter((b) => b.category === "female").length,
+        total: list.length
+      },
+      detail: list
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message || "server error" });
   }
-  res.json({ days: Array.from(days).sort() });
 });
 
-// Create booking
-app.post("/api/bookings", guard, (req, res) => {
-  const payload = req.body || {};
+// ส่งวันที่ในเดือนที่มีคิว: days = ["YYYY-MM-DD", ...]
+app.get("/api/month", guard, async (req, res) => {
+  try {
+    const month = String(req.query.month || ""); // YYYY-MM
+    if (!/^\d{4}-\d{2}$/.test(month)) return res.status(400).json({ error: "bad month" });
 
-  const date = String(payload.date || "");
-  const category = String(payload.category || "");
-  const time = String(payload.time || "");
-  const name = String(payload.name || "").trim();
+    const start = `${month}-01`;
+    const [y, m] = month.split("-").map(Number);
+    const endDate = new Date(y, m, 0); // last day of month
+    const end = `${month}-${pad2(endDate.getDate())}`;
 
-  const phone = String(payload.phone || "").trim();     // optional
-  const service = String(payload.service || "").trim(); // optional
-  const note = String(payload.note || "").trim();       // optional
+    const { data, error } = await supabase
+      .from("bookings")
+      .select("date")
+      .gte("date", start)
+      .lte("date", end);
 
-  if (!date || !category || !time) return res.status(400).json({ error: "missing required fields" });
-  if (!["male", "female"].includes(category)) return res.status(400).json({ error: "bad category" });
-  if (!TIMES.includes(time)) return res.status(400).json({ error: "bad time" });
-  if (!name) return res.status(400).json({ error: "กรุณากรอกชื่อลูกค้า" });
+    if (error) return res.status(500).json({ error: error.message });
 
-  const dup = bookings.find((b) => b.date === date && b.category === category && b.time === time);
-  if (dup) return res.status(409).json({ error: "เวลานี้ถูกจองแล้ว (ประเภทเดียวกัน)" });
-
-  const booking = { id: id++, date, category, time, name, phone, service, note };
-  bookings.push(booking);
-
-  res.json({ ok: true, booking });
+    const days = Array.from(new Set((data || []).map((x) => x.date)));
+    days.sort();
+    res.json({ days });
+  } catch (e) {
+    res.status(500).json({ error: e.message || "server error" });
+  }
 });
 
-// Update booking
-app.put("/api/bookings/:id", guard, (req, res) => {
-  const bid = Number(req.params.id);
-  const idx = bookings.findIndex((b) => b.id === bid);
-  if (idx < 0) return res.status(404).json({ error: "not found" });
+app.post("/api/bookings", guard, async (req, res) => {
+  try {
+    const payload = req.body || {};
+    const booking = {
+      date: String(payload.date || ""),
+      category: String(payload.category || ""),
+      time: String(payload.time || ""),
+      name: String(payload.name || "").trim(),
+      phone: String(payload.phone || "").trim(),
+      service: String(payload.service || "").trim(),
+      note: String(payload.note || "").trim()
+    };
 
-  const payload = req.body || {};
+    if (!booking.date || !booking.category || !booking.time) {
+      return res.status(400).json({ error: "missing required fields" });
+    }
+    if (!["male", "female"].includes(booking.category)) {
+      return res.status(400).json({ error: "bad category" });
+    }
+    if (!TIMES.includes(booking.time)) {
+      return res.status(400).json({ error: "bad time" });
+    }
+    if (!booking.name) {
+      return res.status(400).json({ error: "กรุณากรอกชื่อลูกค้า" });
+    }
 
-  const date = String(payload.date || "");
-  const category = String(payload.category || "");
-  const time = String(payload.time || "");
-  const name = String(payload.name || "").trim();
+    const { data, error } = await supabase
+      .from("bookings")
+      .insert(booking)
+      .select("*")
+      .single();
 
-  const phone = String(payload.phone || "").trim();
-  const service = String(payload.service || "").trim();
-  const note = String(payload.note || "").trim();
+    // ถ้าซ้ำ slot จะติด unique index
+    if (error) {
+      const msg = (error.message || "").toLowerCase();
+      if (msg.includes("duplicate") || msg.includes("unique")) {
+        return res.status(409).json({ error: "เวลานี้ถูกจองแล้ว (ประเภทเดียวกัน)" });
+      }
+      return res.status(500).json({ error: error.message });
+    }
 
-  if (!date || !category || !time) return res.status(400).json({ error: "missing required fields" });
-  if (!["male", "female"].includes(category)) return res.status(400).json({ error: "bad category" });
-  if (!TIMES.includes(time)) return res.status(400).json({ error: "bad time" });
-  if (!name) return res.status(400).json({ error: "กรุณากรอกชื่อลูกค้า" });
-
-  const dup = bookings.find((b) => b.id !== bid && b.date === date && b.category === category && b.time === time);
-  if (dup) return res.status(409).json({ error: "เวลานี้ถูกจองแล้ว (ประเภทเดียวกัน)" });
-
-  bookings[idx] = { id: bid, date, category, time, name, phone, service, note };
-  res.json({ ok: true, booking: bookings[idx] });
+    res.json({ ok: true, booking: data });
+  } catch (e) {
+    res.status(500).json({ error: e.message || "server error" });
+  }
 });
 
-// Delete booking
-app.delete("/api/bookings/:id", guard, (req, res) => {
-  const bid = Number(req.params.id);
-  bookings = bookings.filter((b) => b.id !== bid);
-  res.json({ ok: true });
+app.put("/api/bookings/:id", guard, async (req, res) => {
+  try {
+    const bid = Number(req.params.id);
+    const payload = req.body || {};
+    const booking = {
+      date: String(payload.date || ""),
+      category: String(payload.category || ""),
+      time: String(payload.time || ""),
+      name: String(payload.name || "").trim(),
+      phone: String(payload.phone || "").trim(),
+      service: String(payload.service || "").trim(),
+      note: String(payload.note || "").trim()
+    };
+
+    if (!booking.date || !booking.category || !booking.time) {
+      return res.status(400).json({ error: "missing required fields" });
+    }
+    if (!["male", "female"].includes(booking.category)) {
+      return res.status(400).json({ error: "bad category" });
+    }
+    if (!TIMES.includes(booking.time)) {
+      return res.status(400).json({ error: "bad time" });
+    }
+    if (!booking.name) {
+      return res.status(400).json({ error: "กรุณากรอกชื่อลูกค้า" });
+    }
+
+    const { data, error } = await supabase
+      .from("bookings")
+      .update(booking)
+      .eq("id", bid)
+      .select("*")
+      .single();
+
+    if (error) {
+      const msg = (error.message || "").toLowerCase();
+      if (msg.includes("duplicate") || msg.includes("unique")) {
+        return res.status(409).json({ error: "เวลานี้ถูกจองแล้ว (ประเภทเดียวกัน)" });
+      }
+      return res.status(500).json({ error: error.message });
+    }
+
+    res.json({ ok: true, booking: data });
+  } catch (e) {
+    res.status(500).json({ error: e.message || "server error" });
+  }
 });
 
-// ===== Calendar (.ics) =====
-app.get("/api/calendar/:id", guard, (req, res) => {
-  const bid = Number(req.params.id);
-  const b = bookings.find((x) => x.id === bid);
-  if (!b) return res.status(404).send("Not found");
+app.delete("/api/bookings/:id", guard, async (req, res) => {
+  try {
+    const bid = Number(req.params.id);
+    const { error } = await supabase.from("bookings").delete().eq("id", bid);
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message || "server error" });
+  }
+});
 
-  const startZ = toUtcZFromThai(b.date, b.time);
-  const endThai = addHoursToThaiTimeStr(b.time, 1); // นัด 1 ชั่วโมง
-  const endZ = toUtcZFromThai(b.date, endThai);
+app.get("/api/calendar/:id", guard, async (req, res) => {
+  try {
+    const bid = Number(req.params.id);
+    const { data: b, error } = await supabase
+      .from("bookings")
+      .select("*")
+      .eq("id", bid)
+      .single();
 
-  const title = `${b.category === "male" ? "ตัดผมผู้ชาย" : "ทำผมผู้หญิง"} – Adore hair`;
-  const descLines = [
-    `ลูกค้า: ${b.name || "-"}`,
-    `บริการ: ${b.service || "-"}`,
-    `โทร: ${b.phone || "-"}`,
-    `หมายเหตุ: ${b.note || "-"}`
-  ];
+    if (error || !b) return res.status(404).send("Not found");
 
-  const ics = [
-    "BEGIN:VCALENDAR",
-    "VERSION:2.0",
-    "PRODID:-//AdoreHair//Queue//TH",
-    "CALSCALE:GREGORIAN",
-    "METHOD:PUBLISH",
-    "BEGIN:VEVENT",
-    `UID:adore-${b.id}@adore-hair`,
-    `DTSTAMP:${toUtcZFromThai(b.date, "00:00")}`,
-    `DTSTART:${startZ}`,
-    `DTEND:${endZ}`,
-    `SUMMARY:${escapeICS(title)}`,
-    `DESCRIPTION:${escapeICS(descLines.join("\n"))}`,
-    "LOCATION:Adore hair",
-    "END:VEVENT",
-    "END:VCALENDAR"
-  ].join("\r\n");
+    const startZ = toUtcZFromThai(b.date, b.time);
+    const endThai = addHoursToThaiTimeStr(b.time, 1);
+    const endZ = toUtcZFromThai(b.date, endThai);
 
-  res.setHeader("Content-Type", "text/calendar; charset=utf-8");
-  res.setHeader("Content-Disposition", `inline; filename="adore-queue-${b.id}.ics"`);
-  res.send(ics);
+    const title = `${b.category === "male" ? "ตัดผมผู้ชาย" : "ทำผมผู้หญิง"} – Adore hair`;
+    const descLines = [
+      `ลูกค้า: ${b.name || "-"}`,
+      `บริการ: ${b.service || "-"}`,
+      `โทร: ${b.phone || "-"}`,
+      `หมายเหตุ: ${b.note || "-"}`
+    ];
+
+    const ics = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//AdoreHair//Queue//TH",
+      "CALSCALE:GREGORIAN",
+      "METHOD:PUBLISH",
+      "BEGIN:VEVENT",
+      `UID:adore-${b.id}@adore-hair`,
+      `DTSTAMP:${toUtcZFromThai(b.date, "00:00")}`,
+      `DTSTART:${startZ}`,
+      `DTEND:${endZ}`,
+      `SUMMARY:${escapeICS(title)}`,
+      `DESCRIPTION:${escapeICS(descLines.join("\n"))}`,
+      "LOCATION:Adore hair",
+      "END:VEVENT",
+      "END:VCALENDAR"
+    ].join("\r\n");
+
+    res.setHeader("Content-Type", "text/calendar; charset=utf-8");
+    res.setHeader("Content-Disposition", `inline; filename="adore-queue-${b.id}.ics"`);
+    res.send(ics);
+  } catch (e) {
+    res.status(500).json({ error: e.message || "server error" });
+  }
 });
 
 // ===== STATIC =====
