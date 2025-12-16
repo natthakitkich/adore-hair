@@ -1,8 +1,8 @@
 document.addEventListener("DOMContentLoaded", () => {
   const $ = (s) => document.querySelector(s);
 
-  // Main form
-  const dateEl = $("#date"); // hidden แต่ใช้เก็บค่า
+  // ===== Main form elements =====
+  const dateEl = $("#date");
   const nameEl = $("#name");
   const phoneEl = $("#phone");
   const timeEl = $("#time");
@@ -21,30 +21,29 @@ document.addEventListener("DOMContentLoaded", () => {
   const submitBtn = $("#submitBtn");
   const cancelEditBtn = $("#cancelEditBtn");
 
-  // Login
+  // ===== Auth UI =====
   const loginOverlay = $("#loginOverlay");
   const pinEl = $("#pin");
   const loginBtn = $("#loginBtn");
   const loginMsg = $("#loginMsg");
   const logoutBtn = $("#logoutBtn");
 
-  // Date Picker modal
-  const pickDateBtn = $("#pickDateBtn");
-  const dpOverlay = $("#datePickerOverlay");
+  // ===== Optional date picker overlay (calendar) =====
+  const datePickerOverlay = $("#datePickerOverlay"); // overlay container
   const dpTitle = $("#dpTitle");
-  const dpGrid = $("#dpGrid");
   const dpPrev = $("#dpPrev");
   const dpNext = $("#dpNext");
+  const dpGrid = $("#dpGrid");
   const dpClose = $("#dpClose");
+  const openDatePickerBtn = $("#openDatePickerBtn"); // ถ้ามีปุ่มเลือกวัน
 
   let currentCategory = "male";
   let TIMES = [];
   let editId = null;
 
-  // date picker state
+  // calendar state
   let dpYear = null;
   let dpMonth = null; // 0-11
-  let monthHasDays = new Set(); // yyyy-mm-dd
 
   function todayLocalYYYYMMDD() {
     const d = new Date();
@@ -55,10 +54,13 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function setMsg(text, type = "") {
+    if (!msgEl) return;
     msgEl.className = "msg " + (type || "");
     msgEl.textContent = text || "";
   }
+
   function setLoginMsg(text, type = "") {
+    if (!loginMsg) return;
     loginMsg.className = "msg " + (type || "");
     loginMsg.textContent = text || "";
   }
@@ -67,33 +69,58 @@ document.addEventListener("DOMContentLoaded", () => {
     return cat === "male" ? "ผู้ชาย" : "ผู้หญิง";
   }
 
+  // ---- Robust API helper (รองรับ 204 / non-json / 401) ----
   async function api(path, opts = {}) {
     const res = await fetch(path, {
       headers: { "Content-Type": "application/json" },
       ...opts
     });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+
+    const text = await res.text().catch(() => "");
+    let data = {};
+    try { data = text ? JSON.parse(text) : {}; } catch { data = {}; }
+
+    if (!res.ok) {
+      throw new Error(data?.error || `HTTP ${res.status}`);
+    }
     return data;
   }
 
+  function showLogin() {
+    if (loginOverlay) loginOverlay.style.display = "grid";
+  }
+
+  function hideLogin() {
+    if (loginOverlay) loginOverlay.style.display = "none";
+  }
+
+  // ✅ สำคัญ: อย่าให้หน้าเว็บพังตอนยังไม่ auth
   async function ensureAuth() {
     try {
       await api("/api/me");
-      loginOverlay.style.display = "none";
+      hideLogin();
       return true;
-    } catch {
-      loginOverlay.style.display = "grid";
+    } catch (e) {
+      showLogin();
       return false;
     }
   }
 
   function renderTimeOptions() {
+    if (!timeEl) return;
     timeEl.innerHTML = "";
+
     for (const t of TIMES) {
       const opt = document.createElement("option");
       opt.value = t;
       opt.textContent = t;
+      timeEl.appendChild(opt);
+    }
+
+    if (TIMES.length === 0) {
+      const opt = document.createElement("option");
+      opt.value = "";
+      opt.textContent = "— ไม่มีช่วงเวลา —";
       timeEl.appendChild(opt);
     }
   }
@@ -106,51 +133,54 @@ document.addEventListener("DOMContentLoaded", () => {
       .replaceAll('"', "&quot;")
       .replaceAll("'", "&#039;");
   }
-  function escapeAttr(s) {
-    return escapeHtml(s);
-  }
+  function escapeAttr(s) { return escapeHtml(s); }
 
   function setActiveTab(cat) {
     currentCategory = cat;
-    document
-      .querySelectorAll(".tab")
-      .forEach((t) => t.classList.toggle("active", t.dataset.tab === cat));
-
-    serviceEl.placeholder =
-      cat === "male"
+    document.querySelectorAll(".tab").forEach(t =>
+      t.classList.toggle("active", t.dataset.tab === cat)
+    );
+    if (serviceEl) {
+      serviceEl.placeholder = cat === "male"
         ? "เช่น ตัดผม / รองทรง / สระ+ตัด"
         : "เช่น สระ+ไดร์ / ทำสี / ยืด / ดัด";
+    }
   }
 
   function enterEditMode(b) {
     editId = b.id;
-    dateEl.value = b.date;
+    if (dateEl) dateEl.value = b.date;
     setActiveTab(b.category);
-    timeEl.value = b.time;
-    nameEl.value = b.name;
-    phoneEl.value = b.phone || "";
-    serviceEl.value = b.service || "";
-    noteEl.value = b.note || "";
-    submitBtn.textContent = "บันทึกการแก้ไข";
-    cancelEditBtn.classList.remove("hidden");
+    if (timeEl) timeEl.value = b.time;
+
+    if (nameEl) nameEl.value = b.name || "";
+    if (phoneEl) phoneEl.value = b.phone || "";
+    if (serviceEl) serviceEl.value = b.service || "";
+    if (noteEl) noteEl.value = b.note || "";
+
+    if (submitBtn) submitBtn.textContent = "บันทึกการแก้ไข";
+    if (cancelEditBtn) cancelEditBtn.style.display = "inline-block";
     setMsg(`กำลังแก้ไขคิว ${b.time} (${categoryLabel(b.category)})`);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   function exitEditMode() {
     editId = null;
-    submitBtn.textContent = "บันทึกการจอง";
-    cancelEditBtn.classList.add("hidden");
+    if (submitBtn) submitBtn.textContent = "บันทึกการจอง";
+    if (cancelEditBtn) cancelEditBtn.style.display = "none";
     setMsg("");
-    const keepDate = dateEl.value;
-    formEl.reset();
-    dateEl.value = keepDate;
+
+    const keepDate = dateEl?.value || todayLocalYYYYMMDD();
+    formEl?.reset?.();
+    if (dateEl) dateEl.value = keepDate;
     renderTimeOptions();
   }
 
   function renderList(detail) {
+    if (!listEl) return;
     listEl.innerHTML = "";
-    if (!detail.length) {
+
+    if (!detail?.length) {
       const tr = document.createElement("tr");
       tr.innerHTML = `<td colspan="7" style="color:var(--muted)">ยังไม่มีการจองคิว</td>`;
       listEl.appendChild(tr);
@@ -161,35 +191,29 @@ document.addEventListener("DOMContentLoaded", () => {
       const tr = document.createElement("tr");
       const badgeClass = b.category === "male" ? "male" : "female";
       tr.innerHTML = `
-        <td><b>${b.time}</b></td>
+        <td><b>${escapeHtml(b.time)}</b></td>
         <td><span class="badge ${badgeClass}">${categoryLabel(b.category)}</span></td>
-        <td>${escapeHtml(b.name)}</td>
+        <td>${escapeHtml(b.name || "")}</td>
         <td>${escapeHtml(b.service || "")}</td>
         <td>${escapeHtml(b.note || "")}</td>
-        <td>${
-          b.phone
-            ? `<a href="tel:${escapeAttr(b.phone)}" style="color:var(--accent)">${escapeHtml(b.phone)}</a>`
-            : `<span class="muted">-</span>`
-        }</td>
-        <td>
-          <div class="actionsBtn">
-            <button class="smallBtn edit" data-id="${b.id}">แก้ไข</button>
-            <button class="smallBtn danger del" data-id="${b.id}">ลบ</button>
-          </div>
+        <td>${b.phone ? `<a href="tel:${escapeAttr(b.phone)}" style="color:var(--accent)">${escapeHtml(b.phone)}</a>` : `<span class="muted">-</span>`}</td>
+        <td class="actions">
+          <button class="smallBtn edit" data-id="${b.id}">แก้ไข</button>
+          <button class="smallBtn danger del" data-id="${b.id}">ลบ</button>
         </td>
       `;
       listEl.appendChild(tr);
     }
 
-    listEl.querySelectorAll(".edit").forEach((btn) => {
+    listEl.querySelectorAll(".edit").forEach(btn => {
       btn.addEventListener("click", () => {
         const id = Number(btn.getAttribute("data-id"));
-        const found = detail.find((x) => x.id === id);
+        const found = detail.find(x => Number(x.id) === id);
         if (found) enterEditMode(found);
       });
     });
 
-    listEl.querySelectorAll(".del").forEach((btn) => {
+    listEl.querySelectorAll(".del").forEach(btn => {
       btn.addEventListener("click", async () => {
         const id = Number(btn.getAttribute("data-id"));
         if (!id) return;
@@ -198,9 +222,9 @@ document.addEventListener("DOMContentLoaded", () => {
           if (editId === id) exitEditMode();
           setMsg("ลบคิวแล้ว", "ok");
           await refresh();
-          await dpLoadMonthMarks(); // อัปเดตจุดเขียวในปฏิทิน
+          await dpRefreshMarksSafe(); // อัปเดตวงกลมเขียว (ถ้ามี)
         } catch (e) {
-          if (e.message === "unauthorized") await ensureAuth();
+          if (e.message === "unauthorized") showLogin();
           setMsg(e.message, "err");
         }
       });
@@ -208,78 +232,110 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function refresh() {
-    const date = dateEl.value;
+    const date = dateEl?.value || todayLocalYYYYMMDD();
     const sum = await api(`/api/summary?date=${encodeURIComponent(date)}`);
-    countMale.textContent = sum.counts.male ?? 0;
-    countFemale.textContent = sum.counts.female ?? 0;
-    countTotal.textContent = sum.counts.total ?? 0;
-    const d = new Date(date + "T00:00:00");
-    summaryHint.textContent = d.toLocaleDateString("th-TH", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric"
-    });
-    renderList(sum.detail);
+
+    if (countMale) countMale.textContent = sum.counts?.male ?? 0;
+    if (countFemale) countFemale.textContent = sum.counts?.female ?? 0;
+    if (countTotal) countTotal.textContent = sum.counts?.total ?? 0;
+
+    if (summaryHint) {
+      const d = new Date(date + "T00:00:00");
+      summaryHint.textContent = d.toLocaleDateString("th-TH", {
+        weekday: "long", year: "numeric", month: "long", day: "numeric"
+      });
+    }
+
+    renderList(sum.detail || []);
   }
 
-  // ===== Date Picker =====
+  // =========================
+  // Calendar overlay (month)
+  // =========================
   function dpOpen() {
-    dpOverlay.classList.remove("hidden");
+    if (!datePickerOverlay) return;
+    datePickerOverlay.style.display = "grid";
   }
   function dpCloseFn() {
-    dpOverlay.classList.add("hidden");
+    if (!datePickerOverlay) return;
+    datePickerOverlay.style.display = "none";
   }
 
-  function yyyymm(d) {
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, "0");
-    return `${yyyy}-${mm}`;
+  function ymdFromParts(y, m0, d) {
+    const mm = String(m0 + 1).padStart(2, "0");
+    const dd = String(d).padStart(2, "0");
+    return `${y}-${mm}-${dd}`;
   }
 
-  async function dpLoadMonthMarks() {
-    const monthStr = `${dpYear}-${String(dpMonth + 1).padStart(2, "0")}`;
+  function monthNameTH(y, m0) {
+    const d = new Date(y, m0, 1);
+    return d.toLocaleDateString("th-TH", { month: "long", year: "numeric" });
+  }
+
+  async function dpFetchMonthMarks(y, m0) {
+    // ต้องมี endpoint /api/month?ym=YYYY-MM ที่ฝั่ง server
+    // ถ้าไม่มี ก็จะไม่พัง แค่ไม่มีวงกลมเขียว
+    const ym = `${y}-${String(m0 + 1).padStart(2, "0")}`;
     try {
-      const r = await api(`/api/month?month=${encodeURIComponent(monthStr)}`);
-      monthHasDays = new Set(r.days || []);
+      const r = await api(`/api/month?ym=${encodeURIComponent(ym)}`);
+      return new Set(r?.days || []);
     } catch {
-      monthHasDays = new Set();
+      return new Set();
     }
   }
 
-  function dpRender() {
-    const first = new Date(dpYear, dpMonth, 1);
-    const last = new Date(dpYear, dpMonth + 1, 0);
-    const monthName = first.toLocaleDateString("th-TH", { month: "long", year: "numeric" });
-    dpTitle.textContent = monthName;
+  async function dpRender(y, m0) {
+    if (!dpGrid || !dpTitle) return;
+
+    dpYear = y;
+    dpMonth = m0;
+    dpTitle.textContent = monthNameTH(y, m0);
+
+    const first = new Date(y, m0, 1);
+    const firstDow = (first.getDay() + 6) % 7; // monday=0
+    const daysInMonth = new Date(y, m0 + 1, 0).getDate();
+
+    const marked = await dpFetchMonthMarks(y, m0);
+
+    // header weekdays
+    const weekdays = ["จ", "อ", "พ", "พฤ", "ศ", "ส", "อา"];
 
     dpGrid.innerHTML = "";
+    for (const w of weekdays) {
+      const el = document.createElement("div");
+      el.className = "dpWeek";
+      el.textContent = w;
+      dpGrid.appendChild(el);
+    }
 
-    const startDow = first.getDay(); // 0=Sun
-    const daysInMonth = last.getDate();
-
-    // padding previous month
-    for (let i = 0; i < startDow; i++) {
-      const cell = document.createElement("div");
-      cell.className = "dayCell dim";
-      dpGrid.appendChild(cell);
+    // blanks
+    for (let i = 0; i < firstDow; i++) {
+      const blank = document.createElement("div");
+      blank.className = "dpCell dpBlank";
+      dpGrid.appendChild(blank);
     }
 
     // days
-    for (let day = 1; day <= daysInMonth; day++) {
-      const dateStr =
-        `${dpYear}-${String(dpMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    const today = todayLocalYYYYMMDD();
 
-      const cell = document.createElement("div");
-      cell.className = "dayCell" + (monthHasDays.has(dateStr) ? " has" : "");
-      cell.innerHTML = `<span class="dot"></span><span class="num">${day}</span>`;
+    for (let d = 1; d <= daysInMonth; d++) {
+      const ymd = ymdFromParts(y, m0, d);
+      const cell = document.createElement("button");
+      cell.type = "button";
+      cell.className = "dpCell dpDay";
+      cell.innerHTML = `<span class="dpNum">${d}</span>`;
+
+      if (ymd === today) cell.classList.add("today");
+      if (dateEl?.value === ymd) cell.classList.add("active");
+
+      if (marked.has(ymd)) cell.classList.add("marked"); // ✅ วงกลมเขียว
 
       cell.addEventListener("click", async () => {
-        dateEl.value = dateStr;
+        if (dateEl) dateEl.value = ymd;
         dpCloseFn();
-        exitEditMode();
         setMsg("");
-        await refresh();
+        try { await refresh(); }
+        catch (e) { setMsg(e.message, "err"); }
       });
 
       dpGrid.appendChild(cell);
@@ -287,125 +343,139 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function dpInitOpenAtToday() {
-    const t = new Date();
-    dpYear = t.getFullYear();
-    dpMonth = t.getMonth();
-    await dpLoadMonthMarks();
-    dpRender();
+    const now = new Date();
+    await dpRender(now.getFullYear(), now.getMonth());
     dpOpen();
   }
 
-  // ===== init =====
-  (async function init() {
-    dateEl.value = todayLocalYYYYMMDD();
+  async function dpRefreshMarksSafe() {
+    if (dpYear == null || dpMonth == null) return;
+    await dpRender(dpYear, dpMonth);
+  }
 
-    // load time options after auth (because /api/meta is guarded)
-    const authed = await ensureAuth();
-    if (!authed) return;
+  // =========================
+  // INIT + Events
+  // =========================
+  function wireTabs() {
+    document.querySelectorAll(".tab").forEach(btn => {
+      btn.addEventListener("click", () => setActiveTab(btn.dataset.tab));
+    });
+  }
 
+  async function loadMetaAndTimes() {
     const meta = await api("/api/meta");
     TIMES = meta.times || [];
     renderTimeOptions();
+  }
 
-    document.querySelectorAll(".tab").forEach((btn) =>
-      btn.addEventListener("click", () => setActiveTab(btn.dataset.tab))
-    );
+  async function afterAuthedBoot() {
+    // โหลด meta/time + refresh list
+    await loadMetaAndTimes();
+    await refresh();
 
-    refreshBtn.addEventListener("click", async () => {
+    // ✅ ทำให้ “ปฏิทินเดือน” กลับมาเสมอ (ถ้ามี overlay ใน HTML)
+    if (datePickerOverlay && dpGrid && dpTitle) {
+      await dpInitOpenAtToday();
+    }
+  }
+
+  // ---- Login events ----
+  loginBtn?.addEventListener("click", async () => {
+    setLoginMsg("");
+    const pin = (pinEl?.value || "").trim();
+    if (!pin) return setLoginMsg("กรุณาใส่ PIN", "err");
+
+    try {
+      await api("/api/login", { method: "POST", body: JSON.stringify({ pin }) });
+      setLoginMsg("เข้าสู่ระบบสำเร็จ ✅", "ok");
+      if (pinEl) pinEl.value = "";
+      hideLogin();
+
+      // ✅ หลัง login สำเร็จ ค่อย boot ของจริง
+      await afterAuthedBoot();
+    } catch (e) {
+      setLoginMsg(e.message, "err");
+      showLogin();
+    }
+  });
+
+  pinEl?.addEventListener("keydown", (ev) => {
+    if (ev.key === "Enter") loginBtn?.click();
+  });
+
+  logoutBtn?.addEventListener("click", async () => {
+    try { await api("/api/logout", { method: "POST" }); }
+    finally {
+      showLogin();
       setMsg("");
-      try {
-        await refresh();
-        setMsg("อัปเดตแล้ว", "ok");
-      } catch (e) {
-        if (e.message === "unauthorized") await ensureAuth();
-        setMsg(e.message, "err");
-      }
-    });
+    }
+  });
 
-    cancelEditBtn.addEventListener("click", () => exitEditMode());
+  // ---- Other UI events ----
+  refreshBtn?.addEventListener("click", async () => {
+    setMsg("");
+    try {
+      await refresh();
+      setMsg("อัปเดตแล้ว", "ok");
+    } catch (e) {
+      if (e.message === "unauthorized") showLogin();
+      setMsg(e.message, "err");
+    }
+  });
 
-    // login
-    loginBtn.addEventListener("click", async () => {
-      setLoginMsg("");
-      try {
-        await api("/api/login", {
-          method: "POST",
-          body: JSON.stringify({ pin: pinEl.value })
-        });
-        setLoginMsg("เข้าสู่ระบบสำเร็จ ✅", "ok");
-        loginOverlay.style.display = "none";
-        pinEl.value = "";
+  dateEl?.addEventListener("change", async () => {
+    setMsg("");
+    try { await refresh(); }
+    catch (e) {
+      if (e.message === "unauthorized") showLogin();
+      setMsg(e.message, "err");
+    }
+  });
 
-        const meta2 = await api("/api/meta");
-        TIMES = meta2.times || [];
-        renderTimeOptions();
+  cancelEditBtn?.addEventListener("click", () => exitEditMode());
 
-        await dpInitOpenAtToday(); // ✅ ล็อกอินแล้วเด้งเลือกวัน
-      } catch (e) {
-        setLoginMsg(e.message, "err");
-      }
-    });
+  // Date picker overlay controls (ถ้ามี)
+  openDatePickerBtn?.addEventListener("click", async () => {
+    const now = new Date();
+    await dpRender(now.getFullYear(), now.getMonth());
+    dpOpen();
+  });
 
-    pinEl.addEventListener("keydown", (ev) => {
-      if (ev.key === "Enter") loginBtn.click();
-    });
+  dpClose?.addEventListener("click", dpCloseFn);
+  datePickerOverlay?.addEventListener("click", (e) => {
+    if (e.target === datePickerOverlay) dpCloseFn();
+  });
 
-    logoutBtn.addEventListener("click", async () => {
-      try {
-        await api("/api/logout", { method: "POST" });
-      } finally {
-        loginOverlay.style.display = "grid";
-      }
-    });
+  dpPrev?.addEventListener("click", async () => {
+    if (dpYear == null || dpMonth == null) return;
+    const d = new Date(dpYear, dpMonth - 1, 1);
+    await dpRender(d.getFullYear(), d.getMonth());
+  });
 
-    // date picker controls
-    pickDateBtn.addEventListener("click", async () => {
-      if (dpYear == null) {
-        await dpInitOpenAtToday();
-      } else {
-        await dpLoadMonthMarks();
-        dpRender();
-        dpOpen();
-      }
-    });
-    dpClose.addEventListener("click", dpCloseFn);
-    dpPrev.addEventListener("click", async () => {
-      dpMonth--;
-      if (dpMonth < 0) {
-        dpMonth = 11;
-        dpYear--;
-      }
-      await dpLoadMonthMarks();
-      dpRender();
-    });
-    dpNext.addEventListener("click", async () => {
-      dpMonth++;
-      if (dpMonth > 11) {
-        dpMonth = 0;
-        dpYear++;
-      }
-      await dpLoadMonthMarks();
-      dpRender();
-    });
+  dpNext?.addEventListener("click", async () => {
+    if (dpYear == null || dpMonth == null) return;
+    const d = new Date(dpYear, dpMonth + 1, 1);
+    await dpRender(d.getFullYear(), d.getMonth());
+  });
 
-    // first load: show date picker after auth
-    await dpInitOpenAtToday();
-  })();
-
-  // ===== submit booking =====
-  formEl.addEventListener("submit", async (ev) => {
+  // ---- Form submit ----
+  formEl?.addEventListener("submit", async (ev) => {
     ev.preventDefault();
     setMsg("");
 
+    // required: name, time
     const payload = {
-      date: dateEl.value,
+      date: dateEl?.value || todayLocalYYYYMMDD(),
       category: currentCategory,
-      time: timeEl.value,
-      name: nameEl.value.trim(),
-      phone: phoneEl.value.trim(),     // optional
-      service: serviceEl.value.trim(), // optional ✅
-      note: noteEl.value.trim()
+      time: timeEl?.value || "",
+      name: (nameEl?.value || "").trim(),
+      phone: (phoneEl?.value || "").trim(),     // ✅ optional
+      service: (serviceEl?.value || "").trim(), // ✅ optional (ตามที่คุณขอ)
+      note: (noteEl?.value || "").trim()
     };
+
+    if (!payload.name) return setMsg("กรุณาใส่ชื่อลูกค้า", "err");
+    if (!payload.time) return setMsg("กรุณาเลือกเวลา", "err");
 
     try {
       if (editId) {
@@ -415,33 +485,48 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         setMsg("แก้ไขคิวสำเร็จ ✅", "ok");
         exitEditMode();
-        await refresh();
-        await dpLoadMonthMarks();
-        dpRender();
-        return;
+      } else {
+        await api("/api/bookings", {
+          method: "POST",
+          body: JSON.stringify(payload)
+        });
+        setMsg("จองคิวสำเร็จ ✅", "ok");
+        formEl.reset();
+        renderTimeOptions();
       }
 
-      const r = await api("/api/bookings", {
-        method: "POST",
-        body: JSON.stringify(payload)
-      });
-
-      setMsg("จองคิวสำเร็จ ✅", "ok");
-      formEl.reset();
-      renderTimeOptions();
       await refresh();
-      await dpLoadMonthMarks();
-      dpRender();
-
-      // ✅ เด้งถามเพิ่มลง iPhone Calendar ไหม
-      // (เปิด .ics ของ server -> iOS จะขึ้นหน้า Add to Calendar)
-      const add = confirm("บันทึกคิวแล้ว ✅\nต้องการเพิ่มลงปฏิทิน iPhone ไหม?");
-      if (add && r?.booking?.id) {
-        window.location.href = `/api/calendar/${r.booking.id}`;
-      }
+      await dpRefreshMarksSafe();
     } catch (e) {
-      if (e.message === "unauthorized") await ensureAuth();
+      if (e.message === "unauthorized") showLogin();
       setMsg(e.message, "err");
     }
   });
+
+  // =========================
+  // Boot
+  // =========================
+  (async function init() {
+    // safe default date
+    if (dateEl) dateEl.value = todayLocalYYYYMMDD();
+
+    wireTabs();
+    setActiveTab("male");
+
+    // ✅ สำคัญ: เช็ค auth ก่อน
+    const authed = await ensureAuth();
+
+    if (!authed) {
+      // ยังไม่ auth → โชว์ login overlay และจบ (อย่าโหลด meta)
+      return;
+    }
+
+    // auth แล้ว → boot
+    try {
+      await afterAuthedBoot();
+    } catch (e) {
+      // ถ้า meta/summary fail ก็อย่าให้เว็บตาย
+      setMsg(e.message, "err");
+    }
+  })();
 });
