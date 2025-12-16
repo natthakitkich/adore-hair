@@ -8,9 +8,6 @@
   --ok:#2cff9c;
   --stroke:rgba(255,255,255,.08);
   --shadow:0 10px 30px rgba(0,0,0,.35);
-
-  --green:#2cff9c;
-  --greenBg: rgba(44,255,156,.18);
 }
 
 *{box-sizing:border-box}
@@ -25,7 +22,7 @@ body{
 }
 
 .hidden{display:none !important}
-.row{display:flex; gap:10px; align-items:center}
+.row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
 .between{justify-content:space-between}
 .muted{color:var(--muted)}
 .msg{font-size:13px}
@@ -82,8 +79,7 @@ input, select{
 }
 .title{font-weight:900}
 .subtitle{font-size:12px; color:var(--muted)}
-.topActions{display:flex; gap:12px; align-items:flex-end}
-.dateWrap .label{font-size:12px; color:var(--muted); margin:0 0 6px 2px}
+.topActions{display:flex; gap:12px; align-items:center}
 
 .wrap{width:min(1100px, 95vw); margin:18px auto 48px auto}
 
@@ -158,85 +154,105 @@ th{color:var(--muted); text-align:left; font-weight:900}
 .smallBtn.danger{border-color:rgba(255,92,122,.4); color:var(--danger)}
 .smallBtn.edit{border-color:rgba(110,231,255,.35)}
 
-/* ===== Login overlay (ทึบขึ้น ~50%) ===== */
+/* ===== Overlay / Modal ===== */
 .overlay{
   position:fixed; inset:0;
-  background:rgba(0,0,0,.80); /* เดิม .55 -> ทึบขึ้น */
-  display:grid; place-items:center;
+  background:rgba(0,0,0,.82);
+  display:grid;
+  place-items:center;
   z-index:999;
   padding:20px;
 }
+
 .modal{
-  width:min(520px, 95vw);
-  background:linear-gradient(180deg, rgba(15,18,30,.92), rgba(10,12,22,.88));
-  border:1px solid rgba(255,255,255,.12);
+  width:min(560px, 95vw);
+  background:linear-gradient(180deg, rgba(20,20,25,.92), rgba(12,12,16,.92));
+  border:1px solid rgba(255,255,255,.14);
   border-radius:16px;
-  box-shadow:0 18px 60px rgba(0,0,0,.55);
+  box-shadow:var(--shadow);
   overflow:hidden;
 }
+
 .modalHead{
-  display:flex; gap:12px; align-items:center;
+  display:flex;
+  gap:12px;
+  align-items:center;
   padding:16px;
-  border-bottom:1px solid rgba(255,255,255,.10);
+  border-bottom:1px solid rgba(255,255,255,.12);
 }
+
 .modalBody{padding:16px}
 
 .title2{font-weight:900; font-size:16px}
 .subtitle2{color:var(--muted); font-size:12px; margin-top:4px}
 
-/* ===== Calendar month ===== */
-.calWeekHead{
-  margin-top:12px;
+/* ✅ Login center */
+.loginCenter{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  text-align:center;
+  gap:12px;
+}
+
+/* ===== Date picker ===== */
+.dpWeekRow{
   display:grid;
   grid-template-columns: repeat(7, 1fr);
   gap:8px;
+  text-align:center;
   color:var(--muted);
   font-size:12px;
-  text-align:center;
+  margin-bottom:8px;
 }
-.calGrid{
-  margin-top:8px;
+
+.dpGrid{
   display:grid;
   grid-template-columns: repeat(7, 1fr);
   gap:8px;
 }
-.calCell{
-  position:relative;
-  aspect-ratio: 1 / 1;
-  border-radius:14px;
+
+.dayCell{
+  height:44px;
   border:1px solid var(--stroke);
-  background:rgba(0,0,0,.14);
+  background:rgba(0,0,0,.18);
+  border-radius:14px;
+  cursor:pointer;
   display:flex;
   align-items:center;
   justify-content:center;
-  cursor:pointer;
-  user-select:none;
-}
-.calCell.mutedDay{
-  opacity:.35;
-  cursor:default;
-}
-.calNum{
-  font-weight:900;
-  width:38px;height:38px;
-  border-radius:999px;
-  display:flex;align-items:center;justify-content:center;
-}
-.calCell.hasBookings .calNum{
-  background: var(--greenBg);
-  border:1px solid rgba(44,255,156,.55);
-  color: var(--green);
-}
-.calCell.selected{
-  outline:2px solid rgba(110,231,255,.35);
-  background:rgba(110,231,255,.10);
+  position:relative;
 }
 
-/* ===== Mobile tweaks ===== */
+.dayCell.dim{
+  opacity:.25;
+  cursor:default;
+}
+
+.dayCell .num{
+  font-weight:900;
+}
+
+.dayCell.selected{
+  outline:2px solid rgba(110,231,255,.35);
+}
+
+.dayCell.marked::after{
+  content:"";
+  position:absolute;
+  width:16px;
+  height:16px;
+  border-radius:999px;
+  background:rgba(44,255,156,.55);
+  outline:2px solid rgba(44,255,156,.35);
+  top:8px;
+  right:8px;
+}
+
+.dayCell:hover{
+  background:rgba(110,231,255,.08);
+}
+
 @media (max-width: 720px){
-  .grid{grid-template-columns: 1fr}
-  .topbar{flex-direction:column; align-items:flex-start; gap:12px}
-  .topActions{width:100%; justify-content:space-between}
-  .row{flex-wrap:wrap}
-  input, select{padding:11px}
+  .grid{grid-template-columns:1fr}
 }
