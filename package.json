@@ -1,14 +1,12 @@
 {
   "name": "adore-hair",
   "version": "1.0.0",
-  "description": "Adore Hair Queue System",
-  "main": "server.js",
   "type": "module",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.18.2",
+    "express": "^4.19.2",
     "express-session": "^1.17.3"
   }
 }
