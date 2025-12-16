@@ -62,7 +62,6 @@ function toIcsLocal(dateStr, timeStr) {
   return `${yyyy}${pad2(mm)}${pad2(dd)}T${pad2(HH)}${pad2(MM)}00`;
 }
 
-// เพิ่ม 60 นาที
 function addMinutesToTime(timeStr, minsToAdd) {
   const [HH, MM] = timeStr.split(":").map(Number);
   let total = HH * 60 + MM + minsToAdd;
@@ -97,7 +96,6 @@ app.get("/api/summary", guard, (req, res) => {
   });
 });
 
-// กันจองซ้ำ “เวลาเดียวกัน + ประเภทเดียวกัน + วันเดียวกัน”
 function isSlotTaken({ date, category, time }, ignoreId = null) {
   return bookings.some(b =>
     b.date === date &&
@@ -134,6 +132,7 @@ app.put("/api/bookings/:id", guard, (req, res) => {
   if (idx === -1) return res.status(404).json({ error: "not found" });
 
   const payload = req.body;
+
   if (!payload?.date || !payload?.category || !payload?.time) {
     return res.status(400).json({ error: "missing fields" });
   }
@@ -162,10 +161,9 @@ app.get("/api/calendar/:id", guard, (req, res) => {
   const b = bookings.find(x => Number(x.id) === bid);
   if (!b) return res.status(404).send("Not found");
 
-  // ใช้ TZ Asia/Bangkok เพื่อไม่ให้เวลาเด้งไปกลางคืน
   const tz = "Asia/Bangkok";
   const dtStart = toIcsLocal(b.date, b.time);
-  const dtEnd = toIcsLocal(b.date, addMinutesToTime(b.time, 60)); // 1 ชั่วโมง
+  const dtEnd = toIcsLocal(b.date, addMinutesToTime(b.time, 60));
 
   const title =
     (b.category === "male" ? "ตัดผมผู้ชาย" : "ทำผมผู้หญิง") + " – Adore hair";
