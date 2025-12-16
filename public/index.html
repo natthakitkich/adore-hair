@@ -3,90 +3,114 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Adore hair studio – Queue</title>
+  <title>Adore hair studio</title>
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
 
+  <!-- LOGIN OVERLAY -->
+  <div id="loginOverlay" class="overlay hidden">
+    <div class="modal">
+      <div class="modalHead">
+        <div class="avatar">A</div>
+        <div>
+          <div class="title2">Adore hair</div>
+          <div class="subtitle2">กรุณาใส่ PIN เพื่อเข้าสู่ระบบ</div>
+        </div>
+      </div>
+      <div class="modalBody">
+        <label for="pin">PIN</label>
+        <input id="pin" inputmode="numeric" placeholder="เช่น 1234" />
+        <div class="row" style="margin-top:12px; justify-content:center;">
+          <button id="loginBtn" class="primary">Login</button>
+        </div>
+        <div id="loginMsg" class="msg" style="margin-top:10px; text-align:center;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOPBAR -->
   <div class="topbar">
     <div class="brand">
       <div class="avatar">A</div>
       <div>
         <div class="title">Adore hair</div>
-        <div class="subtitle">Owner Queue · 13:00–22:00 · แยกชาย/หญิง</div>
+        <div class="subtitle">Owner Queue • 13:00–22:00 • แยกชาย/หญิง</div>
       </div>
     </div>
 
     <div class="topActions">
-      <!-- date input ซ่อนไว้ (เก็บค่าเฉยๆ ไม่ให้เลือกบนแถบบน) -->
-      <input id="date" type="date" class="hidden" />
-      <button id="pickDateBtn" class="ghost" type="button">เลือกวัน</button>
-      <button id="logoutBtn" class="ghost" type="button">Logout</button>
+      <div class="dateWrap">
+        <div class="label">เลือกวัน</div>
+        <input id="date" type="date" />
+      </div>
+      <button id="logoutBtn" class="ghost">Logout</button>
     </div>
   </div>
 
-  <main class="wrap">
+  <div class="wrap">
+    <!-- Tabs -->
     <div class="tabs">
-      <button class="tab active" data-tab="male" type="button">ตัดผมผู้ชาย</button>
-      <button class="tab" data-tab="female" type="button">ทำผมผู้หญิง</button>
+      <button class="tab active" id="tabMale" data-cat="male">ตัดผมผู้ชาย</button>
+      <button class="tab" id="tabFemale" data-cat="female">ทำผมหญิง</button>
     </div>
 
-    <section class="panel">
+    <!-- Booking Form -->
+    <div class="panel">
       <form id="bookingForm">
         <div class="grid">
           <div>
-            <label>ชื่อลูกค้า</label>
-            <input id="name" placeholder="เช่น คุณนัท" required />
+            <label for="name">ชื่อลูกค้า</label>
+            <input id="name" required placeholder="เช่น คุณบีม" />
           </div>
 
           <div>
-            <label>เบอร์โทร (ไม่ใส่ก็ได้)</label>
-            <input id="phone" placeholder="เช่น 09xxxxxxxx" inputmode="tel" />
+            <label for="phone">เบอร์โทร (ไม่ใส่ก็ได้)</label>
+            <input id="phone" placeholder="เช่น 09xxxxxxxx" />
           </div>
 
           <div>
-            <label>เวลา</label>
-            <select id="time"></select>
+            <label for="time">เวลา</label>
+            <select id="time" required></select>
           </div>
 
           <div>
-            <label>ทำอะไร (ไม่ใส่ก็ได้)</label>
-            <input id="service" placeholder="เช่น ตัดผม / สระ+ไดร์ / ทำสี" />
+            <label for="service">ทำอะไร (ไม่ใส่ก็ได้)</label>
+            <input id="service" placeholder="เช่น สระ+ไดร์ / ทำสี / ตัด" />
           </div>
 
           <div class="full">
-            <label>หมายเหตุ (ถ้ามี)</label>
-            <input id="note" placeholder="เช่น ไม่เอาเกรียนมาก / ทำสีโทนน้ำตาล" />
-          </div>
-
-          <div class="row full">
-            <button id="submitBtn" class="primary" type="submit">บันทึกการจอง</button>
-            <button id="refreshBtn" class="ghost" type="button">รีเฟรช</button>
-            <button id="cancelEditBtn" class="ghost hidden" type="button">ยกเลิกแก้ไข</button>
+            <label for="note">หมายเหตุ (ถ้ามี)</label>
+            <input id="note" placeholder="เช่น ไม่เอาด้านข้างมาก / ทำสีโทนน้ำตาล" />
           </div>
         </div>
+
+        <div class="row" style="margin-top:12px;">
+          <button class="primary" type="submit">บันทึกการจอง</button>
+          <button class="ghost" type="button" id="resetBtn">รีเฟรช</button>
+          <div id="msg" class="msg" style="margin-left:auto;"></div>
+        </div>
       </form>
+    </div>
 
-      <div id="msg" class="msg" style="margin-top:10px;"></div>
-    </section>
-
-    <section class="panel">
+    <!-- Summary -->
+    <div class="panel">
       <div class="summary">
         <div class="box">
           <div class="muted">ผู้ชาย</div>
-          <div id="countMale" class="big">0</div>
+          <div class="big" id="countMale">0</div>
         </div>
         <div class="box">
           <div class="muted">ผู้หญิง</div>
-          <div id="countFemale" class="big">0</div>
+          <div class="big" id="countFemale">0</div>
         </div>
         <div class="box">
           <div class="muted">รวม</div>
-          <div id="countTotal" class="big">0</div>
+          <div class="big" id="countTotal">0</div>
         </div>
         <div class="box grow">
           <div class="muted">สรุปของวัน</div>
-          <div id="summaryHint" class="big small">-</div>
+          <div class="big small" id="daySummary">-</div>
         </div>
       </div>
 
@@ -94,68 +118,17 @@
         <table>
           <thead>
             <tr>
-              <th style="width:80px">เวลา</th>
-              <th style="width:90px">ประเภท</th>
+              <th>เวลา</th>
+              <th>ประเภท</th>
               <th>ชื่อ</th>
               <th>ทำอะไร</th>
               <th>หมายเหตุ</th>
-              <th style="width:120px">โทร</th>
-              <th style="width:160px">จัดการ</th>
+              <th>โทร</th>
+              <th>จัดการ</th>
             </tr>
           </thead>
           <tbody id="list"></tbody>
         </table>
-      </div>
-    </section>
-  </main>
-
-  <!-- ===== Login Overlay (Centered) ===== -->
-  <div id="loginOverlay" class="overlay">
-    <div class="modal">
-      <div class="modalBody loginCenter">
-        <div class="title2">เข้าสู่ระบบ</div>
-        <div class="subtitle2">กรุณาใส่ PIN เพื่อเข้าใช้งาน</div>
-
-        <div style="width:100%; max-width:280px;">
-          <label>PIN</label>
-          <input id="pin" type="password" placeholder="ใส่รหัส PIN" />
-        </div>
-
-        <button id="loginBtn" class="primary" type="button">Login</button>
-        <div id="loginMsg" class="msg"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ===== Date Picker Overlay (must choose + confirm) ===== -->
-  <div id="datePickerOverlay" class="overlay hidden">
-    <div class="modal">
-      <div class="modalHead between">
-        <div>
-          <div class="title2">เลือกวันที่ต้องการจอง</div>
-          <div id="dpTitle" class="subtitle2">-</div>
-        </div>
-        <div class="row">
-          <button id="dpPrev" class="ghost" type="button">‹</button>
-          <button id="dpNext" class="ghost" type="button">›</button>
-        </div>
-      </div>
-
-      <div class="modalBody">
-        <div class="dpWeekRow">
-          <div>อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div>ส</div>
-        </div>
-
-        <div id="dpGrid" class="dpGrid"></div>
-
-        <div class="row between" style="margin-top:14px;">
-          <div class="muted" style="font-size:12px;">
-            วงกลมเขียว = มีคิวจองแล้ว
-          </div>
-          <button id="dpConfirm" class="primary" type="button">ตกลง</button>
-        </div>
-
-        <div id="dpMsg" class="msg" style="margin-top:8px;"></div>
       </div>
     </div>
   </div>
