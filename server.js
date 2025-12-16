@@ -21,7 +21,7 @@ app.use(
   })
 );
 
-// ===== AUTH =====
+// ====== AUTH ======
 app.get("/api/me", (req, res) => {
   if (req.session.auth) return res.json({ ok: true });
   res.status(401).json({ error: "unauthorized" });
@@ -44,110 +44,170 @@ function guard(req, res, next) {
   next();
 }
 
-// ===== DATA =====
-// in-memory (รีสตาร์ทเซิร์ฟเวอร์ข้อมูลจะหาย — ถ้าต้องการถาวรค่อยเพิ่ม DB ทีหลัง)
+// ====== DATA ======
 let bookings = [];
-let nextId = 1;
+let id = 1;
 
-// ===== TIME SLOTS (hourly 13:00..22:00 incl) =====
+// เวลาแบบทุก 1 ชั่วโมง: 13:00 - 22:00 (รวม 22:00)
 const TIMES = [];
 for (let h = 13; h <= 22; h++) TIMES.push(`${String(h).padStart(2, "0")}:00`);
 
-// ===== HELPERS =====
-function isValidCategory(cat) {
-  return cat === "male" || cat === "female";
-}
-function isValidDate(date) {
-  return typeof date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(date);
-}
-function isValidTime(time) {
-  return TIMES.includes(time);
-}
-function normalizePayload(body) {
-  return {
-    date: String(body.date || ""),
-    category: String(body.category || ""),
-    time: String(body.time || ""),
-    name: String(body.name || "").trim(),
-    phone: String(body.phone || "").trim(),
-    service: String(body.service || "").trim(),
-    note: String(body.note || "").trim()
-  };
-}
-function findConflict({ date, category, time }, ignoreId = null) {
-  return bookings.find(
-    (b) =>
-      b.date === date &&
-      b.category === category &&
-      b.time === time &&
-      (ignoreId == null || b.id !== ignoreId)
-  );
+// ===== Helpers =====
+function pad2(n) { return String(n).padStart(2, "0"); }
+
+// YYYY-MM-DD + "HH:MM" -> "YYYYMMDDTHHMM00"
+function toIcsLocal(dateStr, timeStr) {
+  const [yyyy, mm, dd] = dateStr.split("-").map(Number);
+  const [HH, MM] = timeStr.split(":").map(Number);
+  return `${yyyy}${pad2(mm)}${pad2(dd)}T${pad2(HH)}${pad2(MM)}00`;
 }
 
-// ===== API =====
+// เพิ่ม 60 นาที
+function addMinutesToTime(timeStr, minsToAdd) {
+  const [HH, MM] = timeStr.split(":").map(Number);
+  let total = HH * 60 + MM + minsToAdd;
+  const nh = Math.floor(total / 60);
+  const nm = total % 60;
+  return `${pad2(nh)}:${pad2(nm)}`;
+}
+
+function escapeIcsText(s) {
+  return String(s ?? "")
+    .replace(/\\/g, "\\\\")
+    .replace(/\n/g, "\\n")
+    .replace(/,/g, "\\,")
+    .replace(/;/g, "\\;");
+}
+
+// ====== API ======
 app.get("/api/meta", guard, (req, res) => {
   res.json({ times: TIMES });
 });
 
 app.get("/api/summary", guard, (req, res) => {
-  const date = String(req.query.date || "");
-  const list = bookings
-    .filter((b) => b.date === date)
-    .sort((a, b) => a.time.localeCompare(b.time));
-
+  const date = req.query.date;
+  const list = bookings.filter(b => b.date === date);
   res.json({
     counts: {
-      male: list.filter((b) => b.category === "male").length,
-      female: list.filter((b) => b.category === "female").length,
+      male: list.filter(b => b.category === "male").length,
+      female: list.filter(b => b.category === "female").length,
       total: list.length
     },
     detail: list
   });
 });
 
+// กันจองซ้ำ “เวลาเดียวกัน + ประเภทเดียวกัน + วันเดียวกัน”
+function isSlotTaken({ date, category, time }, ignoreId = null) {
+  return bookings.some(b =>
+    b.date === date &&
+    b.category === category &&
+    b.time === time &&
+    (ignoreId == null || Number(b.id) !== Number(ignoreId))
+  );
+}
+
 app.post("/api/bookings", guard, (req, res) => {
-  const payload = normalizePayload(req.body);
+  const payload = req.body;
 
-  if (!isValidDate(payload.date)) return res.status(400).json({ error: "invalid date" });
-  if (!isValidCategory(payload.category)) return res.status(400).json({ error: "invalid category" });
-  if (!isValidTime(payload.time)) return res.status(400).json({ error: "invalid time" });
-  if (!payload.name) return res.status(400).json({ error: "กรุณากรอกชื่อลูกค้า" });
+  if (!payload?.date || !payload?.category || !payload?.time) {
+    return res.status(400).json({ error: "missing fields" });
+  }
+  if (!TIMES.includes(payload.time)) {
+    return res.status(400).json({ error: "invalid time" });
+  }
+  if (!["male", "female"].includes(payload.category)) {
+    return res.status(400).json({ error: "invalid category" });
+  }
+  if (isSlotTaken(payload)) {
+    return res.status(409).json({ error: "slot already booked" });
+  }
 
-  // ✅ กันจองซ้ำเฉพาะ "ประเภทเดียวกัน"
-  const conflict = findConflict(payload);
-  if (conflict) return res.status(409).json({ error: "ช่วงเวลานี้ถูกจองแล้ว (ประเภทเดียวกัน)" });
-
-  const row = { id: nextId++, ...payload };
-  bookings.push(row);
-  res.json({ ok: true, booking: row });
+  const booking = { id: id++, ...payload };
+  bookings.push(booking);
+  res.json({ ok: true, booking });
 });
 
 app.put("/api/bookings/:id", guard, (req, res) => {
-  const id = Number(req.params.id);
-  const idx = bookings.findIndex((b) => b.id === id);
-  if (idx < 0) return res.status(404).json({ error: "not found" });
+  const bid = Number(req.params.id);
+  const idx = bookings.findIndex(b => Number(b.id) === bid);
+  if (idx === -1) return res.status(404).json({ error: "not found" });
 
-  const payload = normalizePayload(req.body);
+  const payload = req.body;
+  if (!payload?.date || !payload?.category || !payload?.time) {
+    return res.status(400).json({ error: "missing fields" });
+  }
+  if (!TIMES.includes(payload.time)) {
+    return res.status(400).json({ error: "invalid time" });
+  }
+  if (!["male", "female"].includes(payload.category)) {
+    return res.status(400).json({ error: "invalid category" });
+  }
+  if (isSlotTaken(payload, bid)) {
+    return res.status(409).json({ error: "slot already booked" });
+  }
 
-  if (!isValidDate(payload.date)) return res.status(400).json({ error: "invalid date" });
-  if (!isValidCategory(payload.category)) return res.status(400).json({ error: "invalid category" });
-  if (!isValidTime(payload.time)) return res.status(400).json({ error: "invalid time" });
-  if (!payload.name) return res.status(400).json({ error: "กรุณากรอกชื่อลูกค้า" });
-
-  const conflict = findConflict(payload, id);
-  if (conflict) return res.status(409).json({ error: "ช่วงเวลานี้ถูกจองแล้ว (ประเภทเดียวกัน)" });
-
-  bookings[idx] = { id, ...payload };
+  bookings[idx] = { ...bookings[idx], ...payload };
   res.json({ ok: true, booking: bookings[idx] });
 });
 
 app.delete("/api/bookings/:id", guard, (req, res) => {
-  const id = Number(req.params.id);
-  bookings = bookings.filter((b) => b.id !== id);
+  bookings = bookings.filter(b => b.id != req.params.id);
   res.json({ ok: true });
 });
 
-// ===== STATIC =====
+// ====== Calendar (.ics) ======
+app.get("/api/calendar/:id", guard, (req, res) => {
+  const bid = Number(req.params.id);
+  const b = bookings.find(x => Number(x.id) === bid);
+  if (!b) return res.status(404).send("Not found");
+
+  // ใช้ TZ Asia/Bangkok เพื่อไม่ให้เวลาเด้งไปกลางคืน
+  const tz = "Asia/Bangkok";
+  const dtStart = toIcsLocal(b.date, b.time);
+  const dtEnd = toIcsLocal(b.date, addMinutesToTime(b.time, 60)); // 1 ชั่วโมง
+
+  const title =
+    (b.category === "male" ? "ตัดผมผู้ชาย" : "ทำผมผู้หญิง") + " – Adore hair";
+
+  const desc =
+    `ลูกค้า: ${b.name || "-"}\n` +
+    `บริการ: ${b.service || "-"}\n` +
+    `โทร: ${b.phone || "-"}\n` +
+    `หมายเหตุ: ${b.note || "-"}`;
+
+  const uid = `adore-${b.id}@adore-hair`;
+
+  const ics =
+`BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Adore hair//Queue//TH
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+BEGIN:VTIMEZONE
+TZID:${tz}
+BEGIN:STANDARD
+TZOFFSETFROM:+0700
+TZOFFSETTO:+0700
+TZNAME:+07
+DTSTART:19700101T000000
+END:STANDARD
+END:VTIMEZONE
+BEGIN:VEVENT
+UID:${uid}
+SUMMARY:${escapeIcsText(title)}
+DESCRIPTION:${escapeIcsText(desc)}
+DTSTART;TZID=${tz}:${dtStart}
+DTEND;TZID=${tz}:${dtEnd}
+END:VEVENT
+END:VCALENDAR`;
+
+  res.setHeader("Content-Type", "text/calendar; charset=utf-8");
+  res.setHeader("Content-Disposition", `inline; filename="adore-booking-${b.id}.ics"`);
+  res.send(ics);
+});
+
+// ====== STATIC ======
 app.use(express.static(path.join(__dirname, "public")));
 
 app.listen(PORT, () => {
