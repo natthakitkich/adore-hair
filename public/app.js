@@ -116,29 +116,28 @@ document.addEventListener("DOMContentLoaded", () => {
     applyDisabledTimes();
   }
 
-  
   function renderTimeOptions() {
-  if (!timeEl) return;
+    if (!timeEl) return;
 
-  timeEl.innerHTML = "";
+    timeEl.innerHTML = "";
 
-  const ph = document.createElement("option");
-  ph.value = "";
-  ph.textContent = "เลือกเวลา";
-  ph.disabled = true;
-  ph.selected = true;
-  timeEl.appendChild(ph);
+    const ph = document.createElement("option");
+    ph.value = "";
+    ph.textContent = "เลือกเวลา";
+    ph.disabled = true;
+    ph.selected = true;
+    timeEl.appendChild(ph);
 
-  for (const t of TIMES) {
-    const opt = document.createElement("option");
-    opt.value = t;
-    opt.textContent = t;
-    timeEl.appendChild(opt);
+    for (const t of TIMES) {
+      const opt = document.createElement("option");
+      opt.value = t;
+      opt.textContent = t;
+      timeEl.appendChild(opt);
+    }
+
+    // ✅ สำคัญ: สร้าง options เสร็จแล้วต้อง disable ทันที
+    applyDisabledTimes();
   }
-
-  // ✅ สำคัญ: สร้าง options เสร็จแล้วต้อง disable ทันที
-  applyDisabledTimes();
-}
 
   function applyDisabledTimes() {
     // disable เฉพาะเวลาที่ "ถูกจองแล้ว" ใน "ประเภทเดียวกัน"
@@ -148,7 +147,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const booked = new Set(
       lastDetail
         .filter((b) => b.category === currentCategory)
-        .map((b) => b.time)
+        .map((b) => String(b.time || "").trim()) // ✅ กันเวลาเพี้ยนจากช่องว่าง
     );
 
     [...timeEl.options].forEach((opt) => {
@@ -250,8 +249,8 @@ document.addEventListener("DOMContentLoaded", () => {
           await api(`/api/bookings/${id}`, { method: "DELETE" });
           if (editId === id) exitEditMode();
           setMsg("ลบคิวแล้ว", "ok");
-          await refresh();          // รีเฟรชรายวัน
-          await refreshMonth();     // ✅ รีเฟรชปฏิทินเดือนด้วย
+          await refresh(); // รีเฟรชรายวัน
+          await refreshMonth(); // ✅ รีเฟรชปฏิทินเดือนด้วย
         } catch (e) {
           if (e.message === "unauthorized") await ensureAuth();
           setMsg(e.message, "err");
@@ -386,18 +385,23 @@ document.addEventListener("DOMContentLoaded", () => {
       btn.addEventListener("click", () => setActiveTab(btn.dataset.tab));
     });
     setActiveTab(currentCategory);
-    // ✅ iPhone / iPad: บังคับ disable เวลา ก่อนเปิด picker ทุกครั้ง
-if (timeEl) {
-  ["focus", "click", "touchstart"].forEach((evt) => {
-    timeEl.addEventListener(
-      evt,
-      () => {
+
+    // ✅ iPhone / iPad: บังคับ disable "ก่อน" picker เปิด (สำคัญมาก)
+    if (timeEl) {
+      const syncDisableBeforeOpen = () => {
         applyDisabledTimes();
-      },
-      { passive: true }
-    );
-  });
-}
+        // iOS บางเวอร์ชัน UI update ช้า -> กระตุกซ้ำอีกรอบ
+        setTimeout(applyDisabledTimes, 0);
+      };
+
+      // capture:true = ให้รันก่อน default action (เปิด picker)
+      ["pointerdown", "touchstart", "mousedown"].forEach((evt) => {
+        timeEl.addEventListener(evt, syncDisableBeforeOpen, { capture: true });
+      });
+
+      // เผื่อ focus มาทีหลัง
+      timeEl.addEventListener("focus", syncDisableBeforeOpen);
+    }
 
     // refresh button
     if (refreshBtn) {
@@ -481,15 +485,14 @@ if (timeEl) {
           await refresh();
           await refreshMonth();
 
-          // ✅ ✅ ✅ เพิ่มตรงนี้: เด้งถามเพิ่ม Calendar ทันที
-          const wantCalendar = confirm(
-            "บันทึกคิวเรียบร้อยแล้ว ✅\n\nต้องการเพิ่มนัดหมายนี้ลงใน iPhone/iPad Calendar ไหม?"
-          );
+          // (ส่วน Calendar confirm ของคุณยังอยู่ได้ตามเดิม ถ้าต้องการ)
+          // const wantCalendar = confirm(
+          //   "บันทึกคิวเรียบร้อยแล้ว ✅\n\nต้องการเพิ่มนัดหมายนี้ลงใน iPhone/iPad Calendar ไหม?"
+          // );
+          // if (wantCalendar && r?.booking?.id) {
+          //   window.location.href = `/api/calendar/${r.booking.id}`;
+          // }
 
-          if (wantCalendar && r?.booking?.id) {
-            // เปิดไฟล์ .ics → iOS จะเด้งหน้า Add to Calendar
-            window.location.href = `/api/calendar/${r.booking.id}`;
-          }
         } catch (e) {
           if (e.message === "unauthorized") await ensureAuth();
           setMsg(e.message, "err");
