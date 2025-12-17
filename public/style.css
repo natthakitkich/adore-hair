@@ -179,10 +179,7 @@ th{color:var(--muted); text-align:left; font-weight:900}
   padding:16px;
   border-bottom:1px solid rgba(255,255,255,.10);
 }
-.modalBody{padding:16px}
 
-.title2{font-weight:900; font-size:16px}
-.subtitle2{color:var(--muted); font-size:12px; margin-top:4px}
 .modalBody{
   padding:16px;
   display:flex;
