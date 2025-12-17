@@ -47,8 +47,14 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function ymFromDateStr(dateStr) {
-    // "YYYY-MM-DD" -> "YYYY-MM"
     return String(dateStr || "").slice(0, 7);
+  }
+
+  // ✅ normalize time ให้เป็น HH:MM (กัน 13:00:00)
+  function normTime(t) {
+    const s = String(t ?? "").trim();
+    if (!s) return "";
+    return s.length >= 5 ? s.slice(0, 5) : s;
   }
 
   function setMsg(text, type = "") {
@@ -75,14 +81,8 @@ document.addEventListener("DOMContentLoaded", () => {
       .replaceAll('"', "&quot;")
       .replaceAll("'", "&#039;");
   }
-
   function escapeAttr(s) {
     return escapeHtml(s);
-  }
-
-  // ✅ สำคัญมาก: แปลงเวลาให้เป็น "HH:MM" เสมอ (กันเคส "13:00:00")
-  function normTime(t) {
-    return String(t ?? "").trim().slice(0, 5);
   }
 
   async function api(path, opts = {}) {
@@ -104,6 +104,65 @@ document.addEventListener("DOMContentLoaded", () => {
       if (loginOverlay) loginOverlay.style.display = "grid";
       return false;
     }
+  }
+
+  // ===== Custom iOS-safe popup =====
+  function askAddToCalendarPopup() {
+    return new Promise((resolve) => {
+      const overlay = document.createElement("div");
+      overlay.style.position = "fixed";
+      overlay.style.inset = "0";
+      overlay.style.background = "rgba(0,0,0,.55)";
+      overlay.style.display = "grid";
+      overlay.style.placeItems = "center";
+      overlay.style.zIndex = "9999";
+      overlay.style.padding = "16px";
+
+      const box = document.createElement("div");
+      box.style.maxWidth = "420px";
+      box.style.width = "100%";
+      box.style.background = "#111";
+      box.style.color = "#fff";
+      box.style.border = "1px solid rgba(255,255,255,.12)";
+      box.style.borderRadius = "14px";
+      box.style.padding = "16px";
+      box.style.boxShadow = "0 12px 30px rgba(0,0,0,.4)";
+
+      box.innerHTML = `
+        <div style="font-size:16px; font-weight:700; margin-bottom:8px;">บันทึกคิวเรียบร้อยแล้ว ✅</div>
+        <div style="font-size:14px; opacity:.9; line-height:1.4; margin-bottom:14px;">
+          ต้องการเพิ่มนัดหมายนี้ลงใน iPhone/iPad Calendar ไหม?
+        </div>
+        <div style="display:flex; gap:10px; justify-content:flex-end;">
+          <button id="calNo" style="padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,.18); background:transparent; color:#fff;">
+            ไม่ต้องการ
+          </button>
+          <button id="calYes" style="padding:10px 12px; border-radius:10px; border:none; background:#7c5cff; color:#fff; font-weight:700;">
+            เพิ่มลงปฏิทิน
+          </button>
+        </div>
+      `;
+
+      overlay.appendChild(box);
+      document.body.appendChild(overlay);
+
+      const cleanup = () => overlay.remove();
+      overlay.addEventListener("click", (e) => {
+        if (e.target === overlay) {
+          cleanup();
+          resolve(false);
+        }
+      });
+
+      box.querySelector("#calNo").addEventListener("click", () => {
+        cleanup();
+        resolve(false);
+      });
+      box.querySelector("#calYes").addEventListener("click", () => {
+        cleanup();
+        resolve(true);
+      });
+    });
   }
 
   function setActiveTab(cat) {
@@ -136,17 +195,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     for (const t of TIMES) {
       const opt = document.createElement("option");
-      opt.value = normTime(t);
-      opt.textContent = normTime(t);
+      opt.value = t;
+      opt.textContent = t;
       timeEl.appendChild(opt);
     }
 
-    // ✅ สำคัญ: สร้าง options เสร็จแล้วต้อง disable ทันที
     applyDisabledTimes();
   }
 
   function applyDisabledTimes() {
-    // disable เฉพาะเวลาที่ "ถูกจองแล้ว" ใน "ประเภทเดียวกัน"
     if (!timeEl) return;
     if (!Array.isArray(lastDetail)) return;
 
@@ -156,16 +213,13 @@ document.addEventListener("DOMContentLoaded", () => {
         .map((b) => normTime(b.time))
     );
 
-    const currentVal = normTime(timeEl.value);
-
     [...timeEl.options].forEach((opt) => {
       if (!opt.value) return;
       const v = normTime(opt.value);
+      const selected = normTime(timeEl.value);
 
-      // ถ้าเป็น edit mode: เวลาเดิมของคิวที่แก้อยู่ ให้เลือกได้
-      const allowBecauseEditing = !!editId && v === currentVal;
-
-      opt.disabled = booked.has(v) && !allowBecauseEditing;
+      // ✅ edit mode: อนุญาตให้เลือกเวลาของ “ตัวเอง” ได้
+      opt.disabled = booked.has(v) && (!editId || v !== selected);
     });
   }
 
@@ -262,8 +316,8 @@ document.addEventListener("DOMContentLoaded", () => {
           await api(`/api/bookings/${id}`, { method: "DELETE" });
           if (editId === id) exitEditMode();
           setMsg("ลบคิวแล้ว", "ok");
-          await refresh(); // รีเฟรชรายวัน
-          await refreshMonth(); // ✅ รีเฟรชปฏิทินเดือนด้วย
+          await refresh();
+          await refreshMonth();
         } catch (e) {
           if (e.message === "unauthorized") await ensureAuth();
           setMsg(e.message, "err");
@@ -293,12 +347,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     renderList(lastDetail);
-
-    // ✅ สำคัญ: iOS ต้อง disable หลังได้ข้อมูลเสมอ
     applyDisabledTimes();
-    setTimeout(applyDisabledTimes, 0);
-
-    // ✅ อัปเดต highlight วันปัจจุบันในปฏิทิน
     paintSelectedDayInCalendar();
   }
 
@@ -314,7 +363,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function firstDowSunday0(year, monthIndex0) {
-    // 0=Sunday..6=Saturday
     return new Date(year, monthIndex0, 1).getDay();
   }
 
@@ -334,14 +382,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const dateStr = dateEl.value || todayLocalYYYYMMDD();
     const ym = ymFromDateStr(dateStr);
 
-    // title
     calTitle.textContent = monthTitleFromYM(ym);
 
-    // โหลด days ที่มีคิว
     const r = await api(`/api/month?ym=${encodeURIComponent(ym)}`);
     const hasDays = new Set((r.days || []).map(Number));
 
-    // สร้าง grid
     const [year, month] = ym.split("-").map(Number);
     const monthIndex0 = month - 1;
 
@@ -350,7 +395,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     calGrid.innerHTML = "";
 
-    // ช่องว่างก่อนวันแรก
     for (let i = 0; i < first; i++) {
       const empty = document.createElement("div");
       empty.className = "calCell mutedDay";
@@ -359,16 +403,13 @@ document.addEventListener("DOMContentLoaded", () => {
       calGrid.appendChild(empty);
     }
 
-    // วันจริง
     for (let day = 1; day <= total; day++) {
       const cell = document.createElement("div");
       cell.className = "calCell" + (hasDays.has(day) ? " hasBookings" : "");
       cell.setAttribute("data-day", String(day));
-
       cell.innerHTML = `<div class="calNum">${day}</div>`;
 
       cell.addEventListener("click", async () => {
-        // คลิกวัน -> set date -> refresh รายวัน
         const dd = String(day).padStart(2, "0");
         const newDate = `${ym}-${dd}`;
         dateEl.value = newDate;
@@ -391,34 +432,27 @@ document.addEventListener("DOMContentLoaded", () => {
   async function bootAfterLogin() {
     setMsg("");
 
-    // meta times
     const meta = await api("/api/meta");
-    TIMES = Array.isArray(meta.times) ? meta.times.map(normTime) : [];
+    TIMES = Array.isArray(meta.times) ? meta.times : [];
     renderTimeOptions();
 
-    // tabs
     document.querySelectorAll(".tab").forEach((btn) => {
       btn.addEventListener("click", () => setActiveTab(btn.dataset.tab));
     });
     setActiveTab(currentCategory);
 
-    // ✅ iPhone / iPad: บังคับ disable "ก่อน" picker เปิด (สำคัญมาก)
+    // ✅ iOS: disable ต้องเกิด "ก่อน" picker เปิด
     if (timeEl) {
       const syncDisableBeforeOpen = () => {
         applyDisabledTimes();
         setTimeout(applyDisabledTimes, 0);
       };
-
-      // capture:true = ให้รันก่อน default action (เปิด picker)
       ["pointerdown", "touchstart", "mousedown"].forEach((evt) => {
         timeEl.addEventListener(evt, syncDisableBeforeOpen, { capture: true });
       });
-
       timeEl.addEventListener("focus", syncDisableBeforeOpen);
-      timeEl.addEventListener("click", syncDisableBeforeOpen);
     }
 
-    // refresh button
     if (refreshBtn) {
       refreshBtn.addEventListener("click", async () => {
         setMsg("");
@@ -433,13 +467,12 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-    // change date
     if (dateEl) {
       dateEl.addEventListener("change", async () => {
         setMsg("");
         try {
           await refresh();
-          await refreshMonth(); // ✅ เดือนอาจเปลี่ยน
+          await refreshMonth();
         } catch (e) {
           if (e.message === "unauthorized") await ensureAuth();
           setMsg(e.message, "err");
@@ -447,12 +480,10 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-    // cancel edit
     if (cancelEditBtn) {
       cancelEditBtn.addEventListener("click", () => exitEditMode());
     }
 
-    // submit form
     if (formEl) {
       formEl.addEventListener("submit", async (ev) => {
         ev.preventDefault();
@@ -463,7 +494,7 @@ document.addEventListener("DOMContentLoaded", () => {
           category: currentCategory,
           time: normTime(timeEl?.value || ""),
           name: (nameEl?.value || "").trim(),
-          phone: (phoneEl?.value || "").trim(), // ✅ optional
+          phone: (phoneEl?.value || "").trim(),
           service: (serviceEl?.value || "").trim(),
           note: (noteEl?.value || "").trim(),
         };
@@ -485,7 +516,6 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
           }
 
-          // ✅ 1) จองก่อน
           const r = await api("/api/bookings", {
             method: "POST",
             body: JSON.stringify(payload),
@@ -493,19 +523,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
           setMsg("จองคิวสำเร็จ ✅", "ok");
 
-          // ✅ 2) เด้งถาม Calendar ทันที (ก่อน refresh)
-          const wantCalendar = confirm(
-            "บันทึกคิวเรียบร้อยแล้ว ✅\n\nต้องการเพิ่มนัดหมายนี้ลงใน iPhone/iPad Calendar ไหม?"
-          );
-
-          if (wantCalendar && r?.booking?.id) {
-            // เปิดไฟล์ .ics → iOS จะเด้งหน้า Add to Calendar
-            window.location.href = `/api/calendar/${r.booking.id}`;
-            // ถ้ากดเพิ่ม: จะพาไปหน้า Add to Calendar (ถูกต้องตาม flow iOS)
-            // ถ้ากดไม่เพิ่ม: จะทำงานต่อด้านล่างและอยู่หน้าเว็บตามปกติ
+          // ✅ iOS-safe popup (ไม่ใช้ confirm)
+          const bookingId = r?.booking?.id;
+          if (bookingId) {
+            const want = await askAddToCalendarPopup();
+            if (want) {
+              window.location.href = `/api/calendar/${bookingId}`;
+              return; // พาไปหน้า Add to Calendar แล้วจบ flow
+            }
           }
 
-          // ✅ 3) เคลียร์ฟอร์ม + refresh ให้เห็นคิวใหม่ + disable เวลา
           const keepDate = payload.date;
           formEl.reset();
           if (dateEl) dateEl.value = keepDate;
@@ -515,18 +542,11 @@ document.addEventListener("DOMContentLoaded", () => {
           await refreshMonth();
         } catch (e) {
           if (e.message === "unauthorized") await ensureAuth();
-
-          // แปลงข้อความซ้ำให้ user-friendly
-          if (e.message === "time already booked for this category") {
-            setMsg("เวลานี้ถูกจองแล้ว (ในประเภทเดียวกัน) ❌", "err");
-          } else {
-            setMsg(e.message, "err");
-          }
+          setMsg(e.message, "err");
         }
       });
     }
 
-    // initial load
     await refresh();
     await refreshMonth();
   }
@@ -567,7 +587,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // ===== INIT =====
   (async function init() {
     if (dateEl) dateEl.value = todayLocalYYYYMMDD();
 
