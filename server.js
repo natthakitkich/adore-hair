@@ -81,6 +81,13 @@ function firstLastDayOfYM(ym) {
   };
 }
 
+// ✅ ทำให้ time เป็น HH:MM เสมอ (กัน "13:00:00")
+function normTime(t) {
+  const s = String(t ?? "").trim();
+  if (!s) return "";
+  return s.length >= 5 ? s.slice(0, 5) : s;
+}
+
 function pad2(n) { return String(n).padStart(2, "0"); }
 // local floating time for ICS (NO Z)
 function toICSLocal(dateStr, timeStr) {
@@ -126,7 +133,10 @@ app.get("/api/summary", guard, async (req, res) => {
 
   if (error) return res.status(500).json({ error: error.message });
 
-  const list = Array.isArray(data) ? data : [];
+  const listRaw = Array.isArray(data) ? data : [];
+  // ✅ normalize time ก่อนส่งไปหน้าเว็บ
+  const list = listRaw.map((b) => ({ ...b, time: normTime(b.time) }));
+
   res.json({
     counts: {
       male: list.filter((b) => b.category === "male").length,
@@ -154,7 +164,6 @@ app.get("/api/month", guard, async (req, res) => {
 
   const daysSet = new Set();
   for (const row of data || []) {
-    // row.date จาก supabase มักเป็น "YYYY-MM-DD"
     const dd = Number(String(row.date).slice(8, 10));
     if (!Number.isNaN(dd)) daysSet.add(dd);
   }
@@ -168,17 +177,16 @@ app.post("/api/bookings", guard, async (req, res) => {
   const payload = req.body || {};
   const date = String(payload.date || "");
   const category = payload.category === "female" ? "female" : "male";
-  const time = String(payload.time || "");
+  const time = normTime(payload.time);
   const name = String(payload.name || "").trim();
-  const phone = String(payload.phone || "").trim();     // optional
-  const service = String(payload.service || "").trim(); // optional
+  const phone = String(payload.phone || "").trim();
+  const service = String(payload.service || "").trim();
   const note = String(payload.note || "").trim();
 
   if (!isValidDateYYYYMMDD(date)) return res.status(400).json({ error: "bad date" });
   if (!TIMES.includes(time)) return res.status(400).json({ error: "invalid time" });
   if (!name) return res.status(400).json({ error: "missing required fields" });
 
-  // insert (มี unique index กันซ้ำไว้แล้ว)
   const { data, error } = await supabase
     .from("bookings")
     .insert([{ date, category, time, name, phone: phone || null, service: service || null, note: note || null }])
@@ -186,8 +194,6 @@ app.post("/api/bookings", guard, async (req, res) => {
     .single();
 
   if (error) {
-    // กันซ้ำด้วย unique index -> supabase จะ error
-    // ข้อความอาจต่างกัน แต่เราจับแบบง่ายๆ
     const msg = (error.message || "").toLowerCase();
     if (msg.includes("duplicate") || msg.includes("unique")) {
       return res.status(409).json({ error: "time already booked for this category" });
@@ -195,7 +201,8 @@ app.post("/api/bookings", guard, async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 
-  return res.json({ ok: true, booking: data });
+  // ✅ normalize time ตอนตอบกลับด้วย
+  return res.json({ ok: true, booking: { ...data, time: normTime(data?.time) } });
 });
 
 // update booking
@@ -206,7 +213,7 @@ app.put("/api/bookings/:id", guard, async (req, res) => {
   const payload = req.body || {};
   const date = String(payload.date || "");
   const category = payload.category === "female" ? "female" : "male";
-  const time = String(payload.time || "");
+  const time = normTime(payload.time);
   const name = String(payload.name || "").trim();
   const phone = String(payload.phone || "").trim();
   const service = String(payload.service || "").trim();
@@ -232,7 +239,7 @@ app.put("/api/bookings/:id", guard, async (req, res) => {
   }
 
   if (!data) return res.status(404).json({ error: "not found" });
-  res.json({ ok: true, booking: data });
+  res.json({ ok: true, booking: { ...data, time: normTime(data?.time) } });
 });
 
 // delete booking
@@ -260,15 +267,16 @@ app.get("/api/calendar/:id", guard, async (req, res) => {
   if (error) return res.status(500).send(error.message);
   if (!b) return res.status(404).send("not found");
 
-  const dtStart = toICSLocal(b.date, b.time);
-  const endObj = addHoursLocal(b.date, b.time, 1);
+  const t = normTime(b.time);
+  const dtStart = toICSLocal(b.date, t);
+  const endObj = addHoursLocal(b.date, t, 1);
   const dtEnd = toICSLocal(endObj.date, endObj.time);
 
   const title = `Adore hair - ${b.category === "male" ? "ตัดผมผู้ชาย" : "ทำผมผู้หญิง"}`;
   const descLines = [
     `ชื่อ: ${b.name || "-"}`,
     `ประเภท: ${b.category === "male" ? "ผู้ชาย" : "ผู้หญิง"}`,
-    `เวลา: ${b.date} ${b.time}`,
+    `เวลา: ${b.date} ${t}`,
     `ทำอะไร: ${b.service || "-"}`,
     `โทร: ${b.phone || "-"}`,
     b.note ? `หมายเหตุ: ${b.note}` : "",
