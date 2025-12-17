@@ -471,27 +471,31 @@ document.addEventListener("DOMContentLoaded", () => {
           }
 
           const r = await api("/api/bookings", {
-            method: "POST",
-            body: JSON.stringify(payload),
-          });
+  method: "POST",
+  body: JSON.stringify(payload),
+});
 
-          setMsg("จองคิวสำเร็จ ✅", "ok");
+setMsg("จองคิวสำเร็จ ✅", "ok");
 
-          const keepDate = payload.date;
-          formEl.reset();
-          if (dateEl) dateEl.value = keepDate;
+// ✅ เด้งถามเพิ่ม Calendar ทันที (วางตรงนี้ก่อน refresh)
+const wantCalendar = confirm(
+  "บันทึกคิวเรียบร้อยแล้ว ✅\n\nต้องการเพิ่มนัดหมายนี้ลงใน iPhone/iPad Calendar ไหม?"
+);
 
-          renderTimeOptions();
-          await refresh();
-          await refreshMonth();
+if (wantCalendar && r?.booking?.id) {
+  // เปิดไฟล์ .ics → iOS จะขึ้นหน้า Add to Calendar
+  window.location.href = `/api/calendar/${r.booking.id}`;
+  // หมายเหตุ: ถ้าเลือกเพิ่ม ระบบจะพาไปหน้า Add to Calendar (ถือว่าถูกต้อง)
+  // ถ้าเลือกไม่เพิ่ม จะทำงานต่อด้านล่างตามปกติ
+}
 
-          // (ส่วน Calendar confirm ของคุณยังอยู่ได้ตามเดิม ถ้าต้องการ)
-          // const wantCalendar = confirm(
-          //   "บันทึกคิวเรียบร้อยแล้ว ✅\n\nต้องการเพิ่มนัดหมายนี้ลงใน iPhone/iPad Calendar ไหม?"
-          // );
-          // if (wantCalendar && r?.booking?.id) {
-          //   window.location.href = `/api/calendar/${r.booking.id}`;
-          // }
+const keepDate = payload.date;
+formEl.reset();
+if (dateEl) dateEl.value = keepDate;
+
+renderTimeOptions();
+await refresh();
+await refreshMonth();
 
         } catch (e) {
           if (e.message === "unauthorized") await ensureAuth();
