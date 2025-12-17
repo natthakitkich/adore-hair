@@ -116,25 +116,29 @@ document.addEventListener("DOMContentLoaded", () => {
     applyDisabledTimes();
   }
 
+  
   function renderTimeOptions() {
-    if (!timeEl) return;
+  if (!timeEl) return;
 
-    timeEl.innerHTML = "";
+  timeEl.innerHTML = "";
 
-    const ph = document.createElement("option");
-    ph.value = "";
-    ph.textContent = "เลือกเวลา";
-    ph.disabled = true;
-    ph.selected = true;
-    timeEl.appendChild(ph);
+  const ph = document.createElement("option");
+  ph.value = "";
+  ph.textContent = "เลือกเวลา";
+  ph.disabled = true;
+  ph.selected = true;
+  timeEl.appendChild(ph);
 
-    for (const t of TIMES) {
-      const opt = document.createElement("option");
-      opt.value = t;
-      opt.textContent = t;
-      timeEl.appendChild(opt);
-    }
+  for (const t of TIMES) {
+    const opt = document.createElement("option");
+    opt.value = t;
+    opt.textContent = t;
+    timeEl.appendChild(opt);
   }
+
+  // ✅ สำคัญ: สร้าง options เสร็จแล้วต้อง disable ทันที
+  applyDisabledTimes();
+}
 
   function applyDisabledTimes() {
     // disable เฉพาะเวลาที่ "ถูกจองแล้ว" ใน "ประเภทเดียวกัน"
@@ -382,6 +386,18 @@ document.addEventListener("DOMContentLoaded", () => {
       btn.addEventListener("click", () => setActiveTab(btn.dataset.tab));
     });
     setActiveTab(currentCategory);
+    // ✅ iPhone / iPad: บังคับ disable เวลา ก่อนเปิด picker ทุกครั้ง
+if (timeEl) {
+  ["focus", "click", "touchstart"].forEach((evt) => {
+    timeEl.addEventListener(
+      evt,
+      () => {
+        applyDisabledTimes();
+      },
+      { passive: true }
+    );
+  });
+}
 
     // refresh button
     if (refreshBtn) {
