@@ -10,27 +10,43 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 10000;
 
+// ====== ENV ======
 const PIN = process.env.ADORE_PIN || "1234";
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+// ✅ Render อยู่หลัง proxy (สำคัญต่อ cookie/session บน https)
+app.set("trust proxy", 1);
+
+// ✅ Health check: เอาไว้เช็กว่าปลุกติดแล้ว
+app.get("/health", (req, res) => res.status(200).send("OK"));
+
+// ✅ Fail fast: ถ้า env สำคัญหาย ให้หยุดเลย (กันปลุกวนเงียบ ๆ)
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
   console.error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+  process.exit(1);
 }
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
   auth: { persistSession: false },
 });
 
+// ====== MIDDLEWARE ======
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use(
   session({
+    name: "adore.sid",
     secret: process.env.SESSION_SECRET || "adore-secret",
     resave: false,
     saveUninitialized: false,
-    cookie: { sameSite: "lax" },
+    cookie: {
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production", // prod = https บน Render
+      httpOnly: true,
+      maxAge: 1000 * 60 * 60 * 12, // 12 ชม.
+    },
   })
 );
 
@@ -88,7 +104,9 @@ function normTime(t) {
   return s.length >= 5 ? s.slice(0, 5) : s;
 }
 
-function pad2(n) { return String(n).padStart(2, "0"); }
+function pad2(n) {
+  return String(n).padStart(2, "0");
+}
 // local floating time for ICS (NO Z)
 function toICSLocal(dateStr, timeStr) {
   const [y, m, d] = String(dateStr).split("-").map(Number);
@@ -134,7 +152,6 @@ app.get("/api/summary", guard, async (req, res) => {
   if (error) return res.status(500).json({ error: error.message });
 
   const listRaw = Array.isArray(data) ? data : [];
-  // ✅ normalize time ก่อนส่งไปหน้าเว็บ
   const list = listRaw.map((b) => ({ ...b, time: normTime(b.time) }));
 
   res.json({
@@ -189,7 +206,9 @@ app.post("/api/bookings", guard, async (req, res) => {
 
   const { data, error } = await supabase
     .from("bookings")
-    .insert([{ date, category, time, name, phone: phone || null, service: service || null, note: note || null }])
+    .insert([
+      { date, category, time, name, phone: phone || null, service: service || null, note: note || null },
+    ])
     .select("*")
     .single();
 
@@ -201,7 +220,6 @@ app.post("/api/bookings", guard, async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 
-  // ✅ normalize time ตอนตอบกลับด้วย
   return res.json({ ok: true, booking: { ...data, time: normTime(data?.time) } });
 });
 
@@ -310,6 +328,8 @@ app.get("/api/calendar/:id", guard, async (req, res) => {
 // ====== STATIC ======
 app.use(express.static(path.join(__dirname, "public")));
 
+// ====== START ======
 app.listen(PORT, () => {
   console.log("Server running on port", PORT);
+  console.log("Health check:", `/health`);
 });
