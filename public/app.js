@@ -1,292 +1,254 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const $ = (s) => document.querySelector(s);
+// ===== State =====
+let authed = false;
+let currentDate = "";
+let currentYM = "";
+let currentStylist = "bank";
+let bookings = [];
 
-  // ===== Elements =====
-  const dateEl = $("#date");
-  const nameEl = $("#name");
-  const phoneEl = $("#phone");
-  const timeEl = $("#time");
-  const serviceEl = $("#service");
-  const formEl = $("#bookingForm");
-  const msgEl = $("#msg");
-  const listEl = $("#list");
+// ===== Elements =====
+const $ = (id) => document.getElementById(id);
 
-  const countBank = $("#countMale");
-  const countSindy = $("#countFemale");
-  const countTotal = $("#countTotal");
-  const summaryHint = $("#summaryHint");
+const loginOverlay = $("loginOverlay");
+const loginBtn = $("loginBtn");
+const loginMsg = $("loginMsg");
+const pinInput = $("pin");
 
-  const refreshBtn = $("#refreshBtn");
-  const submitBtn = $("#submitBtn");
-  const cancelEditBtn = $("#cancelEditBtn");
+const dateInput = $("date");
+const logoutBtn = $("logoutBtn");
 
-  const loginOverlay = $("#loginOverlay");
-  const pinEl = $("#pin");
-  const loginBtn = $("#loginBtn");
-  const loginMsg = $("#loginMsg");
-  const logoutBtn = $("#logoutBtn");
+const calTitle = $("calTitle");
+const calGrid = $("calGrid");
 
-  const calGrid = $("#calGrid");
-  const calTitle = $("#calTitle");
+const timeSelect = $("time");
+const formEl = $("bookingForm");
+const msgEl = $("msg");
 
-  // ===== State =====
-  let currentStylist = "bank"; // bank | sindy
-  let TIMES = [];
-  let editId = null;
-  let lastDetail = [];
+const countBank = $("countBank");
+const countSindy = $("countSindy");
+const countAssist = $("countAssist");
+const countTotal = $("countTotal");
+const summaryHint = $("summaryHint");
 
-  // ===== Helpers =====
-  const today = () => new Date().toISOString().slice(0, 10);
+const listEl = $("list");
 
-  function setMsg(t, type = "") {
-    msgEl.className = "msg " + type;
-    msgEl.textContent = t || "";
+// ===== Utils =====
+function todayISO() {
+  return new Date().toISOString().slice(0, 10);
+}
+function ymFromDate(d) {
+  return d.slice(0, 7);
+}
+function fmtTime(t) {
+  return t.slice(0, 5);
+}
+
+// ===== Auth =====
+async function checkAuth() {
+  const res = await fetch("/api/me");
+  authed = res.ok;
+  loginOverlay.style.display = authed ? "none" : "flex";
+}
+
+loginBtn.onclick = async () => {
+  loginMsg.textContent = "กำลังเข้าสู่ระบบ...";
+  const res = await fetch("/api/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ pin: pinInput.value }),
+  });
+  if (res.ok) {
+    await init();
+  } else {
+    loginMsg.textContent = "PIN ไม่ถูกต้อง";
   }
+};
 
-  function setLoginMsg(t, type = "") {
-    loginMsg.className = "msg " + type;
-    loginMsg.textContent = t || "";
-  }
+logoutBtn.onclick = async () => {
+  await fetch("/api/logout", { method: "POST" });
+  location.reload();
+};
 
-  function api(path, opts = {}) {
-    return fetch(path, {
-      headers: { "Content-Type": "application/json" },
-      ...opts,
-    }).then(async (r) => {
-      const d = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(d.error || "error");
-      return d;
-    });
-  }
+// ===== Init =====
+async function init() {
+  await checkAuth();
+  if (!authed) return;
 
-  // ===== Auth =====
-  async function ensureAuth() {
-    try {
-      await api("/api/me");
-      loginOverlay.style.display = "none";
-      return true;
-    } catch {
-      loginOverlay.style.display = "grid";
-      return false;
-    }
-  }
+  currentDate = todayISO();
+  dateInput.value = currentDate;
+  currentYM = ymFromDate(currentDate);
 
-  // ===== Tabs (Stylist) =====
-  document.querySelectorAll(".tab").forEach((b) => {
-    b.onclick = () => {
-      currentStylist = b.dataset.tab;
-      document
-        .querySelectorAll(".tab")
-        .forEach((x) => x.classList.toggle("active", x === b));
-      applyDisabledTimes();
+  bindTabs();
+  await loadMeta();
+  await loadMonth();
+  await loadDay();
+}
+
+dateInput.onchange = async () => {
+  currentDate = dateInput.value;
+  currentYM = ymFromDate(currentDate);
+  await loadMonth();
+  await loadDay();
+};
+
+// ===== Tabs =====
+function bindTabs() {
+  document.querySelectorAll(".tab").forEach((btn) => {
+    btn.onclick = async () => {
+      document.querySelectorAll(".tab").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      currentStylist = btn.dataset.stylist;
+      await loadDay();
     };
   });
+}
 
-  // ===== Time select =====
-  function renderTimes() {
-    timeEl.innerHTML = `<option value="">เลือกเวลา</option>`;
-    TIMES.forEach((t) => {
-      const o = document.createElement("option");
-      o.value = t;
-      o.textContent = t;
-      timeEl.appendChild(o);
-    });
-    applyDisabledTimes();
+// ===== Meta / Time =====
+async function loadMeta() {
+  const res = await fetch("/api/meta");
+  const data = await res.json();
+  timeSelect.innerHTML = `<option value="">เลือกเวลา</option>`;
+  data.times.forEach((t) => {
+    const opt = document.createElement("option");
+    opt.value = t;
+    opt.textContent = t;
+    timeSelect.appendChild(opt);
+  });
+}
+
+// ===== Calendar =====
+async function loadMonth() {
+  const res = await fetch(`/api/month?ym=${currentYM}`);
+  const { days } = await res.json();
+
+  const [y, m] = currentYM.split("-").map(Number);
+  const firstDay = new Date(y, m - 1, 1).getDay();
+  const lastDate = new Date(y, m, 0).getDate();
+
+  calTitle.textContent = `${new Date(y, m - 1).toLocaleString("th-TH", {
+    month: "long",
+    year: "numeric",
+  })}`;
+
+  calGrid.innerHTML = "";
+
+  for (let i = 0; i < firstDay; i++) {
+    calGrid.appendChild(document.createElement("div"));
   }
 
-  function applyDisabledTimes() {
-    const booked = new Set(
-      lastDetail
-        .filter((b) => b.stylist === currentStylist)
-        .map((b) => b.time)
-    );
-
-    [...timeEl.options].forEach((o) => {
-      if (!o.value) return;
-      o.disabled = booked.has(o.value) && (!editId || o.value !== timeEl.value);
-    });
-  }
-
-  // ===== Calendar =====
-  function monthTitle(ym) {
-    const d = new Date(ym + "-01");
-    return d.toLocaleDateString("th-TH", { month: "long", year: "numeric" });
-  }
-
-  async function refreshMonth() {
-    const ym = dateEl.value.slice(0, 7);
-    calTitle.textContent = monthTitle(ym);
-
-    const r = await api(`/api/month?ym=${ym}`);
-    const days = new Set(r.days || []);
-
-    const [y, m] = ym.split("-").map(Number);
-    const first = new Date(y, m - 1, 1).getDay();
-    const total = new Date(y, m, 0).getDate();
-
-    calGrid.innerHTML = "";
-    for (let i = 0; i < first; i++) {
-      calGrid.appendChild(document.createElement("div"));
+  for (let d = 1; d <= lastDate; d++) {
+    const cell = document.createElement("div");
+    cell.textContent = d;
+    if (days.includes(d)) cell.classList.add("has");
+    if (String(d).padStart(2, "0") === currentDate.slice(8, 10)) {
+      cell.classList.add("active");
     }
-
-    for (let d = 1; d <= total; d++) {
-      const c = document.createElement("div");
-      c.className = "calCell" + (days.has(d) ? " hasBookings" : "");
-      c.textContent = d;
-      c.onclick = () => {
-        dateEl.value = `${ym}-${String(d).padStart(2, "0")}`;
-        refresh();
-      };
-      calGrid.appendChild(c);
-    }
-  }
-
-  // ===== List =====
-  function renderList() {
-    listEl.innerHTML = "";
-    if (!lastDetail.length) {
-      listEl.innerHTML = `<tr><td colspan="7">ยังไม่มีคิว</td></tr>`;
-      return;
-    }
-
-    lastDetail.forEach((b) => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${b.time}</td>
-        <td>
-          <span class="badge">${b.stylist === "bank" ? "Bank" : "Sindy"}</span>
-          <span class="badge">${b.gender === "male" ? "ชาย" : "หญิง"}</span>
-        </td>
-        <td>${b.name}</td>
-        <td>${b.service}</td>
-        <td>${b.phone || "-"}</td>
-        <td>
-          <button class="smallBtn edit">แก้ไข</button>
-          <button class="smallBtn danger del">ลบ</button>
-        </td>
-      `;
-
-      tr.querySelector(".del").onclick = async () => {
-        if (!confirm("ลบคิวนี้?")) return;
-        await api(`/api/bookings/${b.id}`, { method: "DELETE" });
-        refresh();
-        refreshMonth();
-      };
-
-      tr.querySelector(".edit").onclick = () => {
-        editId = b.id;
-        dateEl.value = b.date;
-        currentStylist = b.stylist;
-        timeEl.value = b.time;
-        nameEl.value = b.name;
-        phoneEl.value = b.phone || "";
-        serviceEl.value = b.service;
-        document.querySelector(`input[name=gender][value=${b.gender}]`).checked =
-          true;
-        applyDisabledTimes();
-      };
-
-      listEl.appendChild(tr);
-    });
-  }
-
-  // ===== Refresh =====
-  async function refresh() {
-    const r = await api(`/api/summary?date=${dateEl.value}`);
-    lastDetail = r.detail || [];
-
-    countBank.textContent = r.counts.bank || 0;
-    countSindy.textContent = r.counts.sindy || 0;
-    countTotal.textContent = r.counts.total || 0;
-
-    summaryHint.textContent = new Date(dateEl.value).toLocaleDateString("th-TH", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
-
-    renderList();
-    applyDisabledTimes();
-  }
-
-  // ===== Submit (แก้ปัญหากดแล้วเงียบ) =====
-  formEl.onsubmit = async (e) => {
-    e.preventDefault();
-    setMsg("");
-
-    const g = document.querySelector("input[name=gender]:checked");
-    if (!g) return setMsg("กรุณาเลือกเพศลูกค้า", "err");
-
-    const payload = {
-      date: dateEl.value,
-      stylist: currentStylist,
-      gender: g.value,
-      time: timeEl.value,
-      name: nameEl.value.trim(),
-      phone: phoneEl.value.trim(),
-      service: serviceEl.value.trim(),
+    cell.onclick = () => {
+      currentDate = `${currentYM}-${String(d).padStart(2, "0")}`;
+      dateInput.value = currentDate;
+      loadDay();
     };
+    calGrid.appendChild(cell);
+  }
+}
 
-    if (!payload.time || !payload.name || !payload.service) {
-      return setMsg("กรอกข้อมูลให้ครบ", "err");
-    }
+// ===== Load Day =====
+async function loadDay() {
+  msgEl.textContent = "กำลังโหลด...";
+  const res = await fetch(`/api/summary?date=${currentDate}`);
+  const data = await res.json();
 
-    submitBtn.disabled = true;
+  bookings = data.detail || [];
 
-    try {
-      if (editId) {
-        await api(`/api/bookings/${editId}`, {
-          method: "PUT",
-          body: JSON.stringify(payload),
-        });
-      } else {
-        await api("/api/bookings", {
-          method: "POST",
-          body: JSON.stringify(payload),
-        });
-      }
+  // Summary
+  countBank.textContent = data.counts.bank || 0;
+  countSindy.textContent = data.counts.sindy || 0;
+  countAssist.textContent = data.counts.assist || 0;
+  countTotal.textContent = data.counts.total || 0;
+  summaryHint.textContent = bookings.length ? "มีคิวแล้ว" : "-";
 
-      editId = null;
-      formEl.reset();
-      setMsg("บันทึกเรียบร้อย", "ok");
-      await refresh();
-      await refreshMonth();
-    } catch (err) {
-      setMsg(err.message, "err");
-    } finally {
-      submitBtn.disabled = false;
-    }
-  };
+  // Disable times by stylist
+  const used = bookings.filter((b) => b.stylist === currentStylist).map((b) => b.time);
+  [...timeSelect.options].forEach((opt) => {
+    if (!opt.value) return;
+    opt.disabled = used.includes(opt.value);
+  });
 
-  // ===== Init =====
-  (async () => {
-    dateEl.value = today();
-    if (!(await ensureAuth())) return;
+  renderTable();
+  msgEl.textContent = "";
+}
 
-    const meta = await api("/api/meta");
-    TIMES = meta.times || [];
-    renderTimes();
-    await refresh();
-    await refreshMonth();
-  })();
+// ===== Table =====
+function renderTable() {
+  listEl.innerHTML = "";
+  bookings.forEach((b) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${fmtTime(b.time)}</td>
+      <td>
+        <span class="badge">${b.stylist}</span>
+        <span class="badge ghost">${b.gender === "male" ? "ชาย" : "หญิง"}</span>
+      </td>
+      <td>${b.name}</td>
+      <td>${b.service}</td>
+      <td>${b.phone ? `<a href="tel:${b.phone}">${b.phone}</a>` : "-"}</td>
+      <td>
+        <button data-id="${b.id}" class="ghost del">ลบ</button>
+      </td>
+    `;
+    listEl.appendChild(tr);
+  });
 
-  // ===== Login =====
-  loginBtn.onclick = async () => {
-    try {
-      await api("/api/login", {
-        method: "POST",
-        body: JSON.stringify({ pin: pinEl.value }),
-      });
-      loginOverlay.style.display = "none";
-      location.reload();
-    } catch (e) {
-      setLoginMsg("PIN ไม่ถูกต้อง", "err");
-    }
-  };
+  listEl.querySelectorAll(".del").forEach((btn) => {
+    btn.onclick = async () => {
+      if (!confirm("ลบคิวนี้?")) return;
+      await fetch(`/api/bookings/${btn.dataset.id}`, { method: "DELETE" });
+      await loadDay();
+      await loadMonth();
+    };
+  });
+}
 
-  logoutBtn.onclick = async () => {
-    await api("/api/logout", { method: "POST" });
-    location.reload();
-  };
-});
+// ===== Submit =====
+formEl.onsubmit = async (e) => {
+  e.preventDefault();
+  msgEl.textContent = "กำลังบันทึก...";
+
+  const name = $("name").value.trim();
+  const phone = $("phone").value.trim() || "0";
+  const service = $("service").value.trim();
+  const time = timeSelect.value;
+  const gender = document.querySelector('input[name="gender"]:checked')?.value;
+
+  if (!name || !service || !time || !gender) {
+    msgEl.textContent = "กรอกข้อมูลให้ครบ";
+    return;
+  }
+
+  const res = await fetch("/api/bookings", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      date: currentDate,
+      time,
+      stylist: currentStylist,
+      gender,
+      name,
+      phone,
+      service,
+    }),
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    msgEl.textContent = data.error || "บันทึกไม่สำเร็จ";
+    return;
+  }
+
+  formEl.reset();
+  msgEl.textContent = "บันทึกแล้ว";
+  await loadDay();
+  await loadMonth();
+};
+
+// ===== Start =====
+init();
