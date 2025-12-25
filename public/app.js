@@ -1,12 +1,6 @@
-// =====================
-// CONFIG
-// =====================
-const API_BASE = '/api';
-const PIN_CODE = '1234'; // เปลี่ยนได้
-
-// =====================
-// ELEMENTS
-// =====================
+/* =========================
+   ELEMENTS
+========================= */
 const loginOverlay = document.getElementById('loginOverlay');
 const loginBtn = document.getElementById('loginBtn');
 const pinInput = document.getElementById('pin');
@@ -18,76 +12,57 @@ const formEl = document.getElementById('bookingForm');
 const listEl = document.getElementById('list');
 const msgEl = document.getElementById('msg');
 
-const calGrid = document.getElementById('calGrid');
-const calTitle = document.getElementById('calTitle');
-
 const countMale = document.getElementById('countMale');
 const countFemale = document.getElementById('countFemale');
 const countTotal = document.getElementById('countTotal');
 const summaryHint = document.getElementById('summaryHint');
 
-// =====================
-// STATE
-// =====================
-let loggedIn = false;
+/* =========================
+   STATE
+========================= */
+const PIN_CODE = '1234';
 let selectedStylist = 'Bank';
 
-// =====================
-// LOGIN
-// =====================
+/* =========================
+   LOGIN
+========================= */
 loginBtn.onclick = () => {
   if (pinInput.value === PIN_CODE) {
-    loggedIn = true;
     loginOverlay.style.display = 'none';
-    loadAll();
+    loadBookings();
   } else {
     loginMsg.textContent = 'PIN ไม่ถูกต้อง';
   }
 };
 
-logoutBtn.onclick = () => {
-  loggedIn = false;
-  location.reload();
-};
+logoutBtn.onclick = () => location.reload();
 
-// =====================
-// DATE INIT
-// =====================
-const today = new Date().toISOString().slice(0, 10);
-dateInput.value = today;
+/* =========================
+   DATE INIT
+========================= */
+dateInput.value = new Date().toISOString().slice(0, 10);
+dateInput.onchange = loadBookings;
 
-// =====================
-// STYLIST TABS
-// =====================
+/* =========================
+   STYLIST BUTTONS
+========================= */
 document.querySelectorAll('.tab').forEach(btn => {
   btn.onclick = () => {
     document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    selectedStylist = btn.dataset.tab === 'male'
-      ? 'Bank'
-      : btn.dataset.tab === 'female'
-      ? 'Sindy'
-      : 'Assist';
+    selectedStylist = btn.textContent.trim();
   };
 });
 
-// =====================
-// LOAD ALL
-// =====================
-async function loadAll() {
-  await loadBookings();
-  await loadCalendar();
-}
-
-// =====================
-// LOAD BOOKINGS (TABLE)
-// =====================
+/* =========================
+   LOAD BOOKINGS
+========================= */
 async function loadBookings() {
   listEl.innerHTML = '';
   msgEl.textContent = '';
 
   try {
-    const res = await fetch(`${API_BASE}/bookings?date=${dateInput.value}`);
+    const res = await fetch(`/bookings?date=${dateInput.value}`);
     const data = await res.json();
 
     let male = 0, female = 0;
@@ -102,11 +77,8 @@ async function loadBookings() {
         <td>${b.stylist} / ${b.gender}</td>
         <td>${b.name}</td>
         <td>${b.service}</td>
-        <td>${b.note || ''}</td>
         <td>${b.phone}</td>
-        <td>
-          <button data-id="${b.id}" class="ghost deleteBtn">ลบ</button>
-        </td>
+        <td>-</td>
       `;
       listEl.appendChild(tr);
     });
@@ -116,79 +88,45 @@ async function loadBookings() {
     countTotal.textContent = data.length;
     summaryHint.textContent = data.length ? 'มีคิว' : '-';
 
-    document.querySelectorAll('.deleteBtn').forEach(btn => {
-      btn.onclick = async () => {
-        await fetch(`${API_BASE}/bookings/${btn.dataset.id}`, { method: 'DELETE' });
-        loadAll();
-      };
-    });
-
-  } catch (e) {
+  } catch (err) {
     msgEl.textContent = 'โหลดข้อมูลไม่สำเร็จ';
   }
 }
 
-// =====================
-// LOAD CALENDAR
-// =====================
-async function loadCalendar() {
-  calGrid.innerHTML = '';
-  const month = dateInput.value.slice(0,7);
-
-  const res = await fetch(`${API_BASE}/calendar?month=${month}`);
-  const days = await res.json();
-
-  const [y, m] = month.split('-');
-  calTitle.textContent = `${new Date(y, m-1).toLocaleString('th-TH', { month: 'long' })} ${parseInt(y)+543}`;
-
-  days.forEach(d => {
-    const cell = document.createElement('div');
-    cell.className = 'calDay';
-    if (d.hasBooking) cell.classList.add('hasBooking');
-    cell.textContent = d.day;
-    calGrid.appendChild(cell);
-  });
-}
-
-// =====================
-// SUBMIT FORM
-// =====================
-formEl.onsubmit = async (e) => {
+/* =========================
+   SUBMIT BOOKING
+========================= */
+formEl.onsubmit = async e => {
   e.preventDefault();
 
-  const payload = {
-    date: dateInput.value,
-    name: name.value,
-    phone: phone.value || '0',
-    service: service.value,
-    note: note.value,
-    time: time.value,
-    stylist: selectedStylist,
-    gender: document.querySelector('input[name="gender"]:checked')?.value
-  };
-
-  if (!payload.gender) {
+  const gender = document.querySelector('input[name="gender"]:checked')?.value;
+  if (!gender) {
     msgEl.textContent = 'กรุณาเลือกเพศ';
     return;
   }
 
-  const res = await fetch(`${API_BASE}/bookings`, {
+  const payload = {
+    date: dateInput.value,
+    time: time.value,
+    name: name.value,
+    phone: phone.value || '0',
+    stylist: selectedStylist,
+    gender,
+    service: service.value
+  };
+
+  const res = await fetch('/bookings', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
   });
 
+  const result = await res.json();
   if (!res.ok) {
-    const err = await res.text();
-    msgEl.textContent = err;
+    msgEl.textContent = result.error || 'บันทึกไม่สำเร็จ';
     return;
   }
 
   formEl.reset();
-  loadAll();
+  loadBookings();
 };
-
-// =====================
-// DATE CHANGE
-// =====================
-dateInput.onchange = loadAll;
