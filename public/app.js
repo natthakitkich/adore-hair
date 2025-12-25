@@ -1,3 +1,21 @@
+/* ===== LOGIN ===== */
+const loginOverlay = document.getElementById('loginOverlay');
+const loginBtn = document.getElementById('loginBtn');
+const loginMsg = document.getElementById('loginMsg');
+const pinInput = document.getElementById('pin');
+
+// เปลี่ยน PIN ตรงนี้
+const OWNER_PIN = '1234';
+
+loginBtn.onclick = () => {
+  if (pinInput.value === OWNER_PIN) {
+    loginOverlay.classList.add('hidden');
+  } else {
+    loginMsg.textContent = 'PIN ไม่ถูกต้อง';
+    loginMsg.classList.remove('ok');
+    loginMsg.classList.add('err');
+  }
+};
 let currentDate = '';
 let viewYear, viewMonth;
 let currentStylist = 'Bank';
