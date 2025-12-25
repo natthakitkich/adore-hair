@@ -18,21 +18,14 @@ const countSindy = document.getElementById('countSindy');
 const countAssist = document.getElementById('countAssist');
 const countTotal = document.getElementById('countTotal');
 
-/* ===== LOGIN ===== */
-const loginOverlay = document.getElementById('loginOverlay');
-document.getElementById('loginBtn').onclick = () => {
-  loginOverlay.classList.add('hidden');
-};
-
 /* =========================
    INIT
 ========================= */
 init();
-
-function init() {
-  const today = new Date().toISOString().slice(0, 10);
-  dateInput.value = today;
+function init(){
+  const today = new Date().toISOString().slice(0,10);
   currentDate = today;
+  dateInput.value = today;
 
   bindTabs();
   bindForm();
@@ -42,7 +35,7 @@ function init() {
 /* =========================
    LOAD ALL
 ========================= */
-async function loadAll() {
+async function loadAll(){
   await loadCalendar();
   await loadBookings();
   await loadSlots();
@@ -53,28 +46,25 @@ async function loadAll() {
 /* =========================
    CALENDAR
 ========================= */
-async function loadCalendar() {
+async function loadCalendar(){
   const res = await fetch('/calendar-days');
   const json = await res.json();
   const daysWithBooking = json.days || [];
 
   calendarDays.innerHTML = '';
-
   const d = new Date(currentDate);
-  const year = d.getFullYear();
-  const month = d.getMonth();
+  const y = d.getFullYear();
+  const m = d.getMonth();
 
-  const firstDay = new Date(year, month, 1).getDay();
-  const totalDays = new Date(year, month + 1, 0).getDate();
+  const first = new Date(y,m,1).getDay();
+  const total = new Date(y,m+1,0).getDate();
 
-  for (let i = 0; i < firstDay; i++) {
-    const empty = document.createElement('div');
-    empty.className = 'calCell mutedDay';
-    calendarDays.appendChild(empty);
+  for(let i=0;i<first;i++){
+    calendarDays.appendChild(document.createElement('div'));
   }
 
-  for (let day = 1; day <= totalDays; day++) {
-    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  for(let day=1;day<=total;day++){
+    const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
 
     const cell = document.createElement('div');
     cell.className = 'calCell';
@@ -82,22 +72,21 @@ async function loadCalendar() {
     const num = document.createElement('div');
     num.className = 'calNum';
     num.textContent = day;
-    cell.appendChild(num);
 
-    if (daysWithBooking.includes(dateStr)) {
+    if(daysWithBooking.includes(dateStr)){
       cell.classList.add('hasBookings');
     }
-
-    if (dateStr === currentDate) {
+    if(dateStr === currentDate){
       cell.classList.add('selected');
     }
 
-    cell.onclick = () => {
-      dateInput.value = dateStr;
+    cell.onclick = ()=>{
       currentDate = dateStr;
+      dateInput.value = dateStr;
       loadAll();
     };
 
+    cell.appendChild(num);
     calendarDays.appendChild(cell);
   }
 }
@@ -105,7 +94,7 @@ async function loadCalendar() {
 /* =========================
    BOOKINGS
 ========================= */
-async function loadBookings() {
+async function loadBookings(){
   const res = await fetch(`/bookings?date=${currentDate}`);
   bookings = await res.json();
 }
@@ -113,42 +102,52 @@ async function loadBookings() {
 /* =========================
    SLOTS
 ========================= */
-async function loadSlots() {
+async function loadSlots(){
   timeSelect.innerHTML = '<option value="">เลือกเวลา</option>';
-
   const res = await fetch(`/slots?date=${currentDate}`);
   const json = await res.json();
   const slots = json.slots || {};
 
-  Object.keys(slots).forEach(time => {
-    if (!slots[time][currentStylist]) {
+  Object.keys(slots).forEach(t=>{
+    if(!slots[t][currentStylist]){
       const opt = document.createElement('option');
-      opt.value = time;
-      opt.textContent = time;
+      opt.value = t;
+      opt.textContent = t;
       timeSelect.appendChild(opt);
     }
   });
 }
 
 /* =========================
-   TABLE
+   TABLE (แก้ตรงนี้)
 ========================= */
-function renderTable() {
+function renderTable(){
   list.innerHTML = '';
 
-  bookings.forEach(b => {
+  bookings.forEach(b=>{
+    const genderTH = b.gender === 'male' ? 'ชาย' : 'หญิง';
+
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${b.time}</td>
-      <td>${b.stylist} / ${b.gender}</td>
+      <td>
+        <span class="badge stylist-${b.stylist.toLowerCase()}">
+          ${b.stylist}
+        </span>
+      </td>
+      <td>
+        <span class="badge gender-${b.gender}">
+          ${genderTH}
+        </span>
+      </td>
       <td>${b.name}</td>
       <td>${b.service || '-'}</td>
       <td>${b.phone || '-'}</td>
-      <td><button data-id="${b.id}">ลบ</button></td>
+      <td><button class="smallBtn danger">ลบ</button></td>
     `;
 
-    tr.querySelector('button').onclick = async () => {
-      await fetch(`/bookings/${b.id}`, { method: 'DELETE' });
+    tr.querySelector('button').onclick = async ()=>{
+      await fetch(`/bookings/${b.id}`,{method:'DELETE'});
       loadAll();
     };
 
@@ -159,22 +158,22 @@ function renderTable() {
 /* =========================
    SUMMARY
 ========================= */
-function renderSummary() {
-  const bank = bookings.filter(b => b.stylist === 'Bank').length;
-  const sindy = bookings.filter(b => b.stylist === 'Sindy').length;
-  const assist = bookings.filter(b => b.stylist === 'Assist').length;
+function renderSummary(){
+  const bank = bookings.filter(b=>b.stylist==='Bank').length;
+  const sindy = bookings.filter(b=>b.stylist==='Sindy').length;
+  const assist = bookings.filter(b=>b.stylist==='Assist').length;
 
   countBank.textContent = bank;
   countSindy.textContent = sindy;
   countAssist.textContent = assist;
-  countTotal.textContent = bank + sindy + assist;
+  countTotal.textContent = bank+sindy+assist;
 }
 
 /* =========================
    FORM
 ========================= */
-function bindForm() {
-  document.getElementById('bookingForm').onsubmit = async e => {
+function bindForm(){
+  document.getElementById('bookingForm').onsubmit = async e=>{
     e.preventDefault();
 
     const body = {
@@ -187,16 +186,16 @@ function bindForm() {
       service: document.getElementById('service').value
     };
 
-    const res = await fetch('/bookings', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
+    const res = await fetch('/bookings',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(body)
     });
 
-    if (res.ok) {
+    if(res.ok){
       e.target.reset();
       loadAll();
-    } else {
+    }else{
       alert('กรอกข้อมูลไม่ครบ');
     }
   };
@@ -205,10 +204,10 @@ function bindForm() {
 /* =========================
    TABS
 ========================= */
-function bindTabs() {
-  document.querySelectorAll('.tab').forEach(btn => {
-    btn.onclick = () => {
-      document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+function bindTabs(){
+  document.querySelectorAll('.tab').forEach(btn=>{
+    btn.onclick = ()=>{
+      document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
       btn.classList.add('active');
       currentStylist = btn.dataset.tab;
       loadSlots();
