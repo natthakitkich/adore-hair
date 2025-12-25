@@ -29,11 +29,12 @@ const supabase = createClient(
    ROUTES
 ========================= */
 
+// หน้าเว็บ
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public/index.html'));
 });
 
-/* bookings รายวัน */
+// bookings ตามวัน
 app.get('/bookings', async (req, res) => {
   const { date } = req.query;
 
@@ -47,19 +48,29 @@ app.get('/bookings', async (req, res) => {
   res.json(data);
 });
 
-/* เพิ่ม booking */
+// สร้าง booking
 app.post('/bookings', async (req, res) => {
   const { date, time, name, phone, stylist, gender, service } = req.body;
 
-  const { error } = await supabase.from('bookings').insert([
-    { date, time, name, phone, stylist, gender, service }
-  ]);
+  if (!date || !time || !name || !stylist || !gender) {
+    return res.status(400).json({ error: 'ข้อมูลไม่ครบ' });
+  }
+
+  const { error } = await supabase.from('bookings').insert([{
+    date,
+    time,
+    name,
+    phone,
+    stylist,
+    gender,
+    service
+  }]);
 
   if (error) return res.status(400).json({ error: error.message });
   res.json({ success: true });
 });
 
-/* ลบ booking */
+// ลบ booking
 app.delete('/bookings/:id', async (req, res) => {
   const { id } = req.params;
 
@@ -72,45 +83,19 @@ app.delete('/bookings/:id', async (req, res) => {
   res.json({ success: true });
 });
 
-/* slot รายวัน */
-app.get('/slots', async (req, res) => {
-  const { date } = req.query;
-
-  const slots = {};
-  for (let h = 13; h <= 22; h++) {
-    const t = `${String(h).padStart(2, '0')}:00`;
-    slots[t] = { Bank: false, Sindy: false, Assist: false };
-  }
-
-  const { data } = await supabase
-    .from('bookings')
-    .select('time, stylist')
-    .eq('date', date);
-
-  data.forEach(b => {
-    if (slots[b.time]) slots[b.time][b.stylist] = true;
-  });
-
-  res.json({ slots });
-});
-
-/* 🔴 CALENDAR API (หัวใจของวงเขียว) */
+// days ที่มีคิว (สำหรับปฏิทินวงเขียว)
 app.get('/calendar', async (req, res) => {
   const { month } = req.query; // YYYY-MM
-
-  const start = `${month}-01`;
-  const end = `${month}-31`;
 
   const { data, error } = await supabase
     .from('bookings')
     .select('date')
-    .gte('date', start)
-    .lte('date', end);
+    .like('date', `${month}%`);
 
   if (error) return res.status(400).json({ error: error.message });
 
   const days = [...new Set(data.map(d => d.date))];
-  res.json({ days });
+  res.json(days);
 });
 
 /* =========================
