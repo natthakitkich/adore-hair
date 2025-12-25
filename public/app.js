@@ -9,7 +9,7 @@ const END_HOUR = 22;
    STATE
 ========================= */
 let selectedDate = null;
-let selectedStylist = 'Bank';
+let selectedStylist = null; // ❗ บังคับให้เลือก
 let selectedGender = null;
 let bookings = [];
 
@@ -54,12 +54,6 @@ function init() {
   selectedDate = new Date().toISOString().slice(0, 10);
   dateInput.value = selectedDate;
 
-  // 🔴 บังคับเลือก Bank ตั้งแต่ต้น (กัน stylist = null)
-  stylistBtns.forEach(b => b.classList.remove('active'));
-  const bankBtn = document.querySelector('.tab[data-tab="Bank"]');
-  if (bankBtn) bankBtn.classList.add('active');
-  selectedStylist = 'Bank';
-
   bindEvents();
   loadAll();
 }
@@ -78,6 +72,7 @@ function bindEvents() {
       stylistBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       selectedStylist = btn.dataset.tab;
+      msg.textContent = ''; // ล้าง error
       loadSlots();
     };
   });
@@ -85,6 +80,7 @@ function bindEvents() {
   document.querySelectorAll('input[name="gender"]').forEach(r => {
     r.onchange = () => {
       selectedGender = r.value;
+      msg.textContent = '';
     };
   });
 
@@ -95,15 +91,10 @@ function bindEvents() {
    LOAD DATA
 ========================= */
 async function loadAll() {
-  try {
-    await loadBookings();
-    await loadSlots();
-    renderTable();
-    renderSummary();
-    msg.textContent = '';
-  } catch (e) {
-    msg.textContent = 'โหลดข้อมูลไม่สำเร็จ';
-  }
+  await loadBookings();
+  await loadSlots();
+  renderTable();
+  renderSummary();
 }
 
 async function loadBookings() {
@@ -112,10 +103,12 @@ async function loadBookings() {
 }
 
 async function loadSlots() {
+  timeSelect.innerHTML = `<option value="">เลือกเวลา</option>`;
+
+  if (!selectedStylist) return;
+
   const res = await fetch(`/slots?date=${selectedDate}`);
   const { slots } = await res.json();
-
-  timeSelect.innerHTML = `<option value="">เลือกเวลา</option>`;
 
   for (let h = START_HOUR; h <= END_HOUR; h++) {
     const t = `${String(h).padStart(2, '0')}:00`;
@@ -131,7 +124,7 @@ async function loadSlots() {
 }
 
 /* =========================
-   SUBMIT BOOKING
+   SUBMIT
 ========================= */
 async function submitBooking(e) {
   e.preventDefault();
@@ -141,8 +134,25 @@ async function submitBooking(e) {
   const time = timeSelect.value;
   const service = document.getElementById('service').value.trim();
 
-  if (!name || !time || !selectedGender || !selectedStylist) {
-    msg.textContent = 'กรอกข้อมูลไม่ครบ';
+  // ❗ VALIDATION ชัดเจนทีละข้อ
+  if (!selectedStylist) {
+    msg.textContent = 'กรุณาเลือกช่างก่อน';
+    highlightStylistTabs();
+    return;
+  }
+
+  if (!name) {
+    msg.textContent = 'กรุณาใส่ชื่อลูกค้า';
+    return;
+  }
+
+  if (!selectedGender) {
+    msg.textContent = 'กรุณาเลือกเพศลูกค้า';
+    return;
+  }
+
+  if (!time) {
+    msg.textContent = 'กรุณาเลือกเวลา';
     return;
   }
 
@@ -172,6 +182,16 @@ async function submitBooking(e) {
   selectedGender = null;
 
   loadAll();
+}
+
+/* =========================
+   UI HELPERS
+========================= */
+function highlightStylistTabs() {
+  stylistBtns.forEach(btn => {
+    btn.classList.add('shake');
+    setTimeout(() => btn.classList.remove('shake'), 300);
+  });
 }
 
 /* =========================
