@@ -1,7 +1,7 @@
 /* =========================
    CONFIG
 ========================= */
-const PIN_CODE = '1234'; // ← เปลี่ยนตรงนี้ได้
+const PIN_CODE = '1234';
 const START_HOUR = 13;
 const END_HOUR = 22;
 
@@ -54,6 +54,12 @@ function init() {
   selectedDate = new Date().toISOString().slice(0, 10);
   dateInput.value = selectedDate;
 
+  // 🔴 บังคับเลือก Bank ตั้งแต่ต้น (กัน stylist = null)
+  stylistBtns.forEach(b => b.classList.remove('active'));
+  const bankBtn = document.querySelector('.tab[data-tab="Bank"]');
+  if (bankBtn) bankBtn.classList.add('active');
+  selectedStylist = 'Bank';
+
   bindEvents();
   loadAll();
 }
@@ -77,7 +83,9 @@ function bindEvents() {
   });
 
   document.querySelectorAll('input[name="gender"]').forEach(r => {
-    r.onchange = () => (selectedGender = r.value);
+    r.onchange = () => {
+      selectedGender = r.value;
+    };
   });
 
   form.onsubmit = submitBooking;
@@ -87,10 +95,15 @@ function bindEvents() {
    LOAD DATA
 ========================= */
 async function loadAll() {
-  await loadBookings();
-  await loadSlots();
-  renderTable();
-  renderSummary();
+  try {
+    await loadBookings();
+    await loadSlots();
+    renderTable();
+    renderSummary();
+    msg.textContent = '';
+  } catch (e) {
+    msg.textContent = 'โหลดข้อมูลไม่สำเร็จ';
+  }
 }
 
 async function loadBookings() {
@@ -118,7 +131,7 @@ async function loadSlots() {
 }
 
 /* =========================
-   SUBMIT
+   SUBMIT BOOKING
 ========================= */
 async function submitBooking(e) {
   e.preventDefault();
@@ -128,7 +141,7 @@ async function submitBooking(e) {
   const time = timeSelect.value;
   const service = document.getElementById('service').value.trim();
 
-  if (!name || !time || !selectedGender) {
+  if (!name || !time || !selectedGender || !selectedStylist) {
     msg.textContent = 'กรอกข้อมูลไม่ครบ';
     return;
   }
@@ -148,6 +161,7 @@ async function submitBooking(e) {
   });
 
   const result = await res.json();
+
   if (result.error) {
     msg.textContent = result.error;
     return;
@@ -176,9 +190,7 @@ function renderTable() {
       </td>
       <td>${b.name}</td>
       <td>${b.service || '-'}</td>
-      <td>
-        <a href="tel:${b.phone}">${b.phone}</a>
-      </td>
+      <td><a href="tel:${b.phone}">${b.phone}</a></td>
       <td>-</td>
     `;
     listEl.appendChild(tr);
