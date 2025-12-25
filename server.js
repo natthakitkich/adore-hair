@@ -120,6 +120,31 @@ app.get('/slots', async (req, res) => {
 });
 
 /* =========================
+   ROUTES
+========================= */
+
+// routes เดิมของคุณ
+app.get('/bookings', ...)
+app.post('/bookings', ...)
+app.get('/slots', ...)
+
+/* =========================
+   CALENDAR (days with booking)
+========================= */
+app.get('/calendar', async (req, res) => {
+  const { data, error } = await supabase
+    .from('bookings')
+    .select('date');
+
+  if (error) {
+    return res.status(400).json({ error: error.message });
+  }
+
+  const dates = [...new Set(data.map(d => d.date))];
+  res.json(dates);
+});
+
+/* =========================
    START SERVER
 ========================= */
 app.listen(PORT, () => {
