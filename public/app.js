@@ -15,7 +15,6 @@ function init(){
   currentDate = today.toISOString().slice(0,10);
   viewYear = today.getFullYear();
   viewMonth = today.getMonth();
-
   dateInput.value = currentDate;
 
   document.getElementById('prevMonth').onclick = () => changeMonth(-1);
@@ -104,11 +103,10 @@ function renderTable(){
 
   bookings.forEach(b=>{
     const tr = document.createElement('tr');
-
     tr.innerHTML = `
       <td>${b.time}</td>
       <td><span class="badge stylist-${b.stylist.toLowerCase()}">${b.stylist}</span></td>
-      <td><span class="gender ${b.gender}">${b.gender === 'male' ? '♂' : '♀'}</span></td>
+      <td><span class="gender ${b.gender}">${b.gender === 'male' ? '👨' : '👩'}</span></td>
       <td>${b.name}</td>
       <td>${b.service || '-'}</td>
       <td>${b.phone || '-'}</td>
@@ -127,15 +125,15 @@ function renderTable(){
 /* ===== SUMMARY ===== */
 function renderSummary(){
   const c = s => bookings.filter(b=>b.stylist===s).length;
-  document.getElementById('countBank').textContent = c('Bank');
-  document.getElementById('countSindy').textContent = c('Sindy');
-  document.getElementById('countAssist').textContent = c('Assist');
-  document.getElementById('countTotal').textContent = bookings.length;
+  countBank.textContent = c('Bank');
+  countSindy.textContent = c('Sindy');
+  countAssist.textContent = c('Assist');
+  countTotal.textContent = bookings.length;
 }
 
 /* ===== FORM ===== */
 function bindForm(){
-  document.getElementById('bookingForm').onsubmit = async e=>{
+  bookingForm.onsubmit = async e=>{
     e.preventDefault();
     const body = {
       date: currentDate,
