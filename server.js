@@ -15,10 +15,6 @@ const PORT = process.env.PORT || 3000;
 ========================= */
 app.use(cors());
 app.use(express.json());
-
-/* =========================
-   STATIC FILES (สำคัญมาก)
-========================= */
 app.use(express.static(path.join(__dirname, 'public')));
 
 /* =========================
@@ -33,12 +29,12 @@ const supabase = createClient(
    ROUTES
 ========================= */
 
-// หน้าเว็บหลัก
+// หน้าเว็บ
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// ดึง bookings
+/* ---------- GET BOOKINGS ---------- */
 app.get('/bookings', async (req, res) => {
   const { date } = req.query;
 
@@ -50,24 +46,58 @@ app.get('/bookings', async (req, res) => {
   if (date) query = query.eq('date', date);
 
   const { data, error } = await query;
-
   if (error) return res.status(400).json({ error: error.message });
+
   res.json(data);
 });
 
-// สร้าง booking
+/* ---------- CREATE BOOKING ---------- */
 app.post('/bookings', async (req, res) => {
   const { date, time, name, phone, stylist, gender, service } = req.body;
+
+  if (!date || !time || !name || !stylist || !gender) {
+    return res.status(400).json({ error: 'ข้อมูลไม่ครบ' });
+  }
 
   const { error } = await supabase.from('bookings').insert([
     { date, time, name, phone, stylist, gender, service }
   ]);
 
   if (error) return res.status(400).json({ error: error.message });
+
   res.json({ success: true });
 });
 
-// slots
+/* ---------- DELETE BOOKING ---------- */
+app.delete('/bookings/:id', async (req, res) => {
+  const { id } = req.params;
+
+  const { error } = await supabase
+    .from('bookings')
+    .delete()
+    .eq('id', id);
+
+  if (error) return res.status(400).json({ error: error.message });
+
+  res.json({ success: true });
+});
+
+/* ---------- UPDATE BOOKING ---------- */
+app.put('/bookings/:id', async (req, res) => {
+  const { id } = req.params;
+  const updateData = req.body;
+
+  const { error } = await supabase
+    .from('bookings')
+    .update(updateData)
+    .eq('id', id);
+
+  if (error) return res.status(400).json({ error: error.message });
+
+  res.json({ success: true });
+});
+
+/* ---------- SLOTS ---------- */
 app.get('/slots', async (req, res) => {
   const { date } = req.query;
 
