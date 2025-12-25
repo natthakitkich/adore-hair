@@ -3,11 +3,7 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { createClient } from '@supabase/supabase-js';
-import cron from 'node-cron';
 
-/* =========================
-   BASIC SETUP
-========================= */
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -37,10 +33,12 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-/* ----- BOOKINGS ----- */
+/* ===== BOOKINGS ===== */
 
 app.get('/bookings', async (req, res) => {
   const { date } = req.query;
+
+  if (!date) return res.json([]);
 
   const { data, error } = await supabase
     .from('bookings')
@@ -48,7 +46,11 @@ app.get('/bookings', async (req, res) => {
     .eq('date', date)
     .order('time', { ascending: true });
 
-  if (error) return res.json([]);
+  if (error) {
+    console.error(error);
+    return res.json([]);
+  }
+
   res.json(data || []);
 });
 
@@ -64,6 +66,7 @@ app.post('/bookings', async (req, res) => {
   ]);
 
   if (error) {
+    console.error(error);
     return res.status(400).json({ error: error.message });
   }
 
@@ -73,11 +76,15 @@ app.post('/bookings', async (req, res) => {
 app.delete('/bookings/:id', async (req, res) => {
   const { id } = req.params;
 
-  await supabase.from('bookings').delete().eq('id', id);
+  await supabase
+    .from('bookings')
+    .delete()
+    .eq('id', id);
+
   res.json({ ok: true });
 });
 
-/* ----- SLOTS ----- */
+/* ===== SLOTS ===== */
 
 app.get('/slots', async (req, res) => {
   const { date } = req.query;
@@ -102,7 +109,7 @@ app.get('/slots', async (req, res) => {
   res.json({ slots });
 });
 
-/* ----- CALENDAR DAYS ----- */
+/* ===== CALENDAR DAYS ===== */
 
 app.get('/calendar-days', async (req, res) => {
   const { data } = await supabase
@@ -117,45 +124,8 @@ app.get('/calendar-days', async (req, res) => {
 });
 
 /* =========================
-   AUTO CLEANUP (7 DAYS)
-   Timezone: Asia/Bangkok
-========================= */
-
-cron.schedule(
-  '0 0 * * *', // ทุกวันตอน 00:00
-  async () => {
-    try {
-      const now = new Date(
-        new Date().toLocaleString('en-US', { timeZone: 'Asia/Bangkok' })
-      );
-
-      const cutoff = new Date(now);
-      cutoff.setDate(cutoff.getDate() - 7);
-      const cutoffDate = cutoff.toISOString().slice(0, 10);
-
-      const { error } = await supabase
-        .from('bookings')
-        .delete()
-        .lt('date', cutoffDate);
-
-      if (error) {
-        console.error('❌ Cleanup error:', error.message);
-      } else {
-        console.log('🧹 Cleanup bookings before', cutoffDate);
-      }
-    } catch (err) {
-      console.error('❌ Cleanup exception:', err);
-    }
-  },
-  {
-    timezone: 'Asia/Bangkok'
-  }
-);
-
-/* =========================
    START SERVER
 ========================= */
-
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
