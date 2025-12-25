@@ -9,7 +9,7 @@ const END_HOUR = 22;
    STATE
 ========================= */
 let selectedDate = null;
-let selectedStylist = 'Bank'; // ✅ FIX: มีค่าเริ่มต้น
+let selectedStylist = 'Bank'; // ✅ default ชัดเจน
 let selectedGender = null;
 let bookings = [];
 
@@ -54,10 +54,11 @@ function init() {
   selectedDate = new Date().toISOString().slice(0, 10);
   dateInput.value = selectedDate;
 
-  // ✅ FIX: ตั้ง active ให้ Bank ตั้งแต่แรก
+  // ✅ sync state + UI ตั้งแต่แรก
   stylistBtns.forEach(btn => {
     if (btn.dataset.tab === 'Bank') {
       btn.classList.add('active');
+      selectedStylist = 'Bank';
     }
   });
 
@@ -78,9 +79,9 @@ function bindEvents() {
     btn.onclick = () => {
       stylistBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      selectedStylist = btn.dataset.tab;
+      selectedStylist = btn.dataset.tab; // ✅ จุดเดียวที่อนุญาตให้เปลี่ยน
       msg.textContent = '';
-      loadSlots(); // ✅ reload เวลา
+      loadSlots();
     };
   });
 
@@ -134,6 +135,12 @@ async function loadSlots() {
 async function submitBooking(e) {
   e.preventDefault();
 
+  // ✅ hard guard ป้องกัน stylist หลุด
+  if (!selectedStylist) {
+    msg.textContent = 'กรุณาเลือกช่าง';
+    return;
+  }
+
   const name = document.getElementById('name').value.trim();
   const phone = document.getElementById('phone').value.trim() || '0';
   const time = timeSelect.value;
@@ -152,7 +159,7 @@ async function submitBooking(e) {
       time,
       name,
       phone,
-      stylist: selectedStylist,
+      stylist: selectedStylist, // ✅ ไม่มีทางเป็น null แล้ว
       gender: selectedGender,
       service
     })
