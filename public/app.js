@@ -1,254 +1,233 @@
-// ===== State =====
-let authed = false;
-let currentDate = "";
-let currentYM = "";
-let currentStylist = "bank";
-let bookings = [];
+const API_BASE = '';
 
-// ===== Elements =====
-const $ = (id) => document.getElementById(id);
+/* =========================
+   STATE
+========================= */
+let selectedDate = '';
+let selectedStylist = 'Bank';
+let selectedGender = '';
+let editingId = null;
 
-const loginOverlay = $("loginOverlay");
-const loginBtn = $("loginBtn");
-const loginMsg = $("loginMsg");
-const pinInput = $("pin");
+/* =========================
+   ELEMENTS
+========================= */
+const dateEl = document.getElementById('date');
+const timeEl = document.getElementById('time');
+const nameEl = document.getElementById('name');
+const phoneEl = document.getElementById('phone');
+const serviceEl = document.getElementById('service');
+const formEl = document.getElementById('bookingForm');
+const msgEl = document.getElementById('msg');
+const listEl = document.getElementById('list');
 
-const dateInput = $("date");
-const logoutBtn = $("logoutBtn");
+const countBankEl = document.getElementById('countBank');
+const countSindyEl = document.getElementById('countSindy');
+const countAssistEl = document.getElementById('countAssist');
+const countTotalEl = document.getElementById('countTotal');
+const summaryHintEl = document.getElementById('summaryHint');
 
-const calTitle = $("calTitle");
-const calGrid = $("calGrid");
+const calGridEl = document.getElementById('calGrid');
+const calTitleEl = document.getElementById('calTitle');
 
-const timeSelect = $("time");
-const formEl = $("bookingForm");
-const msgEl = $("msg");
+/* =========================
+   INIT
+========================= */
+init();
 
-const countBank = $("countBank");
-const countSindy = $("countSindy");
-const countAssist = $("countAssist");
-const countTotal = $("countTotal");
-const summaryHint = $("summaryHint");
+function init() {
+  const today = new Date().toISOString().slice(0, 10);
+  dateEl.value = today;
+  selectedDate = today;
 
-const listEl = $("list");
+  renderCalendar();
+  loadDay();
 
-// ===== Utils =====
-function todayISO() {
-  return new Date().toISOString().slice(0, 10);
-}
-function ymFromDate(d) {
-  return d.slice(0, 7);
-}
-function fmtTime(t) {
-  return t.slice(0, 5);
-}
-
-// ===== Auth =====
-async function checkAuth() {
-  const res = await fetch("/api/me");
-  authed = res.ok;
-  loginOverlay.style.display = authed ? "none" : "flex";
-}
-
-loginBtn.onclick = async () => {
-  loginMsg.textContent = "กำลังเข้าสู่ระบบ...";
-  const res = await fetch("/api/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ pin: pinInput.value }),
+  dateEl.addEventListener('change', () => {
+    selectedDate = dateEl.value;
+    renderCalendar();
+    loadDay();
   });
-  if (res.ok) {
-    await init();
-  } else {
-    loginMsg.textContent = "PIN ไม่ถูกต้อง";
-  }
-};
 
-logoutBtn.onclick = async () => {
-  await fetch("/api/logout", { method: "POST" });
-  location.reload();
-};
+  document.querySelectorAll('.tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedStylist = btn.textContent.trim();
+      loadSlots();
+    });
+  });
 
-// ===== Init =====
-async function init() {
-  await checkAuth();
-  if (!authed) return;
-
-  currentDate = todayISO();
-  dateInput.value = currentDate;
-  currentYM = ymFromDate(currentDate);
-
-  bindTabs();
-  await loadMeta();
-  await loadMonth();
-  await loadDay();
-}
-
-dateInput.onchange = async () => {
-  currentDate = dateInput.value;
-  currentYM = ymFromDate(currentDate);
-  await loadMonth();
-  await loadDay();
-};
-
-// ===== Tabs =====
-function bindTabs() {
-  document.querySelectorAll(".tab").forEach((btn) => {
-    btn.onclick = async () => {
-      document.querySelectorAll(".tab").forEach((b) => b.classList.remove("active"));
-      btn.classList.add("active");
-      currentStylist = btn.dataset.stylist;
-      await loadDay();
-    };
+  document.querySelectorAll('input[name="gender"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+      selectedGender = radio.value;
+    });
   });
 }
 
-// ===== Meta / Time =====
-async function loadMeta() {
-  const res = await fetch("/api/meta");
-  const data = await res.json();
-  timeSelect.innerHTML = `<option value="">เลือกเวลา</option>`;
-  data.times.forEach((t) => {
-    const opt = document.createElement("option");
-    opt.value = t;
-    opt.textContent = t;
-    timeSelect.appendChild(opt);
+/* =========================
+   CALENDAR
+========================= */
+async function renderCalendar() {
+  calGridEl.innerHTML = '';
+  const base = new Date(selectedDate);
+  const year = base.getFullYear();
+  const month = base.getMonth();
+
+  calTitleEl.textContent = base.toLocaleDateString('th-TH', {
+    month: 'long',
+    year: 'numeric',
   });
-}
 
-// ===== Calendar =====
-async function loadMonth() {
-  const res = await fetch(`/api/month?ym=${currentYM}`);
-  const { days } = await res.json();
-
-  const [y, m] = currentYM.split("-").map(Number);
-  const firstDay = new Date(y, m - 1, 1).getDay();
-  const lastDate = new Date(y, m, 0).getDate();
-
-  calTitle.textContent = `${new Date(y, m - 1).toLocaleString("th-TH", {
-    month: "long",
-    year: "numeric",
-  })}`;
-
-  calGrid.innerHTML = "";
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
 
   for (let i = 0; i < firstDay; i++) {
-    calGrid.appendChild(document.createElement("div"));
+    calGridEl.appendChild(document.createElement('div'));
   }
 
-  for (let d = 1; d <= lastDate; d++) {
-    const cell = document.createElement("div");
+  const { data } = await fetch(`${API_BASE}/bookings`).then(r => r.json());
+
+  const bookedDates = new Set(data.map(b => b.date));
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const cell = document.createElement('button');
+    cell.className = 'calDay';
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
     cell.textContent = d;
-    if (days.includes(d)) cell.classList.add("has");
-    if (String(d).padStart(2, "0") === currentDate.slice(8, 10)) {
-      cell.classList.add("active");
+
+    if (bookedDates.has(dateStr)) {
+      cell.classList.add('hasBooking');
     }
+
+    if (dateStr === selectedDate) {
+      cell.classList.add('active');
+    }
+
     cell.onclick = () => {
-      currentDate = `${currentYM}-${String(d).padStart(2, "0")}`;
-      dateInput.value = currentDate;
+      selectedDate = dateStr;
+      dateEl.value = dateStr;
+      renderCalendar();
       loadDay();
     };
-    calGrid.appendChild(cell);
+
+    calGridEl.appendChild(cell);
   }
 }
 
-// ===== Load Day =====
+/* =========================
+   LOAD DAY
+========================= */
 async function loadDay() {
-  msgEl.textContent = "กำลังโหลด...";
-  const res = await fetch(`/api/summary?date=${currentDate}`);
-  const data = await res.json();
-
-  bookings = data.detail || [];
-
-  // Summary
-  countBank.textContent = data.counts.bank || 0;
-  countSindy.textContent = data.counts.sindy || 0;
-  countAssist.textContent = data.counts.assist || 0;
-  countTotal.textContent = data.counts.total || 0;
-  summaryHint.textContent = bookings.length ? "มีคิวแล้ว" : "-";
-
-  // Disable times by stylist
-  const used = bookings.filter((b) => b.stylist === currentStylist).map((b) => b.time);
-  [...timeSelect.options].forEach((opt) => {
-    if (!opt.value) return;
-    opt.disabled = used.includes(opt.value);
-  });
-
-  renderTable();
-  msgEl.textContent = "";
+  await loadSlots();
+  await loadBookings();
 }
 
-// ===== Table =====
-function renderTable() {
-  listEl.innerHTML = "";
-  bookings.forEach((b) => {
-    const tr = document.createElement("tr");
+/* =========================
+   TIME SLOTS
+========================= */
+async function loadSlots() {
+  timeEl.innerHTML = '<option value="">เลือกเวลา</option>';
+
+  const res = await fetch(`${API_BASE}/slots?date=${selectedDate}`);
+  const { slots } = await res.json();
+
+  Object.keys(slots).forEach(time => {
+    const disabled = slots[time][selectedStylist];
+    const opt = document.createElement('option');
+    opt.value = time;
+    opt.textContent = time;
+    if (disabled) opt.disabled = true;
+    timeEl.appendChild(opt);
+  });
+}
+
+/* =========================
+   BOOKINGS LIST
+========================= */
+async function loadBookings() {
+  const res = await fetch(`${API_BASE}/bookings?date=${selectedDate}`);
+  const data = await res.json();
+
+  listEl.innerHTML = '';
+
+  let countBank = 0;
+  let countSindy = 0;
+  let countAssist = 0;
+
+  data.forEach(b => {
+    if (b.stylist === 'Bank') countBank++;
+    if (b.stylist === 'Sindy') countSindy++;
+    if (b.stylist === 'Assist') countAssist++;
+
+    const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${fmtTime(b.time)}</td>
+      <td>${b.time}</td>
       <td>
         <span class="badge">${b.stylist}</span>
-        <span class="badge ghost">${b.gender === "male" ? "ชาย" : "หญิง"}</span>
+        <span class="badge muted">${b.gender === 'male' ? 'ชาย' : 'หญิง'}</span>
       </td>
       <td>${b.name}</td>
       <td>${b.service}</td>
-      <td>${b.phone ? `<a href="tel:${b.phone}">${b.phone}</a>` : "-"}</td>
-      <td>
-        <button data-id="${b.id}" class="ghost del">ลบ</button>
-      </td>
+      <td><a href="tel:${b.phone}">${b.phone}</a></td>
+      <td></td>
     `;
     listEl.appendChild(tr);
   });
 
-  listEl.querySelectorAll(".del").forEach((btn) => {
-    btn.onclick = async () => {
-      if (!confirm("ลบคิวนี้?")) return;
-      await fetch(`/api/bookings/${btn.dataset.id}`, { method: "DELETE" });
-      await loadDay();
-      await loadMonth();
-    };
-  });
+  countBankEl.textContent = countBank;
+  countSindyEl.textContent = countSindy;
+  countAssistEl.textContent = countAssist;
+  countTotalEl.textContent = countBank + countSindy + countAssist;
+  summaryHintEl.textContent = `${countTotalEl.textContent} คิว`;
 }
 
-// ===== Submit =====
-formEl.onsubmit = async (e) => {
+/* =========================
+   SUBMIT
+========================= */
+formEl.onsubmit = async e => {
   e.preventDefault();
-  msgEl.textContent = "กำลังบันทึก...";
+  msg('');
 
-  const name = $("name").value.trim();
-  const phone = $("phone").value.trim() || "0";
-  const service = $("service").value.trim();
-  const time = timeSelect.value;
-  const gender = document.querySelector('input[name="gender"]:checked')?.value;
-
-  if (!name || !service || !time || !gender) {
-    msgEl.textContent = "กรอกข้อมูลให้ครบ";
-    return;
+  if (!selectedGender) {
+    return msg('กรุณาเลือกเพศลูกค้า');
   }
 
-  const res = await fetch("/api/bookings", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      date: currentDate,
-      time,
-      stylist: currentStylist,
-      gender,
-      name,
-      phone,
-      service,
-    }),
+  const payload = {
+    date: selectedDate,
+    time: timeEl.value,
+    name: nameEl.value.trim(),
+    phone: phoneEl.value || '0',
+    stylist: selectedStylist,
+    gender: selectedGender,
+    service: serviceEl.value.trim(),
+  };
+
+  if (!payload.time || !payload.name || !payload.service) {
+    return msg('กรุณากรอกข้อมูลให้ครบ');
+  }
+
+  const res = await fetch(`${API_BASE}/bookings`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
   });
 
-  const data = await res.json();
+  const result = await res.json();
+
   if (!res.ok) {
-    msgEl.textContent = data.error || "บันทึกไม่สำเร็จ";
-    return;
+    return msg(result.error || 'เกิดข้อผิดพลาด');
   }
 
   formEl.reset();
-  msgEl.textContent = "บันทึกแล้ว";
-  await loadDay();
-  await loadMonth();
+  selectedGender = '';
+  loadDay();
+  renderCalendar();
+  msg('บันทึกเรียบร้อย');
 };
 
-// ===== Start =====
-init();
+/* =========================
+   MSG
+========================= */
+function msg(text) {
+  msgEl.textContent = text;
+}
