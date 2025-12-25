@@ -8,165 +8,139 @@
 </head>
 <body>
 
-  <!-- Login Overlay -->
-  <div id="loginOverlay" class="overlay">
-    <div class="modal">
-      <div class="modalHead">
-        <div class="avatar">A</div>
-        <div>
-          <div class="title2">เข้าสู่ระบบ</div>
-          <div class="subtitle2">ใส่ PIN เพื่อจัดการคิว</div>
-        </div>
-      </div>
-      <div class="modalBody">
-        <label for="pin">PIN</label>
-        <div class="row">
-          <input id="pin" type="password" inputmode="numeric" placeholder="••••" />
-          <button id="loginBtn" class="primary">Login</button>
-        </div>
-        <div id="loginMsg" class="msg muted" style="margin-top:10px"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Topbar -->
-  <div class="topbar">
-    <div class="brand">
+<!-- Login Overlay -->
+<div id="loginOverlay" class="overlay">
+  <div class="modal">
+    <div class="modalHead">
       <div class="avatar">A</div>
       <div>
-        <div class="title">Adore hair studio</div>
-        <div class="subtitle">Owner Queue • 13:00–22:00 • แยกตามช่าง</div>
+        <div class="title2">เข้าสู่ระบบ</div>
+        <div class="subtitle2">ใส่ PIN เพื่อจัดการคิว</div>
       </div>
     </div>
-
-    <div class="topActions">
-      <div class="dateWrap">
-        <div class="label">เลือกวัน</div>
-        <input id="date" type="date" />
+    <div class="modalBody">
+      <label>PIN</label>
+      <div class="row">
+        <input id="pin" type="password" inputmode="numeric" placeholder="••••" />
+        <button id="loginBtn" class="primary">Login</button>
       </div>
-      <button id="logoutBtn" class="ghost">Logout</button>
+      <div id="loginMsg" class="msg muted"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Topbar -->
+<div class="topbar">
+  <div class="brand">
+    <div class="avatar">A</div>
+    <div>
+      <div class="title">Adore hair studio</div>
+      <div class="subtitle">Owner Queue • 13:00–22:00 • แยกตามช่าง</div>
     </div>
   </div>
 
-  <div class="wrap">
+  <div class="topActions">
+    <div class="dateWrap">
+      <div class="label">เลือกวัน</div>
+      <input id="date" type="date" />
+    </div>
+  </div>
+</div>
 
-    <!-- Calendar -->
-    <div class="panel">
-      <div class="row between">
-        <div>
-          <div class="title2">ปฏิทินเดือนนี้</div>
-          <div class="subtitle2" id="calTitle">-</div>
-        </div>
-        <div class="muted" style="font-size:12px">วงกลมสีเขียว = มีคิว</div>
-      </div>
+<div class="wrap">
 
-      <div class="calWeekHead" aria-hidden="true">
-        <div>อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div>ส</div>
-      </div>
-      <div id="calGrid" class="calGrid"></div>
+<!-- Calendar -->
+<div class="panel">
+  <div class="row between">
+    <div>
+      <div class="title2">ปฏิทินเดือนนี้</div>
+      <div class="subtitle2">วงกลมสีเขียว = มีคิว</div>
+    </div>
+  </div>
+
+  <div class="calWeekHead">
+    <div>อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div>ส</div>
+  </div>
+
+  <!-- ⭐ สำคัญ -->
+  <div id="calendarDays" class="calGrid"></div>
+</div>
+
+<!-- Stylist Tabs -->
+<div class="tabs">
+  <button class="tab active" data-tab="Bank">Bank</button>
+  <button class="tab" data-tab="Sindy">Sindy</button>
+  <button class="tab" data-tab="Assist">Assist</button>
+</div>
+
+<!-- Booking Form -->
+<div class="panel">
+<form id="bookingForm">
+  <div class="grid">
+
+    <div>
+      <label>ชื่อลูกค้า</label>
+      <input id="name" />
     </div>
 
-    <!-- Tabs: Stylist -->
-    <div class="tabs">
-      <button class="tab active" data-stylist="bank">Bank</button>
-      <button class="tab" data-stylist="sindy">Sindy</button>
-      <button class="tab" data-stylist="assist">Assist</button>
+    <div>
+      <label>เบอร์โทร</label>
+      <input id="phone" />
     </div>
 
-    <!-- Booking form -->
-    <div class="panel">
-      <form id="bookingForm">
-        <div class="grid">
-          <div>
-            <label for="name">ชื่อลูกค้า</label>
-            <input id="name" type="text" placeholder="เช่น คุณบีม" required />
-          </div>
-
-          <div>
-            <label for="phone">เบอร์โทร (ถ้าไม่มีใส่ 0)</label>
-            <input id="phone" type="tel" placeholder="09xxxxxxxx" />
-          </div>
-
-          <div>
-            <label>เพศลูกค้า</label>
-            <div class="row">
-              <label class="radio">
-                <input type="radio" name="gender" value="male" />
-                <span>ชาย</span>
-              </label>
-              <label class="radio">
-                <input type="radio" name="gender" value="female" />
-                <span>หญิง</span>
-              </label>
-            </div>
-          </div>
-
-          <div>
-            <label for="time">เวลา</label>
-            <select id="time">
-              <option value="">เลือกเวลา</option>
-            </select>
-          </div>
-
-          <div class="full">
-            <label for="service">ทำอะไร</label>
-            <input id="service" type="text" placeholder="เช่น สระ+ไดร์ / ทำสี / ตัด" required />
-          </div>
-
-          <div class="full row">
-            <button id="submitBtn" class="primary" type="submit">บันทึกการจอง</button>
-            <button id="refreshBtn" class="ghost" type="button">รีเฟรช</button>
-            <div id="msg" class="msg muted" style="margin-left:auto"></div>
-          </div>
-        </div>
-      </form>
+    <div>
+      <label>เพศ</label>
+      <label><input type="radio" name="gender" value="male" /> ชาย</label>
+      <label><input type="radio" name="gender" value="female" /> หญิง</label>
     </div>
 
-    <!-- Summary + Table -->
-    <div class="panel">
-      <div class="summary">
-        <div class="box">
-          <div class="muted">Bank</div>
-          <div id="countBank" class="big">0</div>
-        </div>
-        <div class="box">
-          <div class="muted">Sindy</div>
-          <div id="countSindy" class="big">0</div>
-        </div>
-        <div class="box">
-          <div class="muted">Assist</div>
-          <div id="countAssist" class="big">0</div>
-        </div>
-        <div class="box">
-          <div class="muted">รวม</div>
-          <div id="countTotal" class="big">0</div>
-        </div>
-        <div class="box grow">
-          <div class="muted">สรุปของวัน</div>
-          <div id="summaryHint" class="big small">-</div>
-        </div>
-      </div>
+    <div>
+      <label>เวลา</label>
+      <select id="time">
+        <option value="">เลือกเวลา</option>
+      </select>
+    </div>
 
-      <div class="tableWrap">
-        <table>
-          <thead>
-            <tr>
-              <th>เวลา</th>
-              <th>ช่าง / เพศ</th>
-              <th>ชื่อ</th>
-              <th>ทำอะไร</th>
-              <th>โทร</th>
-              <th>จัดการ</th>
-            </tr>
-          </thead>
-          <tbody id="list"></tbody>
-        </table>
-      </div>
+    <div class="full">
+      <label>ทำอะไร</label>
+      <input id="service" />
+    </div>
+
+    <div class="full row">
+      <button class="primary">บันทึกการจอง</button>
+      <div id="msg" class="msg muted"></div>
     </div>
 
   </div>
+</form>
+</div>
 
-  <!-- version 2 -->
-  <script src="./app.js"></script>
+<!-- Summary + Table -->
+<div class="panel">
+  <div class="summary">
+    <div class="box"><div>Bank</div><div id="countBank">0</div></div>
+    <div class="box"><div>Sindy</div><div id="countSindy">0</div></div>
+    <div class="box"><div>Assist</div><div id="countAssist">0</div></div>
+    <div class="box"><div>รวม</div><div id="countTotal">0</div></div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>เวลา</th>
+        <th>ช่าง / เพศ</th>
+        <th>ชื่อ</th>
+        <th>ทำอะไร</th>
+        <th>โทร</th>
+        <th>จัดการ</th>
+      </tr>
+    </thead>
+    <tbody id="list"></tbody>
+  </table>
+</div>
+
+</div>
+
+<script src="./app.js"></script>
 </body>
 </html>
