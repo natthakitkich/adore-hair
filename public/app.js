@@ -38,7 +38,14 @@ document.addEventListener("DOMContentLoaded", () => {
   // ===== Helpers =====
   function todayLocalYYYYMMDD() {
     const d = new Date();
-    return d.toISOString().slice(0, 10);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${dd}`;
+  }
+
+  function ymFromDateStr(s) {
+    return String(s || "").slice(0, 7);
   }
 
   function normTime(t) {
@@ -46,11 +53,13 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function setMsg(text, type = "") {
+    if (!msgEl) return;
     msgEl.className = "msg " + type;
     msgEl.textContent = text || "";
   }
 
   function setLoginMsg(text, type = "") {
+    if (!loginMsg) return;
     loginMsg.className = "msg " + type;
     loginMsg.textContent = text || "";
   }
@@ -62,15 +71,19 @@ document.addEventListener("DOMContentLoaded", () => {
       .replaceAll(">", "&gt;");
   }
 
-  function api(path, opts = {}) {
-    return fetch(path, {
+  async function api(path, opts = {}) {
+    const res = await fetch(path, {
       headers: { "Content-Type": "application/json" },
       ...opts,
-    }).then(async (r) => {
-      const d = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(d.error || "error");
-      return d;
     });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+    return data;
+  }
+
+  function stylistFromRow(b) {
+    if (b.stylist) return b.stylist;
+    return b.category === "male" ? "Bank" : "Sindy";
   }
 
   // ===== Auth =====
@@ -85,16 +98,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // ===== Tabs (Stylist) =====
+  // ===== Tabs =====
   function setActiveStylist(name) {
     currentStylist = name;
-    document.querySelectorAll(".tab").forEach((b) => {
-      b.classList.toggle("active", b.dataset.stylist === name);
+    document.querySelectorAll(".tab").forEach((t) => {
+      t.classList.toggle("active", t.dataset.stylist === name);
     });
     applyDisabledTimes();
   }
 
-  // ===== Time select =====
+  // ===== Time =====
   function renderTimeOptions() {
     timeEl.innerHTML = `<option value="" disabled selected>เลือกเวลา</option>`;
     TIMES.forEach((t) => {
@@ -106,15 +119,12 @@ document.addEventListener("DOMContentLoaded", () => {
     applyDisabledTimes();
   }
 
-  function resolveStylistFromRow(b) {
-    if (b.stylist) return b.stylist;
-    return b.category === "male" ? "Bank" : "Sindy";
-  }
-
   function applyDisabledTimes() {
+    if (!Array.isArray(lastDetail)) return;
+
     const booked = new Set(
       lastDetail
-        .filter((b) => resolveStylistFromRow(b) === currentStylist)
+        .filter((b) => stylistFromRow(b) === currentStylist)
         .map((b) => normTime(b.time))
     );
 
@@ -136,7 +146,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     detail.forEach((b) => {
-      const stylist = resolveStylistFromRow(b);
+      const stylist = stylistFromRow(b);
       const gender = b.gender || b.category;
 
       const tr = document.createElement("tr");
@@ -164,50 +174,58 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     listEl.querySelectorAll(".edit").forEach((btn) => {
-      btn.onclick = () => {
-        const b = lastDetail.find((x) => x.id == btn.dataset.id);
-        if (!b) return;
-
-        editId = b.id;
-        dateEl.value = b.date;
-        setActiveStylist(resolveStylistFromRow(b));
-        renderTimeOptions();
-        timeEl.value = normTime(b.time);
-        nameEl.value = b.name;
-        phoneEl.value = b.phone || "";
-        serviceEl.value = b.service || "";
-
-        document
-          .querySelectorAll("input[name=gender]")
-          .forEach((r) => (r.checked = r.value === (b.gender || b.category)));
-
-        submitBtn.textContent = "บันทึกการแก้ไข";
-        cancelEditBtn.style.display = "inline-block";
-      };
+      btn.onclick = () => enterEditMode(btn.dataset.id);
     });
 
     listEl.querySelectorAll(".del").forEach((btn) => {
       btn.onclick = async () => {
         if (!confirm("ยืนยันลบคิวนี้?")) return;
         await api(`/api/bookings/${btn.dataset.id}`, { method: "DELETE" });
-        editId = null;
+        if (editId === Number(btn.dataset.id)) exitEditMode();
         await refresh();
+        await refreshMonth();
       };
     });
   }
 
-  // ===== Refresh =====
+  function enterEditMode(id) {
+    const b = lastDetail.find((x) => x.id == id);
+    if (!b) return;
+
+    editId = b.id;
+    dateEl.value = b.date;
+    setActiveStylist(stylistFromRow(b));
+    renderTimeOptions();
+    timeEl.value = normTime(b.time);
+    nameEl.value = b.name;
+    phoneEl.value = b.phone || "";
+    serviceEl.value = b.service || "";
+
+    document
+      .querySelectorAll("input[name=gender]")
+      .forEach((r) => (r.checked = r.value === (b.gender || b.category)));
+
+    submitBtn.textContent = "บันทึกการแก้ไข";
+    cancelEditBtn.style.display = "inline-block";
+    applyDisabledTimes();
+  }
+
+  function exitEditMode() {
+    editId = null;
+    submitBtn.textContent = "บันทึกการจอง";
+    cancelEditBtn.style.display = "none";
+    formEl.reset();
+    renderTimeOptions();
+  }
+
+  // ===== Refresh Day =====
   async function refresh() {
     const d = dateEl.value;
-    const r = await api(`/api/summary?date=${d}`);
+    const r = await api(`/api/summary?date=${encodeURIComponent(d)}`);
     lastDetail = r.detail || [];
 
-    const bank = lastDetail.filter(
-      (b) => resolveStylistFromRow(b) === "Bank"
-    ).length;
-    const sindy = lastDetail.filter(
-      (b) => resolveStylistFromRow(b) === "Sindy"
-    ).length;
+    const bank = lastDetail.filter((b) => stylistFromRow(b) === "Bank").length;
+    const sindy = lastDetail.filter((b) => stylistFromRow(b) === "Sindy").length;
 
     countBank.textContent = bank;
     countSindy.textContent = sindy;
@@ -222,6 +240,65 @@ document.addEventListener("DOMContentLoaded", () => {
 
     renderList(lastDetail);
     applyDisabledTimes();
+    paintSelectedDay();
+  }
+
+  // ===== Calendar =====
+  function monthTitleFromYM(ym) {
+    const [y, m] = ym.split("-").map(Number);
+    return new Date(y, m - 1, 1).toLocaleDateString("th-TH", {
+      month: "long",
+      year: "numeric",
+    });
+  }
+
+  function daysInMonth(y, m0) {
+    return new Date(y, m0 + 1, 0).getDate();
+  }
+
+  function firstDowSunday0(y, m0) {
+    return new Date(y, m0, 1).getDay();
+  }
+
+  function paintSelectedDay() {
+    const dd = Number(dateEl.value.slice(8, 10));
+    calGrid.querySelectorAll(".calCell").forEach((c) => {
+      c.classList.toggle("selected", Number(c.dataset.day) === dd);
+    });
+  }
+
+  async function refreshMonth() {
+    const ym = ymFromDateStr(dateEl.value);
+    calTitle.textContent = monthTitleFromYM(ym);
+
+    const r = await api(`/api/month?ym=${encodeURIComponent(ym)}`);
+    const hasDays = new Set((r.days || []).map(Number));
+
+    const [y, m] = ym.split("-").map(Number);
+    const total = daysInMonth(y, m - 1);
+    const first = firstDowSunday0(y, m - 1);
+
+    calGrid.innerHTML = "";
+
+    for (let i = 0; i < first; i++) {
+      const e = document.createElement("div");
+      e.className = "calCell mutedDay";
+      calGrid.appendChild(e);
+    }
+
+    for (let d = 1; d <= total; d++) {
+      const c = document.createElement("div");
+      c.className = "calCell" + (hasDays.has(d) ? " hasBookings" : "");
+      c.dataset.day = d;
+      c.innerHTML = `<div class="calNum">${d}</div>`;
+      c.onclick = async () => {
+        dateEl.value = `${ym}-${String(d).padStart(2, "0")}`;
+        await refresh();
+      };
+      calGrid.appendChild(c);
+    }
+
+    paintSelectedDay();
   }
 
   // ===== Boot =====
@@ -234,20 +311,29 @@ document.addEventListener("DOMContentLoaded", () => {
       b.onclick = () => setActiveStylist(b.dataset.stylist);
     });
 
-    refreshBtn.onclick = refresh;
-    cancelEditBtn.onclick = () => location.reload();
+    refreshBtn.onclick = async () => {
+      await refresh();
+      await refreshMonth();
+    };
+
+    cancelEditBtn.onclick = exitEditMode;
+
+    dateEl.onchange = async () => {
+      await refresh();
+      await refreshMonth();
+    };
 
     formEl.onsubmit = async (e) => {
       e.preventDefault();
       setMsg("");
 
-      const genderEl = document.querySelector("input[name=gender]:checked");
-      if (!genderEl) return setMsg("กรุณาเลือกเพศลูกค้า", "err");
+      const g = document.querySelector("input[name=gender]:checked");
+      if (!g) return setMsg("กรุณาเลือกเพศลูกค้า", "err");
 
       const payload = {
         date: dateEl.value,
         stylist: currentStylist,
-        gender: genderEl.value,
+        gender: g.value,
         time: timeEl.value,
         name: nameEl.value.trim(),
         phone: phoneEl.value.trim(),
@@ -269,10 +355,13 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       }
 
-      location.reload();
+      exitEditMode();
+      await refresh();
+      await refreshMonth();
     };
 
     await refresh();
+    await refreshMonth();
   }
 
   // ===== Login =====
@@ -295,6 +384,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   (async () => {
     dateEl.value = todayLocalYYYYMMDD();
-    if (await ensureAuth()) boot();
+    if (await ensureAuth()) await boot();
   })();
 });
