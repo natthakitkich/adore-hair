@@ -251,3 +251,46 @@ th{color:var(--muted); text-align:left; font-weight:900}
   .row{flex-wrap:wrap}
   input, select{padding:11px}
 }
+/* ===== Stylist Badges ===== */
+.badge.stylist{
+  padding:4px 12px;
+  border-radius:999px;
+  font-weight:900;
+  font-size:12px;
+  display:inline-block;
+}
+
+.stylist-bank{
+  background:rgba(110,231,255,.18);
+  color:#6ee7ff;
+  border:1px solid rgba(110,231,255,.4);
+}
+.stylist-sindy{
+  background:rgba(255,105,180,.18);
+  color:#ff7abf;
+  border:1px solid rgba(255,105,180,.4);
+}
+.stylist-assist{
+  background:rgba(200,200,200,.15);
+  color:#d1d5db;
+  border:1px solid rgba(200,200,200,.35);
+}
+
+/* ===== Gender Badges ===== */
+.badge.gender{
+  padding:4px 10px;
+  border-radius:999px;
+  font-weight:900;
+  font-size:12px;
+}
+
+.gender-male{
+  background:rgba(96,165,250,.18);
+  color:#60a5fa;
+  border:1px solid rgba(96,165,250,.4);
+}
+.gender-female{
+  background:rgba(248,113,113,.18);
+  color:#f87171;
+  border:1px solid rgba(248,113,113,.4);
+}
