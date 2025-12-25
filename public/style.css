@@ -116,3 +116,38 @@ th{
   color:var(--muted);
   text-align:left;
 }
+/* ===== Stylist badges ===== */
+.badge.stylist-bank{
+  background: rgba(110,231,255,.18);
+  color:#6ee7ff;
+  border:1px solid rgba(110,231,255,.4);
+}
+.badge.stylist-sindy{
+  background: rgba(255,110,180,.18);
+  color:#ff6eb4;
+  border:1px solid rgba(255,110,180,.4);
+}
+.badge.stylist-assist{
+  background: rgba(200,200,200,.14);
+  color:#cfd3da;
+  border:1px solid rgba(200,200,200,.35);
+}
+
+/* ===== Gender icons ===== */
+.gender{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:32px;
+  height:32px;
+  border-radius:999px;
+  font-weight:900;
+}
+.gender.male{
+  color:#6ee7ff;
+  border:1px solid rgba(110,231,255,.4);
+}
+.gender.female{
+  color:#ff5c7a;
+  border:1px solid rgba(255,92,122,.4);
+}
