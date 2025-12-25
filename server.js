@@ -37,7 +37,6 @@ app.get('/', (req, res) => {
 
 app.get('/bookings', async (req, res) => {
   const { date } = req.query;
-
   if (!date) return res.json([]);
 
   const { data, error } = await supabase
@@ -109,18 +108,27 @@ app.get('/slots', async (req, res) => {
   res.json({ slots });
 });
 
-/* ===== CALENDAR DAYS ===== */
+/* ===== CALENDAR DAYS (WITH DENSITY) ===== */
 
 app.get('/calendar-days', async (req, res) => {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('bookings')
-    .select('date');
+    .select('date, stylist');
 
-  const days = Array.isArray(data)
-    ? [...new Set(data.map(d => d.date))]
-    : [];
+  if (error) {
+    console.error(error);
+    return res.json({ days: {} });
+  }
 
-  res.json({ days });
+  const dayMap = {};
+
+  (data || []).forEach(b => {
+    if (b.stylist === 'Bank' || b.stylist === 'Sindy') {
+      dayMap[b.date] = (dayMap[b.date] || 0) + 1;
+    }
+  });
+
+  res.json({ days: dayMap });
 });
 
 /* =========================
