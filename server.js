@@ -3,7 +3,11 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { createClient } from '@supabase/supabase-js';
+import cron from 'node-cron';
 
+/* =========================
+   BASIC SETUP
+========================= */
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -59,7 +63,10 @@ app.post('/bookings', async (req, res) => {
     { date, time, name, phone, stylist, gender, service }
   ]);
 
-  if (error) return res.status(400).json({ error: error.message });
+  if (error) {
+    return res.status(400).json({ error: error.message });
+  }
+
   res.json({ ok: true });
 });
 
@@ -87,7 +94,9 @@ app.get('/slots', async (req, res) => {
     .eq('date', date);
 
   (data || []).forEach(b => {
-    if (slots[b.time]) slots[b.time][b.stylist] = true;
+    if (slots[b.time]) {
+      slots[b.time][b.stylist] = true;
+    }
   });
 
   res.json({ slots });
@@ -108,8 +117,45 @@ app.get('/calendar-days', async (req, res) => {
 });
 
 /* =========================
+   AUTO CLEANUP (7 DAYS)
+   Timezone: Asia/Bangkok
+========================= */
+
+cron.schedule(
+  '0 0 * * *', // ทุกวันตอน 00:00
+  async () => {
+    try {
+      const now = new Date(
+        new Date().toLocaleString('en-US', { timeZone: 'Asia/Bangkok' })
+      );
+
+      const cutoff = new Date(now);
+      cutoff.setDate(cutoff.getDate() - 7);
+      const cutoffDate = cutoff.toISOString().slice(0, 10);
+
+      const { error } = await supabase
+        .from('bookings')
+        .delete()
+        .lt('date', cutoffDate);
+
+      if (error) {
+        console.error('❌ Cleanup error:', error.message);
+      } else {
+        console.log('🧹 Cleanup bookings before', cutoffDate);
+      }
+    } catch (err) {
+      console.error('❌ Cleanup exception:', err);
+    }
+  },
+  {
+    timezone: 'Asia/Bangkok'
+  }
+);
+
+/* =========================
    START SERVER
 ========================= */
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
