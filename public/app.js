@@ -1,4 +1,9 @@
 /* =========================
+   CONFIG
+========================= */
+const PIN_CODE = '1234'; // เปลี่ยนได้
+
+/* =========================
    STATE
 ========================= */
 let currentDate = '';
@@ -8,6 +13,11 @@ let bookings = [];
 /* =========================
    ELEMENTS
 ========================= */
+const loginOverlay = document.getElementById('loginOverlay');
+const loginBtn = document.getElementById('loginBtn');
+const pinInput = document.getElementById('pin');
+const loginMsg = document.getElementById('loginMsg');
+
 const dateInput = document.getElementById('date');
 const calendarDays = document.getElementById('calendarDays');
 const timeSelect = document.getElementById('time');
@@ -19,17 +29,32 @@ const countAssist = document.getElementById('countAssist');
 const countTotal = document.getElementById('countTotal');
 
 /* =========================
+   LOGIN
+========================= */
+loginBtn.onclick = () => {
+  if (pinInput.value === PIN_CODE) {
+    loginOverlay.style.display = 'none';
+    init();
+  } else {
+    loginMsg.textContent = 'PIN ไม่ถูกต้อง';
+  }
+};
+
+/* =========================
    INIT
 ========================= */
-init();
-
 function init() {
   const today = new Date().toISOString().slice(0, 10);
-  dateInput.value = today;
   currentDate = today;
+  dateInput.value = today;
 
   bindTabs();
   bindForm();
+  dateInput.onchange = () => {
+    currentDate = dateInput.value;
+    loadAll();
+  };
+
   loadAll();
 }
 
@@ -49,8 +74,7 @@ async function loadAll() {
 ========================= */
 async function loadCalendar() {
   const res = await fetch('/calendar-days');
-  const json = await res.json();
-  const daysWithBooking = json.days || [];
+  const { days = [] } = await res.json();
 
   calendarDays.innerHTML = '';
 
@@ -72,13 +96,13 @@ async function loadCalendar() {
     cell.className = 'calDay';
     cell.textContent = day;
 
-    if (daysWithBooking.includes(dateStr)) {
+    if (days.includes(dateStr)) {
       cell.classList.add('hasBooking');
     }
 
     cell.onclick = () => {
-      dateInput.value = dateStr;
       currentDate = dateStr;
+      dateInput.value = dateStr;
       loadAll();
     };
 
@@ -101,8 +125,7 @@ async function loadSlots() {
   timeSelect.innerHTML = '<option value="">เลือกเวลา</option>';
 
   const res = await fetch(`/slots?date=${currentDate}`);
-  const json = await res.json();
-  const slots = json.slots || {};
+  const { slots = {} } = await res.json();
 
   Object.keys(slots).forEach(time => {
     if (!slots[time][currentStylist]) {
@@ -122,14 +145,13 @@ function renderTable() {
 
   bookings.forEach(b => {
     const tr = document.createElement('tr');
-
     tr.innerHTML = `
       <td>${b.time}</td>
       <td>${b.stylist} / ${b.gender}</td>
       <td>${b.name}</td>
       <td>${b.service || '-'}</td>
       <td>${b.phone || '-'}</td>
-      <td><button data-id="${b.id}">ลบ</button></td>
+      <td><button>ลบ</button></td>
     `;
 
     tr.querySelector('button').onclick = async () => {
@@ -162,14 +184,20 @@ function bindForm() {
   document.getElementById('bookingForm').onsubmit = async e => {
     e.preventDefault();
 
+    const genderEl = document.querySelector('input[name="gender"]:checked');
+    if (!genderEl || !timeSelect.value) {
+      alert('กรอกข้อมูลไม่ครบ');
+      return;
+    }
+
     const body = {
       date: currentDate,
       time: timeSelect.value,
       stylist: currentStylist,
-      name: document.getElementById('name').value,
-      phone: document.getElementById('phone').value,
-      gender: document.querySelector('input[name="gender"]:checked')?.value,
-      service: document.getElementById('service').value
+      name: document.getElementById('name').value.trim(),
+      phone: document.getElementById('phone').value.trim(),
+      gender: genderEl.value,
+      service: document.getElementById('service').value.trim()
     };
 
     const res = await fetch('/bookings', {
@@ -182,7 +210,7 @@ function bindForm() {
       e.target.reset();
       loadAll();
     } else {
-      alert('กรอกข้อมูลไม่ครบ');
+      alert('บันทึกไม่สำเร็จ');
     }
   };
 }
