@@ -1,4 +1,28 @@
 /* =========================
+   LOGIN (PIN)
+========================= */
+const loginOverlay = document.getElementById('loginOverlay');
+const loginBtn = document.getElementById('loginBtn');
+const pinInput = document.getElementById('pin');
+
+const PIN_CODE = '1234'; // 🔴 เปลี่ยนเป็น PIN จริงของคุณ
+
+loginBtn?.addEventListener('click', () => {
+  const pin = pinInput.value.trim();
+
+  if (pin === PIN_CODE) {
+    loginOverlay.style.display = 'none';
+    localStorage.setItem('adore_login', 'true');
+  } else {
+    alert('รหัส PIN ไม่ถูกต้อง');
+  }
+});
+
+// ถ้าเคยล็อกอินแล้ว ไม่ต้องขึ้น overlay
+if (localStorage.getItem('adore_login') === 'true') {
+  loginOverlay.style.display = 'none';
+}
+/* =========================
    GLOBAL STATE
 ========================= */
 let selectedDate = null;
