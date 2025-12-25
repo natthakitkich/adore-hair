@@ -50,7 +50,7 @@
 
   <div class="wrap">
 
-    <!-- Calendar month -->
+    <!-- Calendar -->
     <div class="panel">
       <div class="row between">
         <div>
@@ -59,6 +59,7 @@
         </div>
         <div class="muted" style="font-size:12px">วงกลมสีเขียว = มีคิว</div>
       </div>
+
       <div class="calWeekHead" aria-hidden="true">
         <div>อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div>ส</div>
       </div>
@@ -67,55 +68,61 @@
 
     <!-- Tabs: Stylist -->
     <div class="tabs">
-      <button class="tab active" data-stylist="Bank">Bank</button>
-      <button class="tab" data-stylist="Sindy">Sindy</button>
+      <button class="tab active" data-stylist="bank">Bank</button>
+      <button class="tab" data-stylist="sindy">Sindy</button>
+      <button class="tab" data-stylist="assist">Assist</button>
     </div>
 
-    <!-- Form -->
+    <!-- Booking form -->
     <div class="panel">
       <form id="bookingForm">
         <div class="grid">
-
           <div>
             <label for="name">ชื่อลูกค้า</label>
-            <input id="name" type="text" placeholder="เช่น คุณบีม" />
+            <input id="name" type="text" placeholder="เช่น คุณบีม" required />
           </div>
 
           <div>
             <label for="phone">เบอร์โทร (ถ้าไม่มีใส่ 0)</label>
-            <input id="phone" type="tel" inputmode="tel" placeholder="เช่น 09xxxxxxxx" />
+            <input id="phone" type="tel" placeholder="09xxxxxxxx" />
           </div>
 
           <div>
             <label>เพศลูกค้า</label>
             <div class="row">
-              <label class="row"><input type="radio" name="gender" value="male" /> ชาย</label>
-              <label class="row"><input type="radio" name="gender" value="female" /> หญิง</label>
+              <label class="radio">
+                <input type="radio" name="gender" value="male" />
+                <span>ชาย</span>
+              </label>
+              <label class="radio">
+                <input type="radio" name="gender" value="female" />
+                <span>หญิง</span>
+              </label>
             </div>
           </div>
 
           <div>
             <label for="time">เวลา</label>
-            <select id="time"></select>
+            <select id="time">
+              <option value="">เลือกเวลา</option>
+            </select>
           </div>
 
           <div class="full">
             <label for="service">ทำอะไร</label>
-            <input id="service" type="text" placeholder="เช่น สระ+ไดร์ / ทำสี / ตัด" />
+            <input id="service" type="text" placeholder="เช่น สระ+ไดร์ / ทำสี / ตัด" required />
           </div>
 
           <div class="full row">
             <button id="submitBtn" class="primary" type="submit">บันทึกการจอง</button>
-            <button id="cancelEditBtn" class="ghost" type="button" style="display:none">ยกเลิกแก้ไข</button>
             <button id="refreshBtn" class="ghost" type="button">รีเฟรช</button>
             <div id="msg" class="msg muted" style="margin-left:auto"></div>
           </div>
-
         </div>
       </form>
     </div>
 
-    <!-- Summary + table -->
+    <!-- Summary + Table -->
     <div class="panel">
       <div class="summary">
         <div class="box">
@@ -125,6 +132,10 @@
         <div class="box">
           <div class="muted">Sindy</div>
           <div id="countSindy" class="big">0</div>
+        </div>
+        <div class="box">
+          <div class="muted">Assist</div>
+          <div id="countAssist" class="big">0</div>
         </div>
         <div class="box">
           <div class="muted">รวม</div>
@@ -155,6 +166,7 @@
 
   </div>
 
+  <!-- version 2 -->
   <script src="./app.js"></script>
 </body>
 </html>
