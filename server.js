@@ -29,14 +29,12 @@ const supabase = createClient(
    ROUTES
 ========================= */
 
-// หน้าเว็บ
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-/* ---------- BOOKINGS ---------- */
+/* ----- BOOKINGS ----- */
 
-// ดึง bookings รายวัน
 app.get('/bookings', async (req, res) => {
   const { date } = req.query;
 
@@ -46,15 +44,10 @@ app.get('/bookings', async (req, res) => {
     .eq('date', date)
     .order('time', { ascending: true });
 
-  if (error) {
-    console.error(error);
-    return res.json([]);
-  }
-
+  if (error) return res.json([]);
   res.json(data || []);
 });
 
-// เพิ่ม booking
 app.post('/bookings', async (req, res) => {
   const { date, time, name, phone, stylist, gender, service } = req.body;
 
@@ -66,34 +59,19 @@ app.post('/bookings', async (req, res) => {
     { date, time, name, phone, stylist, gender, service }
   ]);
 
-  if (error) {
-    console.error(error);
-    return res.status(400).json({ error: error.message });
-  }
-
-  res.json({ success: true });
+  if (error) return res.status(400).json({ error: error.message });
+  res.json({ ok: true });
 });
 
-// ลบ booking
 app.delete('/bookings/:id', async (req, res) => {
   const { id } = req.params;
 
-  const { error } = await supabase
-    .from('bookings')
-    .delete()
-    .eq('id', id);
-
-  if (error) {
-    console.error(error);
-    return res.status(400).json({ error: error.message });
-  }
-
-  res.json({ success: true });
+  await supabase.from('bookings').delete().eq('id', id);
+  res.json({ ok: true });
 });
 
-/* ---------- SLOTS ---------- */
+/* ----- SLOTS ----- */
 
-// ช่องเวลาต่อวัน / ต่อช่าง
 app.get('/slots', async (req, res) => {
   const { date } = req.query;
 
@@ -103,33 +81,24 @@ app.get('/slots', async (req, res) => {
     slots[t] = { Bank: false, Sindy: false, Assist: false };
   }
 
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from('bookings')
     .select('time, stylist')
     .eq('date', date);
 
-  if (!error && Array.isArray(data)) {
-    data.forEach(b => {
-      if (slots[b.time] && slots[b.time][b.stylist] !== undefined) {
-        slots[b.time][b.stylist] = true;
-      }
-    });
-  }
+  (data || []).forEach(b => {
+    if (slots[b.time]) slots[b.time][b.stylist] = true;
+  });
 
   res.json({ slots });
 });
 
-/* ---------- CALENDAR (วงเขียว) ---------- */
+/* ----- CALENDAR DAYS ----- */
 
 app.get('/calendar-days', async (req, res) => {
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from('bookings')
     .select('date');
-
-  if (error) {
-    console.error(error);
-    return res.json({ days: [] });
-  }
 
   const days = Array.isArray(data)
     ? [...new Set(data.map(d => d.date))]
