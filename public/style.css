@@ -244,3 +244,9 @@ th{
   color:#ff5c7a;
   border:1px solid rgba(255,92,122,.45);
 }
+.hidden{
+  display:none !important;
+}
+.msg.err{
+  color:var(--danger);
+}
