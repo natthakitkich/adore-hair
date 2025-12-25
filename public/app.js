@@ -9,7 +9,7 @@ const END_HOUR = 22;
    STATE
 ========================= */
 let selectedDate = null;
-let selectedStylist = null; // ❗ บังคับให้เลือก
+let selectedStylist = 'Bank'; // ✅ FIX: มีค่าเริ่มต้น
 let selectedGender = null;
 let bookings = [];
 
@@ -54,6 +54,13 @@ function init() {
   selectedDate = new Date().toISOString().slice(0, 10);
   dateInput.value = selectedDate;
 
+  // ✅ FIX: ตั้ง active ให้ Bank ตั้งแต่แรก
+  stylistBtns.forEach(btn => {
+    if (btn.dataset.tab === 'Bank') {
+      btn.classList.add('active');
+    }
+  });
+
   bindEvents();
   loadAll();
 }
@@ -72,8 +79,8 @@ function bindEvents() {
       stylistBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       selectedStylist = btn.dataset.tab;
-      msg.textContent = ''; // ล้าง error
-      loadSlots();
+      msg.textContent = '';
+      loadSlots(); // ✅ reload เวลา
     };
   });
 
@@ -105,8 +112,6 @@ async function loadBookings() {
 async function loadSlots() {
   timeSelect.innerHTML = `<option value="">เลือกเวลา</option>`;
 
-  if (!selectedStylist) return;
-
   const res = await fetch(`/slots?date=${selectedDate}`);
   const { slots } = await res.json();
 
@@ -134,25 +139,8 @@ async function submitBooking(e) {
   const time = timeSelect.value;
   const service = document.getElementById('service').value.trim();
 
-  // ❗ VALIDATION ชัดเจนทีละข้อ
-  if (!selectedStylist) {
-    msg.textContent = 'กรุณาเลือกช่างก่อน';
-    highlightStylistTabs();
-    return;
-  }
-
-  if (!name) {
-    msg.textContent = 'กรุณาใส่ชื่อลูกค้า';
-    return;
-  }
-
-  if (!selectedGender) {
-    msg.textContent = 'กรุณาเลือกเพศลูกค้า';
-    return;
-  }
-
-  if (!time) {
-    msg.textContent = 'กรุณาเลือกเวลา';
+  if (!name || !selectedGender || !time) {
+    msg.textContent = 'กรอกข้อมูลไม่ครบ';
     return;
   }
 
@@ -171,7 +159,6 @@ async function submitBooking(e) {
   });
 
   const result = await res.json();
-
   if (result.error) {
     msg.textContent = result.error;
     return;
@@ -182,16 +169,6 @@ async function submitBooking(e) {
   selectedGender = null;
 
   loadAll();
-}
-
-/* =========================
-   UI HELPERS
-========================= */
-function highlightStylistTabs() {
-  stylistBtns.forEach(btn => {
-    btn.classList.add('shake');
-    setTimeout(() => btn.classList.remove('shake'), 300);
-  });
 }
 
 /* =========================
