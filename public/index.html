@@ -1,95 +1,61 @@
 <!doctype html>
 <html lang="th">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Adore hair studio — Queue</title>
-  <link rel="stylesheet" href="./style.css" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Adore hair studio</title>
+  <link rel="stylesheet" href="./style.css">
 </head>
 <body>
 
-<!-- Login -->
 <div id="loginOverlay" class="overlay">
   <div class="modal">
     <h3>เข้าสู่ระบบ</h3>
-    <input id="pin" type="password" placeholder="PIN" />
+    <input id="pin" type="password" placeholder="PIN">
     <button id="loginBtn">Login</button>
     <div id="loginMsg"></div>
   </div>
 </div>
 
-<!-- Header -->
 <div class="topbar">
-  <div>
-    <h2>Adore hair studio</h2>
-    <small>13:00–22:00 • แยกตามช่าง</small>
-  </div>
-  <input id="date" type="date" />
+  <h1>Adore hair studio</h1>
+  <input id="date" type="date">
 </div>
 
-<div class="wrap">
-
-<!-- Calendar -->
 <div class="panel">
   <h3>ปฏิทินเดือนนี้</h3>
-  <small>วงกลมสีเขียว = มีคิว</small>
-
-  <div class="calWeekHead">
-    <div>อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div>ส</div>
-  </div>
-
   <div id="calendarDays" class="calGrid"></div>
 </div>
 
-<!-- Stylist -->
 <div class="tabs">
   <button class="tab active" data-stylist="Bank">Bank</button>
   <button class="tab" data-stylist="Sindy">Sindy</button>
   <button class="tab" data-stylist="Assist">Assist</button>
 </div>
 
-<!-- Form -->
 <div class="panel">
 <form id="bookingForm">
-  <input id="name" placeholder="ชื่อลูกค้า" required />
-  <input id="phone" placeholder="เบอร์โทร (ถ้าไม่มีใส่ 0)" />
-
+  <input id="name" placeholder="ชื่อลูกค้า">
+  <input id="phone" placeholder="เบอร์โทร">
   <div>
     <label><input type="radio" name="gender" value="male"> ชาย</label>
     <label><input type="radio" name="gender" value="female"> หญิง</label>
   </div>
-
-  <select id="time">
-    <option value="">เลือกเวลา</option>
-  </select>
-
-  <input id="service" placeholder="ทำอะไร" required />
-
-  <button type="submit">บันทึกการจอง</button>
+  <select id="time"><option value="">เลือกเวลา</option></select>
+  <input id="service" placeholder="ทำอะไร">
+  <button>บันทึกการจอง</button>
   <div id="msg"></div>
 </form>
 </div>
 
-<!-- Table -->
-<div class="panel">
-  <div>
-    Bank: <span id="countBank">0</span> |
-    Sindy: <span id="countSindy">0</span> |
-    Assist: <span id="countAssist">0</span> |
-    รวม: <span id="countTotal">0</span>
-  </div>
-
-  <table>
-    <thead>
-      <tr>
-        <th>เวลา</th><th>ช่าง</th><th>ชื่อ</th><th>ทำอะไร</th><th>โทร</th><th>ลบ</th>
-      </tr>
-    </thead>
-    <tbody id="list"></tbody>
-  </table>
-</div>
-
-</div>
+<table>
+  <thead>
+    <tr>
+      <th>เวลา</th><th>ช่าง</th><th>ชื่อ</th><th>ทำอะไร</th><th>ลบ</th>
+    </tr>
+  </thead>
+  <tbody id="list"></tbody>
+</table>
 
 <script src="./app.js"></script>
 </body>
