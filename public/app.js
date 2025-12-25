@@ -1,192 +1,197 @@
 /* =========================
-   LOGIN (PIN)
+   CONFIG
 ========================= */
-const loginOverlay = document.getElementById('loginOverlay');
-const loginBtn = document.getElementById('loginBtn');
-const pinInput = document.getElementById('pin');
+const PIN_CODE = '1234'; // ← เปลี่ยนตรงนี้ได้
+const START_HOUR = 13;
+const END_HOUR = 22;
 
-const PIN_CODE = '1234'; // 🔴 เปลี่ยนเป็น PIN จริงของคุณ
-
-loginBtn?.addEventListener('click', () => {
-  const pin = pinInput.value.trim();
-
-  if (pin === PIN_CODE) {
-    loginOverlay.style.display = 'none';
-    localStorage.setItem('adore_login', 'true');
-  } else {
-    alert('รหัส PIN ไม่ถูกต้อง');
-  }
-});
-
-// ถ้าเคยล็อกอินแล้ว ไม่ต้องขึ้น overlay
-if (localStorage.getItem('adore_login') === 'true') {
-  loginOverlay.style.display = 'none';
-}
 /* =========================
-   GLOBAL STATE
+   STATE
 ========================= */
 let selectedDate = null;
 let selectedStylist = 'Bank';
 let selectedGender = null;
+let bookings = [];
 
 /* =========================
    ELEMENTS
 ========================= */
-const dateInput = document.getElementById('datePicker');
-const formEl = document.getElementById('bookingForm');
-const timeSelect = document.getElementById('timeSelect');
-const summaryBank = document.getElementById('summaryBank');
-const summarySindy = document.getElementById('summarySindy');
-const summaryAssist = document.getElementById('summaryAssist');
-const summaryTotal = document.getElementById('summaryTotal');
-const tableBody = document.getElementById('bookingTableBody');
+const loginOverlay = document.getElementById('loginOverlay');
+const loginBtn = document.getElementById('loginBtn');
+const pinInput = document.getElementById('pin');
+const loginMsg = document.getElementById('loginMsg');
+
+const dateInput = document.getElementById('date');
+const timeSelect = document.getElementById('time');
+const form = document.getElementById('bookingForm');
+const msg = document.getElementById('msg');
+
+const listEl = document.getElementById('list');
+
+const countBank = document.getElementById('countBank');
+const countSindy = document.getElementById('countSindy');
+const countAssist = document.getElementById('countAssist');
+const countTotal = document.getElementById('countTotal');
+
+const stylistBtns = document.querySelectorAll('.tab');
+
+/* =========================
+   LOGIN
+========================= */
+loginBtn.onclick = () => {
+  if (pinInput.value === PIN_CODE) {
+    loginOverlay.style.display = 'none';
+    init();
+  } else {
+    loginMsg.textContent = 'PIN ไม่ถูกต้อง';
+  }
+};
 
 /* =========================
    INIT
 ========================= */
-document.addEventListener('DOMContentLoaded', () => {
-  selectedDate = dateInput.value;
-  loadAll();
-});
+function init() {
+  selectedDate = new Date().toISOString().slice(0, 10);
+  dateInput.value = selectedDate;
 
-/* =========================
-   LOAD ALL DATA
-========================= */
-async function loadAll() {
-  if (!selectedDate) return;
-  await loadSlots();
-  await loadBookings();
+  bindEvents();
+  loadAll();
 }
 
 /* =========================
-   DATE CHANGE
+   EVENTS
 ========================= */
-dateInput.addEventListener('change', e => {
-  selectedDate = e.target.value;
-  loadAll();
-});
+function bindEvents() {
+  dateInput.onchange = () => {
+    selectedDate = dateInput.value;
+    loadAll();
+  };
 
-/* =========================
-   STYLIST BUTTONS
-========================= */
-document.querySelectorAll('.stylist-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.stylist-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    selectedStylist = btn.dataset.stylist;
-    loadSlots();
+  stylistBtns.forEach(btn => {
+    btn.onclick = () => {
+      stylistBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedStylist = btn.dataset.tab;
+      loadSlots();
+    };
   });
-});
 
-/* =========================
-   GENDER RADIO
-========================= */
-document.querySelectorAll('input[name="gender"]').forEach(radio => {
-  radio.addEventListener('change', e => {
-    selectedGender = e.target.value;
+  document.querySelectorAll('input[name="gender"]').forEach(r => {
+    r.onchange = () => (selectedGender = r.value);
   });
-});
+
+  form.onsubmit = submitBooking;
+}
 
 /* =========================
-   LOAD SLOTS
+   LOAD DATA
 ========================= */
+async function loadAll() {
+  await loadBookings();
+  await loadSlots();
+  renderTable();
+  renderSummary();
+}
+
+async function loadBookings() {
+  const res = await fetch(`/bookings?date=${selectedDate}`);
+  bookings = await res.json();
+}
+
 async function loadSlots() {
-  timeSelect.innerHTML = '<option value="">เลือกเวลา</option>';
-
   const res = await fetch(`/slots?date=${selectedDate}`);
   const { slots } = await res.json();
 
-  Object.keys(slots).forEach(time => {
-    if (!slots[time][selectedStylist]) {
-      const opt = document.createElement('option');
-      opt.value = time;
-      opt.textContent = time;
-      timeSelect.appendChild(opt);
-    }
-  });
+  timeSelect.innerHTML = `<option value="">เลือกเวลา</option>`;
+
+  for (let h = START_HOUR; h <= END_HOUR; h++) {
+    const t = `${String(h).padStart(2, '0')}:00`;
+    const disabled = slots[t]?.[selectedStylist];
+
+    const opt = document.createElement('option');
+    opt.value = t;
+    opt.textContent = t;
+    if (disabled) opt.disabled = true;
+
+    timeSelect.appendChild(opt);
+  }
 }
 
 /* =========================
-   LOAD BOOKINGS
+   SUBMIT
 ========================= */
-async function loadBookings() {
-  tableBody.innerHTML = '';
-
-  const res = await fetch(`/bookings?date=${selectedDate}`);
-  const data = await res.json();
-
-  let bank = 0, sindy = 0, assist = 0;
-
-  data.forEach(b => {
-    if (b.stylist === 'Bank') bank++;
-    if (b.stylist === 'Sindy') sindy++;
-    if (b.stylist === 'Assist') assist++;
-
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${b.time}</td>
-      <td>
-        <span class="badge stylist">${b.stylist}</span>
-        <span class="badge gender">${b.gender}</span>
-      </td>
-      <td>${b.name}</td>
-      <td>${b.service || '-'}</td>
-      <td>
-        ${b.phone && b.phone !== '0'
-          ? `<a href="tel:${b.phone}">${b.phone}</a>`
-          : '-'}
-      </td>
-      <td>-</td>
-    `;
-    tableBody.appendChild(tr);
-  });
-
-  summaryBank.textContent = bank;
-  summarySindy.textContent = sindy;
-  summaryAssist.textContent = assist;
-  summaryTotal.textContent = bank + sindy + assist;
-}
-
-/* =========================
-   SUBMIT BOOKING
-========================= */
-formEl.addEventListener('submit', async e => {
+async function submitBooking(e) {
   e.preventDefault();
 
-  const name = formEl.name.value.trim();
-  const phone = formEl.phone.value.trim() || '0';
-  const time = formEl.time.value;
-  const service = formEl.service.value.trim();
+  const name = document.getElementById('name').value.trim();
+  const phone = document.getElementById('phone').value.trim() || '0';
+  const time = timeSelect.value;
+  const service = document.getElementById('service').value.trim();
 
   if (!name || !time || !selectedGender) {
-    alert('กรุณากรอกข้อมูลให้ครบ');
+    msg.textContent = 'กรอกข้อมูลไม่ครบ';
     return;
   }
-
-  const payload = {
-    date: selectedDate,
-    time,
-    name,
-    phone,
-    stylist: selectedStylist,
-    gender: selectedGender,
-    service
-  };
 
   const res = await fetch('/bookings', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
+    body: JSON.stringify({
+      date: selectedDate,
+      time,
+      name,
+      phone,
+      stylist: selectedStylist,
+      gender: selectedGender,
+      service
+    })
   });
 
   const result = await res.json();
-
   if (result.error) {
-    alert(result.error);
+    msg.textContent = result.error;
     return;
   }
 
-  formEl.reset();
+  msg.textContent = 'บันทึกสำเร็จ';
+  form.reset();
   selectedGender = null;
+
   loadAll();
-});
+}
+
+/* =========================
+   RENDER
+========================= */
+function renderTable() {
+  listEl.innerHTML = '';
+
+  bookings.forEach(b => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${b.time}</td>
+      <td>
+        <span class="badge">${b.stylist}</span>
+        <span class="badge muted">${b.gender}</span>
+      </td>
+      <td>${b.name}</td>
+      <td>${b.service || '-'}</td>
+      <td>
+        <a href="tel:${b.phone}">${b.phone}</a>
+      </td>
+      <td>-</td>
+    `;
+    listEl.appendChild(tr);
+  });
+}
+
+function renderSummary() {
+  const bank = bookings.filter(b => b.stylist === 'Bank').length;
+  const sindy = bookings.filter(b => b.stylist === 'Sindy').length;
+  const assist = bookings.filter(b => b.stylist === 'Assist').length;
+
+  countBank.textContent = bank;
+  countSindy.textContent = sindy;
+  countAssist.textContent = assist;
+  countTotal.textContent = bookings.length;
+}
