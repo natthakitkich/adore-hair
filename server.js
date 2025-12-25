@@ -29,7 +29,7 @@ const supabase = createClient(
    ROUTES
 ========================= */
 
-// หน้าเว็บ
+/* ---------- HOME ---------- */
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -46,9 +46,12 @@ app.get('/bookings', async (req, res) => {
   if (date) query = query.eq('date', date);
 
   const { data, error } = await query;
-  if (error) return res.status(400).json({ error: error.message });
 
-  res.json(data);
+  if (error) {
+    return res.status(400).json({ error: error.message });
+  }
+
+  res.json(data || []);
 });
 
 /* ---------- CREATE BOOKING ---------- */
@@ -59,11 +62,15 @@ app.post('/bookings', async (req, res) => {
     return res.status(400).json({ error: 'ข้อมูลไม่ครบ' });
   }
 
-  const { error } = await supabase.from('bookings').insert([
-    { date, time, name, phone, stylist, gender, service }
-  ]);
+  const { error } = await supabase
+    .from('bookings')
+    .insert([
+      { date, time, name, phone, stylist, gender, service }
+    ]);
 
-  if (error) return res.status(400).json({ error: error.message });
+  if (error) {
+    return res.status(400).json({ error: error.message });
+  }
 
   res.json({ success: true });
 });
@@ -77,60 +84,46 @@ app.delete('/bookings/:id', async (req, res) => {
     .delete()
     .eq('id', id);
 
-  if (error) return res.status(400).json({ error: error.message });
+  if (error) {
+    return res.status(400).json({ error: error.message });
+  }
 
   res.json({ success: true });
 });
 
-/* ---------- UPDATE BOOKING ---------- */
-app.put('/bookings/:id', async (req, res) => {
-  const { id } = req.params;
-  const updateData = req.body;
-
-  const { error } = await supabase
-    .from('bookings')
-    .update(updateData)
-    .eq('id', id);
-
-  if (error) return res.status(400).json({ error: error.message });
-
-  res.json({ success: true });
-});
-
-/* ---------- SLOTS ---------- */
+/* ---------- SLOTS (ต่อวัน / ต่อช่าง) ---------- */
 app.get('/slots', async (req, res) => {
   const { date } = req.query;
 
   const slots = {};
   for (let h = 13; h <= 22; h++) {
     const t = `${String(h).padStart(2, '0')}:00`;
-    slots[t] = { Bank: false, Sindy: false, Assist: false };
+    slots[t] = {
+      Bank: false,
+      Sindy: false,
+      Assist: false
+    };
   }
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('bookings')
     .select('time, stylist')
     .eq('date', date);
 
-  data.forEach(b => {
-    if (slots[b.time]) slots[b.time][b.stylist] = true;
+  if (error) {
+    return res.status(400).json({ error: error.message });
+  }
+
+  (data || []).forEach(b => {
+    if (slots[b.time]) {
+      slots[b.time][b.stylist] = true;
+    }
   });
 
   res.json({ slots });
 });
 
-/* =========================
-   ROUTES
-========================= */
-
-// routes เดิมของคุณ
-app.get('/bookings', ...)
-app.post('/bookings', ...)
-app.get('/slots', ...)
-
-/* =========================
-   CALENDAR (days with booking)
-========================= */
+/* ---------- CALENDAR (วันไหนมีคิว) ---------- */
 app.get('/calendar', async (req, res) => {
   const { data, error } = await supabase
     .from('bookings')
@@ -140,7 +133,7 @@ app.get('/calendar', async (req, res) => {
     return res.status(400).json({ error: error.message });
   }
 
-  const dates = [...new Set(data.map(d => d.date))];
+  const dates = [...new Set((data || []).map(d => d.date))];
   res.json(dates);
 });
 
