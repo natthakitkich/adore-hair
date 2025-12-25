@@ -8,6 +8,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+const PORT = process.env.PORT || 3000;
+
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -17,33 +19,62 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-app.get('/bookings', async (req,res)=>{
+// -------------------- PAGE --------------------
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/index.html'));
+});
+
+// -------------------- BOOKINGS (รายวัน) --------------------
+app.get('/bookings', async (req, res) => {
   const { date } = req.query;
-  const { data } = await supabase
+
+  const { data, error } = await supabase
     .from('bookings')
     .select('*')
     .eq('date', date)
     .order('time');
+
+  if (error) return res.status(400).json({ error: error.message });
   res.json(data);
 });
 
-app.post('/bookings', async (req,res)=>{
-  const { error } = await supabase.from('bookings').insert([req.body]);
-  if (error) res.json({error:error.message});
-  else res.json({success:true});
+// -------------------- BOOKINGS (สร้าง) --------------------
+app.post('/bookings', async (req, res) => {
+  const { date, time, name, phone, stylist, gender, service } = req.body;
+
+  if (!date || !time || !name || !stylist || !gender) {
+    return res.status(400).json({ error: 'ข้อมูลไม่ครบ' });
+  }
+
+  const { error } = await supabase.from('bookings').insert([
+    { date, time, name, phone, stylist, gender, service }
+  ]);
+
+  if (error) return res.status(400).json({ error: error.message });
+  res.json({ success: true });
 });
 
-app.delete('/bookings/:id', async (req,res)=>{
-  await supabase.from('bookings').delete().eq('id', req.params.id);
-  res.json({success:true});
+// -------------------- DELETE --------------------
+app.delete('/bookings/:id', async (req, res) => {
+  const { id } = req.params;
+
+  const { error } = await supabase
+    .from('bookings')
+    .delete()
+    .eq('id', id);
+
+  if (error) return res.status(400).json({ error: error.message });
+  res.json({ success: true });
 });
 
-app.get('/slots', async (req,res)=>{
+// -------------------- SLOTS --------------------
+app.get('/slots', async (req, res) => {
   const { date } = req.query;
+
   const slots = {};
-  for (let h=13; h<=22; h++) {
-    const t = `${String(h).padStart(2,'0')}:00`;
-    slots[t] = { Bank:false, Sindy:false, Assist:false };
+  for (let h = 13; h <= 22; h++) {
+    const t = `${String(h).padStart(2, '0')}:00`;
+    slots[t] = { Bank: false, Sindy: false, Assist: false };
   }
 
   const { data } = await supabase
@@ -51,33 +82,26 @@ app.get('/slots', async (req,res)=>{
     .select('time, stylist')
     .eq('date', date);
 
-  data.forEach(b => slots[b.time][b.stylist] = true);
-  res.json({slots});
+  data.forEach(b => {
+    slots[b.time][b.stylist] = true;
+  });
+
+  res.json(slots);
 });
 
-app.get('/calendar', async (req,res)=>{
-  const { month } = req.query;
-  const start = `${month}-01`;
-  const end = `${month}-31`;
+// -------------------- CALENDAR (วงเขียว) --------------------
+app.get('/calendar', async (req, res) => {
+  const { month } = req.query; // YYYY-MM
 
   const { data } = await supabase
     .from('bookings')
     .select('date')
-    .gte('date', start)
-    .lte('date', end);
+    .like('date', `${month}%`);
 
-  const days = {};
-  data.forEach(b=>{
-    const d = Number(b.date.split('-')[2]);
-    days[d] = true;
-  });
-
-  const result = [];
-  for (let i=1;i<=31;i++) {
-    result.push({ day:i, hasBooking:!!days[i] });
-  }
-
-  res.json(result);
+  const days = [...new Set(data.map(d => d.date))];
+  res.json(days);
 });
 
-app.listen(3000, ()=>console.log('Server running'));
+app.listen(PORT, () => {
+  console.log(`Server running on ${PORT}`);
+});
