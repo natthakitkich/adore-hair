@@ -1,9 +1,4 @@
 /* =========================
-   CONFIG
-========================= */
-const PIN_CODE = '1234'; // เปลี่ยนได้
-
-/* =========================
    STATE
 ========================= */
 let currentDate = '';
@@ -13,11 +8,6 @@ let bookings = [];
 /* =========================
    ELEMENTS
 ========================= */
-const loginOverlay = document.getElementById('loginOverlay');
-const loginBtn = document.getElementById('loginBtn');
-const pinInput = document.getElementById('pin');
-const loginMsg = document.getElementById('loginMsg');
-
 const dateInput = document.getElementById('date');
 const calendarDays = document.getElementById('calendarDays');
 const timeSelect = document.getElementById('time');
@@ -28,33 +18,24 @@ const countSindy = document.getElementById('countSindy');
 const countAssist = document.getElementById('countAssist');
 const countTotal = document.getElementById('countTotal');
 
-/* =========================
-   LOGIN
-========================= */
-loginBtn.onclick = () => {
-  if (pinInput.value === PIN_CODE) {
-    loginOverlay.style.display = 'none';
-    init();
-  } else {
-    loginMsg.textContent = 'PIN ไม่ถูกต้อง';
-  }
+/* ===== LOGIN ===== */
+const loginOverlay = document.getElementById('loginOverlay');
+document.getElementById('loginBtn').onclick = () => {
+  loginOverlay.classList.add('hidden');
 };
 
 /* =========================
    INIT
 ========================= */
+init();
+
 function init() {
   const today = new Date().toISOString().slice(0, 10);
-  currentDate = today;
   dateInput.value = today;
+  currentDate = today;
 
   bindTabs();
   bindForm();
-  dateInput.onchange = () => {
-    currentDate = dateInput.value;
-    loadAll();
-  };
-
   loadAll();
 }
 
@@ -74,7 +55,8 @@ async function loadAll() {
 ========================= */
 async function loadCalendar() {
   const res = await fetch('/calendar-days');
-  const { days = [] } = await res.json();
+  const json = await res.json();
+  const daysWithBooking = json.days || [];
 
   calendarDays.innerHTML = '';
 
@@ -86,23 +68,33 @@ async function loadCalendar() {
   const totalDays = new Date(year, month + 1, 0).getDate();
 
   for (let i = 0; i < firstDay; i++) {
-    calendarDays.appendChild(document.createElement('div'));
+    const empty = document.createElement('div');
+    empty.className = 'calCell mutedDay';
+    calendarDays.appendChild(empty);
   }
 
   for (let day = 1; day <= totalDays; day++) {
     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
     const cell = document.createElement('div');
-    cell.className = 'calDay';
-    cell.textContent = day;
+    cell.className = 'calCell';
 
-    if (days.includes(dateStr)) {
-      cell.classList.add('hasBooking');
+    const num = document.createElement('div');
+    num.className = 'calNum';
+    num.textContent = day;
+    cell.appendChild(num);
+
+    if (daysWithBooking.includes(dateStr)) {
+      cell.classList.add('hasBookings');
+    }
+
+    if (dateStr === currentDate) {
+      cell.classList.add('selected');
     }
 
     cell.onclick = () => {
-      currentDate = dateStr;
       dateInput.value = dateStr;
+      currentDate = dateStr;
       loadAll();
     };
 
@@ -125,7 +117,8 @@ async function loadSlots() {
   timeSelect.innerHTML = '<option value="">เลือกเวลา</option>';
 
   const res = await fetch(`/slots?date=${currentDate}`);
-  const { slots = {} } = await res.json();
+  const json = await res.json();
+  const slots = json.slots || {};
 
   Object.keys(slots).forEach(time => {
     if (!slots[time][currentStylist]) {
@@ -151,7 +144,7 @@ function renderTable() {
       <td>${b.name}</td>
       <td>${b.service || '-'}</td>
       <td>${b.phone || '-'}</td>
-      <td><button>ลบ</button></td>
+      <td><button data-id="${b.id}">ลบ</button></td>
     `;
 
     tr.querySelector('button').onclick = async () => {
@@ -184,20 +177,14 @@ function bindForm() {
   document.getElementById('bookingForm').onsubmit = async e => {
     e.preventDefault();
 
-    const genderEl = document.querySelector('input[name="gender"]:checked');
-    if (!genderEl || !timeSelect.value) {
-      alert('กรอกข้อมูลไม่ครบ');
-      return;
-    }
-
     const body = {
       date: currentDate,
       time: timeSelect.value,
       stylist: currentStylist,
-      name: document.getElementById('name').value.trim(),
-      phone: document.getElementById('phone').value.trim(),
-      gender: genderEl.value,
-      service: document.getElementById('service').value.trim()
+      name: document.getElementById('name').value,
+      phone: document.getElementById('phone').value,
+      gender: document.querySelector('input[name="gender"]:checked')?.value,
+      service: document.getElementById('service').value
     };
 
     const res = await fetch('/bookings', {
@@ -210,7 +197,7 @@ function bindForm() {
       e.target.reset();
       loadAll();
     } else {
-      alert('บันทึกไม่สำเร็จ');
+      alert('กรอกข้อมูลไม่ครบ');
     }
   };
 }
