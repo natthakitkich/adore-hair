@@ -1,14 +1,14 @@
 <!doctype html>
 <html lang="th">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Adore hair studio — Queue</title>
-  <link rel="stylesheet" href="./style.css" />
+  <link rel="stylesheet" href="./style.css">
 </head>
 <body>
 
-<!-- LOGIN -->
+<!-- Login -->
 <div id="loginOverlay" class="overlay">
   <div class="modal">
     <div class="modalHead">
@@ -19,17 +19,14 @@
       </div>
     </div>
     <div class="modalBody">
-      <label>PIN</label>
-      <div class="row">
-        <input id="pin" type="password" placeholder="••••" />
-        <button id="loginBtn" class="primary">Login</button>
-      </div>
+      <input id="pin" type="password" placeholder="PIN">
+      <button id="loginBtn" class="primary">Login</button>
       <div id="loginMsg" class="msg muted"></div>
     </div>
   </div>
 </div>
 
-<!-- TOPBAR -->
+<!-- Topbar -->
 <div class="topbar">
   <div class="brand">
     <div class="avatar">A</div>
@@ -38,103 +35,97 @@
       <div class="subtitle">Owner Queue • 13:00–22:00 • แยกตามช่าง</div>
     </div>
   </div>
-
   <div class="topActions">
-    <div class="dateWrap">
-      <div class="label">เลือกวัน</div>
-      <input id="date" type="date" />
-    </div>
+    <input id="date" type="date">
   </div>
 </div>
 
 <div class="wrap">
 
-<!-- CALENDAR -->
+<!-- Calendar -->
 <div class="panel">
   <div class="row between">
     <div>
       <div class="title2">ปฏิทินเดือนนี้</div>
       <div class="subtitle2">วงกลมสีเขียว = มีคิว</div>
     </div>
+    <div class="row">
+      <button id="prevMonth" class="ghost">◀</button>
+      <button id="nextMonth" class="ghost">▶</button>
+    </div>
   </div>
 
   <div class="calWeekHead">
-    <div>อา</div><div>จ</div><div>อ</div><div>พ</div>
-    <div>พฤ</div><div>ศ</div><div>ส</div>
+    <div>อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div>ส</div>
   </div>
-
   <div id="calendarDays" class="calGrid"></div>
 </div>
 
-<!-- STYLIST -->
+<!-- Stylist Tabs -->
 <div class="tabs">
   <button class="tab active" data-tab="Bank">Bank</button>
   <button class="tab" data-tab="Sindy">Sindy</button>
   <button class="tab" data-tab="Assist">Assist</button>
 </div>
 
-<!-- FORM -->
+<!-- Booking -->
 <div class="panel">
 <form id="bookingForm">
   <div class="grid">
     <div>
       <label>ชื่อลูกค้า</label>
-      <input id="name" />
+      <input id="name">
     </div>
-
     <div>
       <label>เบอร์โทร</label>
-      <input id="phone" />
+      <input id="phone">
     </div>
-
     <div>
       <label>เพศ</label>
       <label><input type="radio" name="gender" value="male"> ชาย</label>
       <label><input type="radio" name="gender" value="female"> หญิง</label>
     </div>
-
     <div>
       <label>เวลา</label>
-      <select id="time">
-        <option value="">เลือกเวลา</option>
-      </select>
+      <select id="time"><option value="">เลือกเวลา</option></select>
     </div>
-
     <div class="full">
       <label>ทำอะไร</label>
-      <input id="service" />
+      <input id="service">
     </div>
-
     <div class="full row">
-      <button class="primary" type="submit">บันทึกการจอง</button>
+      <button class="primary">บันทึกการจอง</button>
       <div id="msg" class="msg muted"></div>
     </div>
   </div>
 </form>
 </div>
 
-<!-- SUMMARY + TABLE -->
+<!-- Summary -->
 <div class="panel">
   <div class="summary">
-    <div class="box"><div>Bank</div><div id="countBank">0</div></div>
-    <div class="box"><div>Sindy</div><div id="countSindy">0</div></div>
-    <div class="box"><div>Assist</div><div id="countAssist">0</div></div>
-    <div class="box"><div>รวม</div><div id="countTotal">0</div></div>
+    <div class="box"><div>Bank</div><div id="countBank" class="big">0</div></div>
+    <div class="box"><div>Sindy</div><div id="countSindy" class="big">0</div></div>
+    <div class="box"><div>Assist</div><div id="countAssist" class="big">0</div></div>
+    <div class="box"><div>รวม</div><div id="countTotal" class="big">0</div></div>
   </div>
 
-  <table>
-    <thead>
-      <tr>
-        <th>เวลา</th>
-        <th>ช่าง / เพศ</th>
-        <th>ชื่อ</th>
-        <th>ทำอะไร</th>
-        <th>โทร</th>
-        <th>ลบ</th>
-      </tr>
-    </thead>
-    <tbody id="list"></tbody>
-  </table>
+  <div class="tableWrap">
+    <table>
+      <thead>
+        <tr>
+          <th>เวลา</th>
+          <th>ช่าง</th>
+          <th>เพศ</th>
+          <th>ชื่อ</th>
+          <th>ทำอะไร</th>
+          <th>โทร</th>
+          <th>ลบ</th>
+        </tr>
+      </thead>
+      <tbody id="list"></tbody>
+    </table>
+  </div>
 </div>
 
 </div>
