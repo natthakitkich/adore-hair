@@ -9,7 +9,7 @@ const END_HOUR = 22;
    STATE
 ========================= */
 let selectedDate = null;
-let selectedStylist = null; // ← สำคัญมาก
+let selectedStylist = null;
 let selectedGender = null;
 let bookings = [];
 
@@ -72,8 +72,8 @@ function bindEvents() {
       stylistBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
 
-      // 🔥 ตั้งค่า state จริง
-      selectedStylist = btn.dataset.tab;
+      // ✅ ใช้ text ปุ่มตรง ๆ (ไม่มีวันพัง)
+      selectedStylist = btn.textContent.trim();
 
       loadSlots();
     };
@@ -175,6 +175,16 @@ async function submitBooking(e) {
 }
 
 /* =========================
+   DELETE
+========================= */
+async function deleteBooking(id) {
+  if (!confirm('ลบคิวนี้?')) return;
+
+  await fetch(`/bookings/${id}`, { method: 'DELETE' });
+  loadAll();
+}
+
+/* =========================
    RENDER
 ========================= */
 function renderTable() {
@@ -191,7 +201,9 @@ function renderTable() {
       <td>${b.name}</td>
       <td>${b.service || '-'}</td>
       <td><a href="tel:${b.phone}">${b.phone}</a></td>
-      <td>-</td>
+      <td>
+        <button onclick="deleteBooking(${b.id})">ลบ</button>
+      </td>
     `;
     listEl.appendChild(tr);
   });
