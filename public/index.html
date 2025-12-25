@@ -35,7 +35,7 @@
       <div class="avatar">A</div>
       <div>
         <div class="title">Adore hair studio</div>
-        <div class="subtitle">Owner Queue • 13:00–22:00 • แยกชาย/หญิง</div>
+        <div class="subtitle">Owner Queue • 13:00–22:00 • แยกตามช่าง</div>
       </div>
     </div>
 
@@ -50,7 +50,7 @@
 
   <div class="wrap">
 
-    <!-- ✅ Calendar month panel -->
+    <!-- Calendar month -->
     <div class="panel">
       <div class="row between">
         <div>
@@ -65,37 +65,43 @@
       <div id="calGrid" class="calGrid"></div>
     </div>
 
-    <!-- Tabs -->
+    <!-- Tabs: Stylist -->
     <div class="tabs">
-      <button class="tab active" data-tab="male">ผู้ชาย</button>
-      <button class="tab" data-tab="female">ผู้หญิง</button>
+      <button class="tab active" data-stylist="Bank">Bank</button>
+      <button class="tab" data-stylist="Sindy">Sindy</button>
     </div>
 
-    <!-- Form panel -->
+    <!-- Form -->
     <div class="panel">
       <form id="bookingForm">
         <div class="grid">
+
           <div>
             <label for="name">ชื่อลูกค้า</label>
             <input id="name" type="text" placeholder="เช่น คุณบีม" />
           </div>
+
           <div>
             <label for="phone">เบอร์โทร (ถ้าไม่มีใส่ 0)</label>
             <input id="phone" type="tel" inputmode="tel" placeholder="เช่น 09xxxxxxxx" />
           </div>
 
           <div>
+            <label>เพศลูกค้า</label>
+            <div class="row">
+              <label class="row"><input type="radio" name="gender" value="male" /> ชาย</label>
+              <label class="row"><input type="radio" name="gender" value="female" /> หญิง</label>
+            </div>
+          </div>
+
+          <div>
             <label for="time">เวลา</label>
             <select id="time"></select>
           </div>
-          <div>
-            <label for="service">ทำอะไร</label>
-            <input id="service" type="text" placeholder="เช่น สระ+ไดร์ / ทำสี / ตัด" />
-          </div>
 
           <div class="full">
-            <label for="note">หมายเหตุ (ถ้ามี)</label>
-            <input id="note" type="text" placeholder="เช่น ไม่เอาด้านข้าง / ทำสีโทนน้ำตาล" />
+            <label for="service">ทำอะไร</label>
+            <input id="service" type="text" placeholder="เช่น สระ+ไดร์ / ทำสี / ตัด" />
           </div>
 
           <div class="full row">
@@ -104,6 +110,7 @@
             <button id="refreshBtn" class="ghost" type="button">รีเฟรช</button>
             <div id="msg" class="msg muted" style="margin-left:auto"></div>
           </div>
+
         </div>
       </form>
     </div>
@@ -112,12 +119,12 @@
     <div class="panel">
       <div class="summary">
         <div class="box">
-          <div class="muted">ผู้ชาย</div>
-          <div id="countMale" class="big">0</div>
+          <div class="muted">Bank</div>
+          <div id="countBank" class="big">0</div>
         </div>
         <div class="box">
-          <div class="muted">ผู้หญิง</div>
-          <div id="countFemale" class="big">0</div>
+          <div class="muted">Sindy</div>
+          <div id="countSindy" class="big">0</div>
         </div>
         <div class="box">
           <div class="muted">รวม</div>
@@ -134,10 +141,9 @@
           <thead>
             <tr>
               <th>เวลา</th>
-              <th>ประเภท</th>
+              <th>ช่าง / เพศ</th>
               <th>ชื่อ</th>
               <th>ทำอะไร</th>
-              <th>หมายเหตุ</th>
               <th>โทร</th>
               <th>จัดการ</th>
             </tr>
@@ -146,6 +152,7 @@
         </table>
       </div>
     </div>
+
   </div>
 
   <script src="./app.js"></script>
