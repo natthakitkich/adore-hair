@@ -151,3 +151,96 @@ th{
   color:#ff5c7a;
   border:1px solid rgba(255,92,122,.4);
 }
+/* ===== LOGIN OVERLAY ===== */
+.overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.75);
+  display:grid;
+  place-items:center;
+  z-index:999;
+}
+.modal{
+  width:min(420px,90vw);
+  background:linear-gradient(180deg, rgba(15,18,30,.95), rgba(10,12,22,.9));
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.12);
+  box-shadow:0 20px 60px rgba(0,0,0,.6);
+}
+.modalHead{
+  display:flex;
+  gap:12px;
+  padding:16px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+.modalBody{
+  padding:16px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+/* ===== CALENDAR ===== */
+.calWeekHead{
+  margin-top:12px;
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  text-align:center;
+  font-size:12px;
+  color:var(--muted);
+}
+.calGrid{
+  margin-top:8px;
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:8px;
+}
+.calCell{
+  aspect-ratio:1/1;
+  border-radius:14px;
+  border:1px solid var(--stroke);
+  background:rgba(0,0,0,.15);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+}
+.calNum{
+  width:38px;
+  height:38px;
+  border-radius:999px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:900;
+}
+.calCell.hasBookings .calNum{
+  background:var(--greenBg);
+  color:var(--green);
+  border:1px solid rgba(44,255,156,.5);
+}
+.calCell.selected{
+  outline:2px solid rgba(110,231,255,.35);
+}
+
+/* ===== GENDER ICON ===== */
+.gender{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:34px;
+  height:34px;
+  border-radius:999px;
+  font-size:16px;
+  font-weight:900;
+}
+.gender.male{
+  background:rgba(110,231,255,.15);
+  color:#6ee7ff;
+  border:1px solid rgba(110,231,255,.45);
+}
+.gender.female{
+  background:rgba(255,92,122,.15);
+  color:#ff5c7a;
+  border:1px solid rgba(255,92,122,.45);
+}
