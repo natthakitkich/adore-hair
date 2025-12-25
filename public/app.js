@@ -1,118 +1,152 @@
 /* =========================
+   GLOBAL STATE
+========================= */
+let selectedDate = null;
+let selectedStylist = 'Bank';
+let selectedGender = null;
+
+/* =========================
    ELEMENTS
 ========================= */
-const loginOverlay = document.getElementById('loginOverlay');
-const loginBtn = document.getElementById('loginBtn');
-const pinInput = document.getElementById('pin');
-const loginMsg = document.getElementById('loginMsg');
-const logoutBtn = document.getElementById('logoutBtn');
-
-const dateInput = document.getElementById('date');
+const dateInput = document.getElementById('datePicker');
 const formEl = document.getElementById('bookingForm');
-const listEl = document.getElementById('list');
-const msgEl = document.getElementById('msg');
-
-const countMale = document.getElementById('countMale');
-const countFemale = document.getElementById('countFemale');
-const countTotal = document.getElementById('countTotal');
-const summaryHint = document.getElementById('summaryHint');
-
-/* =========================
-   STATE
-========================= */
-const PIN_CODE = '1234';
-let selectedStylist = 'Bank';
+const timeSelect = document.getElementById('timeSelect');
+const summaryBank = document.getElementById('summaryBank');
+const summarySindy = document.getElementById('summarySindy');
+const summaryAssist = document.getElementById('summaryAssist');
+const summaryTotal = document.getElementById('summaryTotal');
+const tableBody = document.getElementById('bookingTableBody');
 
 /* =========================
-   LOGIN
+   INIT
 ========================= */
-loginBtn.onclick = () => {
-  if (pinInput.value === PIN_CODE) {
-    loginOverlay.style.display = 'none';
-    loadBookings();
-  } else {
-    loginMsg.textContent = 'PIN ไม่ถูกต้อง';
-  }
-};
-
-logoutBtn.onclick = () => location.reload();
+document.addEventListener('DOMContentLoaded', () => {
+  selectedDate = dateInput.value;
+  loadAll();
+});
 
 /* =========================
-   DATE INIT
+   LOAD ALL DATA
 ========================= */
-dateInput.value = new Date().toISOString().slice(0, 10);
-dateInput.onchange = loadBookings;
+async function loadAll() {
+  if (!selectedDate) return;
+  await loadSlots();
+  await loadBookings();
+}
+
+/* =========================
+   DATE CHANGE
+========================= */
+dateInput.addEventListener('change', e => {
+  selectedDate = e.target.value;
+  loadAll();
+});
 
 /* =========================
    STYLIST BUTTONS
 ========================= */
-document.querySelectorAll('.tab').forEach(btn => {
-  btn.onclick = () => {
-    document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+document.querySelectorAll('.stylist-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.stylist-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    selectedStylist = btn.textContent.trim();
-  };
+    selectedStylist = btn.dataset.stylist;
+    loadSlots();
+  });
 });
+
+/* =========================
+   GENDER RADIO
+========================= */
+document.querySelectorAll('input[name="gender"]').forEach(radio => {
+  radio.addEventListener('change', e => {
+    selectedGender = e.target.value;
+  });
+});
+
+/* =========================
+   LOAD SLOTS
+========================= */
+async function loadSlots() {
+  timeSelect.innerHTML = '<option value="">เลือกเวลา</option>';
+
+  const res = await fetch(`/slots?date=${selectedDate}`);
+  const { slots } = await res.json();
+
+  Object.keys(slots).forEach(time => {
+    if (!slots[time][selectedStylist]) {
+      const opt = document.createElement('option');
+      opt.value = time;
+      opt.textContent = time;
+      timeSelect.appendChild(opt);
+    }
+  });
+}
 
 /* =========================
    LOAD BOOKINGS
 ========================= */
 async function loadBookings() {
-  listEl.innerHTML = '';
-  msgEl.textContent = '';
+  tableBody.innerHTML = '';
 
-  try {
-    const res = await fetch(`/bookings?date=${dateInput.value}`);
-    const data = await res.json();
+  const res = await fetch(`/bookings?date=${selectedDate}`);
+  const data = await res.json();
 
-    let male = 0, female = 0;
+  let bank = 0, sindy = 0, assist = 0;
 
-    data.forEach(b => {
-      if (b.gender === 'male') male++;
-      if (b.gender === 'female') female++;
+  data.forEach(b => {
+    if (b.stylist === 'Bank') bank++;
+    if (b.stylist === 'Sindy') sindy++;
+    if (b.stylist === 'Assist') assist++;
 
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${b.time.slice(0,5)}</td>
-        <td>${b.stylist} / ${b.gender}</td>
-        <td>${b.name}</td>
-        <td>${b.service}</td>
-        <td>${b.phone}</td>
-        <td>-</td>
-      `;
-      listEl.appendChild(tr);
-    });
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${b.time}</td>
+      <td>
+        <span class="badge stylist">${b.stylist}</span>
+        <span class="badge gender">${b.gender}</span>
+      </td>
+      <td>${b.name}</td>
+      <td>${b.service || '-'}</td>
+      <td>
+        ${b.phone && b.phone !== '0'
+          ? `<a href="tel:${b.phone}">${b.phone}</a>`
+          : '-'}
+      </td>
+      <td>-</td>
+    `;
+    tableBody.appendChild(tr);
+  });
 
-    countMale.textContent = male;
-    countFemale.textContent = female;
-    countTotal.textContent = data.length;
-    summaryHint.textContent = data.length ? 'มีคิว' : '-';
-
-  } catch (err) {
-    msgEl.textContent = 'โหลดข้อมูลไม่สำเร็จ';
-  }
+  summaryBank.textContent = bank;
+  summarySindy.textContent = sindy;
+  summaryAssist.textContent = assist;
+  summaryTotal.textContent = bank + sindy + assist;
 }
 
 /* =========================
    SUBMIT BOOKING
 ========================= */
-formEl.onsubmit = async e => {
+formEl.addEventListener('submit', async e => {
   e.preventDefault();
 
-  const gender = document.querySelector('input[name="gender"]:checked')?.value;
-  if (!gender) {
-    msgEl.textContent = 'กรุณาเลือกเพศ';
+  const name = formEl.name.value.trim();
+  const phone = formEl.phone.value.trim() || '0';
+  const time = formEl.time.value;
+  const service = formEl.service.value.trim();
+
+  if (!name || !time || !selectedGender) {
+    alert('กรุณากรอกข้อมูลให้ครบ');
     return;
   }
 
   const payload = {
-    date: dateInput.value,
-    time: time.value,
-    name: name.value,
-    phone: phone.value || '0',
+    date: selectedDate,
+    time,
+    name,
+    phone,
     stylist: selectedStylist,
-    gender,
-    service: service.value
+    gender: selectedGender,
+    service
   };
 
   const res = await fetch('/bookings', {
@@ -122,11 +156,13 @@ formEl.onsubmit = async e => {
   });
 
   const result = await res.json();
-  if (!res.ok) {
-    msgEl.textContent = result.error || 'บันทึกไม่สำเร็จ';
+
+  if (result.error) {
+    alert(result.error);
     return;
   }
 
   formEl.reset();
-  loadBookings();
-};
+  selectedGender = null;
+  loadAll();
+});
