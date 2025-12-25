@@ -10,21 +10,33 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+/* =========================
+   MIDDLEWARE
+========================= */
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+/* =========================
+   SUPABASE
+========================= */
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-// -------------------- PAGE --------------------
+/* =========================
+   ROUTES
+========================= */
+
+// หน้าเว็บ
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public/index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// -------------------- BOOKINGS (รายวัน) --------------------
+/* ---------- BOOKINGS ---------- */
+
+// ดึง bookings รายวัน
 app.get('/bookings', async (req, res) => {
   const { date } = req.query;
 
@@ -32,13 +44,17 @@ app.get('/bookings', async (req, res) => {
     .from('bookings')
     .select('*')
     .eq('date', date)
-    .order('time');
+    .order('time', { ascending: true });
 
-  if (error) return res.status(400).json({ error: error.message });
-  res.json(data);
+  if (error) {
+    console.error(error);
+    return res.json([]);
+  }
+
+  res.json(data || []);
 });
 
-// -------------------- BOOKINGS (สร้าง) --------------------
+// เพิ่ม booking
 app.post('/bookings', async (req, res) => {
   const { date, time, name, phone, stylist, gender, service } = req.body;
 
@@ -50,11 +66,15 @@ app.post('/bookings', async (req, res) => {
     { date, time, name, phone, stylist, gender, service }
   ]);
 
-  if (error) return res.status(400).json({ error: error.message });
+  if (error) {
+    console.error(error);
+    return res.status(400).json({ error: error.message });
+  }
+
   res.json({ success: true });
 });
 
-// -------------------- DELETE --------------------
+// ลบ booking
 app.delete('/bookings/:id', async (req, res) => {
   const { id } = req.params;
 
@@ -63,11 +83,17 @@ app.delete('/bookings/:id', async (req, res) => {
     .delete()
     .eq('id', id);
 
-  if (error) return res.status(400).json({ error: error.message });
+  if (error) {
+    console.error(error);
+    return res.status(400).json({ error: error.message });
+  }
+
   res.json({ success: true });
 });
 
-// -------------------- SLOTS --------------------
+/* ---------- SLOTS ---------- */
+
+// ช่องเวลาต่อวัน / ต่อช่าง
 app.get('/slots', async (req, res) => {
   const { date } = req.query;
 
@@ -77,31 +103,44 @@ app.get('/slots', async (req, res) => {
     slots[t] = { Bank: false, Sindy: false, Assist: false };
   }
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('bookings')
     .select('time, stylist')
     .eq('date', date);
 
-  data.forEach(b => {
-    slots[b.time][b.stylist] = true;
-  });
+  if (!error && Array.isArray(data)) {
+    data.forEach(b => {
+      if (slots[b.time] && slots[b.time][b.stylist] !== undefined) {
+        slots[b.time][b.stylist] = true;
+      }
+    });
+  }
 
-  res.json(slots);
+  res.json({ slots });
 });
 
-// -------------------- CALENDAR (วงเขียว) --------------------
-app.get('/calendar', async (req, res) => {
-  const { month } = req.query; // YYYY-MM
+/* ---------- CALENDAR (วงเขียว) ---------- */
 
-  const { data } = await supabase
+app.get('/calendar-days', async (req, res) => {
+  const { data, error } = await supabase
     .from('bookings')
-    .select('date')
-    .like('date', `${month}%`);
+    .select('date');
 
-  const days = [...new Set(data.map(d => d.date))];
-  res.json(days);
+  if (error) {
+    console.error(error);
+    return res.json({ days: [] });
+  }
+
+  const days = Array.isArray(data)
+    ? [...new Set(data.map(d => d.date))]
+    : [];
+
+  res.json({ days });
 });
 
+/* =========================
+   START SERVER
+========================= */
 app.listen(PORT, () => {
-  console.log(`Server running on ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
