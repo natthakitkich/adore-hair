@@ -105,7 +105,7 @@ async function loadCalendar(){
 
   calendarDays.innerHTML = '';
   calendarTitle.textContent =
-    `ปฏิทินเดือน ${new Date(viewYear,viewMonth)
+    `เดือน ${new Date(viewYear,viewMonth)
       .toLocaleDateString('th-TH',{month:'long',year:'numeric'})}`;
 
   const firstDay = new Date(viewYear, viewMonth, 1).getDay();
