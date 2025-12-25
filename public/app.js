@@ -9,9 +9,10 @@ const END_HOUR = 22;
    STATE
 ========================= */
 let selectedDate = null;
-let selectedStylist = null;
+let selectedStylist = 'Bank';
 let selectedGender = null;
 let bookings = [];
+let calendarDates = []; // <<< วันที่ที่มีคิว
 
 /* =========================
    ELEMENTS
@@ -27,6 +28,7 @@ const form = document.getElementById('bookingForm');
 const msg = document.getElementById('msg');
 
 const listEl = document.getElementById('list');
+const calendarEl = document.getElementById('calendarDays');
 
 const countBank = document.getElementById('countBank');
 const countSindy = document.getElementById('countSindy');
@@ -71,18 +73,13 @@ function bindEvents() {
     btn.onclick = () => {
       stylistBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-
-      // ✅ ใช้ text ปุ่มตรง ๆ (ไม่มีวันพัง)
-      selectedStylist = btn.textContent.trim();
-
+      selectedStylist = btn.dataset.tab;
       loadSlots();
     };
   });
 
   document.querySelectorAll('input[name="gender"]').forEach(r => {
-    r.onchange = () => {
-      selectedGender = r.value;
-    };
+    r.onchange = () => (selectedGender = r.value);
   });
 
   form.onsubmit = submitBooking;
@@ -92,24 +89,32 @@ function bindEvents() {
    LOAD DATA
 ========================= */
 async function loadAll() {
+  await loadCalendar();
   await loadBookings();
   await loadSlots();
+  renderCalendar();
   renderTable();
   renderSummary();
 }
 
+/* ---------- CALENDAR ---------- */
+async function loadCalendar() {
+  const res = await fetch('/calendar');
+  calendarDates = await res.json(); // ['2025-12-25', '2025-12-31']
+}
+
+/* ---------- BOOKINGS ---------- */
 async function loadBookings() {
   const res = await fetch(`/bookings?date=${selectedDate}`);
   bookings = await res.json();
 }
 
+/* ---------- SLOTS ---------- */
 async function loadSlots() {
-  timeSelect.innerHTML = `<option value="">เลือกเวลา</option>`;
-
-  if (!selectedStylist) return;
-
   const res = await fetch(`/slots?date=${selectedDate}`);
   const { slots } = await res.json();
+
+  timeSelect.innerHTML = `<option value="">เลือกเวลา</option>`;
 
   for (let h = START_HOUR; h <= END_HOUR; h++) {
     const t = `${String(h).padStart(2, '0')}:00`;
@@ -135,12 +140,7 @@ async function submitBooking(e) {
   const time = timeSelect.value;
   const service = document.getElementById('service').value.trim();
 
-  if (!selectedStylist) {
-    msg.textContent = 'กรุณาเลือกช่าง';
-    return;
-  }
-
-  if (!name || !time || !selectedGender) {
+  if (!name || !time || !selectedGender || !selectedStylist) {
     msg.textContent = 'กรอกข้อมูลไม่ครบ';
     return;
   }
@@ -160,7 +160,6 @@ async function submitBooking(e) {
   });
 
   const result = await res.json();
-
   if (result.error) {
     msg.textContent = result.error;
     return;
@@ -169,24 +168,25 @@ async function submitBooking(e) {
   msg.textContent = 'บันทึกสำเร็จ';
   form.reset();
   selectedGender = null;
-  timeSelect.value = '';
 
-  loadAll();
-}
-
-/* =========================
-   DELETE
-========================= */
-async function deleteBooking(id) {
-  if (!confirm('ลบคิวนี้?')) return;
-
-  await fetch(`/bookings/${id}`, { method: 'DELETE' });
   loadAll();
 }
 
 /* =========================
    RENDER
 ========================= */
+
+/* ---------- CALENDAR UI ---------- */
+function renderCalendar() {
+  if (!calendarEl) return;
+
+  calendarEl.querySelectorAll('[data-date]').forEach(el => {
+    const d = el.dataset.date;
+    el.classList.toggle('has-booking', calendarDates.includes(d));
+  });
+}
+
+/* ---------- TABLE ---------- */
 function renderTable() {
   listEl.innerHTML = '';
 
@@ -200,18 +200,31 @@ function renderTable() {
       </td>
       <td>${b.name}</td>
       <td>${b.service || '-'}</td>
-      <td><a href="tel:${b.phone}">${b.phone}</a></td>
+      <td>${b.phone}</td>
       <td>
-        <button onclick="deleteBooking(${b.id})">ลบ</button>
+        <button onclick="deleteBooking('${b.id}')">ลบ</button>
       </td>
     `;
     listEl.appendChild(tr);
   });
 }
 
+/* ---------- SUMMARY ---------- */
 function renderSummary() {
-  countBank.textContent = bookings.filter(b => b.stylist === 'Bank').length;
-  countSindy.textContent = bookings.filter(b => b.stylist === 'Sindy').length;
-  countAssist.textContent = bookings.filter(b => b.stylist === 'Assist').length;
+  const bank = bookings.filter(b => b.stylist === 'Bank').length;
+  const sindy = bookings.filter(b => b.stylist === 'Sindy').length;
+  const assist = bookings.filter(b => b.stylist === 'Assist').length;
+
+  countBank.textContent = bank;
+  countSindy.textContent = sindy;
+  countAssist.textContent = assist;
   countTotal.textContent = bookings.length;
+}
+
+/* =========================
+   DELETE
+========================= */
+async function deleteBooking(id) {
+  await fetch(`/bookings/${id}`, { method: 'DELETE' });
+  loadAll();
 }
