@@ -37,6 +37,7 @@ app.get('/', (req, res) => {
 
 app.get('/bookings', async (req, res) => {
   const { date } = req.query;
+
   if (!date) return res.json([]);
 
   const { data, error } = await supabase
