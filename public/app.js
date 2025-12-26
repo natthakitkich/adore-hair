@@ -1,10 +1,9 @@
-document.addEventListener('DOMContentLoaded', () => {
-
+/* ===== CONFIG ===== */
 const OWNER_PIN = '1234';
 const TZ = 'Asia/Bangkok';
 
+/* ===== STATE ===== */
 let currentDate = '';
-let todayDate = '';
 let viewYear, viewMonth;
 let currentStylist = 'Bank';
 let bookings = [];
@@ -21,6 +20,15 @@ const calendarDays = document.getElementById('calendarDays');
 const calendarTitle = document.getElementById('calendarTitle');
 const timeSelect = document.getElementById('time');
 const list = document.getElementById('list');
+
+const nameInput = document.getElementById('name');
+const phoneInput = document.getElementById('phone');
+const serviceInput = document.getElementById('service');
+
+const countBank = document.getElementById('countBank');
+const countSindy = document.getElementById('countSindy');
+const countAssist = document.getElementById('countAssist');
+const countTotal = document.getElementById('countTotal');
 
 /* ===== INIT ===== */
 init();
@@ -42,7 +50,6 @@ function initAuth(){
     if(pinInput.value === OWNER_PIN){
       localStorage.setItem('adore_logged_in','1');
       loginOverlay.classList.add('hidden');
-      loadAll();
     }else{
       loginMsg.textContent = 'PIN ไม่ถูกต้อง';
     }
@@ -56,9 +63,11 @@ function initAuth(){
 
 /* ===== DATE ===== */
 function initDate(){
-  const now = new Date(new Date().toLocaleString('en-US',{ timeZone: TZ }));
-  todayDate = now.toISOString().slice(0,10);
-  currentDate = todayDate;
+  const now = new Date(
+    new Date().toLocaleString('en-US',{ timeZone: TZ })
+  );
+
+  currentDate = now.toISOString().slice(0,10);
   viewYear = now.getFullYear();
   viewMonth = now.getMonth();
   dateInput.value = currentDate;
@@ -95,17 +104,18 @@ async function loadAll(){
   await loadBookings();
   await loadSlots();
   renderTable();
+  renderSummary();
 }
 
 /* ===== CALENDAR ===== */
 async function loadCalendar(){
   const res = await fetch('/calendar-days');
-  const density = await res.json();
+  const { days=[] } = await res.json();
 
-  calendarDays.innerHTML='';
+  calendarDays.innerHTML = '';
   calendarTitle.textContent =
-    new Date(viewYear,viewMonth)
-      .toLocaleDateString('th-TH',{month:'long',year:'numeric'});
+    `ปฏิทินเดือน ${new Date(viewYear,viewMonth)
+      .toLocaleDateString('th-TH',{month:'long',year:'numeric'})}`;
 
   const firstDay = new Date(viewYear, viewMonth, 1).getDay();
   const totalDays = new Date(viewYear, viewMonth+1, 0).getDate();
@@ -118,14 +128,10 @@ async function loadCalendar(){
     const dateStr = `${viewYear}-${String(viewMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const cell = document.createElement('div');
     cell.className = 'calCell';
-    cell.textContent = d;
+    cell.innerHTML = `<div class="calNum">${d}</div>`;
 
-    if(dateStr === todayDate) cell.classList.add('today');
+    if(days.includes(dateStr)) cell.classList.add('hasBookings');
     if(dateStr === currentDate) cell.classList.add('selected');
-
-    const count = density[dateStr] || 0;
-    const level = Math.min(5, Math.ceil((count / 20) * 5));
-    if(level > 0) cell.dataset.level = level;
 
     cell.onclick = ()=>{
       currentDate = dateStr;
@@ -145,15 +151,15 @@ async function loadBookings(){
 
 /* ===== SLOTS ===== */
 async function loadSlots(){
-  timeSelect.innerHTML='<option value="">เลือกเวลา</option>';
+  timeSelect.innerHTML = '<option value="">เลือกเวลา</option>';
   const r = await fetch(`/slots?date=${currentDate}`);
   const { slots={} } = await r.json();
 
   Object.keys(slots).forEach(t=>{
     if(!slots[t][currentStylist]){
-      const o=document.createElement('option');
-      o.value=t;
-      o.textContent=t;
+      const o = document.createElement('option');
+      o.value = t;
+      o.textContent = t.slice(0,5);
       timeSelect.appendChild(o);
     }
   });
@@ -161,19 +167,19 @@ async function loadSlots(){
 
 /* ===== TABLE ===== */
 function renderTable(){
-  list.innerHTML='';
+  list.innerHTML = '';
   bookings.forEach(b=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML=`
-      <td>${b.time}</td>
-      <td>${b.stylist}</td>
-      <td>${b.gender==='male'?'👨':'👩'}</td>
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${b.time.slice(0,5)}</td>
+      <td><span class="badge stylist-${b.stylist.toLowerCase()}">${b.stylist}</span></td>
+      <td><span class="gender ${b.gender}">${b.gender==='male'?'👨':'👩'}</span></td>
       <td>${b.name}</td>
       <td>${b.service||'-'}</td>
       <td>${b.phone||'-'}</td>
-      <td><button>ลบ</button></td>
+      <td><button class="smallBtn danger">ลบ</button></td>
     `;
-    tr.querySelector('button').onclick=async()=>{
+    tr.querySelector('button').onclick = async ()=>{
       await fetch(`/bookings/${b.id}`,{method:'DELETE'});
       loadAll();
     };
@@ -181,24 +187,46 @@ function renderTable(){
   });
 }
 
+/* ===== SUMMARY ===== */
+function renderSummary(){
+  const c = s => bookings.filter(b=>b.stylist===s).length;
+  countBank.textContent = c('Bank');
+  countSindy.textContent = c('Sindy');
+  countAssist.textContent = c('Assist');
+  countTotal.textContent = bookings.length;
+}
+
 /* ===== FORM ===== */
 async function submitForm(e){
   e.preventDefault();
-  const body={
-    date:currentDate,
-    time:timeSelect.value,
-    stylist:currentStylist,
-    name:name.value,
-    phone:phone.value,
-    gender:document.querySelector('[name="gender"]:checked')?.value,
-    service:service.value
+
+  const gender = document.querySelector('[name="gender"]:checked')?.value;
+
+  if(!timeSelect.value || !nameInput.value || !gender){
+    alert('กรุณากรอกข้อมูลให้ครบ');
+    return;
+  }
+
+  const body = {
+    date: currentDate,
+    time: timeSelect.value,
+    stylist: currentStylist,
+    name: nameInput.value,
+    phone: phoneInput.value,
+    gender,
+    service: serviceInput.value
   };
-  const r=await fetch('/bookings',{
+
+  const r = await fetch('/bookings',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify(body)
   });
-  if(r.ok){ e.target.reset(); loadAll(); }
-}
 
-});
+  if(r.ok){
+    e.target.reset();
+    loadAll();
+  }else{
+    alert('บันทึกไม่สำเร็จ');
+  }
+}
