@@ -76,42 +76,58 @@ function buildTimeSlots() {
    CALENDAR
 ========================= */
 async function loadCalendar() {
-  const res = await fetch('/calendar-days');
-  const { days = [] } = await res.json();
+  // ดึง booking ทั้งหมด
+  const res = await fetch('/bookings');
+  const allBookings = await res.json();
 
   calendarDays.innerHTML = '';
 
   const d = new Date(selectedDate);
+  const year = d.getFullYear();
+  const month = d.getMonth();
+
   calendarTitle.textContent = d.toLocaleDateString('th-TH', {
     month: 'long',
     year: 'numeric'
   });
 
-  // นับคิวต่อวัน (เฉพาะ Bank + Sindy)
+  // สร้าง map: date => จำนวนคิว (Bank + Sindy)
   const countMap = {};
-  days.forEach(date => {
-    countMap[date] = (countMap[date] || 0) + 1;
+  allBookings.forEach(b => {
+    if (b.stylist === 'Bank' || b.stylist === 'Sindy') {
+      countMap[b.date] = (countMap[b.date] || 0) + 1;
+    }
   });
 
-  for (let day = 1; day <= 31; day++) {
-    const cellDate =
-      selectedDate.slice(0, 8) + String(day).padStart(2, '0');
+  const firstDay = new Date(year, month, 1).getDay();
+  const totalDays = new Date(year, month + 1, 0).getDate();
+
+  // ช่องว่างก่อนวันแรก
+  for (let i = 0; i < firstDay; i++) {
+    calendarDays.appendChild(document.createElement('div'));
+  }
+
+  for (let day = 1; day <= totalDays; day++) {
+    const dateStr =
+      `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
     const cell = document.createElement('div');
     cell.className = 'calCell';
-    cell.textContent = day;
+    cell.innerHTML = `<div class="calNum">${day}</div>`;
 
-    if (cellDate === todayDate) cell.classList.add('today');
-    if (cellDate === selectedDate) cell.classList.add('selected');
+    // today / selected
+    if (dateStr === todayDate) cell.classList.add('today');
+    if (dateStr === selectedDate) cell.classList.add('selected');
 
-    const count = countMap[cellDate] || 0;
+    // ✅ density color
+    const count = countMap[dateStr] || 0;
     if (count > 0) {
       const level = Math.min(5, Math.ceil((count / 20) * 5));
-      cell.dataset.level = level;
+      cell.dataset.level = level; // ให้ CSS ทำสี
     }
 
     cell.onclick = () => {
-      selectedDate = cellDate;
+      selectedDate = dateStr;
       dateInput.value = selectedDate;
       loadCalendar();
       loadBookings(selectedDate);
@@ -120,6 +136,7 @@ async function loadCalendar() {
     calendarDays.appendChild(cell);
   }
 }
+
 
 /* =========================
    LOAD BOOKINGS
