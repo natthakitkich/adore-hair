@@ -1,14 +1,11 @@
-/* ===== CONFIG ===== */
 const OWNER_PIN = '1234';
 const TZ = 'Asia/Bangkok';
 
-/* ===== STATE ===== */
 let currentDate = '';
 let viewYear, viewMonth;
 let currentStylist = 'Bank';
-let bookings = [];
+let calendarMap = {};
 
-/* ===== ELEMENTS ===== */
 const loginOverlay = document.getElementById('loginOverlay');
 const loginBtn = document.getElementById('loginBtn');
 const loginMsg = document.getElementById('loginMsg');
@@ -19,18 +16,7 @@ const dateInput = document.getElementById('date');
 const calendarDays = document.getElementById('calendarDays');
 const calendarTitle = document.getElementById('calendarTitle');
 const timeSelect = document.getElementById('time');
-const list = document.getElementById('list');
 
-const nameInput = document.getElementById('name');
-const phoneInput = document.getElementById('phone');
-const serviceInput = document.getElementById('service');
-
-const countBank = document.getElementById('countBank');
-const countSindy = document.getElementById('countSindy');
-const countAssist = document.getElementById('countAssist');
-const countTotal = document.getElementById('countTotal');
-
-/* ===== INIT ===== */
 init();
 
 function init(){
@@ -98,13 +84,10 @@ function changeMonth(d){
   loadCalendar();
 }
 
-/* ===== LOAD ALL ===== */
+/* ===== LOAD ===== */
 async function loadAll(){
   await loadCalendar();
-  await loadBookings();
   await loadSlots();
-  renderTable();
-  renderSummary();
 }
 
 /* ===== CALENDAR ===== */
@@ -112,10 +95,13 @@ async function loadCalendar(){
   const res = await fetch('/calendar-days');
   const { days=[] } = await res.json();
 
+  calendarMap = {};
+  days.forEach(d => calendarMap[d.date] = d);
+
   calendarDays.innerHTML = '';
   calendarTitle.textContent =
-    `ปฏิทินเดือน ${new Date(viewYear,viewMonth)
-      .toLocaleDateString('th-TH',{month:'long',year:'numeric'})}`;
+    new Date(viewYear,viewMonth)
+      .toLocaleDateString('th-TH',{month:'long',year:'numeric'});
 
   const firstDay = new Date(viewYear, viewMonth, 1).getDay();
   const totalDays = new Date(viewYear, viewMonth+1, 0).getDate();
@@ -128,25 +114,28 @@ async function loadCalendar(){
     const dateStr = `${viewYear}-${String(viewMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const cell = document.createElement('div');
     cell.className = 'calCell';
+
+    const info = calendarMap[dateStr];
+    if(info){
+      const r = info.ratio;
+      if(r > 0 && r <= .25) cell.classList.add('lv1');
+      else if(r <= .5) cell.classList.add('lv2');
+      else if(r <= .75) cell.classList.add('lv3');
+      else cell.classList.add('lv4');
+    }
+
     cell.innerHTML = `<div class="calNum">${d}</div>`;
 
-    if(days.includes(dateStr)) cell.classList.add('hasBookings');
     if(dateStr === currentDate) cell.classList.add('selected');
 
     cell.onclick = ()=>{
       currentDate = dateStr;
       dateInput.value = dateStr;
-      loadAll();
+      loadSlots();
     };
 
     calendarDays.appendChild(cell);
   }
-}
-
-/* ===== BOOKINGS ===== */
-async function loadBookings(){
-  const r = await fetch(`/bookings?date=${currentDate}`);
-  bookings = await r.json();
 }
 
 /* ===== SLOTS ===== */
@@ -165,56 +154,18 @@ async function loadSlots(){
   });
 }
 
-/* ===== TABLE ===== */
-function renderTable(){
-  list.innerHTML = '';
-  bookings.forEach(b=>{
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${b.time.slice(0,5)}</td>
-      <td><span class="badge stylist-${b.stylist.toLowerCase()}">${b.stylist}</span></td>
-      <td><span class="gender ${b.gender}">${b.gender==='male'?'👨':'👩'}</span></td>
-      <td>${b.name}</td>
-      <td>${b.service||'-'}</td>
-      <td>${b.phone||'-'}</td>
-      <td><button class="smallBtn danger">ลบ</button></td>
-    `;
-    tr.querySelector('button').onclick = async ()=>{
-      await fetch(`/bookings/${b.id}`,{method:'DELETE'});
-      loadAll();
-    };
-    list.appendChild(tr);
-  });
-}
-
-/* ===== SUMMARY ===== */
-function renderSummary(){
-  const c = s => bookings.filter(b=>b.stylist===s).length;
-  countBank.textContent = c('Bank');
-  countSindy.textContent = c('Sindy');
-  countAssist.textContent = c('Assist');
-  countTotal.textContent = bookings.length;
-}
-
 /* ===== FORM ===== */
 async function submitForm(e){
   e.preventDefault();
-
-  const gender = document.querySelector('[name="gender"]:checked')?.value;
-
-  if(!timeSelect.value || !nameInput.value || !gender){
-    alert('กรุณากรอกข้อมูลให้ครบ');
-    return;
-  }
 
   const body = {
     date: currentDate,
     time: timeSelect.value,
     stylist: currentStylist,
-    name: nameInput.value,
-    phone: phoneInput.value,
-    gender,
-    service: serviceInput.value
+    name: name.value,
+    phone: phone.value,
+    gender: document.querySelector('[name="gender"]:checked')?.value,
+    service: service.value
   };
 
   const r = await fetch('/bookings',{
@@ -226,7 +177,5 @@ async function submitForm(e){
   if(r.ok){
     e.target.reset();
     loadAll();
-  }else{
-    alert('บันทึกไม่สำเร็จ');
   }
 }
