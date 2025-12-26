@@ -1,14 +1,20 @@
-/* ===== CONFIG ===== */
+/* =========================
+   CONFIG
+========================= */
 const OWNER_PIN = '1234';
 const TZ = 'Asia/Bangkok';
 
-/* ===== STATE ===== */
+/* =========================
+   STATE
+========================= */
 let currentDate = '';
 let viewYear, viewMonth;
 let currentStylist = 'Bank';
 let bookings = [];
 
-/* ===== ELEMENTS ===== */
+/* =========================
+   ELEMENTS
+========================= */
 const loginOverlay = document.getElementById('loginOverlay');
 const loginBtn = document.getElementById('loginBtn');
 const loginMsg = document.getElementById('loginMsg');
@@ -21,7 +27,9 @@ const calendarTitle = document.getElementById('calendarTitle');
 const timeSelect = document.getElementById('time');
 const list = document.getElementById('list');
 
-/* ===== INIT ===== */
+/* =========================
+   INIT
+========================= */
 init();
 
 function init(){
@@ -31,23 +39,29 @@ function init(){
   loadAll();
 }
 
-/* ===== AUTH ===== */
+/* =========================
+   AUTH (FIXED / iOS SAFE)
+========================= */
 function initAuth(){
+
   if(localStorage.getItem('adore_logged_in') === '1'){
     loginOverlay.classList.add('hidden');
   }
 
-  loginBtn.onclick = ()=>{
-    const pin = pinInput.value.replace(/\D/g,'');
-    if(pin === OWNER_PIN){
-      localStorage.setItem('adore_logged_in','1');
-      loginOverlay.classList.add('hidden');
-      loginMsg.textContent = '';
-      pinInput.value = '';
-    }else{
-      loginMsg.textContent = 'PIN ไม่ถูกต้อง';
-      pinInput.value = '';
+  // บังคับ PIN เป็นตัวเลข (iOS)
+  pinInput.setAttribute('inputmode','numeric');
+  pinInput.setAttribute('pattern','[0-9]*');
+
+  pinInput.addEventListener('keydown', e=>{
+    if(e.key === 'Enter'){
+      e.preventDefault();
+      handleLogin();
     }
+  });
+
+  loginBtn.onclick = (e)=>{
+    e.preventDefault();
+    handleLogin();
   };
 
   logoutBtn.onclick = ()=>{
@@ -56,7 +70,23 @@ function initAuth(){
   };
 }
 
-/* ===== DATE ===== */
+function handleLogin(){
+  const pin = pinInput.value.replace(/\D/g,'');
+
+  if(pin === OWNER_PIN){
+    localStorage.setItem('adore_logged_in','1');
+    loginOverlay.classList.add('hidden');
+    loginMsg.textContent = '';
+    pinInput.value = '';
+  }else{
+    loginMsg.textContent = 'PIN ไม่ถูกต้อง';
+    pinInput.value = '';
+  }
+}
+
+/* =========================
+   DATE (BANGKOK TZ)
+========================= */
 function initDate(){
   const now = new Date(
     new Date().toLocaleString('en-US',{ timeZone: TZ })
@@ -67,7 +97,9 @@ function initDate(){
   dateInput.value = currentDate;
 }
 
-/* ===== UI ===== */
+/* =========================
+   UI BINDINGS
+========================= */
 function bindUI(){
   document.getElementById('prevMonth').onclick = ()=>changeMonth(-1);
   document.getElementById('nextMonth').onclick = ()=>changeMonth(1);
@@ -84,7 +116,9 @@ function bindUI(){
   document.getElementById('bookingForm').onsubmit = submitForm;
 }
 
-/* ===== MONTH ===== */
+/* =========================
+   MONTH NAV
+========================= */
 function changeMonth(d){
   viewMonth += d;
   if(viewMonth < 0){ viewMonth = 11; viewYear--; }
@@ -92,7 +126,9 @@ function changeMonth(d){
   loadCalendar();
 }
 
-/* ===== LOAD ALL ===== */
+/* =========================
+   LOAD ALL
+========================= */
 async function loadAll(){
   await loadCalendar();
   await loadBookings();
@@ -101,7 +137,9 @@ async function loadAll(){
   renderSummary();
 }
 
-/* ===== CALENDAR ===== */
+/* =========================
+   CALENDAR (STABLE VERSION)
+========================= */
 async function loadCalendar(){
   const res = await fetch('/calendar-days');
   const { days=[] } = await res.json();
@@ -137,13 +175,17 @@ async function loadCalendar(){
   }
 }
 
-/* ===== BOOKINGS ===== */
+/* =========================
+   BOOKINGS
+========================= */
 async function loadBookings(){
   const r = await fetch(`/bookings?date=${currentDate}`);
   bookings = await r.json();
 }
 
-/* ===== SLOTS ===== */
+/* =========================
+   SLOTS
+========================= */
 async function loadSlots(){
   timeSelect.innerHTML = '<option value="">เลือกเวลา</option>';
   const r = await fetch(`/slots?date=${currentDate}`);
@@ -159,7 +201,9 @@ async function loadSlots(){
   });
 }
 
-/* ===== TABLE ===== */
+/* =========================
+   TABLE
+========================= */
 function renderTable(){
   list.innerHTML = '';
   bookings.forEach(b=>{
@@ -181,7 +225,9 @@ function renderTable(){
   });
 }
 
-/* ===== SUMMARY ===== */
+/* =========================
+   SUMMARY
+========================= */
 function renderSummary(){
   const c = s => bookings.filter(b=>b.stylist===s).length;
   countBank.textContent = c('Bank');
@@ -190,7 +236,9 @@ function renderSummary(){
   countTotal.textContent = bookings.length;
 }
 
-/* ===== FORM ===== */
+/* =========================
+   FORM SUBMIT
+========================= */
 async function submitForm(e){
   e.preventDefault();
   const body = {
@@ -202,11 +250,13 @@ async function submitForm(e){
     gender: document.querySelector('[name="gender"]:checked')?.value,
     service: service.value
   };
+
   const r = await fetch('/bookings',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify(body)
   });
+
   if(r.ok){
     e.target.reset();
     loadAll();
