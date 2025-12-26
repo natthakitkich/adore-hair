@@ -17,7 +17,14 @@
       <div class="title2">เข้าสู่ระบบ</div>
       <div class="subtitle2">ใส่ PIN เพื่อจัดการคิว</div>
 
-      <input id="pin" type="password" placeholder="PIN" />
+     <input
+  id="pin"
+  type="password"
+  inputmode="numeric"
+  pattern="[0-9]*"
+  placeholder="PIN"
+  autocomplete="off"
+/>
       <button id="loginBtn" class="primary full">Login</button>
       <div id="loginMsg" class="msg err"></div>
     </div>
