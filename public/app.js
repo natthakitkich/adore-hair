@@ -30,19 +30,35 @@ function init(){
 }
 
 function initAuth(){
-  if(localStorage.getItem('adore_logged_in') === '1'){
+  const loggedIn = localStorage.getItem('adore_logged_in');
+
+  // ถ้าเคย login แล้ว
+  if(loggedIn === '1'){
     loginOverlay.classList.add('hidden');
   }
 
+  // ปุ่ม Login
   loginBtn.onclick = ()=>{
-    if(pinInput.value === OWNER_PIN){
-      localStorage.setItem('adore_logged_in','1');
+    // บังคับให้เหลือเฉพาะตัวเลข
+    const pin = pinInput.value.replace(/\D/g, '').trim();
+
+    if(pin.length === 0){
+      loginMsg.textContent = 'กรุณาใส่ PIN';
+      return;
+    }
+
+    if(pin === OWNER_PIN){
+      localStorage.setItem('adore_logged_in', '1');
       loginOverlay.classList.add('hidden');
+      loginMsg.textContent = '';
+      pinInput.value = '';
     }else{
       loginMsg.textContent = 'PIN ไม่ถูกต้อง';
+      pinInput.value = '';
     }
   };
 
+  // ปุ่ม Logout
   logoutBtn.onclick = ()=>{
     localStorage.removeItem('adore_logged_in');
     location.reload();
