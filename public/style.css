@@ -1,23 +1,85 @@
-.centerText{text-align:center}
-
-.calendarHead{
-  text-align:center;
-  margin-bottom:10px;
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:system-ui;
+  background:#0b0f1a;
+  color:#e9eefc;
 }
-.calendarTitle{
-  font-size:20px;
+
+.hidden{display:none}
+
+.overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.85);
+  display:grid;
+  place-items:center;
+  z-index:999;
+}
+
+.modal{
+  width:min(420px,90vw);
+  background:#11162a;
+  border-radius:16px;
+  padding:24px;
+}
+
+.modalBody.center{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:14px;
+}
+
+.centerInput{
+  text-align:center;
+  font-size:18px;
+  letter-spacing:4px;
+}
+
+input,select{
+  width:100%;
+  padding:12px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.1);
+  background:#0b1022;
+  color:white;
+}
+
+.primary{
+  background:linear-gradient(90deg,#6ee7ff,#a78bfa);
+  border:none;
+  border-radius:12px;
+  padding:12px;
   font-weight:900;
 }
-.calendarLegend{
-  font-size:11px;
-  color:var(--muted);
+
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  padding:16px;
+  border-bottom:1px solid rgba(255,255,255,.08);
 }
 
-/* calendar */
+.wrap{max-width:1100px;margin:auto;padding:16px}
+
+.panel{
+  background:#11162a;
+  border-radius:16px;
+  padding:16px;
+  margin-top:16px;
+}
+
+.calGrid{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:8px;
+}
+
 .calCell{
   aspect-ratio:1/1;
-  border-radius:14px;
-  border:1px solid var(--stroke);
+  border-radius:12px;
+  background:#0b1022;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -25,15 +87,27 @@
 }
 
 .calCell.today{
-  outline:2px dashed rgba(255,255,255,.4);
+  outline:2px solid #6ee7ff;
 }
 
 .calCell.selected{
-  outline:3px solid var(--accent);
+  outline:3px solid #a78bfa;
 }
 
-/* density */
-.lv1{background:#2cff9c33}
-.lv2{background:#ffe06633}
-.lv3{background:#ff9f4333}
-.lv4{background:#ff5c7a33}
+.calCell[data-level="1"]{background:#1f8f6f}
+.calCell[data-level="2"]{background:#7fa51b}
+.calCell[data-level="3"]{background:#d6a21d}
+.calCell[data-level="4"]{background:#e36b2c}
+.calCell[data-level="5"]{background:#d64545}
+
+.calendarTitle{
+  font-size:20px;
+  font-weight:900;
+  text-align:center;
+}
+
+.calendarSubtitle{
+  font-size:11px;
+  opacity:.6;
+  text-align:center;
+}
