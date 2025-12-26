@@ -21,6 +21,15 @@ const calendarTitle = document.getElementById('calendarTitle');
 const timeSelect = document.getElementById('time');
 const list = document.getElementById('list');
 
+const nameInput = document.getElementById('name');
+const phoneInput = document.getElementById('phone');
+const serviceInput = document.getElementById('service');
+
+const countBank = document.getElementById('countBank');
+const countSindy = document.getElementById('countSindy');
+const countAssist = document.getElementById('countAssist');
+const countTotal = document.getElementById('countTotal');
+
 /* ===== INIT ===== */
 init();
 
@@ -52,7 +61,7 @@ function initAuth(){
   };
 }
 
-/* ===== DATE (BANGKOK TZ) ===== */
+/* ===== DATE ===== */
 function initDate(){
   const now = new Date(
     new Date().toLocaleString('en-US',{ timeZone: TZ })
@@ -150,7 +159,7 @@ async function loadSlots(){
     if(!slots[t][currentStylist]){
       const o = document.createElement('option');
       o.value = t;
-      o.textContent = t.slice(0,5); // HH:mm
+      o.textContent = t.slice(0,5);
       timeSelect.appendChild(o);
     }
   });
@@ -190,19 +199,34 @@ function renderSummary(){
 /* ===== FORM ===== */
 async function submitForm(e){
   e.preventDefault();
+
+  const gender = document.querySelector('[name="gender"]:checked')?.value;
+
+  if(!timeSelect.value || !nameInput.value || !gender){
+    alert('กรุณากรอกข้อมูลให้ครบ');
+    return;
+  }
+
   const body = {
     date: currentDate,
     time: timeSelect.value,
     stylist: currentStylist,
-    name: name.value,
-    phone: phone.value,
-    gender: document.querySelector('[name="gender"]:checked')?.value,
-    service: service.value
+    name: nameInput.value,
+    phone: phoneInput.value,
+    gender,
+    service: serviceInput.value
   };
+
   const r = await fetch('/bookings',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify(body)
   });
-  if(r.ok){ e.target.reset(); loadAll(); }
+
+  if(r.ok){
+    e.target.reset();
+    loadAll();
+  }else{
+    alert('บันทึกไม่สำเร็จ');
+  }
 }
