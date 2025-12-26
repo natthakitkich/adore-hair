@@ -45,19 +45,36 @@ function init() {
 
 /* ===== AUTH ===== */
 function initAuth() {
-  if (localStorage.getItem('adore_logged_in') === '1') {
+  const loggedIn = localStorage.getItem('adore_logged_in');
+
+  // ถ้าเคย login แล้ว → ไม่ต้องถาม PIN อีก
+  if (loggedIn === '1') {
     loginOverlay.classList.add('hidden');
+  } else {
+    loginOverlay.classList.remove('hidden');
   }
 
+  // ปุ่ม Login
   loginBtn.onclick = () => {
-    if (pinInput.value === OWNER_PIN) {
+    const pin = pinInput.value.trim();
+
+    // บังคับตัวเลขเท่านั้น
+    if (!/^[0-9]+$/.test(pin)) {
+      loginMsg.textContent = 'กรุณาใส่ตัวเลขเท่านั้น';
+      return;
+    }
+
+    if (pin === OWNER_PIN) {
       localStorage.setItem('adore_logged_in', '1');
+      loginMsg.textContent = '';
+      pinInput.value = '';
       loginOverlay.classList.add('hidden');
     } else {
       loginMsg.textContent = 'PIN ไม่ถูกต้อง';
     }
   };
 
+  // ปุ่ม Logout
   logoutBtn.onclick = () => {
     localStorage.removeItem('adore_logged_in');
     location.reload();
