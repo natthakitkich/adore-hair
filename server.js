@@ -10,49 +10,16 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-/* =========================
-   MIDDLEWARE
-========================= */
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-/* =========================
-   SUPABASE
-========================= */
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-/* =========================
-   ROUTES
-========================= */
-
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
 /* ===== BOOKINGS ===== */
-
-app.get('/bookings', async (req, res) => {
-  const { date } = req.query;
-
-  if (!date) return res.json([]);
-
-  const { data, error } = await supabase
-    .from('bookings')
-    .select('*')
-    .eq('date', date)
-    .order('time', { ascending: true });
-
-  if (error) {
-    console.error(error);
-    return res.json([]);
-  }
-
-  res.json(data || []);
-});
 
 app.post('/bookings', async (req, res) => {
   const { date, time, name, phone, stylist, gender, service } = req.body;
@@ -65,21 +32,7 @@ app.post('/bookings', async (req, res) => {
     { date, time, name, phone, stylist, gender, service }
   ]);
 
-  if (error) {
-    console.error(error);
-    return res.status(400).json({ error: error.message });
-  }
-
-  res.json({ ok: true });
-});
-
-app.delete('/bookings/:id', async (req, res) => {
-  const { id } = req.params;
-
-  await supabase
-    .from('bookings')
-    .delete()
-    .eq('id', id);
+  if (error) return res.status(400).json({ error: error.message });
 
   res.json({ ok: true });
 });
@@ -109,23 +62,33 @@ app.get('/slots', async (req, res) => {
   res.json({ slots });
 });
 
-/* ===== CALENDAR DAYS ===== */
+/* ===== CALENDAR DAYS (MAX 20 QUEUE) ===== */
 
 app.get('/calendar-days', async (req, res) => {
   const { data } = await supabase
     .from('bookings')
-    .select('date');
+    .select('date, stylist');
 
-  const days = Array.isArray(data)
-    ? [...new Set(data.map(d => d.date))]
-    : [];
+  const map = {};
+
+  (data || []).forEach(b => {
+    if (b.stylist === 'Bank' || b.stylist === 'Sindy') {
+      if (!map[b.date]) map[b.date] = 0;
+      if (map[b.date] < 20) {
+        map[b.date]++;
+      }
+    }
+  });
+
+  const days = Object.keys(map).map(date => ({
+    date,
+    count: map[date],          // 0–20
+    ratio: map[date] / 20      // 0–1
+  }));
 
   res.json({ days });
 });
 
-/* =========================
-   START SERVER
-========================= */
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
