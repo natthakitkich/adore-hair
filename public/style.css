@@ -1,76 +1,329 @@
+/* =========================
+   THEME VARIABLES
+========================= */
+:root{
+  --bg:#0b0f1a;
+  --text:#e9eefc;
+  --muted:#9aa6c5;
+
+  --accent:#6ee7ff;
+  --accent2:#a78bfa;
+
+  --danger:#ff5c7a;
+  --ok:#2cff9c;
+
+  --stroke:rgba(255,255,255,.08);
+  --shadow:0 10px 30px rgba(0,0,0,.35);
+
+  --green:#2cff9c;
+  --greenBg: rgba(44,255,156,.18);
+}
+
+/* =========================
+   BASE
+========================= */
 *{box-sizing:border-box}
 body{
   margin:0;
-  font-family:system-ui;
-  background:#0b0f1a;
-  color:#e9eefc;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+  background:
+    radial-gradient(1200px 700px at 15% 10%, #1a2b5a 0%, transparent 60%),
+    radial-gradient(900px 600px at 90% 20%, #3b1b5a 0%, transparent 55%),
+    var(--bg);
+  color:var(--text);
 }
 
-.hidden{display:none}
+.hidden{display:none !important}
+.row{display:flex; gap:10px; align-items:center}
+.between{justify-content:space-between}
+.muted{color:var(--muted)}
+.msg{font-size:13px}
+.msg.err{color:var(--danger)}
 
-.overlay{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.85);
-  display:grid;
-  place-items:center;
-  z-index:999;
-}
-
-.modal{
-  width:min(420px,90vw);
-  background:#11162a;
-  border-radius:16px;
-  padding:24px;
-}
-
-.modalBody.center{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:14px;
-}
-
-.centerInput{
-  text-align:center;
-  font-size:18px;
-  letter-spacing:4px;
-}
-
-input,select{
+/* =========================
+   INPUTS & BUTTONS
+========================= */
+input, select{
   width:100%;
   padding:12px;
   border-radius:12px;
-  border:1px solid rgba(255,255,255,.1);
-  background:#0b1022;
-  color:white;
+  border:1px solid var(--stroke);
+  background:rgba(0,0,0,.18);
+  color:var(--text);
+  outline:none;
 }
 
 .primary{
-  background:linear-gradient(90deg,#6ee7ff,#a78bfa);
+  background:linear-gradient(90deg, var(--accent), var(--accent2));
+  color:#061022;
   border:none;
+  padding:10px 14px;
   border-radius:12px;
+  font-weight:900;
+  cursor:pointer;
+}
+
+.ghost{
+  background:transparent;
+  color:var(--text);
+  border:1px solid var(--stroke);
+  padding:8px 12px;
+  border-radius:12px;
+  cursor:pointer;
+}
+
+.smallBtn{
+  padding:6px 12px;
+  border-radius:10px;
+  border:1px solid var(--stroke);
+  background:transparent;
+  color:var(--text);
+  cursor:pointer;
+}
+.smallBtn.danger{
+  color:var(--danger);
+  border-color:rgba(255,92,122,.4);
+}
+
+/* =========================
+   TOPBAR
+========================= */
+.topbar{
+  padding:18px 22px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  border-bottom:1px solid var(--stroke);
+  background:rgba(0,0,0,.25);
+  backdrop-filter: blur(10px);
+  position:sticky;
+  top:0;
+  z-index:5;
+}
+
+.brand{
+  display:flex;
+  gap:12px;
+  align-items:center;
+}
+
+/* โลโก้ A (ใช้เหมือนเดิม) */
+.avatar{
+  width:42px;
+  height:42px;
+  border-radius:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:900;
+  font-size:18px;
+  color:#061022;
+  background:linear-gradient(90deg, var(--accent), var(--accent2));
+}
+
+.title{font-weight:900}
+.subtitle{font-size:12px; color:var(--muted)}
+
+.topActions{
+  display:flex;
+  gap:12px;
+  align-items:flex-end;
+}
+
+.dateWrap .label{
+  font-size:12px;
+  color:var(--muted);
+  margin:0 0 6px 2px;
+}
+
+/* =========================
+   LAYOUT
+========================= */
+.wrap{
+  width:min(1100px, 95vw);
+  margin:18px auto 48px auto;
+}
+
+.panel{
+  background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+  border:1px solid var(--stroke);
+  border-radius:16px;
+  padding:16px;
+  box-shadow:var(--shadow);
+  margin-top:14px;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+.full{grid-column:1/-1}
+
+/* =========================
+   TABS (เลือกช่าง)
+========================= */
+.tabs{
+  display:flex;
+  gap:10px;
+  margin-top:14px;
+}
+.tab{
+  flex:1;
   padding:12px;
+  border-radius:14px;
+  border:1px solid var(--stroke);
+  background:rgba(0,0,0,.18);
+  color:var(--text);
+  font-weight:900;
+  cursor:pointer;
+}
+.tab.active{
+  outline:2px solid rgba(110,231,255,.35);
+  background:rgba(110,231,255,.12);
+}
+
+/* =========================
+   SUMMARY
+========================= */
+.summary{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+}
+.box{
+  min-width:140px;
+  border:1px solid var(--stroke);
+  background:rgba(0,0,0,.18);
+  border-radius:14px;
+  padding:12px;
+}
+.big{
+  font-size:24px;
   font-weight:900;
 }
 
-.topbar{
-  display:flex;
-  justify-content:space-between;
-  padding:16px;
-  border-bottom:1px solid rgba(255,255,255,.08);
+/* =========================
+   TABLE
+========================= */
+table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:13px;
+}
+th,td{
+  padding:10px;
+  border-bottom:1px solid var(--stroke);
+}
+th{
+  color:var(--muted);
+  text-align:left;
+  font-weight:900;
 }
 
-.wrap{max-width:1100px;margin:auto;padding:16px}
+/* =========================
+   BADGES (ช่าง)
+========================= */
+.badge{
+  display:inline-block;
+  padding:4px 12px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:900;
+  border:1px solid var(--stroke);
+}
 
-.panel{
-  background:#11162a;
+.badge.stylist-bank{
+  background:rgba(110,231,255,.18);
+  color:#6ee7ff;
+  border-color:rgba(110,231,255,.45);
+}
+.badge.stylist-sindy{
+  background:rgba(255,105,180,.18);
+  color:#ff7abf;
+  border-color:rgba(255,105,180,.45);
+}
+.badge.stylist-assist{
+  background:rgba(209,213,219,.18);
+  color:#d1d5db;
+  border-color:rgba(209,213,219,.35);
+}
+
+/* =========================
+   GENDER ICON (emoji)
+========================= */
+.gender{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:34px;
+  height:34px;
+  border-radius:999px;
+  font-size:16px;
+  font-weight:900;
+}
+.gender.male{
+  background:rgba(110,231,255,.15);
+  color:#6ee7ff;
+  border:1px solid rgba(110,231,255,.45);
+}
+.gender.female{
+  background:rgba(255,92,122,.15);
+  color:#ff5c7a;
+  border:1px solid rgba(255,92,122,.45);
+}
+
+/* =========================
+   LOGIN OVERLAY
+========================= */
+.overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.80);
+  display:grid;
+  place-items:center;
+  z-index:999;
+  padding:20px;
+}
+
+.modal{
+  width:min(520px, 95vw);
+  background:linear-gradient(180deg, rgba(15,18,30,.95), rgba(10,12,22,.9));
   border-radius:16px;
+  border:1px solid rgba(255,255,255,.12);
+  box-shadow:0 18px 60px rgba(0,0,0,.55);
+}
+
+.modalHead{
+  display:flex;
+  gap:12px;
+  align-items:center;
   padding:16px;
-  margin-top:16px;
+  border-bottom:1px solid rgba(255,255,255,.10);
+}
+
+.modalBody{
+  padding:16px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+/* =========================
+   CALENDAR
+========================= */
+.calWeekHead{
+  margin-top:12px;
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:8px;
+  text-align:center;
+  font-size:12px;
+  color:var(--muted);
 }
 
 .calGrid{
+  margin-top:8px;
   display:grid;
   grid-template-columns:repeat(7,1fr);
   gap:8px;
@@ -78,36 +331,218 @@ input,select{
 
 .calCell{
   aspect-ratio:1/1;
-  border-radius:12px;
-  background:#0b1022;
+  border-radius:14px;
+  border:1px solid var(--stroke);
+  background:rgba(0,0,0,.15);
   display:flex;
   align-items:center;
   justify-content:center;
   cursor:pointer;
 }
 
-.calCell.today{
-  outline:2px solid #6ee7ff;
+.calNum{
+  width:38px;
+  height:38px;
+  border-radius:999px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:900;
+}
+
+.calCell.hasBookings .calNum{
+  background:var(--greenBg);
+  color:var(--green);
+  border:1px solid rgba(44,255,156,.5);
 }
 
 .calCell.selected{
-  outline:3px solid #a78bfa;
+  outline:2px solid rgba(110,231,255,.35);
 }
 
-.calCell[data-level="1"]{background:#1f8f6f}
-.calCell[data-level="2"]{background:#7fa51b}
-.calCell[data-level="3"]{background:#d6a21d}
-.calCell[data-level="4"]{background:#e36b2c}
-.calCell[data-level="5"]{background:#d64545}
-
-.calendarTitle{
-  font-size:20px;
+/* =========================
+   RESPONSIVE
+========================= */
+@media (max-width:720px){
+  .grid{grid-template-columns:1fr}
+  .topbar{flex-direction:column; align-items:flex-start; gap:12px}
+  .topActions{width:100%; justify-content:space-between}
+}
+.avatar{
+  width:40px;height:40px;
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
   font-weight:900;
+  background:linear-gradient(135deg,#6ee7ff,#a78bfa);
+  color:#061022;
+}
+.avatar.big{
+  width:64px;height:64px;
+  font-size:28px;
+}
+
+.modalBody.center{
+  align-items:center;
   text-align:center;
 }
 
-.calendarSubtitle{
-  font-size:11px;
-  opacity:.6;
-  text-align:center;
+.ghost{
+  background:transparent;
+  border:1px solid var(--stroke);
+  color:var(--text);
+  padding:10px 14px;
+  border-radius:12px;
+  cursor:pointer;
+}
+
+server.js
+
+import express from 'express';
+import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { createClient } from '@supabase/supabase-js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+/* =========================
+   MIDDLEWARE
+========================= */
+app.use(cors());
+app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
+
+/* =========================
+   SUPABASE
+========================= */
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
+
+/* =========================
+   ROUTES
+========================= */
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+/* ===== BOOKINGS ===== */
+
+app.get('/bookings', async (req, res) => {
+  const { date } = req.query;
+
+  if (!date) return res.json([]);
+
+  const { data, error } = await supabase
+    .from('bookings')
+    .select('*')
+    .eq('date', date)
+    .order('time', { ascending: true });
+
+  if (error) {
+    console.error(error);
+    return res.json([]);
+  }
+
+  res.json(data || []);
+});
+
+app.post('/bookings', async (req, res) => {
+  const { date, time, name, phone, stylist, gender, service } = req.body;
+
+  if (!date || !time || !name || !stylist || !gender) {
+    return res.status(400).json({ error: 'ข้อมูลไม่ครบ' });
+  }
+
+  const { error } = await supabase.from('bookings').insert([
+    { date, time, name, phone, stylist, gender, service }
+  ]);
+
+  if (error) {
+    console.error(error);
+    return res.status(400).json({ error: error.message });
+  }
+
+  res.json({ ok: true });
+});
+
+app.delete('/bookings/:id', async (req, res) => {
+  const { id } = req.params;
+
+  await supabase
+    .from('bookings')
+    .delete()
+    .eq('id', id);
+
+  res.json({ ok: true });
+});
+
+/* ===== SLOTS ===== */
+
+app.get('/slots', async (req, res) => {
+  const { date } = req.query;
+
+  const slots = {};
+  for (let h = 13; h <= 22; h++) {
+    const t = `${String(h).padStart(2, '0')}:00`;
+    slots[t] = { Bank: false, Sindy: false, Assist: false };
+  }
+
+  const { data } = await supabase
+    .from('bookings')
+    .select('time, stylist')
+    .eq('date', date);
+
+  (data || []).forEach(b => {
+    if (slots[b.time]) {
+      slots[b.time][b.stylist] = true;
+    }
+  });
+
+  res.json({ slots });
+});
+
+/* ===== CALENDAR DAYS ===== */
+
+app.get('/calendar-days', async (req, res) => {
+  const { data } = await supabase
+    .from('bookings')
+    .select('date');
+
+  const days = Array.isArray(data)
+    ? [...new Set(data.map(d => d.date))]
+    : [];
+
+  res.json({ days });
+});
+
+/* =========================
+   START SERVER
+========================= */
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
+
+package.json
+
+{
+  "name": "adore-hair",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  }
 }
