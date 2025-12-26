@@ -1,21 +1,20 @@
 <!doctype html>
 <html lang="th">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Adore hair studio</title>
-<link rel="stylesheet" href="./style.css"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Adore hair studio — Queue</title>
+  <link rel="stylesheet" href="/style.css" />
 </head>
-
 <body>
 
-<!-- LOGIN -->
+<!-- LOGIN OVERLAY -->
 <div id="loginOverlay" class="overlay">
   <div class="modal">
     <div class="modalBody center">
       <div class="avatar big">A</div>
-      <h2>เข้าสู่ระบบ</h2>
-      <p class="muted">ใส่ PIN เพื่อจัดการคิว</p>
+      <div class="title2">เข้าสู่ระบบ</div>
+      <div class="subtitle2">ใส่ PIN เพื่อจัดการคิว</div>
 
       <input
         id="pin"
@@ -23,7 +22,7 @@
         inputmode="numeric"
         pattern="[0-9]*"
         placeholder="PIN"
-        class="centerText"
+        class="centerInput"
       />
 
       <button id="loginBtn" class="primary full">Login</button>
@@ -32,27 +31,34 @@
   </div>
 </div>
 
-<!-- TOP -->
+<!-- TOPBAR -->
 <div class="topbar">
   <div class="brand">
     <div class="avatar">A</div>
     <div>
       <div class="title">Adore hair studio</div>
-      <div class="subtitle">Owner Queue • 13:00–22:00</div>
+      <div class="subtitle">Owner Queue • 13:00–22:00 • แยกตามช่าง</div>
     </div>
   </div>
-  <button id="logoutBtn" class="ghost">Logout</button>
+
+  <div class="topActions">
+    <div class="dateWrap">
+      <div class="label">เลือกวัน</div>
+      <input id="date" type="date" />
+    </div>
+    <button id="logoutBtn" class="ghost">Logout</button>
+  </div>
 </div>
 
 <div class="wrap">
 
 <!-- CALENDAR -->
 <div class="panel">
-  <div class="calendarHead">
-    <div class="calendarTitle" id="calendarTitle"></div>
-    <div class="calendarLegend">ระดับเฉดสีแสดงความหนาแน่นของคิว</div>
+  <div class="calendarHeader">
+    <div id="calendarTitle" class="calendarTitle"></div>
+    <div class="calendarSubtitle">ระดับเฉดสีแสดงความหนาแน่นของคิว</div>
 
-    <div class="row">
+    <div class="row center">
       <button id="prevMonth" class="ghost">◀</button>
       <button id="nextMonth" class="ghost">▶</button>
     </div>
@@ -65,13 +71,52 @@
   <div id="calendarDays" class="calGrid"></div>
 </div>
 
-<!-- FORM + TABLE -->
+<!-- STYLIST -->
+<div class="tabs">
+  <button class="tab active" data-tab="Bank">Bank</button>
+  <button class="tab" data-tab="Sindy">Sindy</button>
+  <button class="tab" data-tab="Assist">Assist</button>
+</div>
+
+<!-- FORM -->
+<div class="panel">
+<form id="bookingForm" class="grid">
+  <div>
+    <label>ชื่อลูกค้า</label>
+    <input id="name" required />
+  </div>
+  <div>
+    <label>เบอร์โทร</label>
+    <input id="phone" />
+  </div>
+  <div class="row genderRow">
+    <label><input type="radio" name="gender" value="male" required /> 👨 ชาย</label>
+    <label><input type="radio" name="gender" value="female" /> 👩 หญิง</label>
+  </div>
+  <div>
+    <label>เวลา</label>
+    <select id="time" required>
+      <option value="">เลือกเวลา</option>
+    </select>
+  </div>
+  <div class="full">
+    <label>ทำอะไร</label>
+    <input id="service" />
+  </div>
+  <div class="full row">
+    <button class="primary">บันทึกการจอง</button>
+    <div id="msg" class="msg muted"></div>
+  </div>
+</form>
+</div>
+
+<!-- TABLE -->
 <div class="panel">
   <table>
     <thead>
       <tr>
         <th>เวลา</th><th>ช่าง</th><th>เพศ</th>
-        <th>ชื่อ</th><th>บริการ</th><th>โทร</th>
+        <th>ชื่อ</th><th>ทำอะไร</th><th>โทร</th><th>ลบ</th>
       </tr>
     </thead>
     <tbody id="list"></tbody>
@@ -80,6 +125,6 @@
 
 </div>
 
-<script src="./app.js"></script>
+<script src="/app.js"></script>
 </body>
 </html>
