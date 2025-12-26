@@ -8,6 +8,7 @@ let todayDate = '';
 let viewYear, viewMonth;
 let currentStylist = 'Bank';
 let bookings = [];
+let calendarMap = {}; // ← สำคัญ (ทั้งเดือน)
 
 /* ===== ELEMENTS ===== */
 const loginOverlay = document.getElementById('loginOverlay');
@@ -98,7 +99,10 @@ function changeMonth(d) {
 
 /* ===== LOAD ALL ===== */
 async function loadAll() {
-  await loadBookings();
+  await Promise.all([
+    loadBookings(),
+    loadCalendarMap()
+  ]);
   renderCalendar();
   loadSlots();
   renderTable();
@@ -111,7 +115,13 @@ async function loadBookings() {
   bookings = await r.json();
 }
 
-/* ===== CALENDAR (ใช้ bookings จริง) ===== */
+/* ===== CALENDAR MAP (ทั้งเดือนจริง) ===== */
+async function loadCalendarMap() {
+  const r = await fetch('/calendar-days');
+  calendarMap = await r.json(); // { YYYY-MM-DD: count }
+}
+
+/* ===== CALENDAR ===== */
 function renderCalendar() {
   calendarDays.innerHTML = '';
 
@@ -134,9 +144,9 @@ function renderCalendar() {
     cell.className = 'calCell';
     cell.innerHTML = `<div class="calNum">${d}</div>`;
 
-    // 🔹 นับ booking ของวันนั้นจริง ๆ
-    const count = bookings.filter(b => b.date === dateStr).length;
-    if (count > 0) cell.classList.add('hasBookings');
+    if (calendarMap[dateStr]) {
+      cell.classList.add('hasBookings');
+    }
 
     if (dateStr === todayDate) cell.classList.add('today');
     if (dateStr === currentDate) cell.classList.add('selected');
@@ -170,26 +180,36 @@ async function loadSlots() {
 /* ===== TABLE ===== */
 function renderTable() {
   list.innerHTML = '';
+
   bookings.forEach(b => {
     const tr = document.createElement('tr');
+
+    const genderIcon = b.gender === 'male' ? '👨' : '👩';
+
     tr.innerHTML = `
       <td>${b.time.slice(0,5)}</td>
-      <td>${b.stylist}</td>
-      <td>${b.gender}</td>
+      <td>
+        <span class="badge stylist-${b.stylist.toLowerCase()}">
+          ${b.stylist}
+        </span>
+      </td>
+      <td>${genderIcon}</td>
       <td>${b.name}</td>
       <td>${b.service || '-'}</td>
       <td>${b.phone || '-'}</td>
       <td><button class="smallBtn danger">ลบ</button></td>
     `;
+
     tr.querySelector('button').onclick = async () => {
       await fetch(`/bookings/${b.id}`, { method: 'DELETE' });
       loadAll();
     };
+
     list.appendChild(tr);
   });
 }
 
-/* ===== SUMMARY (ใช้ bookings จริง) ===== */
+/* ===== SUMMARY ===== */
 function renderSummary() {
   const c = s => bookings.filter(b => b.stylist === s).length;
   countBank.textContent = c('Bank');
