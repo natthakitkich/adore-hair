@@ -1,310 +1,108 @@
-/* =========================
-   THEME VARIABLES
-========================= */
-:root{
-  --bg:#0b0f1a;
-  --text:#e9eefc;
-  --muted:#9aa6c5;
-
-  --accent:#6ee7ff;
-  --accent2:#a78bfa;
-
-  --danger:#ff5c7a;
-
-  --stroke:rgba(255,255,255,.08);
-  --shadow:0 10px 30px rgba(0,0,0,.35);
-
-  /* calendar tones */
-  --green:#2cff9c;
-  --greenBg:rgba(44,255,156,.22);
-
-  --yellow:#ffd666;
-  --yellowBg:rgba(255,214,102,.28);
-
-  --orange:#ffb86b;
-  --orangeBg:rgba(255,184,107,.32);
-
-  --red:#ff5c7a;
-  --redBg:rgba(255,92,122,.35);
+* {
+  box-sizing: border-box;
+  font-family: system-ui, -apple-system, sans-serif;
 }
 
-/* =========================
-   BASE
-========================= */
-*{box-sizing:border-box}
-
-body{
-  margin:0;
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
-  background:
-    radial-gradient(1200px 700px at 15% 10%, #1a2b5a 0%, transparent 60%),
-    radial-gradient(900px 600px at 90% 20%, #3b1b5a 0%, transparent 55%),
-    var(--bg);
-  color:var(--text);
+body {
+  margin: 0;
+  background: #0f1220;
+  color: #fff;
 }
 
-.hidden{display allowing:none !important}
-.row{display:flex; gap:10px; align-items:center}
-.between{justify-content:space-between}
-.muted{color:var(--muted)}
-.msg{font-size:13px}
-.msg.err{color:var(--danger)}
-
-/* =========================
-   INPUTS & BUTTONS
-========================= */
-input, select{
-  width:100%;
-  padding:12px;
-  border-radius:12px;
-  border:1px solid var(--stroke);
-  background:rgba(0,0,0,.18);
-  color:var(--text);
-  outline:none;
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
 }
 
-.primary{
-  background:linear-gradient(90deg,var(--accent),var(--accent2));
-  color:#061022;
-  border:none;
-  padding:10px 14px;
-  border-radius:12px;
-  font-weight:900;
-  cursor:pointer;
+.logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: linear-gradient(135deg,#6cf,#b48cff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: bold;
 }
 
-.ghost{
-  background:transparent;
-  color:var(--text);
-  border:1px solid var(--stroke);
-  padding:10px 14px;
-  border-radius:12px;
-  cursor:pointer;
+.title h1 {
+  margin: 0;
+  font-size: 18px;
 }
 
-.smallBtn{
-  padding:6px 12px;
-  border-radius:10px;
-  border:1px solid var(--stroke);
-  background:transparent;
-  color:var(--text);
-  cursor:pointer;
-}
-.smallBtn.danger{
-  color:var(--danger);
-  border-color:rgba(255,92,122,.4);
+.title p {
+  margin: 0;
+  font-size: 12px;
+  opacity: .7;
 }
 
-/* =========================
-   TOPBAR
-========================= */
-.topbar{
-  padding:18px 22px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  border-bottom:1px solid var(--stroke);
-  background:rgba(0,0,0,.25);
+#logout {
+  margin-left: auto;
+}
+
+.container {
+  padding: 16px;
+  display: grid;
+  gap: 16px;
+}
+
+.card {
+  background: rgba(255,255,255,.06);
   backdrop-filter: blur(10px);
-  position:sticky;
-  top:0;
-  z-index:5;
+  padding: 16px;
+  border-radius: 16px;
 }
 
-.brand{
-  display:flex;
-  gap:12px;
-  align-items:center;
+label {
+  display: block;
+  margin-top: 12px;
+  font-size: 14px;
 }
 
-.avatar{
-  width:42px;
-  height:42px;
-  border-radius:14px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:900;
-  font-size:18px;
-  color:#061022;
-  background:linear-gradient(135deg,var(--accent),var(--accent2));
+input, select, button {
+  width: 100%;
+  margin-top: 6px;
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+  background: rgba(255,255,255,.1);
+  color: #fff;
 }
 
-.title{font-weight:900}
-.subtitle{font-size:12px;color:var(--muted)}
-
-.topActions{
-  display:flex;
-  gap:12px;
-  align-items:flex-end;
+button.primary {
+  background: linear-gradient(135deg,#6cf,#b48cff);
+  color: #000;
+  font-weight: bold;
+  margin-top: 16px;
 }
 
-/* =========================
-   LAYOUT
-========================= */
-.wrap{
-  width:min(1100px,95vw);
-  margin:18px auto 48px auto;
+.gender-group {
+  display: flex;
+  gap: 24px;
+  margin-top: 8px;
 }
 
-.panel{
-  background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));
-  border:1px solid var(--stroke);
-  border-radius:18px;
-  padding:16px;
-  box-shadow:var(--shadow);
-  margin-top:14px;
+.gender-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px;
-}
-.full{grid-column:1/-1}
-
-/* =========================
-   TABS
-========================= */
-.tabs{
-  display:flex;
-  gap:10px;
-  margin-top:14px;
-}
-.tab{
-  flex:1;
-  padding:12px;
-  border-radius:14px;
-  border:1px solid var(--stroke);
-  background:rgba(0,0,0,.18);
-  color:var(--text);
-  font-weight:900;
-}
-.tab.active{
-  outline:2px solid rgba(110,231,255,.35);
-  background:rgba(110,231,255,.12);
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  text-align: center;
+  font-weight: bold;
 }
 
-/* =========================
-   CALENDAR
-========================= */
-.calWeekHead{
-  margin-top:12px;
-  display:grid;
-  grid-template-columns:repeat(7,1fr);
-  gap:8px;
-  text-align:center;
-  font-size:12px;
-  color:var(--muted);
+.msg {
+  margin-top: 8px;
+  font-size: 13px;
 }
 
-.calGrid{
-  margin-top:10px;
-  display:grid;
-  grid-template-columns:repeat(7,1fr);
-  gap:10px;
-}
-
-.calCell{
-  aspect-ratio:1/1;
-  border-radius:16px;
-  border:1px solid var(--stroke);
-  background:rgba(0,0,0,.16);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
-}
-
-.calNum{
-  width:40px;
-  height:40px;
-  border-radius:999px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:800;
-  position:relative;
-  overflow:hidden;
-}
-
-/* ===== density levels ===== */
-.calCell.level-1 .calNum{background:var(--greenBg); color:var(--green)}
-.calCell.level-2 .calNum{background:var(--yellowBg); color:#111}
-.calCell.level-3 .calNum{background:var(--orangeBg); color:#111}
-.calCell.level-4 .calNum{background:var(--redBg); color:#fff}
-
-/* ===== split Bank / Sindy ===== */
-.calNum.split .half{
-  position:absolute;
-  top:0; bottom:0;
-  width:50%;
-  opacity:.35;
-}
-.calNum.split .half.bank{left:0;background:#6ee7ff}
-.calNum.split .half.sindy{right:0;background:#ffb86b}
-.calNum.split .half.on{opacity:.85}
-
-.calNum.split .day{
-  position:relative;
-  z-index:2;
-}
-
-/* selected day */
-.calCell.selected{
-  outline:2px solid rgba(110,231,255,.45);
-}
-
-/* =========================
-   GENDER RADIO
-========================= */
-.gender-group{
-  display:flex;
-  gap:24px;
-  align-items:center;
-}
-.gender-option{
-  display:flex;
-  align-items:center;
-  gap:8px;
-}
-
-/* =========================
-   LOGIN
-========================= */
-.overlay{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.8);
-  display:grid;
-  place-items:center;
-  z-index:999;
-}
-
-.modal{
-  width:min(520px,95vw);
-  background:linear-gradient(180deg,rgba(15,18,30,.95),rgba(10,12,22,.9));
-  border-radius:18px;
-  border:1px solid rgba(255,255,255,.12);
-  box-shadow:0 18px 60px rgba(0,0,0,.55);
-}
-
-.modalBody{
-  padding:16px;
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-}
-.modalBody.center{
-  align-items:center;
-  text-align:center;
-}
-
-/* =========================
-   RESPONSIVE
-========================= */
-@media (max-width:720px){
-  .grid{grid-template-columns:1fr}
-  .topbar{flex-direction:column;align-items:flex-start;gap:12px}
-  .topActions{width:100%;justify-content:space-between}
+.muted {
+  opacity: .7;
 }
