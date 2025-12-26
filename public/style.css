@@ -396,3 +396,23 @@ th{
   border-radius:12px;
   cursor:pointer;
 }
+/* =========================
+   GENDER RADIO (INLINE)
+========================= */
+
+.gender-group {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+}
+
+.gender-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gender-option input[type="radio"] {
+  width: 18px;
+  height: 18px;
+}
