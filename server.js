@@ -71,7 +71,6 @@ app.delete('/bookings/:id', async (req, res) => {
   res.json({ ok: true });
 });
 
-/* ===== CALENDAR SUMMARY (หัวใจของสี) ===== */
 app.get('/calendar-days', async (req, res) => {
   const { data, error } = await supabase
     .from('bookings')
@@ -86,7 +85,7 @@ app.get('/calendar-days', async (req, res) => {
     }
   });
 
-  res.json(map); // { '2025-12-26': 8 }
+  res.json(map);
 });
 
 /* ===== SLOTS ===== */
