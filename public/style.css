@@ -348,3 +348,20 @@ th{
   .topbar{flex-direction:column; align-items:flex-start; gap:12px}
   .topActions{width:100%; justify-content:space-between}
 }
+
+/* ===== Calendar Header (minimal & safe) ===== */
+.calendarHeader{
+  text-align:center;
+  margin-bottom:8px;
+}
+
+.calendarTitle{
+  font-size:22px;      /* ใหญ่ */
+  font-weight:900;     /* หนา */
+}
+
+.calendarSubtitle{
+  font-size:11px;      /* ประมาณครึ่งหนึ่ง */
+  font-weight:500;
+  color:rgba(233,238,252,.5); /* muted กว่าสีหลัก */
+}
