@@ -25,18 +25,28 @@ app.get('/', (req, res) => {
 });
 
 /* ===== BOOKINGS BY DATE ===== */
+/* ===== BOOKINGS ===== */
 app.get('/bookings', async (req, res) => {
   const { date } = req.query;
-  if (!date) return res.json([]);
 
-  const { data, error } = await supabase
+  let query = supabase
     .from('bookings')
     .select('*')
-    .eq('date', date)
-    .order('time');
+    .order('time', { ascending: true });
 
-  if (error) return res.json([]);
-  res.json(data);
+  // ถ้ามี date → ดึงเฉพาะวันนั้น
+  if (date) {
+    query = query.eq('date', date);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error(error);
+    return res.json([]);
+  }
+
+  res.json(data || []);
 });
 
 /* ===== CREATE BOOKING ===== */
