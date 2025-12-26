@@ -416,3 +416,12 @@ th{
   width: 18px;
   height: 18px;
 }
+/* calendar header center */
+.panel .row.between {
+  align-items: flex-start;
+}
+
+#calendarTitle {
+  width: 100%;
+  text-align: center;
+}
