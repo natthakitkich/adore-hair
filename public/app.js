@@ -1,10 +1,4 @@
 /* =========================
-   CONFIG
-========================= */
-const OWNER_PIN = '1234';
-const TZ = 'Asia/Bangkok';
-
-/* =========================
    STATE
 ========================= */
 let currentDate = '';
@@ -19,13 +13,16 @@ const loginOverlay = document.getElementById('loginOverlay');
 const loginBtn = document.getElementById('loginBtn');
 const loginMsg = document.getElementById('loginMsg');
 const pinInput = document.getElementById('pin');
-const logoutBtn = document.getElementById('logoutBtn');
 
 const dateInput = document.getElementById('date');
 const calendarDays = document.getElementById('calendarDays');
-const calendarTitle = document.getElementById('calendarTitle');
 const timeSelect = document.getElementById('time');
 const list = document.getElementById('list');
+
+/* =========================
+   CONFIG
+========================= */
+const OWNER_PIN = '1234';
 
 /* =========================
    INIT
@@ -33,76 +30,43 @@ const list = document.getElementById('list');
 init();
 
 function init(){
-  initAuth();
+  initLogin();
   initDate();
   bindUI();
   loadAll();
 }
 
 /* =========================
-   AUTH (FIXED / iOS SAFE)
+   LOGIN (STABLE)
 ========================= */
-function initAuth(){
-
-  if(localStorage.getItem('adore_logged_in') === '1'){
-    loginOverlay.classList.add('hidden');
-  }
-
-  // บังคับ PIN เป็นตัวเลข (iOS)
-  pinInput.setAttribute('inputmode','numeric');
-  pinInput.setAttribute('pattern','[0-9]*');
-
-  pinInput.addEventListener('keydown', e=>{
-    if(e.key === 'Enter'){
-      e.preventDefault();
-      handleLogin();
+function initLogin(){
+  loginBtn.onclick = () => {
+    if(pinInput.value === OWNER_PIN){
+      loginOverlay.classList.add('hidden');
+      loginMsg.textContent = '';
+    }else{
+      loginMsg.textContent = 'PIN ไม่ถูกต้อง';
     }
-  });
-
-  loginBtn.onclick = (e)=>{
-    e.preventDefault();
-    handleLogin();
   };
-
-  logoutBtn.onclick = ()=>{
-    localStorage.removeItem('adore_logged_in');
-    location.reload();
-  };
-}
-
-function handleLogin(){
-  const pin = pinInput.value.replace(/\D/g,'');
-
-  if(pin === OWNER_PIN){
-    localStorage.setItem('adore_logged_in','1');
-    loginOverlay.classList.add('hidden');
-    loginMsg.textContent = '';
-    pinInput.value = '';
-  }else{
-    loginMsg.textContent = 'PIN ไม่ถูกต้อง';
-    pinInput.value = '';
-  }
 }
 
 /* =========================
-   DATE (BANGKOK TZ)
+   DATE
 ========================= */
 function initDate(){
-  const now = new Date(
-    new Date().toLocaleString('en-US',{ timeZone: TZ })
-  );
-  currentDate = now.toISOString().slice(0,10);
-  viewYear = now.getFullYear();
-  viewMonth = now.getMonth();
+  const today = new Date();
+  currentDate = today.toISOString().slice(0,10);
+  viewYear = today.getFullYear();
+  viewMonth = today.getMonth();
   dateInput.value = currentDate;
 }
 
 /* =========================
-   UI BINDINGS
+   UI
 ========================= */
 function bindUI(){
-  document.getElementById('prevMonth').onclick = ()=>changeMonth(-1);
-  document.getElementById('nextMonth').onclick = ()=>changeMonth(1);
+  document.getElementById('prevMonth').onclick = () => changeMonth(-1);
+  document.getElementById('nextMonth').onclick = () => changeMonth(1);
 
   document.querySelectorAll('.tab').forEach(t=>{
     t.onclick = ()=>{
@@ -117,7 +81,7 @@ function bindUI(){
 }
 
 /* =========================
-   MONTH NAV
+   MONTH
 ========================= */
 function changeMonth(d){
   viewMonth += d;
@@ -138,16 +102,13 @@ async function loadAll(){
 }
 
 /* =========================
-   CALENDAR (STABLE VERSION)
+   CALENDAR (ORIGINAL)
 ========================= */
 async function loadCalendar(){
   const res = await fetch('/calendar-days');
   const { days=[] } = await res.json();
 
   calendarDays.innerHTML = '';
-  calendarTitle.textContent =
-    `เดือน ${new Date(viewYear,viewMonth)
-      .toLocaleDateString('th-TH',{month:'long',year:'numeric'})}`;
 
   const firstDay = new Date(viewYear, viewMonth, 1).getDay();
   const totalDays = new Date(viewYear, viewMonth+1, 0).getDate();
@@ -157,7 +118,9 @@ async function loadCalendar(){
   }
 
   for(let d=1; d<=totalDays; d++){
-    const dateStr = `${viewYear}-${String(viewMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dateStr =
+      `${viewYear}-${String(viewMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+
     const cell = document.createElement('div');
     cell.className = 'calCell';
     cell.innerHTML = `<div class="calNum">${d}</div>`;
@@ -195,7 +158,7 @@ async function loadSlots(){
     if(!slots[t][currentStylist]){
       const o = document.createElement('option');
       o.value = t;
-      o.textContent = t.slice(0,5);
+      o.textContent = t;
       timeSelect.appendChild(o);
     }
   });
@@ -209,18 +172,20 @@ function renderTable(){
   bookings.forEach(b=>{
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${b.time.slice(0,5)}</td>
+      <td>${b.time}</td>
       <td>${b.stylist}</td>
-      <td>${b.gender==='male'?'👨':'👩'}</td>
+      <td>${b.gender === 'male' ? 'ชาย' : 'หญิง'}</td>
       <td>${b.name}</td>
-      <td>${b.service||'-'}</td>
-      <td>${b.phone||'-'}</td>
-      <td><button class="smallBtn danger">ลบ</button></td>
+      <td>${b.service || '-'}</td>
+      <td>${b.phone || '-'}</td>
+      <td><button>ลบ</button></td>
     `;
+
     tr.querySelector('button').onclick = async ()=>{
-      await fetch(`/bookings/${b.id}`,{method:'DELETE'});
+      await fetch(`/bookings/${b.id}`, { method:'DELETE' });
       loadAll();
     };
+
     list.appendChild(tr);
   });
 }
@@ -237,10 +202,11 @@ function renderSummary(){
 }
 
 /* =========================
-   FORM SUBMIT
+   FORM
 ========================= */
 async function submitForm(e){
   e.preventDefault();
+
   const body = {
     date: currentDate,
     time: timeSelect.value,
@@ -254,7 +220,7 @@ async function submitForm(e){
   const r = await fetch('/bookings',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify(body)
+    body: JSON.stringify(body)
   });
 
   if(r.ok){
