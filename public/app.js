@@ -42,6 +42,7 @@ function initAuth(){
     if(pinInput.value === OWNER_PIN){
       localStorage.setItem('adore_logged_in','1');
       loginOverlay.classList.add('hidden');
+      loadAll();
     }else{
       loginMsg.textContent = 'PIN ไม่ถูกต้อง';
     }
@@ -55,9 +56,7 @@ function initAuth(){
 
 /* ===== DATE ===== */
 function initDate(){
-  const now = new Date(
-    new Date().toLocaleString('en-US',{ timeZone: TZ })
-  );
+  const now = new Date(new Date().toLocaleString('en-US',{ timeZone: TZ }));
   todayDate = now.toISOString().slice(0,10);
   currentDate = todayDate;
   viewYear = now.getFullYear();
@@ -101,9 +100,9 @@ async function loadAll(){
 /* ===== CALENDAR ===== */
 async function loadCalendar(){
   const res = await fetch('/calendar-days');
-  const { days=[] } = await res.json();
+  const density = await res.json();
 
-  calendarDays.innerHTML = '';
+  calendarDays.innerHTML='';
   calendarTitle.textContent =
     new Date(viewYear,viewMonth)
       .toLocaleDateString('th-TH',{month:'long',year:'numeric'});
@@ -124,7 +123,7 @@ async function loadCalendar(){
     if(dateStr === todayDate) cell.classList.add('today');
     if(dateStr === currentDate) cell.classList.add('selected');
 
-    const count = days.filter(x => x === dateStr).length;
+    const count = density[dateStr] || 0;
     const level = Math.min(5, Math.ceil((count / 20) * 5));
     if(level > 0) cell.dataset.level = level;
 
@@ -146,15 +145,15 @@ async function loadBookings(){
 
 /* ===== SLOTS ===== */
 async function loadSlots(){
-  timeSelect.innerHTML = '<option value="">เลือกเวลา</option>';
+  timeSelect.innerHTML='<option value="">เลือกเวลา</option>';
   const r = await fetch(`/slots?date=${currentDate}`);
   const { slots={} } = await r.json();
 
   Object.keys(slots).forEach(t=>{
     if(!slots[t][currentStylist]){
-      const o = document.createElement('option');
-      o.value = t;
-      o.textContent = t.slice(0,5);
+      const o=document.createElement('option');
+      o.value=t;
+      o.textContent=t;
       timeSelect.appendChild(o);
     }
   });
@@ -162,19 +161,19 @@ async function loadSlots(){
 
 /* ===== TABLE ===== */
 function renderTable(){
-  list.innerHTML = '';
+  list.innerHTML='';
   bookings.forEach(b=>{
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${b.time.slice(0,5)}</td>
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td>${b.time}</td>
       <td>${b.stylist}</td>
       <td>${b.gender==='male'?'👨':'👩'}</td>
       <td>${b.name}</td>
       <td>${b.service||'-'}</td>
       <td>${b.phone||'-'}</td>
-      <td><button class="smallBtn danger">ลบ</button></td>
+      <td><button>ลบ</button></td>
     `;
-    tr.querySelector('button').onclick = async ()=>{
+    tr.querySelector('button').onclick=async()=>{
       await fetch(`/bookings/${b.id}`,{method:'DELETE'});
       loadAll();
     };
@@ -185,26 +184,21 @@ function renderTable(){
 /* ===== FORM ===== */
 async function submitForm(e){
   e.preventDefault();
-  const body = {
-    date: currentDate,
-    time: timeSelect.value,
-    stylist: currentStylist,
-    name: name.value,
-    phone: phone.value,
-    gender: document.querySelector('[name="gender"]:checked')?.value,
-    service: service.value
+  const body={
+    date:currentDate,
+    time:timeSelect.value,
+    stylist:currentStylist,
+    name:name.value,
+    phone:phone.value,
+    gender:document.querySelector('[name="gender"]:checked')?.value,
+    service:service.value
   };
-
-  const r = await fetch('/bookings',{
+  const r=await fetch('/bookings',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify(body)
   });
-
-  if(r.ok){
-    e.target.reset();
-    loadAll();
-  }
+  if(r.ok){ e.target.reset(); loadAll(); }
 }
 
 });
