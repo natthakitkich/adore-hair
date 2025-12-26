@@ -10,14 +10,24 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+/* =========================
+   MIDDLEWARE
+========================= */
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+/* =========================
+   SUPABASE
+========================= */
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
+
+/* =========================
+   ROUTES
+========================= */
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
@@ -35,7 +45,11 @@ app.get('/bookings', async (req, res) => {
     .eq('date', date)
     .order('time', { ascending: true });
 
-  if (error) return res.json([]);
+  if (error) {
+    console.error(error);
+    return res.json([]);
+  }
+
   res.json(data || []);
 });
 
@@ -50,13 +64,22 @@ app.post('/bookings', async (req, res) => {
     { date, time, name, phone, stylist, gender, service }
   ]);
 
-  if (error) return res.status(400).json({ error: error.message });
+  if (error) {
+    console.error(error);
+    return res.status(400).json({ error: error.message });
+  }
+
   res.json({ ok: true });
 });
 
 app.delete('/bookings/:id', async (req, res) => {
   const { id } = req.params;
-  await supabase.from('bookings').delete().eq('id', id);
+
+  await supabase
+    .from('bookings')
+    .delete()
+    .eq('id', id);
+
   res.json({ ok: true });
 });
 
@@ -77,33 +100,31 @@ app.get('/slots', async (req, res) => {
     .eq('date', date);
 
   (data || []).forEach(b => {
-    if (slots[b.time]) slots[b.time][b.stylist] = true;
+    if (slots[b.time]) {
+      slots[b.time][b.stylist] = true;
+    }
   });
 
   res.json({ slots });
 });
 
-/* ===== CALENDAR SUMMARY (Bank + Sindy only) ===== */
+/* ===== CALENDAR DAYS ===== */
 
 app.get('/calendar-days', async (req, res) => {
   const { data } = await supabase
     .from('bookings')
-    .select('date, stylist');
+    .select('date');
 
-  const summary = {};
+  const days = Array.isArray(data)
+    ? [...new Set(data.map(d => d.date))]
+    : [];
 
-  (data || []).forEach(b => {
-    if (b.stylist === 'Assist') return;
-
-    if (!summary[b.date]) {
-      summary[b.date] = { Bank: 0, Sindy: 0 };
-    }
-    summary[b.date][b.stylist]++;
-  });
-
-  res.json(summary);
+  res.json({ days });
 });
 
+/* =========================
+   START SERVER
+========================= */
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
