@@ -430,3 +430,11 @@ th{
 .calCell.lv4 .calNum{
   background:rgba(255,80,80,.45);
 }
+
+/* ===== LOGIN PIN INPUT ===== */
+#pin{
+  text-align: center;
+  letter-spacing: 6px;
+  font-size: 18px;
+  font-weight: 700;
+}
