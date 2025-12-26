@@ -19,8 +19,27 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-/* ===== BOOKINGS ===== */
+/* ===== ROOT ===== */
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
+/* ===== BOOKINGS BY DATE ===== */
+app.get('/bookings', async (req, res) => {
+  const { date } = req.query;
+  if (!date) return res.json([]);
+
+  const { data, error } = await supabase
+    .from('bookings')
+    .select('*')
+    .eq('date', date)
+    .order('time');
+
+  if (error) return res.json([]);
+  res.json(data);
+});
+
+/* ===== CREATE BOOKING ===== */
 app.post('/bookings', async (req, res) => {
   const { date, time, name, phone, stylist, gender, service } = req.body;
 
@@ -33,12 +52,34 @@ app.post('/bookings', async (req, res) => {
   ]);
 
   if (error) return res.status(400).json({ error: error.message });
-
   res.json({ ok: true });
 });
 
-/* ===== SLOTS ===== */
+/* ===== DELETE ===== */
+app.delete('/bookings/:id', async (req, res) => {
+  await supabase.from('bookings').delete().eq('id', req.params.id);
+  res.json({ ok: true });
+});
 
+/* ===== CALENDAR SUMMARY (หัวใจของสี) ===== */
+app.get('/calendar-days', async (req, res) => {
+  const { data, error } = await supabase
+    .from('bookings')
+    .select('date, stylist');
+
+  if (error) return res.json({});
+
+  const map = {};
+  data.forEach(b => {
+    if (b.stylist === 'Bank' || b.stylist === 'Sindy') {
+      map[b.date] = (map[b.date] || 0) + 1;
+    }
+  });
+
+  res.json(map); // { '2025-12-26': 8 }
+});
+
+/* ===== SLOTS ===== */
 app.get('/slots', async (req, res) => {
   const { date } = req.query;
 
@@ -54,41 +95,12 @@ app.get('/slots', async (req, res) => {
     .eq('date', date);
 
   (data || []).forEach(b => {
-    if (slots[b.time]) {
-      slots[b.time][b.stylist] = true;
-    }
+    slots[b.time][b.stylist] = true;
   });
 
   res.json({ slots });
 });
 
-/* ===== CALENDAR DAYS (MAX 20 QUEUE) ===== */
-
-app.get('/calendar-days', async (req, res) => {
-  const { data } = await supabase
-    .from('bookings')
-    .select('date, stylist');
-
-  const map = {};
-
-  (data || []).forEach(b => {
-    if (b.stylist === 'Bank' || b.stylist === 'Sindy') {
-      if (!map[b.date]) map[b.date] = 0;
-      if (map[b.date] < 20) {
-        map[b.date]++;
-      }
-    }
-  });
-
-  const days = Object.keys(map).map(date => ({
-    date,
-    count: map[date],          // 0–20
-    ratio: map[date] / 20      // 0–1
-  }));
-
-  res.json({ days });
-});
-
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log('Server running on', PORT);
 });
