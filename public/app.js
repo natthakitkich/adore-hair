@@ -1,11 +1,14 @@
+/* ===== CONFIG ===== */
 const OWNER_PIN = '1234';
 const TZ = 'Asia/Bangkok';
 
+/* ===== STATE ===== */
 let currentDate = '';
 let viewYear, viewMonth;
 let currentStylist = 'Bank';
 let bookings = [];
 
+/* ===== ELEMENTS ===== */
 const loginOverlay = document.getElementById('loginOverlay');
 const loginBtn = document.getElementById('loginBtn');
 const loginMsg = document.getElementById('loginMsg');
@@ -18,37 +21,26 @@ const calendarTitle = document.getElementById('calendarTitle');
 const timeSelect = document.getElementById('time');
 const list = document.getElementById('list');
 
+/* ===== INIT ===== */
 init();
 
 function init(){
   initAuth();
   initDate();
   bindUI();
-  loadCalendar();
-  loadBookings();
-  loadSlots();
+  loadAll();
 }
 
+/* ===== AUTH ===== */
 function initAuth(){
-  const loggedIn = localStorage.getItem('adore_logged_in');
-
-  // ถ้าเคย login แล้ว
-  if(loggedIn === '1'){
+  if(localStorage.getItem('adore_logged_in') === '1'){
     loginOverlay.classList.add('hidden');
   }
 
-  // ปุ่ม Login
   loginBtn.onclick = ()=>{
-    // บังคับให้เหลือเฉพาะตัวเลข
-    const pin = pinInput.value.replace(/\D/g, '').trim();
-
-    if(pin.length === 0){
-      loginMsg.textContent = 'กรุณาใส่ PIN';
-      return;
-    }
-
+    const pin = pinInput.value.replace(/\D/g,'');
     if(pin === OWNER_PIN){
-      localStorage.setItem('adore_logged_in', '1');
+      localStorage.setItem('adore_logged_in','1');
       loginOverlay.classList.add('hidden');
       loginMsg.textContent = '';
       pinInput.value = '';
@@ -58,13 +50,13 @@ function initAuth(){
     }
   };
 
-  // ปุ่ม Logout
   logoutBtn.onclick = ()=>{
     localStorage.removeItem('adore_logged_in');
     location.reload();
   };
 }
 
+/* ===== DATE ===== */
 function initDate(){
   const now = new Date(
     new Date().toLocaleString('en-US',{ timeZone: TZ })
@@ -75,6 +67,7 @@ function initDate(){
   dateInput.value = currentDate;
 }
 
+/* ===== UI ===== */
 function bindUI(){
   document.getElementById('prevMonth').onclick = ()=>changeMonth(-1);
   document.getElementById('nextMonth').onclick = ()=>changeMonth(1);
@@ -91,19 +84,27 @@ function bindUI(){
   document.getElementById('bookingForm').onsubmit = submitForm;
 }
 
-/* ===== CALENDAR ===== */
-
-function levelFromTotal(total){
-  if(total === 0) return 0;
-  if(total <= 6) return 1;
-  if(total <= 13) return 2;
-  if(total <= 19) return 3;
-  return 4;
+/* ===== MONTH ===== */
+function changeMonth(d){
+  viewMonth += d;
+  if(viewMonth < 0){ viewMonth = 11; viewYear--; }
+  if(viewMonth > 11){ viewMonth = 0; viewYear++; }
+  loadCalendar();
 }
 
+/* ===== LOAD ALL ===== */
+async function loadAll(){
+  await loadCalendar();
+  await loadBookings();
+  await loadSlots();
+  renderTable();
+  renderSummary();
+}
+
+/* ===== CALENDAR ===== */
 async function loadCalendar(){
   const res = await fetch('/calendar-days');
-  const summary = await res.json();
+  const { days=[] } = await res.json();
 
   calendarDays.innerHTML = '';
   calendarTitle.textContent =
@@ -121,27 +122,15 @@ async function loadCalendar(){
     const dateStr = `${viewYear}-${String(viewMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const cell = document.createElement('div');
     cell.className = 'calCell';
+    cell.innerHTML = `<div class="calNum">${d}</div>`;
 
-    const dayData = summary[dateStr] || { Bank:0, Sindy:0 };
-    const total = dayData.Bank + dayData.Sindy;
-    const level = levelFromTotal(total);
-
-    if(level > 0) cell.classList.add(`level-${level}`);
+    if(days.includes(dateStr)) cell.classList.add('hasBookings');
     if(dateStr === currentDate) cell.classList.add('selected');
-
-    cell.innerHTML = `
-      <div class="calNum split">
-        <span class="half bank ${dayData.Bank ? 'on':''}"></span>
-        <span class="half sindy ${dayData.Sindy ? 'on':''}"></span>
-        <span class="day">${d}</span>
-      </div>
-    `;
 
     cell.onclick = ()=>{
       currentDate = dateStr;
       dateInput.value = dateStr;
-      loadBookings();
-      loadSlots();
+      loadAll();
     };
 
     calendarDays.appendChild(cell);
@@ -149,16 +138,12 @@ async function loadCalendar(){
 }
 
 /* ===== BOOKINGS ===== */
-
 async function loadBookings(){
   const r = await fetch(`/bookings?date=${currentDate}`);
   bookings = await r.json();
-  renderTable();
-  renderSummary();
 }
 
 /* ===== SLOTS ===== */
-
 async function loadSlots(){
   timeSelect.innerHTML = '<option value="">เลือกเวลา</option>';
   const r = await fetch(`/slots?date=${currentDate}`);
@@ -175,7 +160,6 @@ async function loadSlots(){
 }
 
 /* ===== TABLE ===== */
-
 function renderTable(){
   list.innerHTML = '';
   bookings.forEach(b=>{
@@ -191,13 +175,13 @@ function renderTable(){
     `;
     tr.querySelector('button').onclick = async ()=>{
       await fetch(`/bookings/${b.id}`,{method:'DELETE'});
-      loadBookings();
-      loadCalendar();
+      loadAll();
     };
     list.appendChild(tr);
   });
 }
 
+/* ===== SUMMARY ===== */
 function renderSummary(){
   const c = s => bookings.filter(b=>b.stylist===s).length;
   countBank.textContent = c('Bank');
@@ -207,7 +191,6 @@ function renderSummary(){
 }
 
 /* ===== FORM ===== */
-
 async function submitForm(e){
   e.preventDefault();
   const body = {
@@ -226,8 +209,6 @@ async function submitForm(e){
   });
   if(r.ok){
     e.target.reset();
-    loadBookings();
-    loadCalendar();
-    loadSlots();
+    loadAll();
   }
 }
