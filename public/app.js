@@ -1,23 +1,42 @@
 /* =========================
-   LOGIN
+   LOGIN (จำสถานะ + Logout)
 ========================= */
 const loginOverlay = document.getElementById('loginOverlay');
 const loginBtn = document.getElementById('loginBtn');
 const loginMsg = document.getElementById('loginMsg');
 const pinInput = document.getElementById('pin');
+const logoutBtn = document.getElementById('logoutBtn');
 
+// เปลี่ยน PIN ตรงนี้
 const OWNER_PIN = '1234';
 
-loginBtn.addEventListener('click', () => {
+// เช็กสถานะ login ตอนโหลด
+if (localStorage.getItem('adore_logged_in') === 'true') {
+  loginOverlay.classList.add('hidden');
+} else {
+  loginOverlay.classList.remove('hidden');
+}
+
+// Login
+loginBtn.onclick = () => {
   if (pinInput.value === OWNER_PIN) {
+    localStorage.setItem('adore_logged_in', 'true');
     loginOverlay.classList.add('hidden');
     loginMsg.textContent = '';
+    pinInput.value = '';
   } else {
     loginMsg.textContent = 'PIN ไม่ถูกต้อง';
-    loginMsg.classList.remove('ok');
     loginMsg.classList.add('err');
   }
-});
+};
+
+// Logout
+if (logoutBtn) {
+  logoutBtn.onclick = () => {
+    localStorage.removeItem('adore_logged_in');
+    location.reload();
+  };
+}
 
 /* =========================
    STATE
@@ -34,11 +53,6 @@ const dateInput = document.getElementById('date');
 const calendarDays = document.getElementById('calendarDays');
 const timeSelect = document.getElementById('time');
 const list = document.getElementById('list');
-
-const bookingForm = document.getElementById('bookingForm');
-const nameInput = document.getElementById('name');
-const phoneInput = document.getElementById('phone');
-const serviceInput = document.getElementById('service');
 
 const countBank = document.getElementById('countBank');
 const countSindy = document.getElementById('countSindy');
@@ -71,8 +85,14 @@ function init() {
 ========================= */
 function changeMonth(delta) {
   viewMonth += delta;
-  if (viewMonth < 0) { viewMonth = 11; viewYear--; }
-  if (viewMonth > 11) { viewMonth = 0; viewYear++; }
+  if (viewMonth < 0) {
+    viewMonth = 11;
+    viewYear--;
+  }
+  if (viewMonth > 11) {
+    viewMonth = 0;
+    viewYear++;
+  }
   loadCalendar();
 }
 
@@ -136,6 +156,7 @@ async function loadBookings() {
 ========================= */
 async function loadSlots() {
   timeSelect.innerHTML = '<option value="">เลือกเวลา</option>';
+
   const res = await fetch(`/slots?date=${currentDate}`);
   const { slots = {} } = await res.json();
 
@@ -181,10 +202,10 @@ function renderTable() {
    SUMMARY
 ========================= */
 function renderSummary() {
-  const c = s => bookings.filter(b => b.stylist === s).length;
-  countBank.textContent = c('Bank');
-  countSindy.textContent = c('Sindy');
-  countAssist.textContent = c('Assist');
+  const count = s => bookings.filter(b => b.stylist === s).length;
+  countBank.textContent = count('Bank');
+  countSindy.textContent = count('Sindy');
+  countAssist.textContent = count('Assist');
   countTotal.textContent = bookings.length;
 }
 
@@ -192,17 +213,17 @@ function renderSummary() {
    FORM
 ========================= */
 function bindForm() {
-  bookingForm.onsubmit = async e => {
+  document.getElementById('bookingForm').onsubmit = async e => {
     e.preventDefault();
 
     const body = {
       date: currentDate,
       time: timeSelect.value,
       stylist: currentStylist,
-      name: nameInput.value,
-      phone: phoneInput.value,
+      name: document.getElementById('name').value,
+      phone: document.getElementById('phone').value,
       gender: document.querySelector('input[name="gender"]:checked')?.value,
-      service: serviceInput.value
+      service: document.getElementById('service').value
     };
 
     const res = await fetch('/bookings', {
@@ -212,7 +233,7 @@ function bindForm() {
     });
 
     if (res.ok) {
-      bookingForm.reset();
+      e.target.reset();
       loadAll();
     }
   };
