@@ -416,3 +416,17 @@ th{
   width: 18px;
   height: 18px;
 }
+
+/* ===== CALENDAR LEVEL (MAX 20 QUEUE) ===== */
+.calCell.lv1 .calNum{
+  background:rgba(44,255,156,.35);
+}
+.calCell.lv2 .calNum{
+  background:rgba(255,234,0,.35);
+}
+.calCell.lv3 .calNum{
+  background:rgba(255,165,0,.35);
+}
+.calCell.lv4 .calNum{
+  background:rgba(255,80,80,.45);
+}
