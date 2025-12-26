@@ -16,7 +16,15 @@
       <div class="title2">เข้าสู่ระบบ</div>
       <div class="subtitle2">ใส่ PIN เพื่อจัดการคิว</div>
 
-      <input id="pin" type="password" placeholder="PIN" />
+      <input
+        id="pin"
+        type="password"
+        inputmode="numeric"
+        pattern="[0-9]*"
+        placeholder="PIN"
+        class="centerInput"
+      />
+
       <button id="loginBtn" class="primary full">Login</button>
       <div id="loginMsg" class="msg err"></div>
     </div>
@@ -46,11 +54,10 @@
 
 <!-- CALENDAR -->
 <div class="panel">
-  <div class="row between">
-    <div>
-      <div id="calendarTitle" class="title2"></div>
-      <div class="subtitle2">วงเขียว = มีคิว</div>
-    </div>
+  <div class="calendarHeader">
+    <div id="calendarTitle" class="calendarTitle"></div>
+    <div class="calendarNote">ระดับเฉดสีแสดงความหนาแน่นของคิว</div>
+
     <div class="row">
       <button id="prevMonth" class="ghost">◀</button>
       <button id="nextMonth" class="ghost">▶</button>
@@ -83,19 +90,12 @@
     <input id="phone" />
   </div>
   <div>
-  <label>เพศ</label>
- <div class="gender-group">
-  <label class="gender-option">
-    <input type="radio" name="gender" value="male" />
-    👦 ชาย
-  </label>
-
-  <label class="gender-option">
-    <input type="radio" name="gender" value="female" />
-    👩 หญิง
-  </label>
-</div>
-</div>
+    <label>เพศ</label>
+    <div class="row">
+      <label><input type="radio" name="gender" value="male" /> 👨 ชาย</label>
+      <label><input type="radio" name="gender" value="female" /> 👩 หญิง</label>
+    </div>
+  </div>
   <div>
     <label>เวลา</label>
     <select id="time"><option value="">เลือกเวลา</option></select>
@@ -109,26 +109,6 @@
     <div id="msg" class="msg muted"></div>
   </div>
 </form>
-</div>
-
-<!-- SUMMARY + TABLE -->
-<div class="panel">
-  <div class="summary">
-    <div class="box"><div>Bank</div><div id="countBank">0</div></div>
-    <div class="box"><div>Sindy</div><div id="countSindy">0</div></div>
-    <div class="box"><div>Assist</div><div id="countAssist">0</div></div>
-    <div class="box"><div>รวม</div><div id="countTotal">0</div></div>
-  </div>
-
-  <table>
-    <thead>
-      <tr>
-        <th>เวลา</th><th>ช่าง</th><th>เพศ</th>
-        <th>ชื่อ</th><th>ทำอะไร</th><th>โทร</th><th>ลบ</th>
-      </tr>
-    </thead>
-    <tbody id="list"></tbody>
-  </table>
 </div>
 
 </div>
