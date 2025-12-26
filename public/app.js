@@ -8,7 +8,7 @@ let todayDate = '';
 let viewYear, viewMonth;
 let currentStylist = 'Bank';
 let bookings = [];
-let calendarMap = {}; // ← สำคัญ (ทั้งเดือน)
+let calendarMap = {};
 
 /* ===== ELEMENTS ===== */
 const loginOverlay = document.getElementById('loginOverlay');
@@ -27,6 +27,10 @@ const countBank = document.getElementById('countBank');
 const countSindy = document.getElementById('countSindy');
 const countAssist = document.getElementById('countAssist');
 const countTotal = document.getElementById('countTotal');
+
+const nameInput = document.getElementById('name');
+const phoneInput = document.getElementById('phone');
+const serviceInput = document.getElementById('service');
 
 /* ===== INIT ===== */
 init();
@@ -82,7 +86,7 @@ function bindUI() {
       document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
       t.classList.add('active');
       currentStylist = t.dataset.tab;
-      loadSlots();
+      loadSlots(); // 🔄 reload slots per stylist
     };
   });
 
@@ -94,7 +98,7 @@ function changeMonth(d) {
   viewMonth += d;
   if (viewMonth < 0) { viewMonth = 11; viewYear--; }
   if (viewMonth > 11) { viewMonth = 0; viewYear++; }
-  loadCalendar();
+  renderCalendar();
 }
 
 /* ===== LOAD ALL ===== */
@@ -115,10 +119,10 @@ async function loadBookings() {
   bookings = await r.json();
 }
 
-/* ===== CALENDAR MAP (ทั้งเดือนจริง) ===== */
+/* ===== CALENDAR MAP ===== */
 async function loadCalendarMap() {
   const r = await fetch('/calendar-days');
-  calendarMap = await r.json(); // { YYYY-MM-DD: count }
+  calendarMap = await r.json();
 }
 
 /* ===== CALENDAR ===== */
@@ -144,11 +148,7 @@ function renderCalendar() {
     cell.className = 'calCell';
     cell.innerHTML = `<div class="calNum">${d}</div>`;
 
-    if (calendarMap[dateStr]) {
-      cell.classList.add('hasBookings');
-    }
-
-    if (dateStr === todayDate) cell.classList.add('today');
+    if (calendarMap[dateStr]) cell.classList.add('hasBookings');
     if (dateStr === currentDate) cell.classList.add('selected');
 
     cell.onclick = () => {
@@ -164,16 +164,23 @@ function renderCalendar() {
 /* ===== SLOTS ===== */
 async function loadSlots() {
   timeSelect.innerHTML = '<option value="">เลือกเวลา</option>';
+
   const r = await fetch(`/slots?date=${currentDate}`);
   const { slots = {} } = await r.json();
 
-  Object.keys(slots).forEach(t => {
-    if (!slots[t][currentStylist]) {
-      const o = document.createElement('option');
-      o.value = t;
-      o.textContent = t.slice(0, 5);
-      timeSelect.appendChild(o);
+  Object.entries(slots).forEach(([time, status]) => {
+    const booked = status[currentStylist];
+
+    const opt = document.createElement('option');
+    opt.value = time;
+    opt.textContent = time.slice(0, 5);
+
+    if (booked) {
+      opt.disabled = true;
+      opt.textContent += ' (เต็ม)';
     }
+
+    timeSelect.appendChild(opt);
   });
 }
 
@@ -183,16 +190,11 @@ function renderTable() {
 
   bookings.forEach(b => {
     const tr = document.createElement('tr');
-
     const genderIcon = b.gender === 'male' ? '👨' : '👩';
 
     tr.innerHTML = `
       <td>${b.time.slice(0,5)}</td>
-      <td>
-        <span class="badge stylist-${b.stylist.toLowerCase()}">
-          ${b.stylist}
-        </span>
-      </td>
+      <td><span class="badge stylist-${b.stylist.toLowerCase()}">${b.stylist}</span></td>
       <td>${genderIcon}</td>
       <td>${b.name}</td>
       <td>${b.service || '-'}</td>
@@ -226,10 +228,10 @@ async function submitForm(e) {
     date: currentDate,
     time: timeSelect.value,
     stylist: currentStylist,
-    name: name.value,
-    phone: phone.value,
+    name: nameInput.value,
+    phone: phoneInput.value,
     gender: document.querySelector('[name="gender"]:checked')?.value,
-    service: service.value
+    service: serviceInput.value
   };
 
   const r = await fetch('/bookings', {
@@ -241,5 +243,8 @@ async function submitForm(e) {
   if (r.ok) {
     e.target.reset();
     loadAll();
+  } else {
+    const err = await r.json();
+    alert(err.error || 'ไม่สามารถจองได้');
   }
 }
