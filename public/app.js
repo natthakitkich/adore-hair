@@ -161,10 +161,7 @@ function renderCalendar() {
 
   for (let d = 1; d <= totalDays; d++) {
     const dateStr =
-      `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-
-    const count = calendarMap[dateStr] || 0;
-    const ratio = count / DAILY_CAPACITY;
+      `${viewYear}-${String(viewMonth + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
 
     const cell = document.createElement('div');
     cell.className = 'calCell';
@@ -173,15 +170,26 @@ function renderCalendar() {
     num.className = 'calNum';
     num.textContent = d;
 
-    // 🎯 กำหนดสีตามความหนาแน่น
-    if (count > 0) {
-      if (ratio <= 0.3) num.classList.add('density-low');       // เขียว
-      else if (ratio <= 0.65) num.classList.add('density-mid'); // เหลือง
-      else if (ratio < 1) num.classList.add('density-high');    // ส้ม
-      else num.classList.add('density-full');                   // แดง
+    const dayData = calendarMap[dateStr];
+    if (dayData) {
+      num.classList.add('split');
+
+      const level = r =>
+        r >= 1 ? 'full' :
+        r >= 0.7 ? 'high' :
+        r >= 0.4 ? 'mid' :
+        r > 0 ? 'low' : null;
+
+      const bankLevel = level((dayData.Bank || 0) / 10);
+      const sindyLevel = level((dayData.Sindy || 0) / 10);
+
+      if (bankLevel) num.classList.add(`bank-${bankLevel}`);
+      if (sindyLevel) num.classList.add(`sindy-${sindyLevel}`);
     }
 
-    if (dateStr === currentDate) cell.classList.add('selected');
+    if (dateStr === currentDate) {
+      cell.classList.add('selected');
+    }
 
     cell.onclick = () => {
       currentDate = dateStr;
