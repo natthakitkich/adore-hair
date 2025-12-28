@@ -398,3 +398,40 @@ th{
   font-size: 18px;
   font-weight: 600;
 }
+
+/* ===== SPLIT RING (Bank / Sindy) ===== */
+.calNum.split{
+  position: relative;
+  overflow: hidden;
+}
+
+.calNum.split::before,
+.calNum.split::after{
+  content:'';
+  position:absolute;
+  inset:-2px;
+  border-radius:999px;
+  border:2px solid transparent;
+  pointer-events:none;
+}
+
+/* LEFT = BANK */
+.calNum.split::before{
+  clip-path: inset(0 50% 0 0);
+}
+
+/* RIGHT = SINDY */
+.calNum.split::after{
+  clip-path: inset(0 0 0 50%);
+}
+
+/* ===== Density colors ===== */
+.bank-low::before{ border-color:#2cff9c }
+.bank-mid::before{ border-color:#fde047 }
+.bank-high::before{ border-color:#fb923c }
+.bank-full::before{ border-color:#ff5c7a }
+
+.sindy-low::after{ border-color:#2cff9c }
+.sindy-mid::after{ border-color:#fde047 }
+.sindy-high::after{ border-color:#fb923c }
+.sindy-full::after{ border-color:#ff5c7a }
