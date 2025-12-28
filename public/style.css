@@ -32,234 +32,10 @@ body{
 }
 
 .hidden{display:none !important}
-.row{display:flex; gap:10px; align-items:center}
-.between{justify-content:space-between}
-.muted{color:var(--muted)}
-.msg{font-size:13px}
-.msg.err{color:var(--danger)}
-
-/* =========================
-   INPUTS & BUTTONS
-========================= */
-input, select{
-  width:100%;
-  padding:12px;
-  border-radius:12px;
-  border:1px solid var(--stroke);
-  background:rgba(0,0,0,.18);
-  color:var(--text);
-  outline:none;
-}
-
-.primary{
-  background:linear-gradient(90deg, var(--accent), var(--accent2));
-  color:#061022;
-  border:none;
-  padding:10px 14px;
-  border-radius:12px;
-  font-weight:900;
-  cursor:pointer;
-}
-
-.ghost{
-  background:transparent;
-  color:var(--text);
-  border:1px solid var(--stroke);
-  padding:8px 12px;
-  border-radius:12px;
-  cursor:pointer;
-}
-
-.smallBtn{
-  padding:6px 12px;
-  border-radius:10px;
-  border:1px solid var(--stroke);
-  background:transparent;
-  color:var(--text);
-  cursor:pointer;
-}
-
-.smallBtn.danger{
-  color:var(--danger);
-  border-color:rgba(255,92,122,.4);
-}
-
-/* =========================
-   TOPBAR
-========================= */
-.topbar{
-  padding:18px 22px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  border-bottom:1px solid var(--stroke);
-  background:rgba(0,0,0,.25);
-  backdrop-filter: blur(10px);
-  position:sticky;
-  top:0;
-  z-index:5;
-}
-
-.brand{
-  display:flex;
-  gap:12px;
-  align-items:center;
-}
-
-.avatar{
-  width:40px;
-  height:40px;
-  border-radius:12px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:900;
-  background:linear-gradient(135deg,var(--accent),var(--accent2));
-  color:#061022;
-}
-
-.title{font-weight:900}
-.subtitle{font-size:12px; color:var(--muted)}
-
-.topActions{
-  display:flex;
-  gap:12px;
-  align-items:flex-end;
-}
-
-.dateWrap .label{
-  font-size:12px;
-  color:var(--muted);
-  margin:0 0 6px 2px;
-}
-
-/* =========================
-   LAYOUT
-========================= */
-.wrap{
-  width:min(1100px, 95vw);
-  margin:18px auto 48px auto;
-}
-
-.panel{
-  background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
-  border:1px solid var(--stroke);
-  border-radius:16px;
-  padding:16px;
-  box-shadow:var(--shadow);
-  margin-top:14px;
-}
-
-.grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px;
-}
-.full{grid-column:1/-1}
-
-/* =========================
-   TABS
-========================= */
-.tabs{
-  display:flex;
-  gap:10px;
-  margin-top:14px;
-}
-
-.tab{
-  flex:1;
-  padding:12px;
-  border-radius:14px;
-  border:1px solid var(--stroke);
-  background:rgba(0,0,0,.18);
-  color:var(--text);
-  font-weight:900;
-  cursor:pointer;
-}
-
-.tab.active{
-  outline:2px solid rgba(110,231,255,.35);
-  background:rgba(110,231,255,.12);
-}
-
-/* =========================
-   SUMMARY
-========================= */
-.summary{
-  display:flex;
-  gap:12px;
-  flex-wrap:wrap;
-}
-
-.box{
-  min-width:140px;
-  border:1px solid var(--stroke);
-  background:rgba(0,0,0,.18);
-  border-radius:14px;
-  padding:12px;
-  font-weight:900;
-}
-
-/* =========================
-   TABLE
-========================= */
-table{
-  width:100%;
-  border-collapse:collapse;
-  font-size:13px;
-}
-
-th,td{
-  padding:10px;
-  border-bottom:1px solid var(--stroke);
-}
-
-th{
-  color:var(--muted);
-  text-align:left;
-  font-weight:900;
-}
-
-/* =========================
-   BADGE
-========================= */
-.badge{
-  display:inline-block;
-  padding:4px 12px;
-  border-radius:999px;
-  font-size:12px;
-  font-weight:900;
-  border:1px solid var(--stroke);
-}
-
-.badge.stylist-bank{
-  background:rgba(110,231,255,.18);
-  color:#6ee7ff;
-}
-
-.badge.stylist-sindy{
-  background:rgba(255,92,122,.18);
-  color:#ff7abf;
-}
-
-.badge.stylist-assist{
-  background:rgba(209,213,219,.18);
-  color:#d1d5db;
-}
 
 /* =========================
    CALENDAR
 ========================= */
-.calWeekHead{
-  margin-top:12px;
-  display:grid;
-  grid-template-columns:repeat(7,1fr);
-  gap:8px;
-  text-align:center;
-  font-size:12px;
-  color:var(--muted);
-}
-
 .calGrid{
   margin-top:8px;
   display:grid;
@@ -282,6 +58,9 @@ th{
   outline:2px solid rgba(110,231,255,.35);
 }
 
+/* =========================
+   CALENDAR NUMBER (BASE)
+========================= */
 .calNum{
   width:38px;
   height:38px;
@@ -290,52 +69,46 @@ th{
   align-items:center;
   justify-content:center;
   font-weight:900;
-  background:rgba(0,0,0,.45);
-  color:var(--text);
+
+  background:rgba(0,0,0,.35);
+  border:1px solid rgba(255,255,255,.15);
+  position:relative;
 }
 
 /* =========================
-   SPLIT RING (PRODUCTION)
+   SPLIT RING (Bank / Sindy)
 ========================= */
-.calNum.split{
-  background:
-    radial-gradient(circle at center,
-      rgba(0,0,0,.6) 62%,
-      transparent 64%
-    ),
-    conic-gradient(
-      var(--bankColor) 0deg 180deg,
-      var(--sindyColor) 180deg 360deg
-    );
+.calNum.split::before,
+.calNum.split::after{
+  content:'';
+  position:absolute;
+  inset:-2px;
+  border-radius:999px;
+  border:2px solid transparent;
+  pointer-events:none;
 }
 
-/* Bank */
-.bank-low   { --bankColor:#2cff9c }
-.bank-mid   { --bankColor:#fde047 }
-.bank-high  { --bankColor:#fb923c }
-.bank-full  { --bankColor:#ff5c7a }
+/* LEFT = BANK */
+.calNum.split::before{
+  clip-path: inset(0 50% 0 0);
+}
 
-/* Sindy */
-.sindy-low  { --sindyColor:#2cff9c }
-.sindy-mid  { --sindyColor:#fde047 }
-.sindy-high { --sindyColor:#fb923c }
-.sindy-full { --sindyColor:#ff5c7a }
-
-/* =========================
-   PIN INPUT
-========================= */
-#pin{
-  text-align:center;
-  letter-spacing:4px;
-  font-size:18px;
-  font-weight:600;
+/* RIGHT = SINDY */
+.calNum.split::after{
+  clip-path: inset(0 0 0 50%);
 }
 
 /* =========================
-   RESPONSIVE
+   DENSITY COLORS
 ========================= */
-@media (max-width:720px){
-  .grid{grid-template-columns:1fr}
-  .topbar{flex-direction:column; align-items:flex-start; gap:12px}
-  .topActions{width:100%; justify-content:space-between}
-}
+/* Bank = ซ้าย */
+.calNum.split.bank-low::before  { border-color:#2cff9c }
+.calNum.split.bank-mid::before  { border-color:#fde047 }
+.calNum.split.bank-high::before { border-color:#fb923c }
+.calNum.split.bank-full::before { border-color:#ff5c7a }
+
+/* Sindy = ขวา */
+.calNum.split.sindy-low::after  { border-color:#2cff9c }
+.calNum.split.sindy-mid::after  { border-color:#fde047 }
+.calNum.split.sindy-high::after { border-color:#fb923c }
+.calNum.split.sindy-full::after { border-color:#ff5c7a }
