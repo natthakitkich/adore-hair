@@ -154,3 +154,51 @@ th,td{padding:10px;border-bottom:1px solid var(--stroke)}
 .stylist-bank{background:rgba(110,231,255,.2);color:#6ee7ff}
 .stylist-sindy{background:rgba(255,92,122,.2);color:#ff7abf}
 .stylist-assist{background:rgba(209,213,219,.2);color:#d1d5db}
+
+/* ===== LOGIN CENTER ===== */
+.overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.85);
+  display:grid;
+  place-items:center;
+  z-index:999;
+}
+
+.modal{
+  width:min(420px,90vw);
+  background:linear-gradient(180deg,#0f1325,#0a0d1b);
+  border-radius:18px;
+  padding:20px;
+  border:1px solid rgba(255,255,255,.12);
+  box-shadow:0 20px 60px rgba(0,0,0,.6);
+}
+
+/* ===== CALENDAR HEADER ===== */
+.calendarHeader{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-top:12px;
+}
+
+.calendarTitle{
+  font-size:20px;
+  font-weight:900;
+  text-align:center;
+}
+
+.calendarSubtitle{
+  font-size:12px;
+  color:var(--muted);
+  text-align:center;
+}
+
+/* ===== GENDER ===== */
+.gender{
+  display:flex;
+  gap:20px;
+  align-items:center;
+}
+.gender input{margin-right:6px}
