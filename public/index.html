@@ -1,85 +1,135 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Adore hair studio</title>
-  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
+<!-- ===== LOGIN OVERLAY ===== -->
 <!-- LOGIN OVERLAY -->
 <div id="loginOverlay" class="overlay">
-  <div class="modal">
-    <div class="modalBody">
-      <div class="avatar big">A</div>
+<div class="modal">
+<div class="modalBody">
+<div class="avatar big">A</div>
+      <h3>เข้าสู่ระบบ</h3>
       <h2>เข้าสู่ระบบ</h2>
-      <p class="muted">ใส่ PIN เพื่อจัดการคิว</p>
+<p class="muted">ใส่ PIN เพื่อจัดการคิว</p>
       <input id="pin" type="password" inputmode="numeric" placeholder="PIN" />
-      <button id="loginBtn" class="primary">Login</button>
-      <div id="loginMsg" class="msg err"></div>
-    </div>
-  </div>
+      <input id="pin" type="password" inputmode="numeric" pattern="[0-9]*" placeholder="PIN" />
+<button id="loginBtn" class="primary">Login</button>
+<div id="loginMsg" class="msg err"></div>
+</div>
+</div>
 </div>
 
+<!-- ===== TOPBAR ===== -->
 <!-- TOPBAR -->
 <div class="topbar">
-  <div class="brand">
-    <div class="avatar">A</div>
-    <div>
-      <div class="title">Adore hair studio</div>
-      <div class="subtitle">Owner Queue · 13:00–22:00 · แยกตามช่าง</div>
-    </div>
-  </div>
-  <button id="logoutBtn" class="ghost">Logout</button>
-</div>
+<div class="brand">
+<div class="avatar">A</div>
+@@ -36,59 +36,62 @@ <h3>เข้าสู่ระบบ</h3>
 
 <div class="wrap">
 
-  <!-- CALENDAR -->
-  <div class="panel">
-    <div class="calendarHeader">
+  <!-- ===== DATE + CALENDAR ===== -->
+  <!-- DATE -->
+<div class="panel">
+<div class="dateWrap">
+<div class="label">เลือกวัน</div>
+<input type="date" id="date" />
+</div>
+
+<div class="calendarHeader">
+      <button id="prevMonth" class="ghost small">◀</button>
       <button id="prevMonth" class="ghost">◀</button>
-      <div>
-        <div id="calendarTitle" class="calendarTitle"></div>
-        <div class="calendarSubtitle">ระดับสีแสดงความหนาแน่นของคิว</div>
-      </div>
+<div>
+<div id="calendarTitle" class="calendarTitle"></div>
+<div class="calendarSubtitle">ระดับสีแสดงความหนาแน่นของคิว</div>
+</div>
+      <button id="nextMonth" class="ghost small">▶</button>
       <button id="nextMonth" class="ghost">▶</button>
-    </div>
+</div>
 
-    <div class="calWeekHead">
-      <div>อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div>ส</div>
-    </div>
+<div class="calWeekHead">
+<div>อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div>ส</div>
+</div>
+    <div class="calGrid" id="calendarDays"></div>
     <div id="calendarDays" class="calGrid"></div>
-  </div>
+</div>
 
-  <!-- SUMMARY -->
-  <div class="panel summary">
-    <div class="box">Bank <span id="countBank">0</span></div>
-    <div class="box">Sindy <span id="countSindy">0</span></div>
-    <div class="box">Assist <span id="countAssist">0</span></div>
-    <div class="box">รวม <span id="countTotal">0</span></div>
-  </div>
+  <!-- ===== STYLIST TABS ===== -->
+  <!-- TABS -->
+<div class="panel tabs">
+<button class="tab active" data-tab="Bank">Bank</button>
+<button class="tab" data-tab="Sindy">Sindy</button>
+<button class="tab" data-tab="Assist">Assist</button>
+</div>
 
-  <!-- TABLE -->
-  <div class="panel">
-    <table>
-      <thead>
-        <tr>
-          <th>เวลา</th>
-          <th>ช่าง</th>
-          <th>เพศ</th>
-          <th>ชื่อ</th>
-          <th>ทำอะไร</th>
-          <th>โทร</th>
-        </tr>
-      </thead>
-      <tbody id="list"></tbody>
-    </table>
-  </div>
+  <!-- ===== FORM ===== -->
+  <!-- FORM -->
+<div class="panel">
+<form id="bookingForm" class="grid">
+      <div class="full">
+        <label>เวลา</label>
+        <select id="time"></select>
+      </div>
 
+<div>
+        <label>ชื่อ</label>
+        <label>ชื่อลูกค้า</label>
+<input id="name" required />
+</div>
+
+<div>
+<label>เบอร์โทร</label>
+<input id="phone" />
+</div>
+
+      <div class="full gender">
+      <div class="full">
+<label>เพศ</label>
+        <label><input type="radio" name="gender" value="male"> 👨 ชาย</label>
+        <label><input type="radio" name="gender" value="female"> 👩 หญิง</label>
+        <div class="row">
+          <label><input type="radio" name="gender" value="male"> 👨 ชาย</label>
+          <label><input type="radio" name="gender" value="female"> 👩 หญิง</label>
+        </div>
+</div>
+
+      <div>
+        <label>เวลา</label>
+        <select id="time"></select>
+      </div>
+
+      <div>
+      <div class="full">
+<label>ทำอะไร</label>
+<input id="service" />
+</div>
+@@ -99,7 +102,7 @@ <h3>เข้าสู่ระบบ</h3>
+</form>
+</div>
+
+  <!-- ===== SUMMARY + TABLE ===== -->
+  <!-- SUMMARY + TABLE -->
+<div class="panel">
+<div class="summary">
+<div class="box">Bank <span id="countBank">0</span></div>
+@@ -127,21 +130,5 @@ <h3>เข้าสู่ระบบ</h3>
 </div>
 
 <script src="app.js"></script>
+  /* =========================
+   CONFIRM DELETE MODAL
+========================= */
+.primary.danger{
+  background:linear-gradient(90deg,#ff5c7a,#fb7185);
+  color:white;
+}
+
+#confirmOverlay .modal{
+  animation: pop .25s ease-out;
+}
+
+@keyframes pop{
+  from{transform:scale(.95); opacity:0}
+  to{transform:scale(1); opacity:1}
+}
 </body>
 </html>
