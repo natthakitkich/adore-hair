@@ -1,17 +1,35 @@
+/* ===== CONFIG ===== */
 const OWNER_PIN = '1234';
 const TZ = 'Asia/Bangkok';
 const DAILY_CAPACITY = 20;
 
+/* ===== STATE ===== */
 let currentDate = '';
 let viewYear, viewMonth;
 let currentStylist = 'Bank';
 let bookings = [];
 let calendarMap = {};
 
-const $ = id => document.getElementById(id);
+/* ===== ELEMENTS ===== */
+const loginOverlay = document.getElementById('loginOverlay');
+const loginBtn = document.getElementById('loginBtn');
+const loginMsg = document.getElementById('loginMsg');
+const pinInput = document.getElementById('pin');
+const logoutBtn = document.getElementById('logoutBtn');
 
+const dateInput = document.getElementById('date');
+const calendarDays = document.getElementById('calendarDays');
+const calendarTitle = document.getElementById('calendarTitle');
+const timeSelect = document.getElementById('time');
+const list = document.getElementById('list');
+
+const countBank = document.getElementById('countBank');
+const countSindy = document.getElementById('countSindy');
+const countAssist = document.getElementById('countAssist');
+const countTotal = document.getElementById('countTotal');
+
+/* ===== INIT ===== */
 init();
-
 function init(){
   initAuth();
   initDate();
@@ -19,27 +37,27 @@ function init(){
   loadAll();
 }
 
-/* ===== LOGIN ===== */
+/* ===== AUTH ===== */
 function initAuth(){
-  if (localStorage.getItem('adore_login') === '1') {
-    $('loginOverlay').classList.add('hidden');
+  if (localStorage.getItem('adore_logged_in') === '1') {
+    loginOverlay.classList.add('hidden');
   }
 
-  $('loginBtn').onclick = () => {
-    if (!/^\d+$/.test($('pin').value)) {
-      $('loginMsg').textContent = 'ใส่ตัวเลขเท่านั้น';
-      return;
-    }
-    if ($('pin').value === OWNER_PIN) {
-      localStorage.setItem('adore_login','1');
-      $('loginOverlay').classList.add('hidden');
+  pinInput.oninput = () => {
+    pinInput.value = pinInput.value.replace(/\D/g,'');
+  };
+
+  loginBtn.onclick = () => {
+    if (pinInput.value === OWNER_PIN) {
+      localStorage.setItem('adore_logged_in','1');
+      loginOverlay.classList.add('hidden');
     } else {
-      $('loginMsg').textContent = 'PIN ไม่ถูกต้อง';
+      loginMsg.textContent = 'PIN ไม่ถูกต้อง';
     }
   };
 
-  $('logoutBtn').onclick = () => {
-    localStorage.removeItem('adore_login');
+  logoutBtn.onclick = () => {
+    localStorage.removeItem('adore_logged_in');
     location.reload();
   };
 }
@@ -50,11 +68,14 @@ function initDate(){
   currentDate = now.toISOString().slice(0,10);
   viewYear = now.getFullYear();
   viewMonth = now.getMonth();
-  $('date').value = currentDate;
+  dateInput.value = currentDate;
 }
 
 /* ===== UI ===== */
 function bindUI(){
+  document.getElementById('prevMonth')?.addEventListener('click',()=>changeMonth(-1));
+  document.getElementById('nextMonth')?.addEventListener('click',()=>changeMonth(1));
+
   document.querySelectorAll('.tab').forEach(t=>{
     t.onclick=()=>{
       document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
@@ -64,7 +85,19 @@ function bindUI(){
     };
   });
 
-  $('bookingForm').onsubmit = submitForm;
+  document.getElementById('bookingForm').onsubmit = submitForm;
+  dateInput.onchange = ()=>{
+    currentDate = dateInput.value;
+    loadAll();
+  };
+}
+
+/* ===== MONTH ===== */
+function changeMonth(d){
+  viewMonth += d;
+  if(viewMonth<0){viewMonth=11;viewYear--;}
+  if(viewMonth>11){viewMonth=0;viewYear++;}
+  renderCalendar();
 }
 
 /* ===== LOAD ===== */
@@ -77,33 +110,35 @@ async function loadAll(){
 }
 
 async function loadBookings(){
-  bookings = await (await fetch(`/bookings?date=${currentDate}`)).json();
+  const r = await fetch(`/bookings?date=${currentDate}`);
+  bookings = await r.json();
 }
 
 async function loadCalendarMap(){
-  calendarMap = await (await fetch('/calendar-days')).json();
+  const r = await fetch('/calendar-days');
+  calendarMap = await r.json();
 }
 
 /* ===== CALENDAR ===== */
 function renderCalendar(){
-  const el = $('calendarDays');
-  el.innerHTML = '';
-  $('calendarTitle').textContent =
+  calendarDays.innerHTML='';
+  calendarTitle.textContent =
     new Date(viewYear,viewMonth).toLocaleDateString('th-TH',{month:'long',year:'numeric'});
 
-  const first = new Date(viewYear,viewMonth,1).getDay();
-  const total = new Date(viewYear,viewMonth+1,0).getDate();
-  for(let i=0;i<first;i++) el.appendChild(document.createElement('div'));
+  const firstDay = new Date(viewYear,viewMonth,1).getDay();
+  const totalDays = new Date(viewYear,viewMonth+1,0).getDate();
 
-  for(let d=1;d<=total;d++){
-    const dateStr=`${viewYear}-${String(viewMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const count=calendarMap[dateStr]||0;
-    const ratio=count/DAILY_CAPACITY;
+  for(let i=0;i<firstDay;i++) calendarDays.appendChild(document.createElement('div'));
 
-    const cell=document.createElement('div');
+  for(let d=1; d<=totalDays; d++){
+    const dateStr = `${viewYear}-${String(viewMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const count = calendarMap[dateStr] || 0;
+    const ratio = count / DAILY_CAPACITY;
+
+    const cell = document.createElement('div');
     cell.className='calCell';
 
-    const num=document.createElement('div');
+    const num = document.createElement('div');
     num.className='calNum';
     num.textContent=d;
 
@@ -115,62 +150,91 @@ function renderCalendar(){
     }
 
     if(dateStr===currentDate) cell.classList.add('selected');
-    cell.onclick=()=>{currentDate=dateStr;$('date').value=dateStr;loadAll();};
+
+    cell.onclick=()=>{
+      currentDate=dateStr;
+      dateInput.value=dateStr;
+      loadAll();
+    };
 
     cell.appendChild(num);
-    el.appendChild(cell);
+    calendarDays.appendChild(cell);
   }
 }
 
 /* ===== SLOTS ===== */
 async function loadSlots(){
-  $('time').innerHTML='<option value="">เลือกเวลา</option>';
-  const {slots={}}=await (await fetch(`/slots?date=${currentDate}`)).json();
-  Object.entries(slots).forEach(([t,s])=>{
-    const o=document.createElement('option');
-    o.value=t;o.textContent=t.slice(0,5);
-    if(s[currentStylist]){o.disabled=true;o.textContent+=' (เต็ม)';}
-    $('time').appendChild(o);
+  timeSelect.innerHTML='<option value="">เลือกเวลา</option>';
+  const r = await fetch(`/slots?date=${currentDate}`);
+  const {slots={}} = await r.json();
+
+  Object.entries(slots).forEach(([time,status])=>{
+    const opt=document.createElement('option');
+    opt.value=time;
+    opt.textContent=time.slice(0,5);
+    if(status[currentStylist]){
+      opt.disabled=true;
+      opt.textContent+=' (เต็ม)';
+    }
+    timeSelect.appendChild(opt);
   });
 }
 
 /* ===== TABLE ===== */
 function renderTable(){
-  $('list').innerHTML='';
+  list.innerHTML='';
   bookings.forEach(b=>{
     const tr=document.createElement('tr');
+    const gender=b.gender==='male'?'👨':'👩';
     tr.innerHTML=`
       <td>${b.time.slice(0,5)}</td>
       <td><span class="badge stylist-${b.stylist.toLowerCase()}">${b.stylist}</span></td>
+      <td>${gender}</td>
       <td>${b.name}</td>
       <td>${b.service||'-'}</td>
-      <td><button class="smallBtn danger">ลบ</button></td>`;
+      <td><button class="smallBtn danger">ลบ</button></td>
+    `;
     tr.querySelector('button').onclick=async()=>{
       await fetch(`/bookings/${b.id}`,{method:'DELETE'});
       loadAll();
     };
-    $('list').appendChild(tr);
+    list.appendChild(tr);
   });
 }
 
+/* ===== SUMMARY ===== */
 function renderSummary(){
-  $('countBank').textContent=bookings.filter(b=>b.stylist==='Bank').length;
-  $('countSindy').textContent=bookings.filter(b=>b.stylist==='Sindy').length;
-  $('countAssist').textContent=bookings.filter(b=>b.stylist==='Assist').length;
-  $('countTotal').textContent=bookings.length;
+  const c=s=>bookings.filter(b=>b.stylist===s).length;
+  countBank.textContent=c('Bank');
+  countSindy.textContent=c('Sindy');
+  countAssist.textContent=c('Assist');
+  countTotal.textContent=bookings.length;
 }
 
+/* ===== FORM ===== */
 async function submitForm(e){
   e.preventDefault();
   const body={
     date:currentDate,
-    time:$('time').value,
+    time:timeSelect.value,
     stylist:currentStylist,
-    name:$('name').value,
-    phone:$('phone').value,
-    service:$('service').value
+    name:document.getElementById('name').value,
+    phone:document.getElementById('phone').value,
+    gender:document.querySelector('[name="gender"]:checked')?.value,
+    service:document.getElementById('service').value
   };
-  const r=await fetch('/bookings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-  if(r.ok){e.target.reset();loadAll();}
-  else alert((await r.json()).error);
+
+  const r=await fetch('/bookings',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(body)
+  });
+
+  if(r.ok){
+    e.target.reset();
+    loadAll();
+  }else{
+    const err=await r.json();
+    alert(err.error||'ไม่สามารถจองได้');
+  }
 }
