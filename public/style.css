@@ -1,4 +1,3 @@
-
 /* =========================
    THEME VARIABLES
 ========================= */
@@ -15,15 +14,12 @@
 
   --stroke:rgba(255,255,255,.08);
   --shadow:0 10px 30px rgba(0,0,0,.35);
-
-  --green:#2cff9c;
-  --greenBg: rgba(44,255,156,.18);
 }
 
 /* =========================
    BASE
 ========================= */
-*{box-sizing:border-box}
+*{ box-sizing:border-box }
 
 body{
   margin:0;
@@ -231,7 +227,7 @@ th{
 }
 
 /* =========================
-   BADGE : STYLIST (ใหม่ ใช้จริง)
+   BADGE : STYLIST
 ========================= */
 .badge{
   display:inline-block;
@@ -321,6 +317,10 @@ th{
   cursor:pointer;
 }
 
+.calCell.selected{
+  outline:2px solid rgba(110,231,255,.35);
+}
+
 .calNum{
   width:38px;
   height:38px;
@@ -331,78 +331,31 @@ th{
   font-weight:900;
 }
 
-.calCell.hasBookings .calNum{
-  background:var(--greenBg);
-  color:var(--green);
-  border:1px solid rgba(44,255,156,.5);
-}
-
-.calCell.selected{
-  outline:2px solid rgba(110,231,255,.35);
-}
-
 /* =========================
-   RESPONSIVE
+   CALENDAR HEADER
 ========================= */
-@media (max-width:720px){
-  .grid{grid-template-columns:1fr}
-  .topbar{flex-direction:column; align-items:flex-start; gap:12px}
-  .topActions{width:100%; justify-content:space-between}
-}
-
-/* ===== Calendar Header (minimal & safe) ===== */
 .calendarHeader{
   text-align:center;
   margin-bottom:8px;
 }
 
 .calendarTitle{
-  font-size:22px;      /* ใหญ่ */
-  font-weight:900;     /* หนา */
+  font-size:22px;
+  font-weight:900;
 }
 
 .calendarSubtitle{
-  font-size:11px;      /* ประมาณครึ่งหนึ่ง */
+  font-size:11px;
   font-weight:500;
-  color:rgba(233,238,252,.5); /* muted กว่าสีหลัก */
-}
-/* ===== Calendar Density Colors ===== */
-.calNum.density-low{
-  background: rgba(44,255,156,.18);
-  color:#2cff9c;
-  border:1px solid rgba(44,255,156,.5);
+  color:rgba(233,238,252,.5);
 }
 
-.calNum.density-mid{
-  background: rgba(253,224,71,.18);
-  color:#fde047;
-  border:1px solid rgba(253,224,71,.5);
-}
-
-.calNum.density-high{
-  background: rgba(251,146,60,.18);
-  color:#fb923c;
-  border:1px solid rgba(251,146,60,.5);
-}
-
-.calNum.density-full{
-  background: rgba(255,92,122,.18);
-  color:#ff5c7a;
-  border:1px solid rgba(255,92,122,.5);
-}
-
-/* ===== PIN INPUT CENTER ===== */
-#pin{
-  text-align: center;
-  letter-spacing: 4px;
-  font-size: 18px;
-  font-weight: 600;
-}
-
-/* ===== SPLIT RING (Bank / Sindy) ===== */
+/* =========================
+   SPLIT RING (Bank / Sindy)
+========================= */
 .calNum.split{
-  position: relative;
-  overflow: hidden;
+  position:relative;
+  overflow:hidden;
 }
 
 .calNum.split::before,
@@ -425,13 +378,34 @@ th{
   clip-path: inset(0 0 0 50%);
 }
 
-/* ===== Density colors ===== */
+/* ===== Density Colors ===== */
+/* Bank */
 .bank-low::before{ border-color:#2cff9c }
 .bank-mid::before{ border-color:#fde047 }
 .bank-high::before{ border-color:#fb923c }
 .bank-full::before{ border-color:#ff5c7a }
 
+/* Sindy */
 .sindy-low::after{ border-color:#2cff9c }
 .sindy-mid::after{ border-color:#fde047 }
 .sindy-high::after{ border-color:#fb923c }
 .sindy-full::after{ border-color:#ff5c7a }
+
+/* =========================
+   PIN INPUT
+========================= */
+#pin{
+  text-align:center;
+  letter-spacing:4px;
+  font-size:18px;
+  font-weight:600;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media (max-width:720px){
+  .grid{grid-template-columns:1fr}
+  .topbar{flex-direction:column; align-items:flex-start; gap:12px}
+  .topActions{width:100%; justify-content:space-between}
+}
