@@ -5,47 +5,69 @@ import { createClient } from '@supabase/supabase-js';
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(express.static('public'));
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_KEY
 );
 
-/* =========================
-   CALENDAR DAYS (ทุกเดือน)
-========================= */
+/* ================= BOOKINGS ================= */
+
+app.get('/bookings', async (req, res) => {
+  const { date } = req.query;
+
+  const { data, error } = await supabase
+    .from('bookings')
+    .select('*')
+    .eq('date', date)
+    .order('time');
+
+  if (error) return res.json([]);
+  res.json(data || []);
+});
+
+app.post('/bookings', async (req, res) => {
+  const { date, time, stylist, name, phone, gender, service } = req.body;
+
+  const { error } = await supabase.from('bookings').insert([
+    { date, time, stylist, name, phone, gender, service }
+  ]);
+
+  if (error) return res.status(400).json({ error: error.message });
+  res.json({ ok: true });
+});
+
+app.delete('/bookings/:id', async (req, res) => {
+  const { id } = req.params;
+
+  await supabase.from('bookings').delete().eq('id', id);
+  res.json({ ok: true });
+});
+
+/* ================= CALENDAR DENSITY ================= */
+/* รวมทุก booking ทุกเดือน */
+
 app.get('/calendar-days', async (req, res) => {
   const { data, error } = await supabase
     .from('bookings')
-    .select('date, stylist');
+    .select('date');
 
-  if (error) {
-    console.error(error);
-    return res.json({});
-  }
+  if (error) return res.json({});
 
   const map = {};
 
   (data || []).forEach(b => {
     if (!b.date) return;
-
-    const d = b.date.slice(0, 10); // YYYY-MM-DD
-
-    if (!map[d]) {
-      map[d] = { Bank: 0, Sindy: 0 };
-    }
-
-    if (b.stylist === 'Bank' || b.stylist === 'Sindy') {
-      map[d][b.stylist]++;
-    }
+    const d = b.date.slice(0, 10);
+    map[d] = (map[d] || 0) + 1;
   });
 
   res.json(map);
 });
 
-/* =========================
-   SLOTS
-========================= */
+/* ================= SLOTS ================= */
+
 app.get('/slots', async (req, res) => {
   const { date } = req.query;
 
@@ -55,53 +77,17 @@ app.get('/slots', async (req, res) => {
     .eq('date', date);
 
   const slots = {};
+  for (let h = 13; h <= 22; h++) {
+    const t = `${String(h).padStart(2, '0')}:00`;
+    slots[t] = { Bank: false, Sindy: false, Assist: false };
+  }
 
   (data || []).forEach(b => {
-    if (!slots[b.time]) {
-      slots[b.time] = { Bank: false, Sindy: false };
-    }
-    slots[b.time][b.stylist] = true;
+    if (slots[b.time]) slots[b.time][b.stylist] = true;
   });
 
   res.json({ slots });
 });
 
-/* =========================
-   BOOKINGS
-========================= */
-app.get('/bookings', async (req, res) => {
-  const { date } = req.query;
-
-  const { data } = await supabase
-    .from('bookings')
-    .select('*')
-    .eq('date', date)
-    .order('time');
-
-  res.json(data || []);
-});
-
-app.post('/bookings', async (req, res) => {
-  const { error } = await supabase
-    .from('bookings')
-    .insert(req.body);
-
-  if (error) {
-    return res.status(400).json({ error: error.message });
-  }
-
-  res.json({ ok: true });
-});
-
-app.delete('/bookings/:id', async (req, res) => {
-  await supabase
-    .from('bookings')
-    .delete()
-    .eq('id', req.params.id);
-
-  res.json({ ok: true });
-});
-
-app.listen(3000, () => {
-  console.log('Server running');
-});
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log('Server running on', PORT));
