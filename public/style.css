@@ -13,16 +13,16 @@
   --ok:#2cff9c;
 
   --stroke:rgba(255,255,255,.08);
-  --shadow:0 10px 30px rgba(0,0,0,.35);
-
-  --green:#2cff9c;
-  --greenBg:rgba(44,255,156,.18);
+  --shadow:0 14px 40px rgba(0,0,0,.45);
 }
 
 /* =========================
    BASE
 ========================= */
-*{box-sizing:border-box}
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+}
 
 body{
   margin:0;
@@ -46,21 +46,25 @@ body{
 input,select{
   width:100%;
   padding:14px;
-  border-radius:14px;
+  font-size:16px; /* iOS Safari: กัน auto zoom */
+  border-radius:16px;
   border:1px solid var(--stroke);
-  background:rgba(0,0,0,.25);
+  background:rgba(0,0,0,.28);
   color:var(--text);
   outline:none;
 }
 
-label{font-size:13px;color:var(--muted)}
+label{
+  font-size:13px;
+  color:var(--muted);
+}
 
 .primary{
   background:linear-gradient(135deg,var(--accent),var(--accent2));
   color:#061022;
   border:none;
   padding:14px;
-  border-radius:14px;
+  border-radius:16px;
   font-weight:900;
   cursor:pointer;
 }
@@ -86,7 +90,7 @@ label{font-size:13px;color:var(--muted)}
   justify-content:space-between;
   align-items:center;
   background:rgba(0,0,0,.35);
-  backdrop-filter:blur(12px);
+  backdrop-filter:blur(14px);
   border-bottom:1px solid var(--stroke);
 }
 
@@ -114,21 +118,28 @@ label{font-size:13px;color:var(--muted)}
   font-size:32px;
 }
 
-.title{font-weight:900;font-size:16px}
-.subtitle{font-size:12px;color:var(--muted)}
+.title{
+  font-weight:900;
+  font-size:16px;
+}
+
+.subtitle{
+  font-size:12px;
+  color:var(--muted);
+}
 
 /* =========================
    LAYOUT
 ========================= */
 .wrap{
   width:min(1100px,94vw);
-  margin:18px auto 56px;
+  margin:18px auto 64px;
 }
 
 .panel{
   background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
   border:1px solid var(--stroke);
-  border-radius:20px;
+  border-radius:22px;
   padding:18px;
   box-shadow:var(--shadow);
   margin-top:16px;
@@ -155,11 +166,11 @@ label{font-size:13px;color:var(--muted)}
 }
 
 .modal{
-  width:min(420px,90vw);
-  background:linear-gradient(180deg,rgba(20,25,45,.95),rgba(10,12,22,.95));
-  border-radius:22px;
+  width:min(420px,92vw);
+  background:linear-gradient(180deg,rgba(20,25,45,.96),rgba(10,12,22,.96));
+  border-radius:26px;
   border:1px solid rgba(255,255,255,.15);
-  box-shadow:0 20px 80px rgba(0,0,0,.6);
+  box-shadow:0 22px 90px rgba(0,0,0,.65);
 }
 
 .modalBody{
@@ -175,23 +186,25 @@ label{font-size:13px;color:var(--muted)}
    CALENDAR
 ========================= */
 .calendarHeader{
-  display:flex;
+  display:grid;
+  grid-template-columns:48px 1fr 48px;
   align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  margin-bottom:10px;
+  margin-bottom:12px;
+}
+
+.calendarCenter{
+  text-align:center;
 }
 
 .calendarTitle{
   font-size:22px;
   font-weight:900;
-  text-align:center;
 }
 
 .calendarSubtitle{
   font-size:13px;
   color:var(--muted);
-  text-align:center;
+  margin-top:2px;
 }
 
 .calWeekHead{
@@ -213,8 +226,8 @@ label{font-size:13px;color:var(--muted)}
 
 .calCell{
   aspect-ratio:1/1;
-  border-radius:16px;
-  background:rgba(0,0,0,.25);
+  border-radius:18px;
+  background:rgba(0,0,0,.28);
   border:1px solid var(--stroke);
   display:flex;
   align-items:center;
@@ -223,7 +236,7 @@ label{font-size:13px;color:var(--muted)}
 }
 
 .calCell.selected{
-  outline:2px solid rgba(110,231,255,.5);
+  outline:2px solid rgba(110,231,255,.45);
 }
 
 .calNum{
@@ -238,27 +251,27 @@ label{font-size:13px;color:var(--muted)}
 
 /* ===== Density Colors ===== */
 .calNum.density-low{
-  background:rgba(44,255,156,.2);
+  background:rgba(44,255,156,.22);
   color:#2cff9c;
-  border:1px solid rgba(44,255,156,.5);
+  border:1px solid rgba(44,255,156,.55);
 }
 
 .calNum.density-mid{
-  background:rgba(253,224,71,.2);
+  background:rgba(253,224,71,.22);
   color:#fde047;
-  border:1px solid rgba(253,224,71,.5);
+  border:1px solid rgba(253,224,71,.55);
 }
 
 .calNum.density-high{
-  background:rgba(251,146,60,.2);
+  background:rgba(251,146,60,.22);
   color:#fb923c;
-  border:1px solid rgba(251,146,60,.5);
+  border:1px solid rgba(251,146,60,.55);
 }
 
 .calNum.density-full{
-  background:rgba(255,92,122,.2);
+  background:rgba(255,92,122,.22);
   color:#ff5c7a;
-  border:1px solid rgba(255,92,122,.5);
+  border:1px solid rgba(255,92,122,.55);
 }
 
 /* =========================
@@ -272,16 +285,17 @@ label{font-size:13px;color:var(--muted)}
 .tab{
   flex:1;
   padding:14px;
-  border-radius:18px;
+  border-radius:20px;
   border:1px solid var(--stroke);
-  background:rgba(0,0,0,.3);
+  background:rgba(0,0,0,.32);
   font-weight:900;
   cursor:pointer;
+  text-align:center;
 }
 
 .tab.active{
-  background:rgba(110,231,255,.15);
-  outline:2px solid rgba(110,231,255,.35);
+  background:rgba(110,231,255,.16);
+  outline:2px solid rgba(110,231,255,.4);
 }
 
 /* =========================
@@ -291,13 +305,13 @@ label{font-size:13px;color:var(--muted)}
   display:grid;
   grid-template-columns:repeat(2,1fr);
   gap:14px;
-  margin-bottom:12px;
+  margin-bottom:14px;
 }
 
 .box{
   padding:16px;
-  border-radius:18px;
-  background:rgba(0,0,0,.3);
+  border-radius:20px;
+  background:rgba(0,0,0,.32);
   border:1px solid var(--stroke);
   font-weight:900;
 }
@@ -334,12 +348,12 @@ th{
 }
 
 .badge.stylist-bank{
-  background:rgba(110,231,255,.18);
+  background:rgba(110,231,255,.2);
   color:#6ee7ff;
 }
 
 .badge.stylist-sindy{
-  background:rgba(255,92,122,.18);
+  background:rgba(255,92,122,.2);
   color:#ff7abf;
 }
 
@@ -354,20 +368,9 @@ th{
 @media(max-width:720px){
   .grid{grid-template-columns:1fr}
   .summary{grid-template-columns:1fr 1fr}
-  .topbar{flex-direction:column;align-items:flex-start;gap:12px}
-}
-/* === LOGIN OVERLAY FIX FOR iOS === */
-.modal{
-  width: min(380px, 92vw);
-}
-
-.modalBody input,
-.modalBody button{
-  font-size:16px;
-}
-
-#pin{
-  text-align:center;
-  letter-spacing:4px;
-  font-size:18px;
+  .topbar{
+    flex-direction:column;
+    align-items:flex-start;
+    gap:12px;
+  }
 }
