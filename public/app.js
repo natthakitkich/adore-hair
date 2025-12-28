@@ -1,7 +1,5 @@
 /* ===== CONFIG ===== */
-const OWNER_PIN = '1234';
-const TZ = 'Asia/Bangkok';
-const PER_STYLIST_CAPACITY = 10; // ต่อช่าง / ต่อวัน
+const DAILY_CAPACITY = 20;
 
 /* ===== STATE ===== */
 let currentDate = '';
@@ -9,16 +7,9 @@ let todayDate = '';
 let viewYear, viewMonth;
 let currentStylist = 'Bank';
 let bookings = [];
-let calendarMap = {}; 
-// รูปแบบ: { "YYYY-MM-DD": { Bank: number, Sindy: number } }
+let calendarMap = {};
 
 /* ===== ELEMENTS ===== */
-const loginOverlay = document.getElementById('loginOverlay');
-const loginBtn = document.getElementById('loginBtn');
-const loginMsg = document.getElementById('loginMsg');
-const pinInput = document.getElementById('pin');
-const logoutBtn = document.getElementById('logoutBtn');
-
 const dateInput = document.getElementById('date');
 const calendarDays = document.getElementById('calendarDays');
 const calendarTitle = document.getElementById('calendarTitle');
@@ -30,89 +21,43 @@ const countSindy = document.getElementById('countSindy');
 const countAssist = document.getElementById('countAssist');
 const countTotal = document.getElementById('countTotal');
 
-const nameInput = document.getElementById('name');
-const phoneInput = document.getElementById('phone');
-const serviceInput = document.getElementById('service');
-
 /* ===== INIT ===== */
 init();
 
 function init() {
-  initAuth();
-  initDate();
-  bindUI();
-  loadAll();
-}
-
-/* ===== AUTH ===== */
-function initAuth() {
-  const loggedIn = localStorage.getItem('adore_logged_in');
-
-  if (loggedIn === '1') {
-    loginOverlay.classList.add('hidden');
-  } else {
-    loginOverlay.classList.remove('hidden');
-  }
-
-  loginBtn.onclick = () => {
-    const pin = pinInput.value.trim();
-
-    if (!/^[0-9]+$/.test(pin)) {
-      loginMsg.textContent = 'กรุณาใส่ตัวเลขเท่านั้น';
-      return;
-    }
-
-    if (pin === OWNER_PIN) {
-      localStorage.setItem('adore_logged_in', '1');
-      pinInput.value = '';
-      loginMsg.textContent = '';
-      loginOverlay.classList.add('hidden');
-    } else {
-      loginMsg.textContent = 'PIN ไม่ถูกต้อง';
-    }
-  };
-
-  logoutBtn.onclick = () => {
-    localStorage.removeItem('adore_logged_in');
-    location.reload();
-  };
-}
-
-/* ===== DATE ===== */
-function initDate() {
-  const now = new Date(
-    new Date().toLocaleString('en-US', { timeZone: TZ })
-  );
-
+  const now = new Date();
   todayDate = now.toISOString().slice(0, 10);
   currentDate = todayDate;
+
   viewYear = now.getFullYear();
   viewMonth = now.getMonth();
-  dateInput.value = currentDate;
-}
 
-/* ===== UI ===== */
-function bindUI() {
+  dateInput.value = currentDate;
+
   document.getElementById('prevMonth').onclick = () => changeMonth(-1);
   document.getElementById('nextMonth').onclick = () => changeMonth(1);
 
-  document.querySelectorAll('.tab').forEach(tab => {
-    tab.onclick = () => {
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      currentStylist = tab.dataset.tab;
+  document.querySelectorAll('.tab').forEach(t => {
+    t.onclick = () => {
+      document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      currentStylist = t.dataset.tab;
       loadSlots();
     };
   });
 
   document.getElementById('bookingForm').onsubmit = submitForm;
+
+  loadAll();
 }
 
 /* ===== MONTH ===== */
-function changeMonth(step) {
-  viewMonth += step;
+async function changeMonth(d) {
+  viewMonth += d;
   if (viewMonth < 0) { viewMonth = 11; viewYear--; }
   if (viewMonth > 11) { viewMonth = 0; viewYear++; }
+
+  await loadCalendarMap();
   renderCalendar();
 }
 
@@ -122,25 +67,25 @@ async function loadAll() {
     loadBookings(),
     loadCalendarMap()
   ]);
+
   renderCalendar();
   loadSlots();
   renderTable();
   renderSummary();
 }
 
-/* ===== BOOKINGS ===== */
+/* ===== DATA ===== */
 async function loadBookings() {
   const r = await fetch(`/bookings?date=${currentDate}`);
   bookings = await r.json();
 }
 
-/* ===== CALENDAR MAP ===== */
 async function loadCalendarMap() {
   const r = await fetch('/calendar-days');
   calendarMap = await r.json();
 }
 
-/* ===== CALENDAR (SPLIT RING FINAL) ===== */
+/* ===== CALENDAR ===== */
 function renderCalendar() {
   calendarDays.innerHTML = '';
 
@@ -167,20 +112,18 @@ function renderCalendar() {
     num.textContent = d;
 
     const dayData = calendarMap[dateStr];
-    const bankCount = dayData?.Bank || 0;
-    const sindyCount = dayData?.Sindy || 0;
-
-    if (bankCount > 0 || sindyCount > 0) {
+    if (dayData) {
       num.classList.add('split');
 
-      const level = ratio =>
-        ratio >= 1 ? 'full' :
-        ratio >= 0.7 ? 'high' :
-        ratio >= 0.4 ? 'mid' :
-        ratio > 0 ? 'low' : null;
+      const level = r =>
+        r >= 1 ? 'full' :
+        r >= 0.7 ? 'high' :
+        r >= 0.4 ? 'mid' :
+        r > 0 ? 'low' : null;
 
-      const bankLevel = level(bankCount / PER_STYLIST_CAPACITY);
-      const sindyLevel = level(sindyCount / PER_STYLIST_CAPACITY);
+      // 👉 Bank = ซ้าย / Sindy = ขวา
+      const bankLevel = level((dayData.Bank || 0) / 10);
+      const sindyLevel = level((dayData.Sindy || 0) / 10);
 
       if (bankLevel) num.classList.add(`bank-${bankLevel}`);
       if (sindyLevel) num.classList.add(`sindy-${sindyLevel}`);
@@ -266,10 +209,10 @@ async function submitForm(e) {
     date: currentDate,
     time: timeSelect.value,
     stylist: currentStylist,
-    name: nameInput.value,
-    phone: phoneInput.value,
+    name: document.getElementById('name').value,
+    phone: document.getElementById('phone').value,
     gender: document.querySelector('[name="gender"]:checked')?.value,
-    service: serviceInput.value
+    service: document.getElementById('service').value
   };
 
   const r = await fetch('/bookings', {
@@ -282,7 +225,6 @@ async function submitForm(e) {
     e.target.reset();
     loadAll();
   } else {
-    const err = await r.json();
-    alert(err.error || 'ไม่สามารถจองได้');
+    alert('ไม่สามารถจองได้');
   }
 }
