@@ -9,8 +9,10 @@
   --accent:#6ee7ff;
   --accent2:#a78bfa;
 
-  --danger:#ff5c7a;
-  --ok:#2cff9c;
+  --green:#2cff9c;
+  --yellow:#fde047;
+  --orange:#fb923c;
+  --red:#ff5c7a;
 
   --stroke:rgba(255,255,255,.08);
   --shadow:0 10px 30px rgba(0,0,0,.35);
@@ -34,8 +36,48 @@ body{
 .hidden{display:none !important}
 
 /* =========================
-   CALENDAR
+   TOPBAR / LAYOUT (เดิม)
 ========================= */
+.topbar{
+  padding:18px 22px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  border-bottom:1px solid var(--stroke);
+  background:rgba(0,0,0,.25);
+  backdrop-filter: blur(10px);
+  position:sticky;
+  top:0;
+  z-index:5;
+}
+
+.wrap{
+  width:min(1100px, 95vw);
+  margin:18px auto 48px;
+}
+
+.panel{
+  background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+  border:1px solid var(--stroke);
+  border-radius:16px;
+  padding:16px;
+  box-shadow:var(--shadow);
+  margin-top:14px;
+}
+
+/* =========================
+   CALENDAR (STYLE เดิม)
+========================= */
+.calWeekHead{
+  margin-top:12px;
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:8px;
+  text-align:center;
+  font-size:12px;
+  color:var(--muted);
+}
+
 .calGrid{
   margin-top:8px;
   display:grid;
@@ -59,7 +101,7 @@ body{
 }
 
 /* =========================
-   CALENDAR NUMBER (BASE)
+   CALENDAR NUMBER (หัวใจ)
 ========================= */
 .calNum{
   width:38px;
@@ -71,44 +113,55 @@ body{
   font-weight:900;
 
   background:rgba(0,0,0,.35);
-  border:1px solid rgba(255,255,255,.15);
+  border:1px solid rgba(255,255,255,.12);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.04),
+    0 0 0 0 transparent;
+
   position:relative;
 }
 
 /* =========================
-   SPLIT RING (Bank / Sindy)
+   SPLIT RING (เพิ่มอย่างเดียว)
 ========================= */
 .calNum.split::before,
 .calNum.split::after{
   content:'';
   position:absolute;
-  inset:-2px;
+  inset:-3px;
   border-radius:999px;
   border:2px solid transparent;
   pointer-events:none;
 }
 
-/* LEFT = BANK */
+/* Bank = ซ้าย */
 .calNum.split::before{
   clip-path: inset(0 50% 0 0);
 }
 
-/* RIGHT = SINDY */
+/* Sindy = ขวา */
 .calNum.split::after{
   clip-path: inset(0 0 0 50%);
 }
 
 /* =========================
-   DENSITY COLORS
+   DENSITY COLORS (นุ่ม แบบเดิม)
 ========================= */
-/* Bank = ซ้าย */
-.calNum.split.bank-low::before  { border-color:#2cff9c }
-.calNum.split.bank-mid::before  { border-color:#fde047 }
-.calNum.split.bank-high::before { border-color:#fb923c }
-.calNum.split.bank-full::before { border-color:#ff5c7a }
+/* Bank */
+.bank-low::before{ border-color:rgba(44,255,156,.55) }
+.bank-mid::before{ border-color:rgba(253,224,71,.55) }
+.bank-high::before{ border-color:rgba(251,146,60,.6) }
+.bank-full::before{ border-color:rgba(255,92,122,.65) }
 
-/* Sindy = ขวา */
-.calNum.split.sindy-low::after  { border-color:#2cff9c }
-.calNum.split.sindy-mid::after  { border-color:#fde047 }
-.calNum.split.sindy-high::after { border-color:#fb923c }
-.calNum.split.sindy-full::after { border-color:#ff5c7a }
+/* Sindy */
+.sindy-low::after{ border-color:rgba(44,255,156,.55) }
+.sindy-mid::after{ border-color:rgba(253,224,71,.55) }
+.sindy-high::after{ border-color:rgba(251,146,60,.6) }
+.sindy-full::after{ border-color:rgba(255,92,122,.65) }
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media (max-width:720px){
+  .topbar{flex-direction:column; gap:12px}
+}
