@@ -9,9 +9,7 @@ const DAILY_CAPACITY = 20;
    STATE
 ========================= */
 let currentDate = '';
-let todayDate = '';
 let viewYear, viewMonth;
-let currentStylist = 'Bank';
 let bookings = [];
 let calendarMap = {};
 
@@ -45,31 +43,27 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* =========================
-   AUTH (FIXED)
+   AUTH
 ========================= */
 function initAuth() {
   if (localStorage.getItem('adore_logged_in') === '1') {
     loginOverlay.classList.add('hidden');
   }
 
-  if (loginBtn) {
-    loginBtn.onclick = () => {
-      if (pinInput.value === OWNER_PIN) {
-        localStorage.setItem('adore_logged_in', '1');
-        loginOverlay.classList.add('hidden');
-        loginMsg.textContent = '';
-      } else {
-        loginMsg.textContent = 'PIN ไม่ถูกต้อง';
-      }
-    };
-  }
+  loginBtn.onclick = () => {
+    if (pinInput.value === OWNER_PIN) {
+      localStorage.setItem('adore_logged_in', '1');
+      loginOverlay.classList.add('hidden');
+      loginMsg.textContent = '';
+    } else {
+      loginMsg.textContent = 'PIN ไม่ถูกต้อง';
+    }
+  };
 
-  if (logoutBtn) {
-    logoutBtn.onclick = () => {
-      localStorage.removeItem('adore_logged_in');
-      location.reload();
-    };
-  }
+  logoutBtn.onclick = () => {
+    localStorage.removeItem('adore_logged_in');
+    location.reload();
+  };
 }
 
 /* =========================
@@ -77,38 +71,31 @@ function initAuth() {
 ========================= */
 function initDate() {
   const now = new Date(new Date().toLocaleString('en-US', { timeZone: TZ }));
-  todayDate = now.toISOString().slice(0, 10);
-  currentDate = todayDate;
+  currentDate = now.toISOString().slice(0, 10);
 
   viewYear = now.getFullYear();
   viewMonth = now.getMonth();
 
-  if (dateInput) {
-    dateInput.value = currentDate;
-    dateInput.onchange = () => {
-      currentDate = dateInput.value;
-      loadAll();
-    };
-  }
+  dateInput.value = currentDate;
+  dateInput.onchange = () => {
+    currentDate = dateInput.value;
+    loadAll();
+  };
 }
 
 /* =========================
-   UI (SAFE)
+   UI
 ========================= */
 function bindUI() {
-  const prevBtn = document.getElementById('prevMonth');
-  const nextBtn = document.getElementById('nextMonth');
+  document.getElementById('prevMonth').onclick = () => changeMonth(-1);
+  document.getElementById('nextMonth').onclick = () => changeMonth(1);
 
-  if (prevBtn) prevBtn.onclick = () => changeMonth(-1);
-  if (nextBtn) nextBtn.onclick = () => changeMonth(1);
-
+  // แถบช่าง = ไม่มีผล (ไว้เฉย ๆ)
   document.querySelectorAll('.tab').forEach(tab => {
     tab.onclick = () => {
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
-      currentStylist = tab.dataset.tab;
-      renderTable();
-      renderSummary();
+      // ❌ ไม่ทำอะไรกับข้อมูล
     };
   });
 }
@@ -137,6 +124,7 @@ async function loadAll() {
     loadBookings(),
     loadCalendarMap()
   ]);
+
   renderCalendar();
   renderTable();
   renderSummary();
@@ -156,9 +144,8 @@ async function loadCalendarMap() {
    CALENDAR
 ========================= */
 function renderCalendar() {
-  if (!calendarDays) return;
-
   calendarDays.innerHTML = '';
+
   calendarTitle.textContent =
     new Date(viewYear, viewMonth).toLocaleDateString('th-TH', {
       month: 'long',
@@ -173,7 +160,7 @@ function renderCalendar() {
   }
 
   for (let d = 1; d <= totalDays; d++) {
-    const dateStr = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const dateStr = `${viewYear}-${String(viewMonth + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const count = calendarMap[dateStr] || 0;
     const ratio = count / DAILY_CAPACITY;
 
@@ -195,7 +182,7 @@ function renderCalendar() {
 
     cell.onclick = () => {
       currentDate = dateStr;
-      if (dateInput) dateInput.value = dateStr;
+      dateInput.value = dateStr;
       loadAll();
     };
 
@@ -205,36 +192,39 @@ function renderCalendar() {
 }
 
 /* =========================
-   TABLE (FIXED: แสดงทุกช่าง)
+   TABLE
+   👉 แสดงทุกช่างเสมอ
 ========================= */
 function renderTable() {
-  if (!list) return;
   list.innerHTML = '';
 
-  bookings
-    .filter(b => b.stylist === currentStylist)
-    .forEach(b => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${b.time}</td>
-        <td><span class="badge stylist-${b.stylist.toLowerCase()}">${b.stylist}</span></td>
-        <td>${b.gender === 'male' ? '👨' : '👩'}</td>
-        <td>${b.name}</td>
-        <td>${b.service || ''}</td>
-        <td>${b.phone || ''}</td>
-        <td></td>
-      `;
-      list.appendChild(tr);
-    });
+  bookings.forEach(b => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${b.time}</td>
+      <td>
+        <span class="badge stylist-${b.stylist.toLowerCase()}">${b.stylist}</span>
+      </td>
+      <td>${b.gender === 'male' ? '👨' : '👩'}</td>
+      <td>${b.name}</td>
+      <td>${b.service || ''}</td>
+      <td>${b.phone || ''}</td>
+      <td></td>
+    `;
+    list.appendChild(tr);
+  });
 }
 
 /* =========================
    SUMMARY
 ========================= */
 function renderSummary() {
-  const c = s => bookings.filter(b => b.stylist === s).length;
-  countBank.textContent = c('Bank');
-  countSindy.textContent = c('Sindy');
-  countAssist.textContent = c('Assist');
-  countTotal.textContent = bookings.length;
+  const bank = bookings.filter(b => b.stylist === 'Bank').length;
+  const sindy = bookings.filter(b => b.stylist === 'Sindy').length;
+  const assist = bookings.filter(b => b.stylist === 'Assist').length;
+
+  countBank.textContent = bank;
+  countSindy.textContent = sindy;
+  countAssist.textContent = assist;
+  countTotal.textContent = bank + sindy + assist;
 }
