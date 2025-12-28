@@ -28,7 +28,6 @@ const countSindy = document.getElementById('countSindy');
 const countAssist = document.getElementById('countAssist');
 const countTotal = document.getElementById('countTotal');
 
-/* 🔧 FIX: input elements ที่ขาดไป */
 const nameInput = document.getElementById('name');
 const phoneInput = document.getElementById('phone');
 const serviceInput = document.getElementById('service');
@@ -87,7 +86,7 @@ function bindUI() {
       document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
       t.classList.add('active');
       currentStylist = t.dataset.tab;
-      loadSlots();
+      loadSlots(); // 🔄 reload slots per stylist
     };
   });
 
@@ -149,11 +148,7 @@ function renderCalendar() {
     cell.className = 'calCell';
     cell.innerHTML = `<div class="calNum">${d}</div>`;
 
-    if (calendarMap[dateStr]) {
-      cell.classList.add('hasBookings');
-    }
-
-    if (dateStr === todayDate) cell.classList.add('today');
+    if (calendarMap[dateStr]) cell.classList.add('hasBookings');
     if (dateStr === currentDate) cell.classList.add('selected');
 
     cell.onclick = () => {
@@ -173,13 +168,19 @@ async function loadSlots() {
   const r = await fetch(`/slots?date=${currentDate}`);
   const { slots = {} } = await r.json();
 
-  Object.keys(slots).forEach(t => {
-    if (!slots[t][currentStylist]) {
-      const o = document.createElement('option');
-      o.value = t;
-      o.textContent = t.slice(0, 5);
-      timeSelect.appendChild(o);
+  Object.entries(slots).forEach(([time, status]) => {
+    const booked = status[currentStylist];
+
+    const opt = document.createElement('option');
+    opt.value = time;
+    opt.textContent = time.slice(0, 5);
+
+    if (booked) {
+      opt.disabled = true;
+      opt.textContent += ' (เต็ม)';
     }
+
+    timeSelect.appendChild(opt);
   });
 }
 
@@ -243,6 +244,7 @@ async function submitForm(e) {
     e.target.reset();
     loadAll();
   } else {
-    alert('บันทึกไม่สำเร็จ กรุณาตรวจสอบข้อมูล');
+    const err = await r.json();
+    alert(err.error || 'ไม่สามารถจองได้');
   }
 }
