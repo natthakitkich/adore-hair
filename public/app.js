@@ -1,138 +1,179 @@
+/* ===== CONFIG ===== */
 const OWNER_PIN = '1234';
 const TZ = 'Asia/Bangkok';
 const DAILY_CAPACITY = 20;
 
 /* ===== STATE ===== */
-let selectedDate = '';
+let currentDate;
 let viewYear, viewMonth;
 let currentStylist = 'Bank';
 let bookings = [];
 let calendarMap = {};
 
-/* ===== INIT ===== */
-init();
+/* ===== ELEMENTS ===== */
+const loginOverlay = document.getElementById('loginOverlay');
+const loginBtn = document.getElementById('loginBtn');
+const loginMsg = document.getElementById('loginMsg');
+const pinInput = document.getElementById('pin');
+const logoutBtn = document.getElementById('logoutBtn');
 
-async function init(){
+const dateInput = document.getElementById('date');
+const calendarDays = document.getElementById('calendarDays');
+const calendarTitle = document.getElementById('calendarTitle');
+const timeSelect = document.getElementById('time');
+const list = document.getElementById('list');
+
+const countBank = document.getElementById('countBank');
+const countSindy = document.getElementById('countSindy');
+const countAssist = document.getElementById('countAssist');
+const countTotal = document.getElementById('countTotal');
+
+/* ===== INIT ===== */
+document.addEventListener('DOMContentLoaded', () => {
   initAuth();
   initDate();
   bindUI();
-  await loadCalendarMap();
-  renderCalendar();
-  await loadBookings();
-  renderAll();
-}
+  loadAll();
+});
 
 /* ===== AUTH ===== */
 function initAuth(){
-  if(localStorage.getItem('adore_logged_in')==='1'){
+  if(localStorage.getItem('adore_logged_in') === '1'){
     loginOverlay.classList.add('hidden');
   }
-  loginBtn.onclick=()=>{
-    if(pinInput.value===OWNER_PIN){
+
+  loginBtn.onclick = () => {
+    if(pinInput.value === OWNER_PIN){
       localStorage.setItem('adore_logged_in','1');
       loginOverlay.classList.add('hidden');
+      loadAll(); // 🔴 สำคัญ
     }else{
-      loginMsg.textContent='PIN ไม่ถูกต้อง';
+      loginMsg.textContent = 'PIN ไม่ถูกต้อง';
     }
   };
-  logoutBtn.onclick=()=>{
-    localStorage.clear();
+
+  logoutBtn.onclick = () => {
+    localStorage.removeItem('adore_logged_in');
     location.reload();
   };
 }
 
 /* ===== DATE ===== */
 function initDate(){
-  const now=new Date(new Date().toLocaleString('en-US',{timeZone:TZ}));
-  selectedDate=now.toISOString().slice(0,10);
-  viewYear=now.getFullYear();
-  viewMonth=now.getMonth();
-  dateInput.value=selectedDate;
-  dateInput.onchange=()=>{
-    selectedDate=dateInput.value;
-    loadBookings().then(renderAll);
-  };
+  const now = new Date(
+    new Date().toLocaleString('en-US',{ timeZone:TZ })
+  );
+  setDate(now.toISOString().slice(0,10));
+}
+
+function setDate(dateStr){
+  currentDate = dateStr;
+  const d = new Date(dateStr);
+  viewYear = d.getFullYear();
+  viewMonth = d.getMonth();
+  dateInput.value = dateStr;
 }
 
 /* ===== UI ===== */
 function bindUI(){
-  prevMonth.onclick=()=>changeMonth(-1);
-  nextMonth.onclick=()=>changeMonth(1);
+  document.getElementById('prevMonth').onclick = () => changeMonth(-1);
+  document.getElementById('nextMonth').onclick = () => changeMonth(1);
+
+  dateInput.onchange = e => {
+    setDate(e.target.value);
+    loadAll();
+  };
 
   document.querySelectorAll('.tab').forEach(t=>{
-    t.onclick=()=>{
+    t.onclick = ()=>{
       document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
       t.classList.add('active');
-      currentStylist=t.dataset.tab;
+      currentStylist = t.dataset.tab;
+      loadSlots();
     };
   });
 
-  bookingForm.onsubmit=submitForm;
+  document.getElementById('bookingForm').onsubmit = submitForm;
 }
 
 /* ===== MONTH ===== */
-function changeMonth(d){
-  viewMonth+=d;
-  if(viewMonth<0){viewMonth=11;viewYear--}
-  if(viewMonth>11){viewMonth=0;viewYear++}
+function changeMonth(delta){
+  viewMonth += delta;
+  if(viewMonth < 0){ viewMonth = 11; viewYear--; }
+  if(viewMonth > 11){ viewMonth = 0; viewYear++; }
   renderCalendar();
+}
+
+/* ===== LOAD ===== */
+async function loadAll(){
+  await Promise.all([loadCalendarMap(), loadBookings()]);
+  renderCalendar();
+  loadSlots();
+  renderTable();
+  renderSummary();
 }
 
 /* ===== DATA ===== */
 async function loadBookings(){
-  const r=await fetch(`/bookings?date=${selectedDate}`);
-  bookings=await r.json();
+  const r = await fetch(`/bookings?date=${currentDate}`);
+  bookings = await r.json();
 }
 
 async function loadCalendarMap(){
-  const r=await fetch('/calendar-days');
-  calendarMap=await r.json();
+  const r = await fetch('/calendar-days');
+  calendarMap = await r.json();
 }
 
-/* ===== RENDER ===== */
-function renderAll(){
-  renderSummary();
-  renderTable();
-}
-
+/* ===== CALENDAR ===== */
 function renderCalendar(){
-  calendarDays.innerHTML='';
+  calendarDays.innerHTML = '';
   calendarTitle.textContent =
     new Date(viewYear,viewMonth)
       .toLocaleDateString('th-TH',{month:'long',year:'numeric'});
 
-  const first=new Date(viewYear,viewMonth,1).getDay();
-  const total=new Date(viewYear,viewMonth+1,0).getDate();
+  const firstDay = new Date(viewYear,viewMonth,1).getDay();
+  const total = new Date(viewYear,viewMonth+1,0).getDate();
 
-  for(let i=0;i<first;i++) calendarDays.appendChild(document.createElement('div'));
+  for(let i=0;i<firstDay;i++){
+    calendarDays.appendChild(document.createElement('div'));
+  }
 
   for(let d=1;d<=total;d++){
-    const dateStr=`${viewYear}-${String(viewMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const count=calendarMap[dateStr]||0;
-    const ratio=count/DAILY_CAPACITY;
+    const dateStr = `${viewYear}-${String(viewMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const count = calendarMap[dateStr] || 0;
+    const ratio = count / DAILY_CAPACITY;
 
-    const cell=document.createElement('div');
-    cell.className='calCell';
-    if(dateStr===selectedDate) cell.classList.add('selected');
+    const cell = document.createElement('div');
+    cell.className = 'calCell';
 
-    const num=document.createElement('div');
-    num.className='calNum';
-    num.textContent=d;
+    const num = document.createElement('div');
+    num.className = 'calNum';
+    num.textContent = d;
 
     if(count){
-      if(ratio<=.3) num.classList.add('density-low');
-      else if(ratio<=.65) num.classList.add('density-mid');
+      if(ratio<=0.3) num.classList.add('density-low');
+      else if(ratio<=0.65) num.classList.add('density-mid');
       else if(ratio<1) num.classList.add('density-high');
       else num.classList.add('density-full');
     }
 
-    cell.onclick=()=>{
-      selectedDate=dateStr;
-      dateInput.value=dateStr;
-      loadBookings().then(renderAll);
+    if(dateStr===currentDate) cell.classList.add('selected');
+
+    cell.onclick = ()=>{
+      setDate(dateStr);
+      loadAll();
     };
 
     cell.appendChild(num);
     calendarDays.appendChild(cell);
   }
+}
+
+/* ===== SUMMARY ===== */
+function renderSummary(){
+  const c = s => bookings.filter(b=>b.stylist===s).length;
+  countBank.textContent = c('Bank');
+  countSindy.textContent = c('Sindy');
+  countAssist.textContent = c('Assist');
+  countTotal.textContent = bookings.length;
 }
