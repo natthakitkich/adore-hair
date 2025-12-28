@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
   <title>Adore hair studio</title>
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -15,7 +15,13 @@
       <div class="avatar big">A</div>
       <h2>เข้าสู่ระบบ</h2>
       <p class="muted">ใส่ PIN เพื่อจัดการคิว</p>
-      <input id="pin" type="password" inputmode="numeric" pattern="[0-9]*" placeholder="PIN" />
+      <input
+        id="pin"
+        type="password"
+        inputmode="numeric"
+        pattern="[0-9]*"
+        placeholder="••••"
+      />
       <button id="loginBtn" class="primary">Login</button>
       <div id="loginMsg" class="msg err"></div>
     </div>
@@ -36,7 +42,7 @@
 
 <div class="wrap">
 
-  <!-- DATE -->
+  <!-- CALENDAR -->
   <div class="panel">
     <div class="dateWrap">
       <div class="label">เลือกวัน</div>
