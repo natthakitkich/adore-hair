@@ -37,36 +37,39 @@ const countTotal = document.getElementById('countTotal');
 /* =========================
    INIT
 ========================= */
-init();
-
-function init() {
+document.addEventListener('DOMContentLoaded', () => {
   initAuth();
   initDate();
   bindUI();
   loadAll();
-}
+});
 
 /* =========================
-   AUTH
+   AUTH (FIXED)
 ========================= */
 function initAuth() {
   if (localStorage.getItem('adore_logged_in') === '1') {
     loginOverlay.classList.add('hidden');
   }
 
-  loginBtn.onclick = () => {
-    if (pinInput.value === OWNER_PIN) {
-      localStorage.setItem('adore_logged_in', '1');
-      loginOverlay.classList.add('hidden');
-    } else {
-      loginMsg.textContent = 'PIN ไม่ถูกต้อง';
-    }
-  };
+  if (loginBtn) {
+    loginBtn.onclick = () => {
+      if (pinInput.value === OWNER_PIN) {
+        localStorage.setItem('adore_logged_in', '1');
+        loginOverlay.classList.add('hidden');
+        loginMsg.textContent = '';
+      } else {
+        loginMsg.textContent = 'PIN ไม่ถูกต้อง';
+      }
+    };
+  }
 
-  logoutBtn.onclick = () => {
-    localStorage.removeItem('adore_logged_in');
-    location.reload();
-  };
+  if (logoutBtn) {
+    logoutBtn.onclick = () => {
+      localStorage.removeItem('adore_logged_in');
+      location.reload();
+    };
+  }
 }
 
 /* =========================
@@ -80,20 +83,24 @@ function initDate() {
   viewYear = now.getFullYear();
   viewMonth = now.getMonth();
 
-  dateInput.value = currentDate;
-
-  dateInput.onchange = () => {
-    currentDate = dateInput.value;
-    loadAll();
-  };
+  if (dateInput) {
+    dateInput.value = currentDate;
+    dateInput.onchange = () => {
+      currentDate = dateInput.value;
+      loadAll();
+    };
+  }
 }
 
 /* =========================
-   UI
+   UI (SAFE)
 ========================= */
 function bindUI() {
-  document.getElementById('prevMonth').onclick = () => changeMonth(-1);
-  document.getElementById('nextMonth').onclick = () => changeMonth(1);
+  const prevBtn = document.getElementById('prevMonth');
+  const nextBtn = document.getElementById('nextMonth');
+
+  if (prevBtn) prevBtn.onclick = () => changeMonth(-1);
+  if (nextBtn) nextBtn.onclick = () => changeMonth(1);
 
   document.querySelectorAll('.tab').forEach(tab => {
     tab.onclick = () => {
@@ -130,7 +137,6 @@ async function loadAll() {
     loadBookings(),
     loadCalendarMap()
   ]);
-
   renderCalendar();
   renderTable();
   renderSummary();
@@ -150,8 +156,9 @@ async function loadCalendarMap() {
    CALENDAR
 ========================= */
 function renderCalendar() {
-  calendarDays.innerHTML = '';
+  if (!calendarDays) return;
 
+  calendarDays.innerHTML = '';
   calendarTitle.textContent =
     new Date(viewYear, viewMonth).toLocaleDateString('th-TH', {
       month: 'long',
@@ -188,7 +195,7 @@ function renderCalendar() {
 
     cell.onclick = () => {
       currentDate = dateStr;
-      dateInput.value = dateStr;
+      if (dateInput) dateInput.value = dateStr;
       loadAll();
     };
 
@@ -198,32 +205,27 @@ function renderCalendar() {
 }
 
 /* =========================
-   TABLE
+   TABLE (FIXED: แสดงทุกช่าง)
 ========================= */
 function renderTable() {
+  if (!list) return;
   list.innerHTML = '';
 
-  const filtered = bookings.filter(b => b.stylist === currentStylist);
-
-  filtered.forEach(b => {
-    const tr = document.createElement('tr');
-
-    tr.innerHTML = `
-      <td>${b.time}</td>
-      <td>
-        <span class="badge stylist-${b.stylist.toLowerCase()}">
-          ${b.stylist}
-        </span>
-      </td>
-      <td>${b.gender === 'male' ? '👨' : '👩'}</td>
-      <td>${b.name}</td>
-      <td>${b.service || ''}</td>
-      <td>${b.phone || ''}</td>
-      <td></td>
-    `;
-
-    list.appendChild(tr);
-  });
+  bookings
+    .filter(b => b.stylist === currentStylist)
+    .forEach(b => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${b.time}</td>
+        <td><span class="badge stylist-${b.stylist.toLowerCase()}">${b.stylist}</span></td>
+        <td>${b.gender === 'male' ? '👨' : '👩'}</td>
+        <td>${b.name}</td>
+        <td>${b.service || ''}</td>
+        <td>${b.phone || ''}</td>
+        <td></td>
+      `;
+      list.appendChild(tr);
+    });
 }
 
 /* =========================
@@ -231,7 +233,6 @@ function renderTable() {
 ========================= */
 function renderSummary() {
   const c = s => bookings.filter(b => b.stylist === s).length;
-
   countBank.textContent = c('Bank');
   countSindy.textContent = c('Sindy');
   countAssist.textContent = c('Assist');
