@@ -74,14 +74,30 @@ app.delete('/bookings/:id', async (req, res) => {
 });
 
 /* ===== CALENDAR DAYS (รวมทุกช่าง) ===== */
+/* ===== CALENDAR DAYS (แยก Bank / Sindy) ===== */
 app.get('/calendar-days', async (req, res) => {
-  const { data } = await supabase.from('bookings').select('date');
+  const { data, error } = await supabase
+    .from('bookings')
+    .select('date, stylist');
+
+  if (error) {
+    console.error(error);
+    return res.json({});
+  }
 
   const map = {};
+
   (data || []).forEach(b => {
     if (!b.date) return;
     const d = b.date.slice(0, 10);
-    map[d] = (map[d] || 0) + 1;
+
+    if (!map[d]) {
+      map[d] = { Bank: 0, Sindy: 0 };
+    }
+
+    if (b.stylist === 'Bank' || b.stylist === 'Sindy') {
+      map[d][b.stylist]++;
+    }
   });
 
   res.json(map);
