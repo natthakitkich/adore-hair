@@ -1,6 +1,7 @@
 /* ===== CONFIG ===== */
 const OWNER_PIN = '1234';
 const TZ = 'Asia/Bangkok';
+const DAILY_CAPACITY = 20; // Bank + Sindy
 
 /* ===== STATE ===== */
 let currentDate = '';
@@ -86,7 +87,7 @@ function bindUI() {
       document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
       t.classList.add('active');
       currentStylist = t.dataset.tab;
-      loadSlots(); // 🔄 reload slots per stylist
+      loadSlots();
     };
   });
 
@@ -144,11 +145,24 @@ function renderCalendar() {
     const dateStr =
       `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 
+    const count = calendarMap[dateStr] || 0;
+    const ratio = count / DAILY_CAPACITY;
+
     const cell = document.createElement('div');
     cell.className = 'calCell';
-    cell.innerHTML = `<div class="calNum">${d}</div>`;
 
-    if (calendarMap[dateStr]) cell.classList.add('hasBookings');
+    const num = document.createElement('div');
+    num.className = 'calNum';
+    num.textContent = d;
+
+    /* 🎯 density → color */
+    if (count > 0) {
+      if (ratio <= 0.3) num.classList.add('density-low');       // เขียว
+      else if (ratio <= 0.65) num.classList.add('density-mid'); // เหลือง
+      else if (ratio < 1) num.classList.add('density-high');    // ส้ม/แดงอ่อน
+      else num.classList.add('density-full');                   // แดง
+    }
+
     if (dateStr === currentDate) cell.classList.add('selected');
 
     cell.onclick = () => {
@@ -157,6 +171,7 @@ function renderCalendar() {
       loadAll();
     };
 
+    cell.appendChild(num);
     calendarDays.appendChild(cell);
   }
 }
@@ -169,13 +184,11 @@ async function loadSlots() {
   const { slots = {} } = await r.json();
 
   Object.entries(slots).forEach(([time, status]) => {
-    const booked = status[currentStylist];
-
     const opt = document.createElement('option');
     opt.value = time;
     opt.textContent = time.slice(0, 5);
 
-    if (booked) {
+    if (status[currentStylist]) {
       opt.disabled = true;
       opt.textContent += ' (เต็ม)';
     }
