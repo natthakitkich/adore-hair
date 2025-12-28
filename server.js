@@ -4,7 +4,6 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { createClient } from '@supabase/supabase-js';
 
-/* ===== BASIC SETUP ===== */
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -26,11 +25,7 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-/* =========================================================
-   BOOKINGS
-========================================================= */
-
-/* ----- GET BOOKINGS ----- */
+/* ===== BOOKINGS ===== */
 app.get('/bookings', async (req, res) => {
   const { date } = req.query;
 
@@ -41,13 +36,10 @@ app.get('/bookings', async (req, res) => {
 
   if (date) q = q.eq('date', date);
 
-  const { data, error } = await q;
-  if (error) return res.json([]);
-
+  const { data } = await q;
   res.json(data || []);
 });
 
-/* ----- CREATE BOOKING (with duplicate guard) ----- */
 app.post('/bookings', async (req, res) => {
   const { date, time, stylist, name, gender, phone, service } = req.body;
 
@@ -55,8 +47,8 @@ app.post('/bookings', async (req, res) => {
     return res.status(400).json({ error: 'ข้อมูลไม่ครบ' });
   }
 
-  /* 🔒 CHECK DUPLICATE: same date + time + stylist */
-  const { data: exists } = await supabase
+  // ป้องกันช่างซ้ำเวลาเดียวกัน
+  const { data: dup } = await supabase
     .from('bookings')
     .select('id')
     .eq('date', date)
@@ -64,37 +56,44 @@ app.post('/bookings', async (req, res) => {
     .eq('stylist', stylist)
     .limit(1);
 
-  if (exists && exists.length > 0) {
-    return res.status(409).json({
-      error: 'เวลานี้ช่างคนนี้ถูกจองแล้ว'
-    });
+  if (dup && dup.length) {
+    return res.status(409).json({ error: 'เวลานี้ถูกจองแล้ว' });
   }
 
-  const { error } = await supabase
-    .from('bookings')
-    .insert([{ date, time, stylist, name, gender, phone, service }]);
-
-  if (error) {
-    return res.status(400).json({ error: error.message });
-  }
+  await supabase.from('bookings').insert([
+    { date, time, stylist, name, gender, phone, service }
+  ]);
 
   res.json({ ok: true });
 });
 
-/* ----- DELETE ----- */
 app.delete('/bookings/:id', async (req, res) => {
-  await supabase
-    .from('bookings')
-    .delete()
-    .eq('id', req.params.id);
-
+  await supabase.from('bookings').delete().eq('id', req.params.id);
   res.json({ ok: true });
 });
 
-/* =========================================================
-   SLOTS (13:00–22:00)
-========================================================= */
+/* ===== CALENDAR DAYS (แยก Bank / Sindy) ===== */
+app.get('/calendar-days', async (req, res) => {
+  const { data } = await supabase
+    .from('bookings')
+    .select('date, stylist');
 
+  const map = {};
+
+  (data || []).forEach(b => {
+    const d = b.date?.slice(0, 10);
+    if (!d) return;
+
+    if (!map[d]) map[d] = { Bank: 0, Sindy: 0 };
+
+    if (b.stylist === 'Bank') map[d].Bank++;
+    if (b.stylist === 'Sindy') map[d].Sindy++;
+  });
+
+  res.json(map);
+});
+
+/* ===== SLOTS ===== */
 app.get('/slots', async (req, res) => {
   const { date } = req.query;
   if (!date) return res.json({ slots: {} });
@@ -102,11 +101,7 @@ app.get('/slots', async (req, res) => {
   const slots = {};
   for (let h = 13; h <= 22; h++) {
     const t = `${String(h).padStart(2, '0')}:00`;
-    slots[t] = {
-      Bank: false,
-      Sindy: false,
-      Assist: false
-    };
+    slots[t] = { Bank: false, Sindy: false, Assist: false };
   }
 
   const { data } = await supabase
@@ -115,34 +110,12 @@ app.get('/slots', async (req, res) => {
     .eq('date', date);
 
   (data || []).forEach(b => {
-    if (slots[b.time] && slots[b.time][b.stylist] !== undefined) {
-      slots[b.time][b.stylist] = true; // 🔒 mark as booked
-    }
+    if (slots[b.time]) slots[b.time][b.stylist] = true;
   });
 
   res.json({ slots });
 });
 
-/* =========================================================
-   CALENDAR DAYS
-========================================================= */
-
-app.get('/calendar-days', async (req, res) => {
-  const { data } = await supabase
-    .from('bookings')
-    .select('date');
-
-  const map = {};
-  (data || []).forEach(b => {
-    if (!b.date) return;
-    const d = b.date.slice(0, 10);
-    map[d] = (map[d] || 0) + 1;
-  });
-
-  res.json(map);
-});
-
-/* ===== START ===== */
 app.listen(PORT, () => {
   console.log('Server running on port', PORT);
 });
