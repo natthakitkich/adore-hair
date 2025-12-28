@@ -4,7 +4,6 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { createClient } from '@supabase/supabase-js';
 
-/* ===== BASIC SETUP ===== */
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -22,15 +21,11 @@ const supabase = createClient(
 );
 
 /* ===== ROOT ===== */
-app.get('/', (req, res) => {
+app.get('/', (_, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-/* =========================================================
-   BOOKINGS
-========================================================= */
-
-/* ----- GET BOOKINGS ----- */
+/* ===== BOOKINGS ===== */
 app.get('/bookings', async (req, res) => {
   const { date } = req.query;
 
@@ -47,15 +42,12 @@ app.get('/bookings', async (req, res) => {
   res.json(data || []);
 });
 
-/* ----- CREATE BOOKING (with duplicate guard) ----- */
 app.post('/bookings', async (req, res) => {
   const { date, time, stylist, name, gender, phone, service } = req.body;
-
   if (!date || !time || !stylist || !name || !gender) {
     return res.status(400).json({ error: 'ข้อมูลไม่ครบ' });
   }
 
-  /* 🔒 CHECK DUPLICATE: same date + time + stylist */
   const { data: exists } = await supabase
     .from('bookings')
     .select('id')
@@ -64,37 +56,24 @@ app.post('/bookings', async (req, res) => {
     .eq('stylist', stylist)
     .limit(1);
 
-  if (exists && exists.length > 0) {
-    return res.status(409).json({
-      error: 'เวลานี้ช่างคนนี้ถูกจองแล้ว'
-    });
+  if (exists?.length) {
+    return res.status(409).json({ error: 'เวลานี้ถูกจองแล้ว' });
   }
 
   const { error } = await supabase
     .from('bookings')
     .insert([{ date, time, stylist, name, gender, phone, service }]);
 
-  if (error) {
-    return res.status(400).json({ error: error.message });
-  }
-
+  if (error) return res.status(400).json({ error: error.message });
   res.json({ ok: true });
 });
 
-/* ----- DELETE ----- */
 app.delete('/bookings/:id', async (req, res) => {
-  await supabase
-    .from('bookings')
-    .delete()
-    .eq('id', req.params.id);
-
+  await supabase.from('bookings').delete().eq('id', req.params.id);
   res.json({ ok: true });
 });
 
-/* =========================================================
-   SLOTS (13:00–22:00)
-========================================================= */
-
+/* ===== SLOTS ===== */
 app.get('/slots', async (req, res) => {
   const { date } = req.query;
   if (!date) return res.json({ slots: {} });
@@ -102,11 +81,7 @@ app.get('/slots', async (req, res) => {
   const slots = {};
   for (let h = 13; h <= 22; h++) {
     const t = `${String(h).padStart(2, '0')}:00`;
-    slots[t] = {
-      Bank: false,
-      Sindy: false,
-      Assist: false
-    };
+    slots[t] = { Bank:false, Sindy:false, Assist:false };
   }
 
   const { data } = await supabase
@@ -115,34 +90,24 @@ app.get('/slots', async (req, res) => {
     .eq('date', date);
 
   (data || []).forEach(b => {
-    if (slots[b.time] && slots[b.time][b.stylist] !== undefined) {
-      slots[b.time][b.stylist] = true; // 🔒 mark as booked
-    }
+    if (slots[b.time]) slots[b.time][b.stylist] = true;
   });
 
   res.json({ slots });
 });
 
-/* =========================================================
-   CALENDAR DAYS
-========================================================= */
-
-app.get('/calendar-days', async (req, res) => {
-  const { data } = await supabase
-    .from('bookings')
-    .select('date');
-
+/* ===== CALENDAR DAYS ===== */
+app.get('/calendar-days', async (_, res) => {
+  const { data } = await supabase.from('bookings').select('date');
   const map = {};
   (data || []).forEach(b => {
-    if (!b.date) return;
-    const d = b.date.slice(0, 10);
+    const d = b.date?.slice(0,10);
+    if (!d) return;
     map[d] = (map[d] || 0) + 1;
   });
-
   res.json(map);
 });
 
-/* ===== START ===== */
 app.listen(PORT, () => {
-  console.log('Server running on port', PORT);
+  console.log('Server running on', PORT);
 });
