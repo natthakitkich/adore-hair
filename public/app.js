@@ -1,4 +1,4 @@
-แก้ app.js จากโค้ดเดิมเพราะกลัวเพี้ยน
+
 /* ===== CONFIG ===== */
 const OWNER_PIN = '1234';
 const TZ = 'Asia/Bangkok';
