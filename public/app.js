@@ -1,7 +1,6 @@
 /* ===== CONFIG ===== */
 const OWNER_PIN = '1234';
 const TZ = 'Asia/Bangkok';
-const DAILY_CAPACITY = 20; // Bank + Sindy รวม 20 คิว/วัน
 
 /* ===== STATE ===== */
 let currentDate = '';
@@ -9,7 +8,7 @@ let todayDate = '';
 let viewYear, viewMonth;
 let currentStylist = 'Bank';
 let bookings = [];
-let calendarMap = {}; // { 'YYYY-MM-DD': count }
+let calendarMap = {};
 
 /* ===== ELEMENTS ===== */
 const loginOverlay = document.getElementById('loginOverlay');
@@ -29,6 +28,7 @@ const countSindy = document.getElementById('countSindy');
 const countAssist = document.getElementById('countAssist');
 const countTotal = document.getElementById('countTotal');
 
+/* 🔧 FIX: input elements ที่ขาดไป */
 const nameInput = document.getElementById('name');
 const phoneInput = document.getElementById('phone');
 const serviceInput = document.getElementById('service');
@@ -120,13 +120,13 @@ async function loadBookings() {
   bookings = await r.json();
 }
 
-/* ===== CALENDAR MAP (จำนวนคิวต่อวัน) ===== */
+/* ===== CALENDAR MAP ===== */
 async function loadCalendarMap() {
   const r = await fetch('/calendar-days');
   calendarMap = await r.json();
 }
 
-/* ===== CALENDAR (เปลี่ยนสีตามความหนาแน่น) ===== */
+/* ===== CALENDAR ===== */
 function renderCalendar() {
   calendarDays.innerHTML = '';
 
@@ -145,24 +145,15 @@ function renderCalendar() {
     const dateStr =
       `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 
-    const count = calendarMap[dateStr] || 0;
-    const ratio = count / DAILY_CAPACITY;
-
     const cell = document.createElement('div');
     cell.className = 'calCell';
+    cell.innerHTML = `<div class="calNum">${d}</div>`;
 
-    const num = document.createElement('div');
-    num.className = 'calNum';
-    num.textContent = d;
-
-    // 🎯 กำหนดสีตามความหนาแน่น
-    if (count > 0) {
-      if (ratio <= 0.3) num.classList.add('density-low');       // เขียว
-      else if (ratio <= 0.65) num.classList.add('density-mid'); // เหลือง
-      else if (ratio < 1) num.classList.add('density-high');    // ส้ม
-      else num.classList.add('density-full');                   // แดง
+    if (calendarMap[dateStr]) {
+      cell.classList.add('hasBookings');
     }
 
+    if (dateStr === todayDate) cell.classList.add('today');
     if (dateStr === currentDate) cell.classList.add('selected');
 
     cell.onclick = () => {
@@ -171,7 +162,6 @@ function renderCalendar() {
       loadAll();
     };
 
-    cell.appendChild(num);
     calendarDays.appendChild(cell);
   }
 }
@@ -183,17 +173,13 @@ async function loadSlots() {
   const r = await fetch(`/slots?date=${currentDate}`);
   const { slots = {} } = await r.json();
 
-  Object.entries(slots).forEach(([time, status]) => {
-    const opt = document.createElement('option');
-    opt.value = time;
-    opt.textContent = time.slice(0, 5);
-
-    if (status[currentStylist]) {
-      opt.disabled = true;
-      opt.textContent += ' (เต็ม)';
+  Object.keys(slots).forEach(t => {
+    if (!slots[t][currentStylist]) {
+      const o = document.createElement('option');
+      o.value = t;
+      o.textContent = t.slice(0, 5);
+      timeSelect.appendChild(o);
     }
-
-    timeSelect.appendChild(opt);
   });
 }
 
@@ -257,7 +243,6 @@ async function submitForm(e) {
     e.target.reset();
     loadAll();
   } else {
-    const err = await r.json();
-    alert(err.error || 'ไม่สามารถจองได้');
+    alert('บันทึกไม่สำเร็จ กรุณาตรวจสอบข้อมูล');
   }
 }
