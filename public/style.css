@@ -349,3 +349,27 @@ th{
   .topActions{width:100%; justify-content:space-between}
 }
 
+/* ===== Calendar Density Colors ===== */
+.calNum.density-low{
+  background: rgba(44,255,156,.18);
+  color:#2cff9c;
+  border:1px solid rgba(44,255,156,.5);
+}
+
+.calNum.density-mid{
+  background: rgba(253,224,71,.18);
+  color:#fde047;
+  border:1px solid rgba(253,224,71,.5);
+}
+
+.calNum.density-high{
+  background: rgba(251,146,60,.18);
+  color:#fb923c;
+  border:1px solid rgba(251,146,60,.5);
+}
+
+.calNum.density-full{
+  background: rgba(255,92,122,.18);
+  color:#ff5c7a;
+  border:1px solid rgba(255,92,122,.5);
+}
