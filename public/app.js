@@ -1,7 +1,7 @@
 /* ===== CONFIG ===== */
 const OWNER_PIN = '1234';
 const TZ = 'Asia/Bangkok';
-const DAILY_CAPACITY = 20; // Bank + Sindy
+const DAILY_CAPACITY = 20; // Bank + Sindy รวม 20 คิว/วัน
 
 /* ===== STATE ===== */
 let currentDate = '';
@@ -9,7 +9,7 @@ let todayDate = '';
 let viewYear, viewMonth;
 let currentStylist = 'Bank';
 let bookings = [];
-let calendarMap = {};
+let calendarMap = {}; // { 'YYYY-MM-DD': count }
 
 /* ===== ELEMENTS ===== */
 const loginOverlay = document.getElementById('loginOverlay');
@@ -120,13 +120,13 @@ async function loadBookings() {
   bookings = await r.json();
 }
 
-/* ===== CALENDAR MAP ===== */
+/* ===== CALENDAR MAP (จำนวนคิวต่อวัน) ===== */
 async function loadCalendarMap() {
   const r = await fetch('/calendar-days');
   calendarMap = await r.json();
 }
 
-/* ===== CALENDAR ===== */
+/* ===== CALENDAR (เปลี่ยนสีตามความหนาแน่น) ===== */
 function renderCalendar() {
   calendarDays.innerHTML = '';
 
@@ -155,11 +155,11 @@ function renderCalendar() {
     num.className = 'calNum';
     num.textContent = d;
 
-    /* 🎯 density → color */
+    // 🎯 กำหนดสีตามความหนาแน่น
     if (count > 0) {
       if (ratio <= 0.3) num.classList.add('density-low');       // เขียว
       else if (ratio <= 0.65) num.classList.add('density-mid'); // เหลือง
-      else if (ratio < 1) num.classList.add('density-high');    // ส้ม/แดงอ่อน
+      else if (ratio < 1) num.classList.add('density-high');    // ส้ม
       else num.classList.add('density-full');                   // แดง
     }
 
