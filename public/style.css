@@ -10,19 +10,15 @@
   --accent2:#a78bfa;
 
   --danger:#ff5c7a;
-  --ok:#2cff9c;
 
   --stroke:rgba(255,255,255,.08);
   --shadow:0 10px 30px rgba(0,0,0,.35);
-
-  --green:#2cff9c;
-  --greenBg: rgba(44,255,156,.18);
 }
 
 /* =========================
    BASE
 ========================= */
-*{box-sizing:border-box}
+*{ box-sizing:border-box }
 
 body{
   margin:0;
@@ -34,9 +30,7 @@ body{
   color:var(--text);
 }
 
-.hidden{display:none !important}
-.row{display:flex; gap:10px; align-items:center}
-.between{justify-content:space-between}
+.hidden{display:none!important}
 .muted{color:var(--muted)}
 .msg{font-size:13px}
 .msg.err{color:var(--danger)}
@@ -55,7 +49,7 @@ input, select{
 }
 
 .primary{
-  background:linear-gradient(90deg, var(--accent), var(--accent2));
+  background:linear-gradient(90deg,var(--accent),var(--accent2));
   color:#061022;
   border:none;
   padding:10px 14px;
@@ -97,7 +91,7 @@ input, select{
   align-items:center;
   border-bottom:1px solid var(--stroke);
   background:rgba(0,0,0,.25);
-  backdrop-filter: blur(10px);
+  backdrop-filter:blur(10px);
   position:sticky;
   top:0;
   z-index:5;
@@ -128,30 +122,18 @@ input, select{
 }
 
 .title{font-weight:900}
-.subtitle{font-size:12px; color:var(--muted)}
-
-.topActions{
-  display:flex;
-  gap:12px;
-  align-items:flex-end;
-}
-
-.dateWrap .label{
-  font-size:12px;
-  color:var(--muted);
-  margin:0 0 6px 2px;
-}
+.subtitle{font-size:12px;color:var(--muted)}
 
 /* =========================
    LAYOUT
 ========================= */
 .wrap{
-  width:min(1100px, 95vw);
+  width:min(1100px,95vw);
   margin:18px auto 48px auto;
 }
 
 .panel{
-  background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+  background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));
   border:1px solid var(--stroke);
   border-radius:16px;
   padding:16px;
@@ -167,12 +149,11 @@ input, select{
 .full{grid-column:1/-1}
 
 /* =========================
-   TABS (เลือกช่าง)
+   TABS
 ========================= */
 .tabs{
   display:flex;
   gap:10px;
-  margin-top:14px;
 }
 
 .tab{
@@ -230,7 +211,7 @@ th{
 }
 
 /* =========================
-   BADGE : STYLIST (ใหม่ ใช้จริง)
+   BADGE : STYLIST
 ========================= */
 .badge{
   display:inline-block;
@@ -265,26 +246,25 @@ th{
 .overlay{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.80);
+  background:rgba(0,0,0,.8);
   display:grid;
   place-items:center;
   z-index:999;
-  padding:20px;
 }
 
 .modal{
-  width:min(520px, 95vw);
-  background:linear-gradient(180deg, rgba(15,18,30,.95), rgba(10,12,22,.9));
+  width:min(420px,90vw);
+  background:linear-gradient(180deg,rgba(15,18,30,.95),rgba(10,12,22,.9));
   border-radius:16px;
   border:1px solid rgba(255,255,255,.12);
   box-shadow:0 18px 60px rgba(0,0,0,.55);
 }
 
 .modalBody{
-  padding:16px;
+  padding:20px;
   display:flex;
   flex-direction:column;
-  gap:12px;
+  gap:14px;
   align-items:center;
   text-align:center;
 }
@@ -320,6 +300,10 @@ th{
   cursor:pointer;
 }
 
+.calCell.selected{
+  outline:2px solid rgba(110,231,255,.35);
+}
+
 .calNum{
   width:38px;
   height:38px;
@@ -328,16 +312,35 @@ th{
   align-items:center;
   justify-content:center;
   font-weight:900;
+  background:rgba(0,0,0,.25);
+  border:1px solid rgba(255,255,255,.12);
 }
 
-.calCell.hasBookings .calNum{
-  background:var(--greenBg);
-  color:var(--green);
-  border:1px solid rgba(44,255,156,.5);
+/* =========================
+   CALENDAR DENSITY COLORS
+========================= */
+.calNum.density-low{
+  background:rgba(44,255,156,.18);
+  color:#2cff9c;
+  border-color:rgba(44,255,156,.5);
 }
 
-.calCell.selected{
-  outline:2px solid rgba(110,231,255,.35);
+.calNum.density-mid{
+  background:rgba(253,224,71,.18);
+  color:#fde047;
+  border-color:rgba(253,224,71,.5);
+}
+
+.calNum.density-high{
+  background:rgba(251,146,60,.18);
+  color:#fb923c;
+  border-color:rgba(251,146,60,.5);
+}
+
+.calNum.density-full{
+  background:rgba(255,92,122,.18);
+  color:#ff5c7a;
+  border-color:rgba(255,92,122,.5);
 }
 
 /* =========================
@@ -345,36 +348,5 @@ th{
 ========================= */
 @media (max-width:720px){
   .grid{grid-template-columns:1fr}
-  .topbar{flex-direction:column; align-items:flex-start; gap:12px}
-  .topActions{width:100%; justify-content:space-between}
+  .topbar{flex-direction:column;align-items:flex-start;gap:12px}
 }
-
-/* ===== Calendar Density Colors ===== */
-.calNum.density-low{
-  background: rgba(44,255,156,.18);
-  color:#2cff9c;
-  border:1px solid rgba(44,255,156,.5);
-}
-
-.calNum.density-mid{
-  background: rgba(253,224,71,.18);
-  color:#fde047;
-  border:1px solid rgba(253,224,71,.5);
-}
-
-.calNum.density-high{
-  background: rgba(251,146,60,.18);
-  color:#fb923c;
-  border:1px solid rgba(251,146,60,.5);
-}
-
-.calNum.density-full{
-  background: rgba(255,92,122,.18);
-  color:#ff5c7a;
-  border:1px solid rgba(255,92,122,.5);
-}
-
-.calNum.density-low{ background:rgba(44,255,156,.18); color:#2cff9c; border:1px solid rgba(44,255,156,.5); }
-.calNum.density-mid{ background:rgba(253,224,71,.18); color:#fde047; border:1px solid rgba(253,224,71,.5); }
-.calNum.density-high{ background:rgba(251,146,60,.18); color:#fb923c; border:1px solid rgba(251,146,60,.5); }
-.calNum.density-full{ background:rgba(255,92,122,.18); color:#ff5c7a; border:1px solid rgba(255,92,122,.5); }
