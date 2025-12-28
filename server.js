@@ -14,31 +14,21 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-/* ===== SUPABASE ===== */
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-/* ===== ROOT ===== */
 app.get('/', (_, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, 'public/index.html'));
 });
 
 /* ===== BOOKINGS ===== */
 app.get('/bookings', async (req, res) => {
   const { date } = req.query;
-
-  let q = supabase
-    .from('bookings')
-    .select('*')
-    .order('time', { ascending: true });
-
+  let q = supabase.from('bookings').select('*').order('time');
   if (date) q = q.eq('date', date);
-
-  const { data, error } = await q;
-  if (error) return res.json([]);
-
+  const { data } = await q;
   res.json(data || []);
 });
 
@@ -60,11 +50,7 @@ app.post('/bookings', async (req, res) => {
     return res.status(409).json({ error: 'เวลานี้ถูกจองแล้ว' });
   }
 
-  const { error } = await supabase
-    .from('bookings')
-    .insert([{ date, time, stylist, name, gender, phone, service }]);
-
-  if (error) return res.status(400).json({ error: error.message });
+  await supabase.from('bookings').insert([{ date, time, stylist, name, gender, phone, service }]);
   res.json({ ok: true });
 });
 
@@ -80,19 +66,11 @@ app.get('/slots', async (req, res) => {
 
   const slots = {};
   for (let h = 13; h <= 22; h++) {
-    const t = `${String(h).padStart(2, '0')}:00`;
-    slots[t] = { Bank:false, Sindy:false, Assist:false };
+    slots[`${String(h).padStart(2,'0')}:00`] = { Bank:false, Sindy:false, Assist:false };
   }
 
-  const { data } = await supabase
-    .from('bookings')
-    .select('time, stylist')
-    .eq('date', date);
-
-  (data || []).forEach(b => {
-    if (slots[b.time]) slots[b.time][b.stylist] = true;
-  });
-
+  const { data } = await supabase.from('bookings').select('time,stylist').eq('date', date);
+  (data || []).forEach(b => slots[b.time] && (slots[b.time][b.stylist] = true));
   res.json({ slots });
 });
 
@@ -101,13 +79,10 @@ app.get('/calendar-days', async (_, res) => {
   const { data } = await supabase.from('bookings').select('date');
   const map = {};
   (data || []).forEach(b => {
-    const d = b.date?.slice(0,10);
-    if (!d) return;
+    const d = b.date;
     map[d] = (map[d] || 0) + 1;
   });
   res.json(map);
 });
 
-app.listen(PORT, () => {
-  console.log('Server running on', PORT);
-});
+app.listen(PORT, () => console.log('Server running'));
