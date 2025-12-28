@@ -2,7 +2,8 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
   <title>Adore hair studio</title>
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -15,13 +16,16 @@
       <div class="avatar big">A</div>
       <h2>เข้าสู่ระบบ</h2>
       <p class="muted">ใส่ PIN เพื่อจัดการคิว</p>
+
       <input
         id="pin"
         type="password"
         inputmode="numeric"
         pattern="[0-9]*"
-        placeholder="••••"
+        placeholder="PIN"
+        class="pinInput"
       />
+
       <button id="loginBtn" class="primary">Login</button>
       <div id="loginMsg" class="msg err"></div>
     </div>
@@ -42,7 +46,7 @@
 
 <div class="wrap">
 
-  <!-- CALENDAR -->
+  <!-- DATE + CALENDAR -->
   <div class="panel">
     <div class="dateWrap">
       <div class="label">เลือกวัน</div>
@@ -50,17 +54,20 @@
     </div>
 
     <div class="calendarHeader">
-      <button id="prevMonth" class="ghost">◀</button>
-      <div>
+      <button id="prevMonth" class="ghost">‹</button>
+
+      <div class="calendarCenter">
         <div id="calendarTitle" class="calendarTitle"></div>
         <div class="calendarSubtitle">ระดับสีแสดงความหนาแน่นของคิว</div>
       </div>
-      <button id="nextMonth" class="ghost">▶</button>
+
+      <button id="nextMonth" class="ghost">›</button>
     </div>
 
     <div class="calWeekHead">
       <div>อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div>ส</div>
     </div>
+
     <div id="calendarDays" class="calGrid"></div>
   </div>
 
