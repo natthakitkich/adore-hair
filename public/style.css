@@ -419,3 +419,15 @@ th{
   border:1px solid rgba(255,255,255,.12);
   box-shadow: inset 0 0 0 1px rgba(255,255,255,.04);
 }
+/* =========================
+   FIX SPLIT RING VISIBILITY
+========================= */
+.calNum{
+  position: relative;
+  z-index: 0;
+}
+
+.calNum.split::before,
+.calNum.split::after{
+  z-index: 1;
+}
