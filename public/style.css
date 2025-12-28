@@ -118,12 +118,6 @@ input, select{
   color:#061022;
 }
 
-.avatar.big{
-  width:64px;
-  height:64px;
-  font-size:28px;
-}
-
 .title{font-weight:900}
 .subtitle{font-size:12px; color:var(--muted)}
 
@@ -164,7 +158,7 @@ input, select{
 .full{grid-column:1/-1}
 
 /* =========================
-   TABS (เลือกช่าง)
+   TABS
 ========================= */
 .tabs{
   display:flex;
@@ -227,7 +221,7 @@ th{
 }
 
 /* =========================
-   BADGE : STYLIST
+   BADGE
 ========================= */
 .badge{
   display:inline-block;
@@ -241,49 +235,16 @@ th{
 .badge.stylist-bank{
   background:rgba(110,231,255,.18);
   color:#6ee7ff;
-  border-color:rgba(110,231,255,.45);
 }
 
 .badge.stylist-sindy{
   background:rgba(255,92,122,.18);
   color:#ff7abf;
-  border-color:rgba(255,92,122,.45);
 }
 
 .badge.stylist-assist{
   background:rgba(209,213,219,.18);
   color:#d1d5db;
-  border-color:rgba(209,213,219,.35);
-}
-
-/* =========================
-   LOGIN OVERLAY
-========================= */
-.overlay{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.80);
-  display:grid;
-  place-items:center;
-  z-index:999;
-  padding:20px;
-}
-
-.modal{
-  width:min(520px, 95vw);
-  background:linear-gradient(180deg, rgba(15,18,30,.95), rgba(10,12,22,.9));
-  border-radius:16px;
-  border:1px solid rgba(255,255,255,.12);
-  box-shadow:0 18px 60px rgba(0,0,0,.55);
-}
-
-.modalBody{
-  padding:16px;
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-  align-items:center;
-  text-align:center;
 }
 
 /* =========================
@@ -329,67 +290,36 @@ th{
   align-items:center;
   justify-content:center;
   font-weight:900;
+  background:rgba(0,0,0,.45);
+  color:var(--text);
 }
 
 /* =========================
-   CALENDAR HEADER
-========================= */
-.calendarHeader{
-  text-align:center;
-  margin-bottom:8px;
-}
-
-.calendarTitle{
-  font-size:22px;
-  font-weight:900;
-}
-
-.calendarSubtitle{
-  font-size:11px;
-  font-weight:500;
-  color:rgba(233,238,252,.5);
-}
-
-/* =========================
-   SPLIT RING (Bank / Sindy)
+   SPLIT RING (PRODUCTION)
 ========================= */
 .calNum.split{
-  position:relative;
-  overflow:hidden;
+  background:
+    radial-gradient(circle at center,
+      rgba(0,0,0,.6) 62%,
+      transparent 64%
+    ),
+    conic-gradient(
+      var(--bankColor) 0deg 180deg,
+      var(--sindyColor) 180deg 360deg
+    );
 }
 
-.calNum.split::before,
-.calNum.split::after{
-  content:'';
-  position:absolute;
-  inset:-2px;
-  border-radius:999px;
-  border:2px solid transparent;
-  pointer-events:none;
-}
-
-/* LEFT = BANK */
-.calNum.split::before{
-  clip-path: inset(0 50% 0 0);
-}
-
-/* RIGHT = SINDY */
-.calNum.split::after{
-  clip-path: inset(0 0 0 50%);
-}
-
-/* ===== Density Colors ===== */
 /* Bank */
-.bank-low::before{ border-color:#2cff9c }
-.bank-mid::before{ border-color:#fde047 }
-.bank-high::before{ border-color:#fb923c }
-.bank-full::before{ border-color:#ff5c7a }
+.bank-low   { --bankColor:#2cff9c }
+.bank-mid   { --bankColor:#fde047 }
+.bank-high  { --bankColor:#fb923c }
+.bank-full  { --bankColor:#ff5c7a }
 
 /* Sindy */
-.sindy-low::after{ border-color:#2cff9c }
-.sindy-mid::after{ border-color:#fde047 }
-.sindy-high::after{ border-color:#fb923c }
-.sindy-full::after{ border-color:#ff5c7a }
+.sindy-low  { --sindyColor:#2cff9c }
+.sindy-mid  { --sindyColor:#fde047 }
+.sindy-high { --sindyColor:#fb923c }
+.sindy-full { --sindyColor:#ff5c7a }
 
 /* =========================
    PIN INPUT
@@ -408,26 +338,4 @@ th{
   .grid{grid-template-columns:1fr}
   .topbar{flex-direction:column; align-items:flex-start; gap:12px}
   .topActions{width:100%; justify-content:space-between}
-}
-
-
-/* =========================
-   CALENDAR BASE CIRCLE (สำคัญมาก)
-========================= */
-.calNum{
-  background: rgba(0,0,0,.25);
-  border:1px solid rgba(255,255,255,.12);
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.04);
-}
-/* =========================
-   FIX SPLIT RING VISIBILITY
-========================= */
-.calNum{
-  position: relative;
-  z-index: 0;
-}
-
-.calNum.split::before,
-.calNum.split::after{
-  z-index: 1;
 }
