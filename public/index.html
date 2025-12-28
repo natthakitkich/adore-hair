@@ -127,5 +127,21 @@
 </div>
 
 <script src="app.js"></script>
+  /* =========================
+   CONFIRM DELETE MODAL
+========================= */
+.primary.danger{
+  background:linear-gradient(90deg,#ff5c7a,#fb7185);
+  color:white;
+}
+
+#confirmOverlay .modal{
+  animation: pop .25s ease-out;
+}
+
+@keyframes pop{
+  from{transform:scale(.95); opacity:0}
+  to{transform:scale(1); opacity:1}
+}
 </body>
 </html>
