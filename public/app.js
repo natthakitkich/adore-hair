@@ -3,16 +3,16 @@
 ========================= */
 const OWNER_PIN = '1234';
 const TZ = 'Asia/Bangkok';
-const DAILY_CAPACITY = 20;
 
 /* =========================
    STATE
 ========================= */
 let currentDate;
 let viewYear, viewMonth;
-let currentStylist = 'Bank'; // ✅ default
+let currentStylist = 'Bank'; // default
 let bookings = [];
 let calendarMap = {};
+let slots = {};
 
 /* =========================
    ELEMENTS
@@ -56,6 +56,7 @@ function initAuth(){
     if(pinInput.value === OWNER_PIN){
       localStorage.setItem('adore_logged_in','1');
       loginOverlay.classList.add('hidden');
+      loginMsg.textContent = '';
       loadAll();
     }else{
       loginMsg.textContent = 'PIN ไม่ถูกต้อง';
@@ -98,26 +99,16 @@ function bindUI(){
     loadAll();
   };
 
-  // ✅ เลือกช่าง = ใช้ตอน "บันทึก"
-  document.querySelectorAll('.tab').forEach(tab=>{
-    tab.onclick = ()=>{
-      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-      tab.classList.add('active');
-      currentStylist = tab.dataset.tab;
+  document.querySelectorAll('.tab').forEach(t=>{
+    t.onclick = ()=>{
+      document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+      t.classList.add('active');
+      currentStylist = t.dataset.tab;
+      renderTimeOptions();
     };
   });
 
   document.getElementById('bookingForm').onsubmit = submitForm;
-}
-
-/* =========================
-   MONTH
-========================= */
-function changeMonth(delta){
-  viewMonth += delta;
-  if(viewMonth < 0){ viewMonth = 11; viewYear--; }
-  if(viewMonth > 11){ viewMonth = 0; viewYear++; }
-  renderCalendar();
 }
 
 /* =========================
@@ -126,9 +117,12 @@ function changeMonth(delta){
 async function loadAll(){
   await Promise.all([
     loadCalendarMap(),
-    loadBookings()
+    loadBookings(),
+    loadSlots()
   ]);
+
   renderCalendar();
+  renderTimeOptions();
   renderTable();
   renderSummary();
 }
@@ -144,6 +138,37 @@ async function loadBookings(){
 async function loadCalendarMap(){
   const r = await fetch('/calendar-days');
   calendarMap = await r.json();
+}
+
+async function loadSlots(){
+  const r = await fetch(`/slots?date=${currentDate}`);
+  const json = await r.json();
+  slots = json.slots || {};
+}
+
+/* =========================
+   TIME SELECT (FIXED)
+========================= */
+function renderTimeOptions(){
+  timeSelect.innerHTML = '';
+
+  const daySlots = slots || {};
+
+  Object.keys(daySlots).forEach(time=>{
+    if(daySlots[time][currentStylist]) return;
+
+    const opt = document.createElement('option');
+    opt.value = time;
+    opt.textContent = time;
+    timeSelect.appendChild(opt);
+  });
+
+  if(!timeSelect.children.length){
+    const opt = document.createElement('option');
+    opt.textContent = 'ไม่มีเวลาว่าง';
+    opt.disabled = true;
+    timeSelect.appendChild(opt);
+  }
 }
 
 /* =========================
@@ -165,7 +190,6 @@ function renderCalendar(){
   for(let d=1;d<=total;d++){
     const dateStr = `${viewYear}-${String(viewMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const count = calendarMap[dateStr] || 0;
-    const ratio = count / DAILY_CAPACITY;
 
     const cell = document.createElement('div');
     cell.className = 'calCell';
@@ -173,13 +197,6 @@ function renderCalendar(){
     const num = document.createElement('div');
     num.className = 'calNum';
     num.textContent = d;
-
-    if(count){
-      if(ratio<=0.3) num.classList.add('density-low');
-      else if(ratio<=0.65) num.classList.add('density-mid');
-      else if(ratio<1) num.classList.add('density-high');
-      else num.classList.add('density-full');
-    }
 
     if(dateStr===currentDate) cell.classList.add('selected');
 
@@ -194,7 +211,7 @@ function renderCalendar(){
 }
 
 /* =========================
-   TABLE (แสดงทุกช่าง)
+   TABLE + DELETE
 ========================= */
 function renderTable(){
   list.innerHTML = '';
@@ -203,19 +220,22 @@ function renderTable(){
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${b.time}</td>
-      <td>
-        <span class="badge stylist-${b.stylist.toLowerCase()}">
-          ${b.stylist}
-        </span>
-      </td>
+      <td><span class="badge stylist-${b.stylist.toLowerCase()}">${b.stylist}</span></td>
       <td>${b.gender === 'male' ? '👨' : '👩'}</td>
       <td>${b.name}</td>
       <td>${b.service || ''}</td>
       <td>${b.phone || ''}</td>
-      <td></td>
+      <td><button class="ghost" data-id="${b.id}">ลบ</button></td>
     `;
+    tr.querySelector('button').onclick = () => deleteBooking(b.id);
     list.appendChild(tr);
   });
+}
+
+async function deleteBooking(id){
+  if(!confirm('ยืนยันลบคิวนี้?')) return;
+  await fetch(`/bookings/${id}`,{ method:'DELETE' });
+  loadAll();
 }
 
 /* =========================
@@ -230,44 +250,32 @@ function renderSummary(){
 }
 
 /* =========================
-   SUBMIT FORM
+   SUBMIT
 ========================= */
 async function submitForm(e){
   e.preventDefault();
 
-  const time = document.getElementById('time').value;
-  const name = document.getElementById('name').value.trim();
-  const phone = document.getElementById('phone').value.trim();
-  const service = document.getElementById('service').value.trim();
-  const gender = document.querySelector('input[name="gender"]:checked')?.value;
-
-  if(!time || !name || !gender){
-    alert('กรุณากรอกข้อมูลให้ครบ');
-    return;
-  }
-
-  const payload = {
+  const data = {
     date: currentDate,
-    time,
-    stylist: currentStylist, // ✅ ตามแท็บที่เลือก
-    name,
-    gender,
-    phone,
-    service
+    time: timeSelect.value,
+    stylist: currentStylist,
+    name: document.getElementById('name').value,
+    phone: document.getElementById('phone').value,
+    gender: document.querySelector('input[name="gender"]:checked')?.value,
+    service: document.getElementById('service').value
   };
 
   const r = await fetch('/bookings',{
     method:'POST',
-    headers:{ 'Content-Type':'application/json' },
-    body: JSON.stringify(payload)
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(data)
   });
 
   if(!r.ok){
-    const err = await r.json();
-    alert(err.error || 'เกิดข้อผิดพลาด');
+    alert('จองไม่สำเร็จ');
     return;
   }
 
   e.target.reset();
-  await loadAll();
+  loadAll();
 }
