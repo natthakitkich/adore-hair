@@ -1,16 +1,16 @@
-/* ================= CONFIG ================= */
+/* ===== CONFIG ===== */
 const OWNER_PIN = '1234';
 const TZ = 'Asia/Bangkok';
 const DAILY_CAPACITY = 20;
 
-/* ================= STATE ================= */
+/* ===== STATE ===== */
 let currentDate;
 let viewYear, viewMonth;
-let currentStylist = 'Bank'; // default
+let currentStylist = 'Bank';
 let bookings = [];
 let calendarMap = {};
 
-/* ================= ELEMENTS ================= */
+/* ===== ELEMENTS ===== */
 const loginOverlay = document.getElementById('loginOverlay');
 const loginBtn = document.getElementById('loginBtn');
 const loginMsg = document.getElementById('loginMsg');
@@ -28,7 +28,7 @@ const countSindy = document.getElementById('countSindy');
 const countAssist = document.getElementById('countAssist');
 const countTotal = document.getElementById('countTotal');
 
-/* ================= INIT ================= */
+/* ===== INIT ===== */
 document.addEventListener('DOMContentLoaded', () => {
   initAuth();
   initDate();
@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadAll();
 });
 
-/* ================= AUTH ================= */
+/* ===== AUTH ===== */
 function initAuth() {
   if (localStorage.getItem('adore_logged_in') === '1') {
     loginOverlay.classList.add('hidden');
@@ -46,6 +46,7 @@ function initAuth() {
     if (pinInput.value === OWNER_PIN) {
       localStorage.setItem('adore_logged_in', '1');
       loginOverlay.classList.add('hidden');
+      loginMsg.textContent = '';
       loadAll();
     } else {
       loginMsg.textContent = 'PIN ไม่ถูกต้อง';
@@ -58,7 +59,7 @@ function initAuth() {
   };
 }
 
-/* ================= DATE ================= */
+/* ===== DATE ===== */
 function initDate() {
   const now = new Date(
     new Date().toLocaleString('en-US', { timeZone: TZ })
@@ -74,7 +75,7 @@ function setDate(dateStr) {
   dateInput.value = dateStr;
 }
 
-/* ================= UI ================= */
+/* ===== UI ===== */
 function bindUI() {
   document.getElementById('prevMonth').onclick = () => changeMonth(-1);
   document.getElementById('nextMonth').onclick = () => changeMonth(1);
@@ -88,15 +89,15 @@ function bindUI() {
     tab.onclick = () => {
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
-      currentStylist = tab.dataset.tab; // ใช้ตอนจอง
-      loadSlots(); // เวลาเปลี่ยนตามช่าง
+      currentStylist = tab.dataset.tab;
+      loadSlots(); // อัปเดตเวลาตามช่าง
     };
   });
 
   document.getElementById('bookingForm').onsubmit = submitForm;
 }
 
-/* ================= MONTH ================= */
+/* ===== MONTH ===== */
 function changeMonth(delta) {
   viewMonth += delta;
   if (viewMonth < 0) { viewMonth = 11; viewYear--; }
@@ -104,7 +105,7 @@ function changeMonth(delta) {
   renderCalendar();
 }
 
-/* ================= LOAD ================= */
+/* ===== LOAD ===== */
 async function loadAll() {
   await Promise.all([
     loadCalendarMap(),
@@ -116,7 +117,7 @@ async function loadAll() {
   renderSummary();
 }
 
-/* ================= DATA ================= */
+/* ===== DATA ===== */
 async function loadBookings() {
   const r = await fetch(`/bookings?date=${currentDate}`);
   bookings = await r.json();
@@ -127,24 +128,7 @@ async function loadCalendarMap() {
   calendarMap = await r.json();
 }
 
-/* ================= SLOTS (เวลาที่ว่าง) ================= */
-async function loadSlots() {
-  timeSelect.innerHTML = '';
-
-  const r = await fetch(`/slots?date=${currentDate}`);
-  const { slots } = await r.json();
-
-  Object.keys(slots).forEach(time => {
-    if (!slots[time][currentStylist]) {
-      const opt = document.createElement('option');
-      opt.value = time;
-      opt.textContent = time;
-      timeSelect.appendChild(opt);
-    }
-  });
-}
-
-/* ================= CALENDAR ================= */
+/* ===== CALENDAR ===== */
 function renderCalendar() {
   calendarDays.innerHTML = '';
   calendarTitle.textContent =
@@ -170,7 +154,7 @@ function renderCalendar() {
     num.className = 'calNum';
     num.textContent = d;
 
-    if (count > 0) {
+    if (count) {
       if (ratio <= 0.3) num.classList.add('density-low');
       else if (ratio <= 0.65) num.classList.add('density-mid');
       else if (ratio < 1) num.classList.add('density-high');
@@ -189,43 +173,29 @@ function renderCalendar() {
   }
 }
 
-/* ================= TABLE ================= */
-function renderTable() {
-  list.innerHTML = '';
+/* ===== SLOTS (สำคัญที่สุด) ===== */
+async function loadSlots() {
+  timeSelect.innerHTML = '';
 
-  bookings.forEach(b => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${b.time}</td>
-      <td><span class="badge stylist-${b.stylist.toLowerCase()}">${b.stylist}</span></td>
-      <td>${b.gender === 'male' ? '👨' : '👩'}</td>
-      <td>${b.name}</td>
-      <td>${b.service || ''}</td>
-      <td>${b.phone || ''}</td>
-      <td>
-        <button class="ghost" data-id="${b.id}">ลบ</button>
-      </td>
-    `;
-    tr.querySelector('button').onclick = async () => {
-      if (confirm('ลบคิวนี้ใช่หรือไม่')) {
-        await fetch(`/bookings/${b.id}`, { method: 'DELETE' });
-        loadAll();
-      }
-    };
-    list.appendChild(tr);
+  const r = await fetch(`/slots?date=${currentDate}`);
+  const { slots } = await r.json();
+
+  Object.keys(slots).forEach(time => {
+    const opt = document.createElement('option');
+    opt.value = time;
+
+    if (slots[time][currentStylist]) {
+      opt.textContent = `${time} (ถูกจองแล้ว)`;
+      opt.disabled = true;
+    } else {
+      opt.textContent = time;
+    }
+
+    timeSelect.appendChild(opt);
   });
 }
 
-/* ================= SUMMARY ================= */
-function renderSummary() {
-  const c = s => bookings.filter(b => b.stylist === s).length;
-  countBank.textContent = c('Bank');
-  countSindy.textContent = c('Sindy');
-  countAssist.textContent = c('Assist');
-  countTotal.textContent = bookings.length;
-}
-
-/* ================= SUBMIT ================= */
+/* ===== SUBMIT ===== */
 async function submitForm(e) {
   e.preventDefault();
 
@@ -239,12 +209,60 @@ async function submitForm(e) {
     service: document.getElementById('service').value
   };
 
-  await fetch('/bookings', {
+  const res = await fetch('/bookings', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
   });
 
+  if (res.status === 409) {
+    alert('เวลานี้ถูกจองแล้ว กรุณาเลือกเวลาอื่น');
+    loadSlots();
+    return;
+  }
+
+  if (!res.ok) {
+    alert('เกิดข้อผิดพลาด กรุณาลองใหม่');
+    return;
+  }
+
+  alert('บันทึกการจองเรียบร้อยแล้ว');
   e.target.reset();
   loadAll();
+}
+
+/* ===== TABLE ===== */
+function renderTable() {
+  list.innerHTML = '';
+  bookings.forEach(b => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${b.time}</td>
+      <td><span class="badge stylist-${b.stylist.toLowerCase()}">${b.stylist}</span></td>
+      <td>${b.gender === 'male' ? '👨' : '👩'}</td>
+      <td>${b.name}</td>
+      <td>${b.service || ''}</td>
+      <td>${b.phone || ''}</td>
+      <td>
+        <button class="ghost" onclick="deleteBooking('${b.id}')">ลบ</button>
+      </td>
+    `;
+    list.appendChild(tr);
+  });
+}
+
+/* ===== DELETE ===== */
+async function deleteBooking(id) {
+  if (!confirm('ยืนยันการลบคิวนี้?')) return;
+  await fetch(`/bookings/${id}`, { method: 'DELETE' });
+  loadAll();
+}
+
+/* ===== SUMMARY ===== */
+function renderSummary() {
+  const c = s => bookings.filter(b => b.stylist === s).length;
+  countBank.textContent = c('Bank');
+  countSindy.textContent = c('Sindy');
+  countAssist.textContent = c('Assist');
+  countTotal.textContent = bookings.length;
 }
