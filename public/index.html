@@ -4,71 +4,58 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Adore Hair Studio</title>
-
-  <style>
-    body{
-      margin:0;
-      font-family:-apple-system,system-ui;
-      background:#0b0f1a;
-      color:#fff;
-    }
-
-    .overlay{
-      position:fixed;
-      inset:0;
-      background:rgba(0,0,0,.85);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      z-index:999;
-    }
-
-    .card{
-      width:300px;
-      padding:24px;
-      border-radius:20px;
-      background:#121735;
-      text-align:center;
-    }
-
-    input,button{
-      width:100%;
-      margin-top:12px;
-      padding:14px;
-      border-radius:12px;
-      border:none;
-      font-size:16px;
-    }
-
-    button{
-      background:linear-gradient(135deg,#6ee7ff,#a78bfa);
-      font-weight:700;
-    }
-
-    #app{
-      display:none;
-      padding:20px;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
 
-<!-- LOGIN OVERLAY (hidden by default) -->
+<!-- ================= LOGIN OVERLAY ================= -->
 <div id="loginOverlay" class="overlay" style="display:none">
-  <div class="card">
-    <h2>เข้าสู่ระบบ</h2>
-    <p>ใส่ PIN 4 หลัก</p>
-    <input id="pin" type="password" inputmode="numeric" maxlength="4" />
-    <button id="loginBtn">Login</button>
-    <div id="msg" style="margin-top:10px;color:#ff5c7a"></div>
+  <div class="loginCard">
+    <div class="loginAvatar">A</div>
+    <h1>เข้าสู่ระบบ</h1>
+    <p class="muted">กรุณาใส่ PIN 4 หลัก</p>
+
+    <input
+      id="pinInput"
+      type="password"
+      inputmode="numeric"
+      maxlength="4"
+      placeholder="••••"
+    />
+
+    <button id="loginBtn" class="primary">Login</button>
+    <div id="loginMsg" class="msg"></div>
   </div>
 </div>
 
-<!-- APP -->
-<div id="app">
-  <h1>✅ เข้าระบบสำเร็จ</h1>
-  <button id="logoutBtn">Logout</button>
+<!-- ================= APP ROOT ================= -->
+<div id="appRoot" style="display:none">
+
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="avatar">A</div>
+      <div>
+        <div class="title">Adore hair studio</div>
+        <div class="subtitle">Owner Queue · 13:00–22:00 · แยกตามช่าง</div>
+      </div>
+    </div>
+
+    <div class="topActions">
+      <div id="topDate" class="dateBadge"></div>
+      <button id="logoutBtn" class="ghost">Logout</button>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main class="wrap">
+    <section class="panel center">
+      <b>Phase A ผ่านแล้ว</b><br/>
+      โครงสร้าง App พร้อมใช้งาน
+    </section>
+  </main>
+
 </div>
 
 <script src="app.js"></script>
