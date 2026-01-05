@@ -9,9 +9,9 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentMonth = new Date();
   let selectedDate = null;
   let bookings = [];
-  let closedDays = new Set();
   let calendarDensity = {};
   let activeStylist = 'Bank';
+  let editingBooking = null;
 
   const stylists = ['Bank','Sindy','Assist'];
 
@@ -39,16 +39,9 @@ document.addEventListener('DOMContentLoaded', () => {
     $('topDate').textContent =
       new Date().toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'});
 
-    await loadClosedDays();
     await loadCalendarDensity();
     renderCalendar();
     renderStylistTabs();
-  }
-
-  /* ===== LOAD DATA ===== */
-  async function loadClosedDays(){
-    const res = await fetch(`${API}/closed-days`);
-    closedDays = new Set(await res.json());
   }
 
   async function loadCalendarDensity(){
@@ -88,8 +81,6 @@ document.addEventListener('DOMContentLoaded', () => {
       else if(count<=15) num.classList.add('density-high');
       else if(count>=16) num.classList.add('density-full');
 
-      if(closedDays.has(date)) cell.classList.add('closed');
-
       inner.appendChild(num);
       cell.appendChild(inner);
       cell.onclick=()=>selectDate(date);
@@ -100,21 +91,10 @@ document.addEventListener('DOMContentLoaded', () => {
   $('prevMonth').onclick=()=>{currentMonth.setMonth(currentMonth.getMonth()-1);renderCalendar();};
   $('nextMonth').onclick=()=>{currentMonth.setMonth(currentMonth.getMonth()+1);renderCalendar();};
 
-  /* ===== DATE SELECT ===== */
+  /* ===== DATE ===== */
   async function selectDate(date){
     selectedDate=date;
-    const isClosed=closedDays.has(date);
-
-    $('dayStatus').textContent=isClosed?'วันนี้เป็นวันหยุด':`วันที่ ${date} เปิดทำการ`;
-    $('closeDayBtn').classList.toggle('hidden',isClosed);
-    $('openDayBtn').classList.toggle('hidden',!isClosed);
-
-    if(isClosed){
-      $('queueBody').innerHTML='';
-      $('summary').innerHTML='';
-      return;
-    }
-
+    $('dayStatus').textContent=`วันที่ ${date}`;
     await loadBookings();
   }
 
@@ -140,19 +120,96 @@ document.addEventListener('DOMContentLoaded', () => {
           <td>${b.name}</td>
           <td>${b.service||''}</td>
           <td>${b.phone||''}</td>
-          <td><button class="ghost">ลบ</button></td>
+          <td>
+            <button class="ghost">แก้ไข</button>
+          </td>
         `;
-        tr.querySelector('button').onclick=()=>deleteBooking(b.id);
+        tr.querySelector('button').onclick=()=>openEdit(b);
         $('queueBody').appendChild(tr);
       });
   }
 
-  async function deleteBooking(id){
-    if(!confirm('ยืนยันลบคิวนี้?')) return;
-    await fetch(`${API}/bookings/${id}`,{method:'DELETE'});
+  /* ===== EDIT ===== */
+  function openEdit(b){
+    editingBooking=b;
+
+    $('editDate').value=b.date;
+    $('editStylist').value=b.stylist;
+    $('editName').value=b.name;
+    $('editPhone').value=b.phone||'';
+    $('editService').value=b.service||'';
+
+    document.querySelectorAll('[name=editGender]')
+      .forEach(r=>r.checked=r.value===b.gender);
+
+    renderEditTimes(b.date,b.time);
+    $('editOverlay').classList.remove('hidden');
+  }
+
+  async function renderEditTimes(date,current){
+    $('editTime').innerHTML='';
+    const res=await fetch(`${API}/bookings?date=${date}`);
+    const list=await res.json();
+
+    for(let h=13;h<=22;h++){
+      const t=`${String(h).padStart(2,'0')}:00:00`;
+      const clash=list.find(x =>
+        x.time===t &&
+        x.stylist===editingBooking.stylist &&
+        x.id!==editingBooking.id
+      );
+
+      const opt=document.createElement('option');
+      opt.value=t;
+      opt.textContent=t.slice(0,5);
+      if(clash) opt.disabled=true;
+      if(t===current) opt.selected=true;
+      $('editTime').appendChild(opt);
+    }
+  }
+
+  $('saveEditBtn').onclick = async () => {
+    const gender=document.querySelector('[name=editGender]:checked')?.value;
+
+    const res=await fetch(`${API}/bookings/${editingBooking.id}`,{
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        date:$('editDate').value,
+        time:$('editTime').value,
+        name:$('editName').value,
+        phone:$('editPhone').value,
+        gender,
+        service:$('editService').value
+      })
+    });
+
+    if(!res.ok){
+      alert('คิวนี้ถูกจองแล้ว');
+      return;
+    }
+
+    closeEdit();
     await loadBookings();
     await loadCalendarDensity();
     renderCalendar();
+    alert('แก้ไขคิวสำเร็จ');
+  };
+
+  $('deleteEditBtn').onclick = async () => {
+    if(!confirm('ยืนยันลบคิวนี้?')) return;
+    await fetch(`${API}/bookings/${editingBooking.id}`,{method:'DELETE'});
+    closeEdit();
+    await loadBookings();
+    await loadCalendarDensity();
+    renderCalendar();
+  };
+
+  $('closeEditBtn').onclick=closeEdit;
+
+  function closeEdit(){
+    $('editOverlay').classList.add('hidden');
+    editingBooking=null;
   }
 
   /* ===== STYLIST ===== */
