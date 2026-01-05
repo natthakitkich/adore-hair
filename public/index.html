@@ -8,21 +8,21 @@
 </head>
 <body>
 
-<!-- LOGIN -->
+<!-- LOGIN OVERLAY -->
 <div id="loginOverlay" class="overlay">
   <div class="modal">
     <div class="modalBody">
       <div class="avatar big">A</div>
       <h2>เข้าสู่ระบบ</h2>
       <p class="muted">กรุณาใส่ PIN 4 หลัก</p>
-      <input id="pin" type="password" maxlength="4" />
+      <input id="pin" type="password" maxlength="4" inputmode="numeric" />
       <button id="loginBtn" class="primary">Login</button>
       <div id="loginMsg" class="msg err"></div>
     </div>
   </div>
 </div>
 
-<!-- EDIT -->
+<!-- EDIT MODAL -->
 <div id="editOverlay" class="overlay hidden">
   <div class="modal">
     <div class="modalBody">
@@ -58,7 +58,7 @@
 <div class="wrap">
 
   <!-- CALENDAR -->
-  <div class="panel">
+  <div class="panel calendarPanel">
     <div class="calendarHeader">
       <button id="prevMonth" class="ghost">‹</button>
       <div class="calendarCenter">
@@ -71,32 +71,25 @@
     <div class="calWeekHead">
       <div>อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div>ส</div>
     </div>
-
     <div id="calendarDays" class="calGrid"></div>
   </div>
 
-  <!-- DATE -->
+  <!-- SUMMARY -->
   <div class="panel">
-    <label>เลือกวันที่</label>
-    <input type="date" id="date" />
+    <div class="summaryGrid">
+      <div class="summaryCard bank">Bank <span id="sumBank">0</span></div>
+      <div class="summaryCard sindy">Sindy <span id="sumSindy">0</span></div>
+      <div class="summaryCard assist">Assist <span id="sumAssist">0</span></div>
+      <div class="summaryCard total">รวม <span id="sumTotal">0</span></div>
+    </div>
   </div>
 
-  <!-- TABS -->
+  <!-- TABS (ยังใช้สำหรับเพิ่มคิว) -->
   <div class="panel">
     <div class="tabs">
       <div class="tab active" data-tab="Bank">Bank</div>
       <div class="tab" data-tab="Sindy">Sindy</div>
       <div class="tab" data-tab="Assist">Assist</div>
-    </div>
-  </div>
-
-  <!-- SUMMARY -->
-  <div class="panel">
-    <div class="summary">
-      <div class="box">Bank: <span id="countBank">0</span></div>
-      <div class="box">Sindy: <span id="countSindy">0</span></div>
-      <div class="box">Assist: <span id="countAssist">0</span></div>
-      <div class="box">รวม: <span id="countTotal">0</span></div>
     </div>
   </div>
 
@@ -137,7 +130,13 @@
     <table>
       <thead>
         <tr>
-          <th>เวลา</th><th>ช่าง</th><th>เพศ</th><th>ชื่อ</th><th>ทำอะไร</th><th>โทร</th><th></th>
+          <th>เวลา</th>
+          <th>ช่าง</th>
+          <th>เพศ</th>
+          <th>ชื่อ</th>
+          <th>ทำอะไร</th>
+          <th>โทร</th>
+          <th></th>
         </tr>
       </thead>
       <tbody id="list"></tbody>
