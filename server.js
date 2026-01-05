@@ -1,6 +1,5 @@
 // ================================
-// Adore Hair – Version Basic
-// Backend Server (Express + Supabase)
+// Adore Hair – Version Basic Backend
 // ================================
 
 import express from 'express';
@@ -19,18 +18,18 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ===== Supabase Client (Basic – เดิม) =====
+// BASIC: Supabase client
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-// ===== Serve Frontend =====
+// BASIC
 app.get('/', (_, res) => {
   res.sendFile(path.join(__dirname, 'public/index.html'));
 });
 
-// ===== GET BOOKINGS (Basic – เดิม) =====
+// BASIC: get bookings
 app.get('/bookings', async (req, res) => {
   const { date } = req.query;
 
@@ -47,7 +46,7 @@ app.get('/bookings', async (req, res) => {
   res.json(data || []);
 });
 
-// ===== CREATE BOOKING (Basic – เดิม) =====
+// BASIC: create booking
 app.post('/bookings', async (req, res) => {
   const { date, time, stylist, name, gender, phone, service } = req.body;
 
@@ -73,12 +72,10 @@ app.post('/bookings', async (req, res) => {
     .single();
 
   if (error) return res.status(500).json(error);
-
   res.json(data);
 });
 
-// ===== UPDATE BOOKING (NEW – เพิ่มความสามารถ) =====
-// * ล็อกเวลา + ช่าง ไม่ให้แก้ *
+// NEW: update booking (ล็อกเวลา + ช่าง)
 app.put('/bookings/:id', async (req, res) => {
   const { id } = req.params;
   const { name, phone, gender, service } = req.body;
@@ -89,11 +86,10 @@ app.put('/bookings/:id', async (req, res) => {
     .eq('id', id);
 
   if (error) return res.status(500).json(error);
-
   res.json({ success: true });
 });
 
-// ===== DELETE BOOKING (Basic – เดิม) =====
+// BASIC: delete booking
 app.delete('/bookings/:id', async (req, res) => {
   const { id } = req.params;
 
@@ -103,7 +99,6 @@ app.delete('/bookings/:id', async (req, res) => {
     .eq('id', id);
 
   if (error) return res.status(500).json(error);
-
   res.json({ success: true });
 });
 
