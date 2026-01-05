@@ -1,233 +1,71 @@
-/* =================================================
-   ADORE HAIR – PHASE 4.1 STYLE
-   Calendar Grid + Density Color (0–20 queues)
-   Safari iOS Safe
-================================================= */
-
 :root{
   --bg:#0b0f1a;
   --text:#e9eefc;
   --muted:#9aa6c5;
-
   --accent:#6ee7ff;
   --accent2:#a78bfa;
-
-  /* density colors */
-  --lv1:#2cff9c;   /* 1–4  */
-  --lv2:#7cefae;   /* 5–8  */
-  --lv3:#fde047;   /* 9–12 */
-  --lv4:#fb923c;   /* 13–16 */
-  --lv5:#ff5c7a;   /* 17–20 */
-
   --stroke:rgba(255,255,255,.08);
-  --panel-bg:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
-  --shadow:0 18px 50px rgba(0,0,0,.55);
 }
 
-/* =========================
-   BASE
-========================= */
-*{
-  box-sizing:border-box;
-  -webkit-tap-highlight-color:transparent;
-}
+*{ box-sizing:border-box }
 
 body{
   margin:0;
-  font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial;
-  background:
-    radial-gradient(1200px 700px at 15% 10%, #1a2b5a 0%, transparent 60%),
-    radial-gradient(900px 600px at 90% 20%, #3b1b5a 0%, transparent 55%),
-    var(--bg);
+  font-family: system-ui, -apple-system, Segoe UI, Roboto;
+  background: radial-gradient(1000px 600px at 20% 10%, #1a2b5a, transparent),
+              radial-gradient(800px 500px at 80% 20%, #3b1b5a, transparent),
+              var(--bg);
   color:var(--text);
 }
 
-.hidden{display:none!important;}
-.muted{color:var(--muted);}
+.hidden{ display:none }
 
-/* =========================
-   LOGIN (เดิม – คงไว้)
-========================= */
-.overlay{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.88);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  z-index:9999;
-}
-
-.loginCard{
-  width:320px;
-  padding:28px 22px;
-  border-radius:26px;
-  text-align:center;
-  background:linear-gradient(180deg,rgba(30,40,80,.95),rgba(10,12,22,.95));
-  border:1px solid rgba(255,255,255,.12);
-  box-shadow:var(--shadow);
-}
-
-.loginAvatar{
-  width:64px;
-  height:64px;
-  border-radius:18px;
-  margin:0 auto 12px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:28px;
-  font-weight:900;
-  background:linear-gradient(135deg,var(--accent),var(--accent2));
-  color:#061022;
-}
-
-.loginCard input{
-  width:100%;
-  margin-top:14px;
-  padding:14px;
-  font-size:20px;
-  letter-spacing:6px;
-  text-align:center;
-  border-radius:16px;
-  border:1px solid var(--stroke);
-  background:rgba(0,0,0,.35);
-  color:var(--text);
-}
-
-.primary{
-  width:100%;
-  margin-top:14px;
-  padding:14px;
-  border:none;
-  border-radius:16px;
-  font-weight:900;
-  cursor:pointer;
-  background:linear-gradient(135deg,var(--accent),var(--accent2));
-  color:#061022;
-}
-
-/* =========================
-   TOP BAR (ผ่านแล้ว)
-========================= */
 .topbar{
   position:sticky;
   top:0;
-  z-index:50;
-  padding:18px 20px;
+  z-index:10;
   display:flex;
   justify-content:space-between;
   align-items:center;
+  padding:16px;
   background:rgba(0,0,0,.35);
   backdrop-filter:blur(14px);
-  border-bottom:1px solid var(--stroke);
 }
 
-.brand{
-  display:flex;
-  gap:12px;
-  align-items:center;
-}
-
+.brand{ display:flex; gap:12px; align-items:center }
 .avatar{
-  width:44px;
-  height:44px;
-  border-radius:16px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  width:44px; height:44px;
+  border-radius:14px;
+  display:flex; align-items:center; justify-content:center;
   font-weight:900;
   background:linear-gradient(135deg,var(--accent),var(--accent2));
   color:#061022;
 }
 
-.title{
-  font-weight:900;
-  font-size:17px;
-}
-
-.subtitle{
-  font-size:12px;
-  color:var(--muted);
-}
-
-.topActions{
-  display:flex;
-  gap:12px;
-  align-items:center;
-}
-
-.dateBox{
-  padding:10px 14px;
-  border-radius:14px;
-  background:rgba(255,255,255,.08);
-  border:1px solid var(--stroke);
-  font-size:14px;
-  font-weight:700;
-}
-
-.ghost{
-  padding:10px 16px;
-  border-radius:14px;
-  background:rgba(255,255,255,.08);
-  border:1px solid var(--stroke);
-  color:var(--text);
-}
-
-/* =========================
-   LAYOUT
-========================= */
 .wrap{
   width:min(1100px,94vw);
-  margin:18px auto 64px;
+  margin:20px auto 80px;
 }
 
 .panel{
-  background:var(--panel-bg);
+  background:rgba(255,255,255,.05);
   border:1px solid var(--stroke);
-  border-radius:26px;
+  border-radius:22px;
   padding:18px;
-  box-shadow:var(--shadow);
-}
-
-/* =========================
-   CALENDAR – GRID CORE
-========================= */
-.calendarPanel{
-  margin-top:18px;
+  margin-bottom:18px;
 }
 
 .calendarHeader{
   display:grid;
   grid-template-columns:48px 1fr 48px;
   align-items:center;
-  margin-bottom:10px;
-}
-
-.calNav{
-  width:42px;
-  height:42px;
-  border-radius:14px;
-  border:1px solid var(--stroke);
-  background:rgba(255,255,255,.08);
-  color:var(--text);
-  font-size:22px;
-  cursor:pointer;
+  margin-bottom:12px;
 }
 
 .calendarTitle{
   text-align:center;
-}
-
-.calendarTitle > div:first-child{
   font-size:22px;
   font-weight:900;
-}
-
-.calendarSub{
-  font-size:12px;
-  color:var(--muted);
-  margin-top:4px;
 }
 
 .calendarWeek{
@@ -236,7 +74,6 @@ body{
   text-align:center;
   font-size:12px;
   color:var(--muted);
-  margin-top:10px;
 }
 
 .calendarGrid{
@@ -246,63 +83,88 @@ body{
   margin-top:10px;
 }
 
-/* ===== DAY CELL ===== */
-.calendarCell{
-  height:54px;               /* Safari iOS safe */
-  border-radius:999px;
+.calCell{
+  height:52px;
+  border-radius:16px;
+  background:rgba(0,0,0,.35);
   display:flex;
   align-items:center;
   justify-content:center;
-  font-weight:900;
+}
+
+.tabs{ display:flex; gap:12px }
+.tab{
+  flex:1;
+  padding:14px;
+  border-radius:18px;
   background:rgba(0,0,0,.35);
   border:1px solid var(--stroke);
-  color:var(--text);
+  font-weight:900;
+}
+.tab.active{
+  outline:2px solid rgba(110,231,255,.5);
 }
 
-/* selected day */
-.calendarCell.selected{
-  outline:3px solid rgba(110,231,255,.45);
+.summary{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:12px;
 }
 
-/* ===== DENSITY LEVELS (0–20 queues) ===== */
-.calendarCell.density-lv1{
-  color:var(--lv1);
-  border:2px solid rgba(44,255,156,.55);
-  background:rgba(44,255,156,.12);
+.loginOverlay,
+.overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.85);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:999;
 }
 
-.calendarCell.density-lv2{
-  color:var(--lv2);
-  border:2px solid rgba(124,239,174,.55);
-  background:rgba(124,239,174,.12);
+.loginCard{
+  width:320px;
+  padding:28px;
+  background:#0f1426;
+  border-radius:24px;
+  text-align:center;
 }
 
-.calendarCell.density-lv3{
-  color:var(--lv3);
-  border:2px solid rgba(253,224,71,.55);
-  background:rgba(253,224,71,.12);
+.loginAvatar{
+  width:64px;height:64px;
+  margin:0 auto 12px;
+  border-radius:20px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:32px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#061022;
 }
 
-.calendarCell.density-lv4{
-  color:var(--lv4);
-  border:2px solid rgba(251,146,60,.55);
-  background:rgba(251,146,60,.12);
+input{
+  width:100%;
+  padding:14px;
+  margin-top:12px;
+  border-radius:16px;
+  border:1px solid var(--stroke);
+  background:#000;
+  color:#fff;
+  text-align:center;
+  font-size:18px;
 }
 
-.calendarCell.density-lv5{
-  color:var(--lv5);
-  border:2px solid rgba(255,92,122,.6);
-  background:rgba(255,92,122,.14);
+button{
+  margin-top:14px;
+  padding:14px;
+  width:100%;
+  border-radius:16px;
+  border:none;
+  font-weight:900;
 }
 
-/* =========================
-   RESPONSIVE (iOS)
-========================= */
-@media(max-width:720px){
-  .calendarCell{
-    height:48px;
-  }
-  .calendarTitle > div:first-child{
-    font-size:20px;
-  }
+.primary{
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+}
+.ghost{
+  background:rgba(255,255,255,.08);
+  color:#fff;
 }
