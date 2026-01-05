@@ -16,14 +16,19 @@ const prevMonthBtn = document.getElementById('prevMonth');
 const nextMonthBtn = document.getElementById('nextMonth');
 
 const bookingForm = document.getElementById('bookingForm');
+const submitBookingBtn = document.getElementById('submitBooking');
 const timeSelect = document.getElementById('time');
 const listEl = document.getElementById('list');
+
+const storeStatusText = document.getElementById('storeStatusText');
+const toggleStoreBtn = document.getElementById('toggleStoreBtn');
 
 /* =========================
    STATE
 ========================= */
 let bookings = [];
-let calendarDensity = {};
+let calendarDensity = [];
+let closedDays = [];
 
 let selectedStylist = 'Bank';
 let selectedDate = getTodayTH();
@@ -71,6 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function init() {
   bindStylistTabs();
   loadCalendar();
+  loadClosedDays();
   loadBookings();
 }
 
@@ -80,6 +86,13 @@ function init() {
 async function loadCalendar() {
   const res = await fetch(`${API}/calendar-days`);
   calendarDensity = await res.json();
+  renderCalendar();
+}
+
+async function loadClosedDays() {
+  const res = await fetch(`${API}/closed-days`);
+  closedDays = await res.json();
+  updateStoreStatusBar();
   renderCalendar();
 }
 
@@ -100,19 +113,22 @@ function renderCalendar() {
   for (let d = 1; d <= daysInMonth; d++) {
     const date = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
     const count = calendarDensity[date] || 0;
+    const isClosed = closedDays.includes(date);
 
     const el = document.createElement('div');
     el.className = 'day';
     el.textContent = d;
 
     if (date === selectedDate) el.classList.add('today');
-    if (count > 0 && count <= 5) el.classList.add('low');
-    if (count > 5 && count <= 10) el.classList.add('mid');
-    if (count > 10) el.classList.add('high');
+    if (isClosed) el.classList.add('closed');
+    else if (count > 0 && count <= 5) el.classList.add('low');
+    else if (count > 5 && count <= 10) el.classList.add('mid');
+    else if (count > 10) el.classList.add('high');
 
     el.onclick = () => {
       selectedDate = date;
       loadBookings();
+      updateStoreStatusBar();
       renderCalendar();
     };
 
@@ -136,6 +152,41 @@ nextMonthBtn.onclick = () => {
     viewYear++;
   }
   renderCalendar();
+};
+
+/* =========================
+   STORE STATUS
+========================= */
+function updateStoreStatusBar() {
+  const isClosed = closedDays.includes(selectedDate);
+
+  if (isClosed) {
+    storeStatusText.textContent = '⛔️ ร้านปิดในวันที่เลือก';
+    toggleStoreBtn.textContent = 'Open Store';
+    toggleStoreBtn.className = 'ghost open';
+    submitBookingBtn.disabled = true;
+  } else {
+    storeStatusText.textContent = '🟢 ร้านเปิดให้บริการ';
+    toggleStoreBtn.textContent = 'Close Store';
+    toggleStoreBtn.className = 'ghost closed';
+    submitBookingBtn.disabled = false;
+  }
+}
+
+toggleStoreBtn.onclick = async () => {
+  const isClosed = closedDays.includes(selectedDate);
+
+  if (isClosed) {
+    await fetch(`${API}/closed-days/${selectedDate}`, { method: 'DELETE' });
+  } else {
+    await fetch(`${API}/closed-days`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ date: selectedDate })
+    });
+  }
+
+  await loadClosedDays();
 };
 
 /* =========================
@@ -184,6 +235,11 @@ function renderTimeOptions() {
 ========================= */
 bookingForm.onsubmit = async e => {
   e.preventDefault();
+
+  if (closedDays.includes(selectedDate)) {
+    alert('วันนี้ร้านปิด ไม่สามารถจองคิวได้');
+    return;
+  }
 
   const gender = document.querySelector('[name=gender]:checked')?.value;
   if (!gender) return alert('กรุณาเลือกเพศ');
