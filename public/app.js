@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ================= CONFIG ================= */
   const OWNER_PIN = '1234';
   const AUTH_KEY = 'adore_owner_auth';
+  const API = ''; // ใช้ same origin
 
   /* ================= ELEMENTS ================= */
   const loginOverlay = document.getElementById('loginOverlay');
@@ -22,6 +23,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentMonth = new Date();
   let selectedDate = null;
   let activeStylist = 'Bank';
+
+  let densityMap = {}; // { 'YYYY-MM-DD': count }
 
   const stylists = ['Bank', 'Sindy', 'Assist'];
 
@@ -48,8 +51,9 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   /* ================= BOOT ================= */
-  function boot() {
+  async function boot() {
     renderTopDate();
+    await loadCalendarDensity();
     renderCalendar();
     renderStylistTabs();
     renderSummary();
@@ -61,6 +65,32 @@ document.addEventListener('DOMContentLoaded', () => {
       day: 'numeric',
       year: 'numeric'
     });
+  }
+
+  /* ================= DENSITY ================= */
+  async function loadCalendarDensity() {
+    try {
+      const res = await fetch(`${API}/calendar-days`);
+      const raw = await res.json();
+
+      /*
+        raw = { '2026-01-05': totalBookings }
+        → ใช้ตรง ๆ เพราะ backend นับรวมมาแล้ว
+      */
+      densityMap = raw || {};
+    } catch (e) {
+      densityMap = {};
+    }
+  }
+
+  function getDensityClass(dateKey) {
+    const count = Math.min(densityMap[dateKey] || 0, 20);
+
+    if (count >= 16) return 'density-full';
+    if (count >= 11) return 'density-high';
+    if (count >= 6) return 'density-mid';
+    if (count >= 1) return 'density-low';
+    return '';
   }
 
   /* ================= CALENDAR ================= */
@@ -98,16 +128,22 @@ document.addEventListener('DOMContentLoaded', () => {
       num.className = 'calNum';
       num.textContent = d;
 
-      cell.onclick = () => selectDate(d);
+      const dateKey =
+        `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+
+      const densityClass = getDensityClass(dateKey);
+      if (densityClass) num.classList.add(densityClass);
+
+      cell.onclick = () => selectDate(dateKey);
 
       cell.appendChild(num);
       calendarGrid.appendChild(cell);
     }
   }
 
-  function selectDate(day) {
-    selectedDate = day;
-    dayHint.textContent = `วันที่เลือก: ${day}`;
+  function selectDate(dateKey) {
+    selectedDate = dateKey;
+    dayHint.textContent = `วันที่เลือก: ${dateKey}`;
     renderSummary();
   }
 
