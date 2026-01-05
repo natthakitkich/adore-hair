@@ -1,8 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
 
+  /* ================= CONFIG ================= */
   const OWNER_PIN = '1234';
   const AUTH_KEY = 'adore_auth';
 
+  /* ================= ELEMENTS ================= */
   const loginOverlay = document.getElementById('loginOverlay');
   const pinInput = document.getElementById('pinInput');
   const loginBtn = document.getElementById('loginBtn');
@@ -16,11 +18,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const summary = document.getElementById('summary');
   const topDate = document.getElementById('topDate');
 
+  /* ================= STATE ================= */
   let currentMonth = new Date();
   let selectedDate = null;
   let activeStylist = 'Bank';
+  let bookings = [];
 
-  /* ===== AUTH ===== */
+  /* ================= AUTH ================= */
   if (localStorage.getItem(AUTH_KEY) === 'true') {
     loginOverlay.classList.add('hidden');
     boot();
@@ -41,12 +45,12 @@ document.addEventListener('DOMContentLoaded', () => {
     location.reload();
   };
 
-  /* ===== BOOT ===== */
+  /* ================= BOOT ================= */
   function boot(){
     renderTopDate();
     renderCalendar();
     renderTabs();
-    renderSummary();
+    renderEmptySummary();
   }
 
   function renderTopDate(){
@@ -55,11 +59,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  /* ===== CALENDAR ===== */
+  /* ================= CALENDAR ================= */
   document.getElementById('prevMonth').onclick = () => {
     currentMonth.setMonth(currentMonth.getMonth()-1);
     renderCalendar();
   };
+
   document.getElementById('nextMonth').onclick = () => {
     currentMonth.setMonth(currentMonth.getMonth()+1);
     renderCalendar();
@@ -79,40 +84,98 @@ document.addEventListener('DOMContentLoaded', () => {
       calendarGrid.appendChild(document.createElement('div'));
     }
 
-    for(let d=1;d<=days;d++){
+    for(let d=1; d<=days; d++){
       const cell = document.createElement('div');
       cell.className = 'calCell';
       cell.textContent = d;
 
       cell.onclick = () => {
-        selectedDate = `${y}-${m+1}-${d}`;
-        dayHint.textContent = `เลือกวันที่ ${d}`;
+        selectedDate = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        dayHint.textContent = `วันที่เลือก: ${d}`;
+        fetchBookings();
       };
 
       calendarGrid.appendChild(cell);
     }
   }
 
-  /* ===== TABS ===== */
+  /* ================= BOOKINGS ================= */
+  async function fetchBookings(){
+    try{
+      const res = await fetch(`/bookings?date=${selectedDate}`);
+      bookings = await res.json();
+      renderTabs();
+      renderSummary();
+      renderBookingTable();
+    }catch(err){
+      console.error(err);
+    }
+  }
+
+  /* ================= TABS ================= */
   function renderTabs(){
     stylistTabs.innerHTML='';
     ['Bank','Sindy','Assist'].forEach(name=>{
       const t=document.createElement('div');
       t.className='tab'+(name===activeStylist?' active':'');
       t.textContent=name;
-      t.onclick=()=>{activeStylist=name;renderTabs();};
+      t.onclick=()=>{activeStylist=name;renderBookingTable();renderTabs();};
       stylistTabs.appendChild(t);
     });
   }
 
-  /* ===== SUMMARY ===== */
+  /* ================= SUMMARY ================= */
+  function renderEmptySummary(){
+    summary.innerHTML = `<div class="center muted">ยังไม่มีข้อมูล</div>`;
+  }
+
   function renderSummary(){
-    summary.innerHTML=`
-      <div class="panel">Bank<br><b>0</b></div>
-      <div class="panel">Sindy<br><b>0</b></div>
-      <div class="panel">Assist<br><b>0</b></div>
-      <div class="panel">รวม<br><b>0</b></div>
+    const count = { Bank:0, Sindy:0, Assist:0 };
+    bookings.forEach(b => count[b.stylist]++);
+
+    summary.innerHTML = `
+      <div class="panel">Bank<br><b>${count.Bank}</b></div>
+      <div class="panel">Sindy<br><b>${count.Sindy}</b></div>
+      <div class="panel">Assist<br><b>${count.Assist}</b></div>
+      <div class="panel">รวม<br><b>${bookings.length}</b></div>
     `;
+  }
+
+  /* ================= TABLE ================= */
+  function renderBookingTable(){
+    const list = bookings.filter(b => b.stylist === activeStylist);
+
+    let html = `
+      <section class="panel">
+        <table style="width:100%;border-collapse:collapse">
+          <thead>
+            <tr style="color:#9aa6c5;text-align:left">
+              <th>เวลา</th>
+              <th>ช่าง</th>
+              <th>เพศ</th>
+              <th>ชื่อ</th>
+            </tr>
+          </thead>
+          <tbody>
+    `;
+
+    if(list.length === 0){
+      html += `<tr><td colspan="4" class="muted">ไม่มีคิว</td></tr>`;
+    }else{
+      list.forEach(b=>{
+        html += `
+          <tr>
+            <td>${b.time}</td>
+            <td>${b.stylist}</td>
+            <td>${b.gender}</td>
+            <td>${b.name}</td>
+          </tr>
+        `;
+      });
+    }
+
+    html += `</tbody></table></section>`;
+    summary.insertAdjacentHTML('afterend', html);
   }
 
 });
