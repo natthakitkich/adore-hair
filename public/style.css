@@ -272,3 +272,31 @@ button{
   background:rgba(255,255,255,.1);
   color:#fff;
 }
+
+/* ===== CALENDAR (เพิ่มเติม Phase 1) ===== */
+
+.calCell{
+  aspect-ratio:1/1;
+  border-radius:50%;
+  background:rgba(0,0,0,.35);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  transition:.15s;
+}
+
+.calCell.selected{
+  outline:3px solid rgba(110,231,255,.85);
+  background:rgba(110,231,255,.15);
+}
+
+.calNum{
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:900;
+}
