@@ -54,112 +54,28 @@ input,select{
   outline:none;
 }
 
-input:disabled{
-  opacity:.6;
-  cursor:not-allowed;
-}
-
-label{
-  font-size:13px;
-  color:var(--muted);
-}
-
 .primary{
-  background:linear-gradient(135deg,var(--accent),var(--accent2));
-  color:#061022;
-  border:none;
+  width:100%;
   padding:14px;
   border-radius:16px;
   font-weight:900;
+  border:none;
   cursor:pointer;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#061022;
 }
 
 .ghost{
   background:rgba(255,255,255,.06);
   border:1px solid var(--stroke);
   color:var(--text);
-  padding:8px 14px;
+  padding:10px 18px;
   border-radius:14px;
   cursor:pointer;
 }
 
 /* =========================
-   TOPBAR
-========================= */
-.topbar{
-  position:sticky;
-  top:0;
-  z-index:10;
-  padding:18px 22px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  background:rgba(0,0,0,.35);
-  backdrop-filter:blur(14px);
-  border-bottom:1px solid var(--stroke);
-}
-
-.brand{
-  display:flex;
-  gap:12px;
-  align-items:center;
-}
-
-.avatar{
-  width:40px;
-  height:40px;
-  border-radius:14px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:900;
-  background:linear-gradient(135deg,var(--accent),var(--accent2));
-  color:#061022;
-}
-
-.avatar.big{
-  width:72px;
-  height:72px;
-  font-size:32px;
-}
-
-.title{
-  font-weight:900;
-  font-size:16px;
-}
-
-.subtitle{
-  font-size:12px;
-  color:var(--muted);
-}
-
-/* =========================
-   LAYOUT
-========================= */
-.wrap{
-  width:min(1100px,94vw);
-  margin:18px auto 64px;
-}
-
-.panel{
-  background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
-  border:1px solid var(--stroke);
-  border-radius:22px;
-  padding:18px;
-  box-shadow:var(--shadow);
-  margin-top:16px;
-}
-
-.grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:14px;
-}
-
-.full{grid-column:1/-1}
-
-/* =========================
-   OVERLAY / MODAL
+   OVERLAY / LOGIN
 ========================= */
 .overlay{
   position:fixed;
@@ -187,173 +103,38 @@ label{
   text-align:center;
 }
 
-/* =========================
-   CALENDAR
-========================= */
-.calendarHeader{
-  display:grid;
-  grid-template-columns:48px 1fr 48px;
-  align-items:center;
-  margin-bottom:12px;
-}
-
-.calendarCenter{text-align:center}
-
-.calendarTitle{
+#pin{
+  max-width:280px;
+  text-align:center;
+  letter-spacing:6px;
   font-size:22px;
-  font-weight:900;
 }
 
-.calendarSubtitle{
-  font-size:13px;
-  color:var(--muted);
-  margin-top:2px;
-}
-
-.calWeekHead{
-  display:grid;
-  grid-template-columns:repeat(7,1fr);
-  gap:10px;
-  text-align:center;
-  font-size:12px;
-  color:var(--muted);
-  margin-top:14px;
-}
-
-.calGrid{
-  display:grid;
-  grid-template-columns:repeat(7,1fr);
-  gap:10px;
-  margin-top:10px;
-}
-
-.calCell{
-  aspect-ratio:1/1;
-  border-radius:18px;
-  background:rgba(0,0,0,.28);
-  border:1px solid var(--stroke);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
-}
-
-.calCell.selected{
-  outline:2px solid rgba(110,231,255,.45);
-}
-
-.calNum{
-  width:40px;
-  height:40px;
+/* =========================
+   STYLIST BADGE
+========================= */
+.stylist{
+  padding:6px 14px;
   border-radius:999px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
   font-weight:900;
-}
-
-/* ===== DENSITY COLORS (สำคัญ) ===== */
-/* 0 คิว = ไม่มี class */
-
-.calNum.density-low{
-  background:rgba(44,255,156,.22);
-  color:#2cff9c;
-  border:1px solid rgba(44,255,156,.55);
-}
-
-.calNum.density-mid{
-  background:rgba(253,224,71,.22);
-  color:#fde047;
-  border:1px solid rgba(253,224,71,.55);
-}
-
-.calNum.density-high{
-  background:rgba(251,146,60,.22);
-  color:#fb923c;
-  border:1px solid rgba(251,146,60,.55);
-}
-
-.calNum.density-full{
-  background:rgba(255,92,122,.22);
-  color:#ff5c7a;
-  border:1px solid rgba(255,92,122,.55);
-}
-
-/* =========================
-   TABS
-========================= */
-.tabs{
-  display:flex;
-  gap:12px;
-}
-
-.tab{
-  flex:1;
-  padding:14px;
-  border-radius:20px;
-  border:1px solid var(--stroke);
-  background:rgba(0,0,0,.32);
-  font-weight:900;
-  cursor:pointer;
-  text-align:center;
-}
-
-.tab.active{
-  background:rgba(110,231,255,.16);
-  outline:2px solid rgba(110,231,255,.4);
-}
-
-/* =========================
-   SUMMARY
-========================= */
-.summary{
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:14px;
-}
-
-.box{
-  padding:16px;
-  border-radius:20px;
-  background:rgba(0,0,0,.32);
-  border:1px solid var(--stroke);
-  font-weight:900;
-}
-
-/* =========================
-   TABLE
-========================= */
-table{
-  width:100%;
-  border-collapse:collapse;
   font-size:13px;
+  display:inline-block;
 }
 
-th,td{
-  padding:12px;
-  border-bottom:1px solid var(--stroke);
+.stylist.bank{
+  color:#6ee7ff;
+  border:1px solid rgba(110,231,255,.6);
+  background:rgba(110,231,255,.15);
 }
 
-th{
-  color:var(--muted);
-  font-weight:900;
-  text-align:left;
+.stylist.sindy{
+  color:#ff8fb1;
+  border:1px solid rgba(255,143,177,.6);
+  background:rgba(255,143,177,.15);
 }
 
-td a{
-  color:var(--accent);
-  text-decoration:none;
-}
-
-/* =========================
-   RESPONSIVE
-========================= */
-@media(max-width:720px){
-  .grid{grid-template-columns:1fr}
-  .summary{grid-template-columns:1fr 1fr}
-  .topbar{
-    flex-direction:column;
-    align-items:flex-start;
-    gap:12px;
-  }
+.stylist.assist{
+  color:#2cff9c;
+  border:1px solid rgba(44,255,156,.6);
+  background:rgba(44,255,156,.15);
 }
