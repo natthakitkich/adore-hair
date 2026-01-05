@@ -1,15 +1,16 @@
 /* =========================
-   CONFIG / STATE
+   CONFIG / STATE (BASIC)
 ========================= */
 const API = '';
 
 let bookings = [];
 let currentDate = '';
+let currentMonth = new Date();
 let currentStylist = 'Bank';
 let editingId = null;
 
 /* =========================
-   LOGIN
+   LOGIN (BASIC)
 ========================= */
 const loginOverlay = document.getElementById('loginOverlay');
 const loginBtn = document.getElementById('loginBtn');
@@ -31,11 +32,11 @@ loginBtn.onclick = () => {
 };
 
 logoutBtn.onclick = () => {
-  loginOverlay.classList.remove('hidden');
+  location.reload();
 };
 
 /* =========================
-   INIT
+   INIT (BASIC FLOW)
 ========================= */
 function init() {
   const dateInput = document.getElementById('date');
@@ -54,7 +55,6 @@ function init() {
       tab.classList.add('active');
       currentStylist = tab.dataset.tab;
       renderTable();
-      updateSummary();
     };
   });
 
@@ -69,7 +69,7 @@ function formatTime(time) {
 }
 
 /* =========================
-   LOAD BOOKINGS
+   LOAD BOOKINGS (BASIC)
 ========================= */
 async function loadBookings() {
   const res = await fetch(`${API}/bookings?date=${currentDate}`);
@@ -79,7 +79,7 @@ async function loadBookings() {
 }
 
 /* =========================
-   RENDER TABLE
+   TABLE (BASIC + EDIT)
 ========================= */
 function renderTable() {
   const list = document.getElementById('list');
@@ -104,7 +104,7 @@ function renderTable() {
 }
 
 /* =========================
-   SUMMARY
+   SUMMARY (BASIC)
 ========================= */
 function updateSummary() {
   const bank = bookings.filter(b => b.stylist === 'Bank').length;
@@ -118,26 +118,17 @@ function updateSummary() {
 }
 
 /* =========================
-   EDIT MODAL
+   EDIT MODAL (NEW)
 ========================= */
 const editOverlay = document.getElementById('editOverlay');
-const editTime = document.getElementById('editTime');
-const editStylist = document.getElementById('editStylist');
-const editName = document.getElementById('editName');
-const editPhone = document.getElementById('editPhone');
-const editService = document.getElementById('editService');
-const saveEdit = document.getElementById('saveEdit');
-const deleteEdit = document.getElementById('deleteEdit');
-const closeEditBtn = document.getElementById('closeEdit');
 
 function openEdit(b) {
   editingId = b.id;
-
-  editTime.value = formatTime(b.time);
-  editStylist.value = b.stylist;
-  editName.value = b.name;
-  editPhone.value = b.phone || '';
-  editService.value = b.service || '';
+  document.getElementById('editTime').value = formatTime(b.time);
+  document.getElementById('editStylist').value = b.stylist;
+  document.getElementById('editName').value = b.name;
+  document.getElementById('editPhone').value = b.phone || '';
+  document.getElementById('editService').value = b.service || '';
 
   document.querySelectorAll('[name=editGender]').forEach(r => {
     r.checked = r.value === b.gender;
@@ -146,7 +137,7 @@ function openEdit(b) {
   editOverlay.classList.remove('hidden');
 }
 
-saveEdit.onclick = async () => {
+document.getElementById('saveEdit').onclick = async () => {
   const gender = document.querySelector('[name=editGender]:checked')?.value;
 
   await fetch(`${API}/bookings/${editingId}`, {
@@ -165,7 +156,7 @@ saveEdit.onclick = async () => {
   loadBookings();
 };
 
-deleteEdit.onclick = async () => {
+document.getElementById('deleteEdit').onclick = async () => {
   if (!confirm('ยืนยันการลบคิวนี้?')) return;
 
   await fetch(`${API}/bookings/${editingId}`, { method: 'DELETE' });
@@ -173,7 +164,7 @@ deleteEdit.onclick = async () => {
   loadBookings();
 };
 
-closeEditBtn.onclick = closeEdit;
+document.getElementById('closeEdit').onclick = closeEdit;
 
 function closeEdit() {
   editOverlay.classList.add('hidden');
