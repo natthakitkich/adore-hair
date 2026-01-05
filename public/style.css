@@ -46,12 +46,17 @@ body{
 input,select{
   width:100%;
   padding:14px;
-  font-size:16px; /* iOS Safari: กัน auto zoom */
+  font-size:16px;
   border-radius:16px;
   border:1px solid var(--stroke);
   background:rgba(0,0,0,.28);
   color:var(--text);
   outline:none;
+}
+
+input:disabled{
+  opacity:.6;
+  cursor:not-allowed;
 }
 
 label{
@@ -154,7 +159,7 @@ label{
 .full{grid-column:1/-1}
 
 /* =========================
-   LOGIN OVERLAY
+   OVERLAY / MODAL
 ========================= */
 .overlay{
   position:fixed;
@@ -180,6 +185,13 @@ label{
   gap:16px;
   align-items:center;
   text-align:center;
+}
+
+/* PIN */
+#pin{
+  text-align:center;
+  letter-spacing:6px;
+  font-size:22px;
 }
 
 /* =========================
@@ -249,7 +261,7 @@ label{
   font-weight:900;
 }
 
-/* ===== Density Colors ===== */
+/* ===== ORIGINAL DENSITY COLORS ===== */
 .calNum.density-low{
   background:rgba(44,255,156,.22);
   color:#2cff9c;
@@ -334,32 +346,6 @@ th{
   color:var(--muted);
   font-weight:900;
   text-align:left;
-}
-
-/* =========================
-   BADGE
-========================= */
-.badge{
-  padding:4px 12px;
-  border-radius:999px;
-  font-size:12px;
-  font-weight:900;
-  border:1px solid var(--stroke);
-}
-
-.badge.stylist-bank{
-  background:rgba(110,231,255,.2);
-  color:#6ee7ff;
-}
-
-.badge.stylist-sindy{
-  background:rgba(255,92,122,.2);
-  color:#ff7abf;
-}
-
-.badge.stylist-assist{
-  background:rgba(209,213,219,.18);
-  color:#d1d5db;
 }
 
 /* =========================
