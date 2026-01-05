@@ -43,41 +43,23 @@
       <div id="calendarTitle" class="calendarTitle"></div>
       <button id="nextMonth" class="navBtn">›</button>
     </div>
+
     <div class="calendarWeek">
       <span>อา</span><span>จ</span><span>อ</span>
       <span>พ</span><span>พฤ</span><span>ศ</span><span>ส</span>
     </div>
+
     <div id="calendarGrid" class="calendarGrid"></div>
   </section>
 
+  <!-- DAY CONTROL -->
   <section class="panel center">
     <div id="dayStatus" class="muted">กรุณาเลือกวันจากปฏิทิน</div>
+    <button id="closeDayBtn" class="danger hidden">ตั้งเป็นวันหยุด</button>
+    <button id="openDayBtn" class="primary hidden">ยกเลิกวันหยุด</button>
   </section>
 
-  <!-- ADD -->
-  <section class="panel hidden" id="addBookingPanel">
-    <h3>เพิ่มคิวใหม่</h3>
-
-    <select id="addTime"></select>
-    <select id="addStylist">
-      <option>Bank</option>
-      <option>Sindy</option>
-      <option>Assist</option>
-    </select>
-
-    <div class="row">
-      <label><input type="radio" name="addGender" value="male"> 👨</label>
-      <label><input type="radio" name="addGender" value="female"> 👩</label>
-    </div>
-
-    <input id="addName" placeholder="ชื่อลูกค้า" />
-    <input id="addPhone" placeholder="เบอร์โทร" />
-    <input id="addService" placeholder="บริการ" />
-
-    <button id="addBookingBtn" class="primary">บันทึกคิว</button>
-  </section>
-
-  <!-- TABS -->
+  <!-- STYLIST -->
   <section class="panel">
     <div id="stylistTabs" class="tabs"></div>
   </section>
@@ -85,7 +67,7 @@
   <!-- SUMMARY -->
   <section id="summary" class="panel summary"></section>
 
-  <!-- TABLE -->
+  <!-- QUEUE -->
   <section class="panel">
     <table class="queueTable">
       <thead>
@@ -104,31 +86,6 @@
   </section>
 
 </main>
-
-<!-- EDIT MODAL -->
-<div id="editOverlay" class="overlay hidden">
-  <div class="loginCard">
-    <h2>แก้ไขคิว</h2>
-
-    <input id="editDate" type="date" />
-    <select id="editTime"></select>
-
-    <input id="editStylist" disabled />
-    <input id="editName" />
-    <input id="editPhone" />
-
-    <div class="row">
-      <label><input type="radio" name="editGender" value="male"> 👨</label>
-      <label><input type="radio" name="editGender" value="female"> 👩</label>
-    </div>
-
-    <input id="editService" />
-
-    <button id="saveEditBtn" class="primary">บันทึก</button>
-    <button id="deleteEditBtn" class="danger">ลบคิว</button>
-    <button id="closeEditBtn" class="ghost">ปิด</button>
-  </div>
-</div>
 
 <script src="app.js"></script>
 </body>
