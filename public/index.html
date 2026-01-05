@@ -14,12 +14,19 @@
     <div class="loginAvatar">A</div>
     <h1>เข้าสู่ระบบ</h1>
     <p class="muted">กรุณาใส่ PIN 4 หลัก</p>
-    <input id="pin" type="password" inputmode="numeric" maxlength="4" placeholder="••••" />
+    <input
+      id="pin"
+      type="password"
+      inputmode="numeric"
+      maxlength="4"
+      placeholder="••••"
+    />
     <button id="loginBtn" class="primary">Login</button>
     <div id="loginMsg" class="msg err"></div>
   </div>
 </div>
 
+<!-- TOP BAR -->
 <header class="topbar">
   <div class="brand">
     <div class="avatar">A</div>
@@ -28,16 +35,18 @@
       <div class="subtitle">Owner Queue · 13:00–22:00 · แยกตามช่าง</div>
     </div>
   </div>
+
   <div class="topRight">
     <div id="topDate" class="dateBadge"></div>
     <button id="logoutBtn" class="ghost">Logout</button>
   </div>
 </header>
 
+<!-- MAIN -->
 <main class="wrap">
 
   <!-- CALENDAR -->
-  <section class="panel">
+  <section class="panel" id="calendarPanel">
     <div class="calendarHeader">
       <button id="prevMonth" class="ghost">‹</button>
       <div class="calendarTitle" id="calendarTitle"></div>
@@ -45,7 +54,13 @@
     </div>
 
     <div class="calendarWeek">
-      <span>อา</span><span>จ</span><span>อ</span><span>พ</span><span>พฤ</span><span>ศ</span><span>ส</span>
+      <span>อา</span>
+      <span>จ</span>
+      <span>อ</span>
+      <span>พ</span>
+      <span>พฤ</span>
+      <span>ศ</span>
+      <span>ส</span>
     </div>
 
     <div class="calendarGrid" id="calendarGrid"></div>
@@ -67,6 +82,17 @@
 
 </main>
 
+<!-- CLOSED DAY OVERLAY -->
+<div id="closedOverlay" class="overlay hidden">
+  <div class="loginCard">
+    <h2>วันนี้เป็นวันหยุด</h2>
+    <p class="muted">ไม่สามารถจัดการคิวได้</p>
+    <button id="closeClosedOverlay" class="ghost">รับทราบ</button>
+  </div>
+</div>
+
+<!-- SCRIPT : MUST BE LAST -->
 <script src="app.js"></script>
+
 </body>
 </html>
