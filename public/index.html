@@ -9,7 +9,7 @@
 <body>
 
 <!-- =========================
-     LOGIN OVERLAY (ENTRY)
+     LOGIN OVERLAY
 ========================= -->
 <div id="loginOverlay" class="overlay">
   <div class="modal">
@@ -36,7 +36,7 @@
 </div>
 
 <!-- =========================
-     EDIT BOOKING MODAL
+     EDIT BOOKING MODAL (เดิม)
 ========================= -->
 <div id="editOverlay" class="overlay hidden">
   <div class="modal">
@@ -70,7 +70,7 @@
 <!-- =========================
      TOP BAR
 ========================= -->
-<div class="topbar hidden" id="topbar">
+<div class="topbar">
   <div class="brand">
     <div class="avatar">A</div>
     <div>
@@ -85,63 +85,56 @@
 </div>
 
 <!-- =========================
-     CALENDAR VIEW (NEW)
+     MAIN CONTENT (SINGLE PAGE)
 ========================= -->
-<div class="calendarWrap hidden" id="calendarView">
-  <div class="calendarHeader">
-    <button id="prevMonth" class="ghost">‹</button>
-    <div class="calendarTitle" id="calendarTitle">—</div>
-    <button id="nextMonth" class="ghost">›</button>
-  </div>
+<div class="wrap">
 
-  <div class="calendarGrid">
-    <div class="dayLabel">อา</div>
-    <div class="dayLabel">จ</div>
-    <div class="dayLabel">อ</div>
-    <div class="dayLabel">พ</div>
-    <div class="dayLabel">พฤ</div>
-    <div class="dayLabel">ศ</div>
-    <div class="dayLabel">ส</div>
+  <!-- ===== CALENDAR ===== -->
+  <section class="panel">
+    <div class="calendarHeader">
+      <button id="prevMonth" class="ghost">‹</button>
+      <div id="calendarTitle" class="calendarTitle">—</div>
+      <button id="nextMonth" class="ghost">›</button>
+    </div>
 
-    <!-- JS จะ render day cells ตรงนี้ -->
-    <div id="calendarDays" class="calendarDays"></div>
-  </div>
+    <div class="calendarGrid">
+      <div class="dayLabel">อา</div>
+      <div class="dayLabel">จ</div>
+      <div class="dayLabel">อ</div>
+      <div class="dayLabel">พ</div>
+      <div class="dayLabel">พฤ</div>
+      <div class="dayLabel">ศ</div>
+      <div class="dayLabel">ส</div>
 
-  <div class="calendarLegend">
-    <span class="dot low"></span> คิวน้อย
-    <span class="dot mid"></span> คิวปานกลาง
-    <span class="dot high"></span> คิวหนาแน่น
-  </div>
-</div>
+      <div id="calendarDays" class="calendarDays"></div>
+    </div>
 
-<!-- =========================
-     MAIN BOOKING VIEW
-========================= -->
-<div class="wrap hidden" id="bookingView">
+    <div class="calendarLegend">
+      <span class="dot low"></span> คิวน้อย
+      <span class="dot mid"></span> ปานกลาง
+      <span class="dot high"></span> หนาแน่น
+    </div>
+  </section>
 
-  <div class="panel">
-    <label for="date">เลือกวันที่</label>
-    <input type="date" id="date" />
-  </div>
+  <!-- ===== SUMMARY ===== -->
+  <section class="panel">
+    <div class="summary">
+      <div class="box">Bank<br><strong id="countBank">0</strong></div>
+      <div class="box">Sindy<br><strong id="countSindy">0</strong></div>
+      <div class="box">Assist<br><strong id="countAssist">0</strong></div>
+      <div class="box">รวม<br><strong id="countTotal">0</strong></div>
+    </div>
+  </section>
 
-  <div class="panel">
+  <!-- ===== BOOKING ===== -->
+  <section class="panel">
+
     <div class="tabs">
       <div class="tab active" data-tab="Bank">Bank</div>
       <div class="tab" data-tab="Sindy">Sindy</div>
       <div class="tab" data-tab="Assist">Assist</div>
     </div>
-  </div>
 
-  <div class="panel">
-    <div class="summary">
-      <div class="box">Bank: <span id="countBank">0</span></div>
-      <div class="box">Sindy: <span id="countSindy">0</span></div>
-      <div class="box">Assist: <span id="countAssist">0</span></div>
-      <div class="box">รวม: <span id="countTotal">0</span></div>
-    </div>
-  </div>
-
-  <div class="panel">
     <form id="bookingForm" class="grid">
       <div>
         <label>เวลา</label>
@@ -175,9 +168,10 @@
         <button type="submit" class="primary">เพิ่มคิว</button>
       </div>
     </form>
-  </div>
+  </section>
 
-  <div class="panel">
+  <!-- ===== TABLE ===== -->
+  <section class="panel">
     <table>
       <thead>
         <tr>
@@ -192,7 +186,7 @@
       </thead>
       <tbody id="list"></tbody>
     </table>
-  </div>
+  </section>
 
 </div>
 
