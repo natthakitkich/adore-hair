@@ -4,18 +4,18 @@ document.addEventListener('DOMContentLoaded', () => {
   const AUTH_KEY = 'adore_owner_auth';
   const API = '';
 
-  const stylists = ['Bank','Sindy','Assist'];
-  const START = 13, END = 22;
-
   const el = id => document.getElementById(id);
 
   let currentMonth = new Date();
   let selectedDate = null;
   let bookings = [];
+  let closedDays = new Set();
   let activeStylist = 'Bank';
-  let editing = null;
 
-  /* ===== AUTH ===== */
+  const stylists = ['Bank','Sindy','Assist'];
+  const START = 13, END = 22;
+
+  /* ===== LOGIN ===== */
   if (localStorage.getItem(AUTH_KEY)==='true') boot();
   else el('loginOverlay').style.display='flex';
 
@@ -35,10 +35,34 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   /* ===== BOOT ===== */
-  function boot(){
-    el('topDate').textContent = new Date().toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'});
+  async function boot(){
+    el('topDate').textContent =
+      new Date().toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'});
+
+    await loadClosedDays();
     renderCalendar();
     renderStylistTabs();
+  }
+
+  /* ===== CLOSED DAYS (SERVER) ===== */
+  async function loadClosedDays(){
+    const res = await fetch(`${API}/closed-days`);
+    const list = await res.json();
+    closedDays = new Set(list);
+  }
+
+  async function setClosed(date, close){
+    await fetch(`${API}/closed-days`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        date,
+        action: close ? 'close' : 'open'
+      })
+    });
+    await loadClosedDays();
+    renderCalendar();
+    selectDate(date);
   }
 
   /* ===== CALENDAR ===== */
@@ -51,20 +75,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const first=new Date(y,m,1).getDay();
     const days=new Date(y,m+1,0).getDate();
 
-    for(let i=0;i<first;i++) el('calendarGrid').appendChild(document.createElement('div'));
+    for(let i=0;i<first;i++)
+      el('calendarGrid').appendChild(document.createElement('div'));
 
     for(let d=1;d<=days;d++){
       const date=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
       const cell=document.createElement('div');
       cell.className='calCell';
+
       const inner=document.createElement('div');
       inner.className='calCellInner';
+
       const num=document.createElement('div');
       num.className='calNum';
       num.textContent=d;
+
+      if(closedDays.has(date)){
+        cell.classList.add('closed');
+      }
+
       inner.appendChild(num);
       cell.appendChild(inner);
-      cell.onclick=()=>selectDate(date,cell);
+      cell.onclick=()=>selectDate(date);
+
       el('calendarGrid').appendChild(cell);
     }
   }
@@ -72,61 +105,41 @@ document.addEventListener('DOMContentLoaded', () => {
   el('prevMonth').onclick=()=>{currentMonth.setMonth(currentMonth.getMonth()-1);renderCalendar();};
   el('nextMonth').onclick=()=>{currentMonth.setMonth(currentMonth.getMonth()+1);renderCalendar();};
 
-  /* ===== DATE ===== */
-  async function selectDate(date,cell){
-    selectedDate=date;
-    document.querySelectorAll('.calCell').forEach(c=>c.classList.remove('selected'));
-    cell.classList.add('selected');
-    el('dayStatus').textContent=`วันที่ ${date}`;
-    el('addBookingPanel').classList.remove('hidden');
-    renderAddTimes();
-    await loadBookings();
-  }
+  /* ===== DATE SELECT ===== */
+  async function selectDate(date){
+    selectedDate = date;
+    const isClosed = closedDays.has(date);
 
-  function renderAddTimes(){
-    el('addTime').innerHTML='';
-    for(let h=START;h<=END;h++){
-      const t=`${String(h).padStart(2,'0')}:00:00`;
-      el('addTime').innerHTML+=`<option value="${t}">${t.slice(0,5)}</option>`;
+    el('dayStatus').textContent =
+      isClosed ? 'วันนี้เป็นวันหยุด' : `วันที่ ${date} เปิดทำการ`;
+
+    el('closeDayBtn').classList.toggle('hidden', isClosed);
+    el('openDayBtn').classList.toggle('hidden', !isClosed);
+
+    el('closeDayBtn').onclick = () => setClosed(date,true);
+    el('openDayBtn').onclick  = () => setClosed(date,false);
+
+    if(isClosed){
+      el('queueBody').innerHTML='';
+      el('summary').innerHTML='';
+      return;
     }
-  }
-
-  /* ===== ADD ===== */
-  el('addBookingBtn').onclick=async()=>{
-    const gender=document.querySelector('[name=addGender]:checked')?.value;
-    if(!gender){alert('เลือกเพศ');return;}
-
-    const res=await fetch(`${API}/bookings`,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        date:selectedDate,
-        time:el('addTime').value,
-        stylist:el('addStylist').value,
-        name:el('addName').value,
-        phone:el('addPhone').value,
-        gender,
-        service:el('addService').value
-      })
-    });
-
-    if(!res.ok){ alert('คิวนี้ถูกจองแล้ว'); return; }
 
     await loadBookings();
-    alert('เพิ่มคิวสำเร็จ');
-  };
+  }
 
-  /* ===== LOAD ===== */
+  /* ===== BOOKINGS ===== */
   async function loadBookings(){
-    const res=await fetch(`${API}/bookings?date=${selectedDate}`);
-    bookings=await res.json();
+    const res = await fetch(`${API}/bookings?date=${selectedDate}`);
+    bookings = await res.json();
     renderQueue();
     renderSummary();
   }
 
   function renderQueue(){
     el('queueBody').innerHTML='';
-    bookings.filter(b=>b.stylist===activeStylist)
+    bookings
+      .filter(b=>b.stylist===activeStylist)
       .sort((a,b)=>a.time.localeCompare(b.time))
       .forEach(b=>{
         const tr=document.createElement('tr');
@@ -137,83 +150,12 @@ document.addEventListener('DOMContentLoaded', () => {
           <td>${b.name}</td>
           <td>${b.service||''}</td>
           <td>${b.phone||''}</td>
-          <td><button class="ghost">แก้ไข</button></td>
+          <td></td>
         `;
-        tr.querySelector('button').onclick=()=>openEdit(b);
         el('queueBody').appendChild(tr);
       });
   }
 
-  /* ===== EDIT ===== */
-  function openEdit(b){
-    editing=b;
-    el('editDate').value=b.date;
-    el('editStylist').value=b.stylist;
-    el('editName').value=b.name;
-    el('editPhone').value=b.phone||'';
-    el('editService').value=b.service||'';
-
-    document.querySelectorAll('[name=editGender]').forEach(r=>{
-      r.checked=r.value===b.gender;
-    });
-
-    renderEditTimes(b);
-    el('editOverlay').classList.remove('hidden');
-  }
-
-  async function renderEditTimes(b){
-    el('editTime').innerHTML='';
-    const res=await fetch(`${API}/bookings?date=${b.date}`);
-    const list=await res.json();
-
-    for(let h=START;h<=END;h++){
-      const t=`${String(h).padStart(2,'0')}:00:00`;
-      const clash=list.find(x=>x.time===t && x.stylist===b.stylist && x.id!==b.id);
-      const opt=document.createElement('option');
-      opt.value=t; opt.textContent=t.slice(0,5);
-      if(clash) opt.disabled=true;
-      if(t===b.time) opt.selected=true;
-      el('editTime').appendChild(opt);
-    }
-  }
-
-  el('saveEditBtn').onclick=async()=>{
-    const gender=document.querySelector('[name=editGender]:checked')?.value;
-
-    const res=await fetch(`${API}/bookings/${editing.id}`,{
-      method:'PUT',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        date:el('editDate').value,
-        time:el('editTime').value,
-        name:el('editName').value,
-        phone:el('editPhone').value,
-        gender,
-        service:el('editService').value
-      })
-    });
-
-    if(!res.ok){ alert('คิวนี้ถูกจองแล้ว'); return; }
-
-    closeEdit();
-    await loadBookings();
-    alert('แก้ไขคิวสำเร็จ');
-  };
-
-  el('deleteEditBtn').onclick=async()=>{
-    if(!confirm('ยืนยันลบคิวนี้?')) return;
-    await fetch(`${API}/bookings/${editing.id}`,{method:'DELETE'});
-    closeEdit();
-    await loadBookings();
-  };
-
-  el('closeEditBtn').onclick=closeEdit;
-  function closeEdit(){
-    el('editOverlay').classList.add('hidden');
-    editing=null;
-  }
-
-  /* ===== TABS ===== */
   function renderStylistTabs(){
     el('stylistTabs').innerHTML='';
     stylists.forEach(s=>{
