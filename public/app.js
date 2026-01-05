@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const OWNER_PIN = '1234';
   const AUTH_KEY = 'adore_owner_auth';
+  const CLOSED_KEY = 'adore_closed_days';
 
   const loginOverlay = document.getElementById('loginOverlay');
   const loginBtn = document.getElementById('loginBtn');
@@ -9,7 +10,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const loginMsg = document.getElementById('loginMsg');
   const logoutBtn = document.getElementById('logoutBtn');
 
-  /* ===== AUTH ===== */
+  let selectedDate = null;
+  let closedDays = new Set(JSON.parse(localStorage.getItem(CLOSED_KEY) || '[]'));
+
   if (localStorage.getItem(AUTH_KEY) === 'true') {
     loginOverlay.classList.add('hidden');
     bootApp();
@@ -30,7 +33,6 @@ document.addEventListener('DOMContentLoaded', () => {
     location.reload();
   };
 
-  /* ===== BOOT ===== */
   function bootApp(){
     renderTopDate();
     initCalendar();
@@ -73,6 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
     for(let i=0;i<first;i++) grid.appendChild(document.createElement('div'));
 
     for(let d=1;d<=days;d++){
+      const dateKey = `${y}-${m+1}-${d}`;
       const cell = document.createElement('div');
       cell.className='calCell';
 
@@ -89,9 +92,46 @@ document.addEventListener('DOMContentLoaded', () => {
       else if(total<=15) num.classList.add('density-high');
       else num.classList.add('density-full');
 
+      if(closedDays.has(dateKey)){
+        cell.classList.add('closed');
+        num.classList.add('closed');
+      }
+
+      cell.onclick = () => selectDate(dateKey);
+
       cell.appendChild(num);
       grid.appendChild(cell);
     }
+  }
+
+  /* ===== DAY CONTROL ===== */
+  function selectDate(key){
+    selectedDate = key;
+    const isClosed = closedDays.has(key);
+    const status = document.getElementById('dayStatus');
+    const btn = document.getElementById('toggleClosedBtn');
+
+    status.textContent = isClosed
+      ? 'วันนี้ถูกตั้งเป็นวันหยุด'
+      : 'วันนี้เปิดทำการตามปกติ';
+
+    btn.textContent = isClosed
+      ? 'ยกเลิกวันหยุด'
+      : 'ตั้งเป็นวันหยุด';
+
+    btn.classList.remove('hidden');
+    btn.onclick = () => toggleClosed(key);
+  }
+
+  function toggleClosed(key){
+    if(closedDays.has(key)){
+      closedDays.delete(key);
+    }else{
+      closedDays.add(key);
+    }
+    localStorage.setItem(CLOSED_KEY, JSON.stringify([...closedDays]));
+    renderCalendar();
+    selectDate(key);
   }
 
   /* ===== TABS ===== */
