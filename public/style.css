@@ -1,226 +1,362 @@
-/* =================================================
-   Adore Hair – style.css (STABLE RESET)
-   Purpose: No hidden state / No override conflict
-================================================= */
+/* =========================
+   THEME VARIABLES
+========================= */
+:root{
+  --bg:#0b0f1a;
+  --text:#e9eefc;
+  --muted:#9aa6c5;
 
-/* ---------- RESET ---------- */
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-}
+  --accent:#6ee7ff;
+  --accent2:#a78bfa;
 
-body {
-  min-height: 100vh;
-  background: radial-gradient(
-    ellipse at top,
-    #1b2a4a 0%,
-    #0a0f1f 45%,
-    #05070f 100%
-  );
-  color: #e8ecf3;
+  --danger:#ff5c7a;
+  --ok:#2cff9c;
+
+  --stroke:rgba(255,255,255,.08);
+  --shadow:0 14px 40px rgba(0,0,0,.45);
 }
 
-/* ---------- GLOBAL ---------- */
-button {
-  border: none;
-  cursor: pointer;
-  color: #fff;
+/* =========================
+   BASE
+========================= */
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
 }
 
-.hidden {
-  display: none !important;
+body{
+  margin:0;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+  background:
+    radial-gradient(1200px 700px at 15% 10%, #1a2b5a 0%, transparent 60%),
+    radial-gradient(900px 600px at 90% 20%, #3b1b5a 0%, transparent 55%),
+    var(--bg);
+  color:var(--text);
 }
 
-/* ---------- GLASS CARD ---------- */
-.glass {
-  background: rgba(20, 28, 55, 0.55);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border-radius: 20px;
-  box-shadow:
-    inset 0 0 0 1px rgba(255,255,255,0.06),
-    0 30px 60px rgba(0,0,0,0.5);
+.hidden{display:none!important}
+.row{display:flex;gap:16px;align-items:center}
+.muted{color:var(--muted)}
+.msg{font-size:13px}
+.msg.err{color:var(--danger)}
+
+/* =========================
+   INPUT / BUTTON
+========================= */
+input,select{
+  width:100%;
+  padding:14px;
+  font-size:16px;
+  border-radius:16px;
+  border:1px solid var(--stroke);
+  background:rgba(0,0,0,.28);
+  color:var(--text);
+  outline:none;
 }
 
-/* ---------- HEADER ---------- */
-header {
-  padding: 20px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
+input:disabled{
+  opacity:.6;
+  cursor:not-allowed;
 }
 
-.logo {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #7dd3fc, #a78bfa);
-  display: grid;
-  place-items: center;
-  font-weight: 700;
+label{
+  font-size:13px;
+  color:var(--muted);
 }
 
-.header-text h1 {
-  font-size: 18px;
+.primary{
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#061022;
+  border:none;
+  padding:14px;
+  border-radius:16px;
+  font-weight:900;
+  cursor:pointer;
 }
 
-.header-text p {
-  font-size: 13px;
-  opacity: 0.7;
+.ghost{
+  background:rgba(255,255,255,.06);
+  border:1px solid var(--stroke);
+  color:var(--text);
+  padding:8px 14px;
+  border-radius:14px;
+  cursor:pointer;
 }
 
-/* ---------- LOGIN OVERLAY ---------- */
-#loginOverlay {
-  position: fixed;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  background: radial-gradient(
-    ellipse at top,
-    rgba(30, 58, 138, 0.6),
-    rgba(0, 0, 0, 0.9)
-  );
-  z-index: 1000;
+/* =========================
+   TOPBAR
+========================= */
+.topbar{
+  position:sticky;
+  top:0;
+  z-index:10;
+  padding:18px 22px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  background:rgba(0,0,0,.35);
+  backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--stroke);
 }
 
-#loginCard {
-  width: 90%;
-  max-width: 360px;
-  padding: 28px;
-  text-align: center;
+.brand{
+  display:flex;
+  gap:12px;
+  align-items:center;
 }
 
-#loginCard h2 {
-  margin: 16px 0 6px;
+.avatar{
+  width:40px;
+  height:40px;
+  border-radius:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:900;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#061022;
 }
 
-#loginCard p {
-  font-size: 14px;
-  opacity: 0.7;
-  margin-bottom: 16px;
+.avatar.big{
+  width:72px;
+  height:72px;
+  font-size:32px;
 }
 
-#pinInput {
-  width: 100%;
-  padding: 14px;
-  border-radius: 14px;
-  border: none;
-  text-align: center;
-  font-size: 18px;
-  margin-bottom: 14px;
+.title{
+  font-weight:900;
+  font-size:16px;
 }
 
-#loginBtn {
-  width: 100%;
-  padding: 14px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #7dd3fc, #a78bfa);
-  font-weight: 600;
+.subtitle{
+  font-size:12px;
+  color:var(--muted);
 }
 
-#loginMsg {
-  margin-top: 10px;
-  font-size: 13px;
-  color: #fca5a5;
+/* =========================
+   LAYOUT
+========================= */
+.wrap{
+  width:min(1100px,94vw);
+  margin:18px auto 64px;
 }
 
-/* ---------- APP SCREEN ---------- */
-#appScreen {
-  padding-bottom: 80px;
+.panel{
+  background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
+  border:1px solid var(--stroke);
+  border-radius:22px;
+  padding:18px;
+  box-shadow:var(--shadow);
+  margin-top:16px;
 }
 
-/* ---------- SECTION ---------- */
-.section {
-  margin: 20px;
-  padding: 18px;
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
 }
 
-/* ---------- CALENDAR ---------- */
-#calendarHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
+.full{grid-column:1/-1}
+
+/* =========================
+   OVERLAY / MODAL
+========================= */
+.overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.85);
+  display:grid;
+  place-items:center;
+  z-index:999;
 }
 
-#calendarHeader button {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.08);
+.modal{
+  width:min(420px,92vw);
+  background:linear-gradient(180deg,rgba(20,25,45,.96),rgba(10,12,22,.96));
+  border-radius:26px;
+  border:1px solid rgba(255,255,255,.15);
+  box-shadow:0 22px 90px rgba(0,0,0,.65);
 }
 
-#calendarTitle {
-  font-weight: 600;
+.modalBody{
+  padding:28px;
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+  align-items:center;
+  text-align:center;
 }
 
-#calendarGrid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 8px;
+/* PIN */
+#pin{
+  text-align:center;
+  letter-spacing:6px;
+  font-size:22px;
 }
 
-.calDay {
-  aspect-ratio: 1;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: rgba(255,255,255,0.05);
+/* =========================
+   CALENDAR
+========================= */
+.calendarHeader{
+  display:grid;
+  grid-template-columns:48px 1fr 48px;
+  align-items:center;
+  margin-bottom:12px;
 }
 
-.calDay.active {
-  background: linear-gradient(135deg, #22d3ee, #a78bfa);
-  color: #000;
+.calendarCenter{
+  text-align:center;
 }
 
-/* ---------- TABS ---------- */
-.tabs {
-  display: flex;
-  gap: 10px;
+.calendarTitle{
+  font-size:22px;
+  font-weight:900;
 }
 
-.tab {
-  flex: 1;
-  padding: 12px;
-  border-radius: 14px;
-  background: rgba(255,255,255,0.06);
-  text-align: center;
+.calendarSubtitle{
+  font-size:13px;
+  color:var(--muted);
+  margin-top:2px;
 }
 
-.tab.active {
-  outline: 2px solid #7dd3fc;
+.calWeekHead{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:10px;
+  text-align:center;
+  font-size:12px;
+  color:var(--muted);
+  margin-top:14px;
 }
 
-/* ---------- TABLE ---------- */
-table {
-  width: 100%;
-  border-collapse: collapse;
+.calGrid{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:10px;
+  margin-top:10px;
 }
 
-th, td {
-  padding: 14px 10px;
-  text-align: left;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-  font-size: 14px;
+.calCell{
+  aspect-ratio:1/1;
+  border-radius:18px;
+  background:rgba(0,0,0,.28);
+  border:1px solid var(--stroke);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
 }
 
-/* Barber color frames (สำคัญ: ตามของเดิม) */
-.barber-bank td {
-  border-left: 4px solid #38bdf8;
-}
-.barber-sindy td {
-  border-left: 4px solid #a78bfa;
-}
-.barber-assist td {
-  border-left: 4px solid #22c55e;
+.calCell.selected{
+  outline:2px solid rgba(110,231,255,.45);
 }
 
-/* ---------- BUTTON ---------- */
-.btn-primary {
-  background: linear-gradient(135deg, #7dd3fc, #a78bfa);
-  padding: 12px 18px;
-  border-radius: 14px;
-  font-weight: 600;
+.calNum{
+  width:40px;
+  height:40px;
+  border-radius:999px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:900;
+}
+
+/* ===== ORIGINAL DENSITY COLORS ===== */
+.calNum.density-low{
+  background:rgba(44,255,156,.22);
+  color:#2cff9c;
+  border:1px solid rgba(44,255,156,.55);
+}
+
+.calNum.density-mid{
+  background:rgba(253,224,71,.22);
+  color:#fde047;
+  border:1px solid rgba(253,224,71,.55);
+}
+
+.calNum.density-high{
+  background:rgba(251,146,60,.22);
+  color:#fb923c;
+  border:1px solid rgba(251,146,60,.55);
+}
+
+.calNum.density-full{
+  background:rgba(255,92,122,.22);
+  color:#ff5c7a;
+  border:1px solid rgba(255,92,122,.55);
+}
+
+/* =========================
+   TABS
+========================= */
+.tabs{
+  display:flex;
+  gap:12px;
+}
+
+.tab{
+  flex:1;
+  padding:14px;
+  border-radius:20px;
+  border:1px solid var(--stroke);
+  background:rgba(0,0,0,.32);
+  font-weight:900;
+  cursor:pointer;
+  text-align:center;
+}
+
+.tab.active{
+  background:rgba(110,231,255,.16);
+  outline:2px solid rgba(110,231,255,.4);
+}
+
+/* =========================
+   SUMMARY
+========================= */
+.summary{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:14px;
+  margin-bottom:14px;
+}
+
+.box{
+  padding:16px;
+  border-radius:20px;
+  background:rgba(0,0,0,.32);
+  border:1px solid var(--stroke);
+  font-weight:900;
+}
+
+/* =========================
+   TABLE
+========================= */
+table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:13px;
+}
+
+th,td{
+  padding:12px;
+  border-bottom:1px solid var(--stroke);
+}
+
+th{
+  color:var(--muted);
+  font-weight:900;
+  text-align:left;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media(max-width:720px){
+  .grid{grid-template-columns:1fr}
+  .summary{grid-template-columns:1fr 1fr}
+  .topbar{
+    flex-direction:column;
+    align-items:flex-start;
+    gap:12px;
+  }
 }
