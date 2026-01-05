@@ -8,34 +8,57 @@
 </head>
 <body>
 
-<!-- LOGIN OVERLAY -->
+<!-- =========================
+     LOGIN OVERLAY
+========================= -->
 <div id="loginOverlay" class="overlay">
   <div class="modal">
     <div class="modalBody">
       <div class="avatar big">A</div>
       <h2>เข้าสู่ระบบ</h2>
       <p class="muted">กรุณาใส่ PIN 4 หลัก</p>
-      <input id="pin" type="password" inputmode="numeric" maxlength="4" placeholder="PIN" />
+
+      <input
+        id="pin"
+        type="password"
+        inputmode="numeric"
+        maxlength="4"
+        placeholder="PIN"
+      />
+
       <button id="loginBtn" class="primary">Login</button>
       <div id="loginMsg" class="msg err"></div>
     </div>
   </div>
 </div>
 
-<!-- EDIT MODAL -->
+<!-- =========================
+     EDIT BOOKING MODAL
+========================= -->
 <div id="editOverlay" class="overlay hidden">
   <div class="modal">
     <div class="modalBody">
       <h2>แก้ไขคิว</h2>
+
       <input id="editTime" disabled />
       <input id="editStylist" disabled />
+
       <input id="editName" placeholder="ชื่อลูกค้า" />
       <input id="editPhone" placeholder="เบอร์โทร" />
+
       <div class="row">
-        <label><input type="radio" name="editGender" value="male" /> 👨 ชาย</label>
-        <label><input type="radio" name="editGender" value="female" /> 👩 หญิง</label>
+        <label>
+          <input type="radio" name="editGender" value="male" />
+          👨 ชาย
+        </label>
+        <label>
+          <input type="radio" name="editGender" value="female" />
+          👩 หญิง
+        </label>
       </div>
+
       <input id="editService" placeholder="ทำอะไร" />
+
       <button id="saveEdit" class="primary">บันทึกการแก้ไข</button>
       <button id="deleteEdit" class="ghost">ลบคิว</button>
       <button id="closeEdit" class="ghost">ปิด</button>
@@ -43,21 +66,29 @@
   </div>
 </div>
 
-<!-- TOP BAR -->
+<!-- =========================
+     TOP BAR
+========================= -->
 <div class="topbar">
   <div class="brand">
     <div class="avatar">A</div>
     <div>
       <div class="title">Adore hair studio</div>
-      <div class="subtitle">Owner Queue · 13:00–22:00 · แยกตามช่าง</div>
+      <div class="subtitle">
+        Owner Queue · 13:00–22:00 · แยกตามช่าง
+      </div>
     </div>
   </div>
+
   <button id="logoutBtn" class="ghost">Logout</button>
 </div>
 
+<!-- =========================
+     MAIN CONTENT
+========================= -->
 <div class="wrap">
 
-  <!-- DATE -->
+  <!-- DATE PICKER -->
   <div class="panel">
     <label for="date">เลือกวันที่</label>
     <input type="date" id="date" />
@@ -66,25 +97,46 @@
   <!-- CALENDAR -->
   <div class="panel">
     <div class="calendarHeader">
-      
-  <button id="prevMonth" class="ghost">‹</button>
+      <button id="prevMonth" class="ghost">‹</button>
 
-  <div class="calendarCenter">
-    <div id="calendarTitle" class="calendarTitle"></div>
-    <div class="calendarSubtitle">
-      ระดับสีแสดงความหนาแน่นของคิว
+      <div class="calendarCenter">
+        <div id="calendarTitle" class="calendarTitle"></div>
+        <div class="calendarSubtitle">
+          ระดับสีแสดงความหนาแน่นของคิว
+        </div>
+      </div>
+
+      <button id="nextMonth" class="ghost">›</button>
     </div>
-  </div>
-
-  <button id="nextMonth" class="ghost">›</button>
-</div>
-
 
     <div class="calWeekHead">
-      <div>อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div>ส</div>
+      <div>อา</div>
+      <div>จ</div>
+      <div>อ</div>
+      <div>พ</div>
+      <div>พฤ</div>
+      <div>ศ</div>
+      <div>ส</div>
     </div>
 
     <div id="calendarDays" class="calGrid"></div>
+  </div>
+
+  <!-- =========================
+       DAY CONTROL (NEW)
+  ========================= -->
+  <div class="panel" id="dayControl">
+    <div id="dayStatus" class="muted"></div>
+
+    <div class="row">
+      <button id="setHoliday" class="danger hidden">
+        ตั้งเป็นวันหยุด
+      </button>
+
+      <button id="unsetHoliday" class="ok hidden">
+        ยกเลิกวันหยุด
+      </button>
+    </div>
   </div>
 
   <!-- TABS -->
@@ -113,25 +165,36 @@
         <label for="time">เวลา</label>
         <select id="time"></select>
       </div>
+
       <div>
         <label for="name">ชื่อลูกค้า</label>
         <input id="name" required />
       </div>
+
       <div>
         <label for="phone">เบอร์โทร</label>
         <input id="phone" />
       </div>
+
       <div>
         <label>เพศ</label>
         <div class="row">
-          <label><input type="radio" name="gender" value="male" required /> 👨</label>
-          <label><input type="radio" name="gender" value="female" /> 👩</label>
+          <label>
+            <input type="radio" name="gender" value="male" required />
+            👨
+          </label>
+          <label>
+            <input type="radio" name="gender" value="female" />
+            👩
+          </label>
         </div>
       </div>
+
       <div class="full">
         <label for="service">ทำอะไร</label>
         <input id="service" />
       </div>
+
       <div class="full">
         <button type="submit" class="primary">เพิ่มคิว</button>
       </div>
@@ -158,6 +221,10 @@
 
 </div>
 
+<!-- =========================
+     SCRIPT
+========================= -->
 <script src="app.js"></script>
+
 </body>
 </html>
