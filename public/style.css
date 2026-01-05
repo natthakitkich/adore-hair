@@ -132,29 +132,25 @@ body{
   gap:10px;
 }
 
-/* =========================
-   🔴 CALENDAR CIRCLE FIX
-   iOS Safari SAFE
-   ========================= */
-
+/* ===== CALENDAR CIRCLE (FINAL) ===== */
 .calCell{
-  position:relative;
-  width:100%;
-  padding-top:100%;            /* ทำให้เป็นสี่เหลี่ยมจัตุรัส */
-}
-
-.calCellInner{
-  position:absolute;
-  inset:0;
-  margin:auto;
-  width:100%;
-  height:100%;
+  aspect-ratio:1/1;
   border-radius:50%;
   background:rgba(0,0,0,.35);
   display:flex;
   align-items:center;
   justify-content:center;
   cursor:pointer;
+  transition:.15s;
+}
+
+.calCell.selected{
+  outline:3px solid rgba(110,231,255,.85);
+  background:rgba(110,231,255,.15);
+}
+
+.calCell.closed{
+  opacity:.4;
 }
 
 .calNum{
@@ -165,16 +161,6 @@ body{
   align-items:center;
   justify-content:center;
   font-weight:900;
-}
-
-/* closed day */
-.calCell.closed .calCellInner{
-  opacity:.4;
-}
-
-/* ===== DAY CONTROL ===== */
-#dayControl{
-  font-size:13px;
 }
 
 /* ===== TABS ===== */
@@ -271,32 +257,4 @@ button{
 .ghost{
   background:rgba(255,255,255,.1);
   color:#fff;
-}
-
-/* ===== CALENDAR (เพิ่มเติม Phase 1) ===== */
-
-.calCell{
-  aspect-ratio:1/1;
-  border-radius:50%;
-  background:rgba(0,0,0,.35);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
-  transition:.15s;
-}
-
-.calCell.selected{
-  outline:3px solid rgba(110,231,255,.85);
-  background:rgba(110,231,255,.15);
-}
-
-.calNum{
-  width:36px;
-  height:36px;
-  border-radius:50%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:900;
 }
