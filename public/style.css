@@ -360,3 +360,31 @@ th{
     gap:12px;
   }
 }
+/* =========================
+   STYLIST BADGE
+========================= */
+.stylist-badge{
+  padding:6px 12px;
+  border-radius:999px;
+  font-weight:900;
+  font-size:12px;
+  display:inline-block;
+}
+
+.stylist-bank{
+  background:rgba(110,231,255,.2);
+  color:#6ee7ff;
+  border:1px solid rgba(110,231,255,.5);
+}
+
+.stylist-sindy{
+  background:rgba(167,139,250,.2);
+  color:#a78bfa;
+  border:1px solid rgba(167,139,250,.5);
+}
+
+.stylist-assist{
+  background:rgba(44,255,156,.2);
+  color:#2cff9c;
+  border:1px solid rgba(44,255,156,.5);
+}
