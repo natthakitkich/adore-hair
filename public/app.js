@@ -54,12 +54,18 @@ document.addEventListener('DOMContentLoaded', () => {
     initCalendar();
     renderStylistTabs();
     renderSummary();
-    lockQueueUI(); // ยังไม่เลือกวัน
+
+    // ✅ สำคัญ: initial state = ยังไม่เลือกวัน
+    dayStatus.textContent = 'ยังไม่ได้เลือกวัน';
+    toggleClosedBtn.classList.add('hidden');
+    unlockQueueUI(); // ❗ ห้าม lock ตอนยังไม่เลือกวัน
   }
 
   function renderTopDate(){
     document.getElementById('topDate').textContent =
-      new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+      new Date().toLocaleDateString('en-US',{
+        month:'short',day:'numeric',year:'numeric'
+      });
   }
 
   /* ===== CALENDAR ===== */
@@ -82,7 +88,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const title = document.getElementById('calendarTitle');
     grid.innerHTML = '';
 
-    title.textContent = currentMonth.toLocaleDateString('th-TH',{month:'long',year:'numeric'});
+    title.textContent = currentMonth.toLocaleDateString('th-TH',{
+      month:'long',year:'numeric'
+    });
 
     const y = currentMonth.getFullYear();
     const m = currentMonth.getMonth();
@@ -100,7 +108,6 @@ document.addEventListener('DOMContentLoaded', () => {
       num.className = 'calNum';
       num.textContent = d;
 
-      // density demo
       const total = Math.floor(Math.random()*21);
       if(total<=5) num.classList.add('density-low');
       else if(total<=10) num.classList.add('density-mid');
@@ -183,7 +190,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const t=document.createElement('div');
       t.className='tab'+(s===active?' active':'');
       t.textContent=s;
-      t.onclick=()=>{ if(!isClosedDay()) active=s; renderStylistTabs(); };
+      t.onclick=()=>{
+        if(isClosedDay()) return;
+        active=s;
+        renderStylistTabs();
+      };
       stylistTabsEl.appendChild(t);
     });
   }
