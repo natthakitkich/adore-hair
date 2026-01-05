@@ -413,3 +413,32 @@ th{color:var(--muted)}
     font-size:13px;
   }
 }
+/* =========================
+   FIX AVATAR ROUND (iOS)
+========================= */
+.avatar{
+  aspect-ratio:1 / 1;          /* 🔑 บังคับเป็นสี่เหลี่ยม */
+  min-width:42px;
+  min-height:42px;
+  max-width:42px;
+  max-height:42px;
+  flex-shrink:0;               /* 🔑 กัน flex บีบ */
+}
+/* =========================
+   TOPBAR TEXT – MOBILE
+========================= */
+@media (max-width: 768px){
+  .topbar .title{
+    font-size:16px;     /* ↓ จาก ~18–20 */
+    line-height:1.2;
+  }
+
+  .topbar .subtitle{
+    font-size:12px;     /* ↓ จาก ~14 */
+    opacity:.85;
+  }
+
+  .brand{
+    gap:10px;           /* ลดช่องว่างโลโก้กับข้อความ */
+  }
+}
