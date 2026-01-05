@@ -1,15 +1,15 @@
-/* ===== BASE ===== */
+/* ================= BASE ================= */
 *{box-sizing:border-box}
 body{
   margin:0;
-  font-family: system-ui, -apple-system;
+  font-family:system-ui,-apple-system;
   background:#0b0f1a;
   color:#e9eefc;
 }
 .hidden{display:none!important}
 .row{display:flex;gap:12px;align-items:center}
 
-/* ===== TOPBAR ===== */
+/* ================= TOPBAR ================= */
 .topbar{
   padding:16px;
   display:flex;
@@ -25,7 +25,7 @@ body{
 }
 .avatar.big{width:72px;height:72px;font-size:32px}
 
-/* ===== PANEL ===== */
+/* ================= LAYOUT ================= */
 .wrap{max-width:1100px;margin:0 auto;padding:16px}
 .panel{
   background:rgba(255,255,255,.05);
@@ -34,15 +34,23 @@ body{
   margin-top:16px;
 }
 
-/* ===== CALENDAR ===== */
+/* ================= CALENDAR ================= */
 .calendarPanel{overflow:hidden}
 .calendarHeader{
   display:grid;
   grid-template-columns:44px 1fr 44px;
   align-items:center;
 }
-.calendarTitle{font-size:26px;font-weight:900;text-align:center}
-.calendarSubtitle{text-align:center;font-size:13px;color:#9aa6c5}
+.calendarTitle{
+  font-size:26px;
+  font-weight:900;
+  text-align:center;
+}
+.calendarSubtitle{
+  font-size:13px;
+  color:#9aa6c5;
+  text-align:center;
+}
 .calWeekHead,.calGrid{
   display:grid;
   grid-template-columns:repeat(7,1fr);
@@ -56,20 +64,35 @@ body{
   align-items:center;
   justify-content:center;
 }
+.calCell.selected{outline:2px solid #fff}
 .calNum{
-  width:42px;height:42px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
+  width:42px;height:42px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
   font-weight:900;
 }
-.calCell.selected{outline:2px solid #fff}
 
-/* density */
-.calNum.low{background:#1f3;color:#0f0}
-.calNum.mid{background:#0ff3;color:#6ee7ff}
-.calNum.high{background:#ff03;color:#fde047}
-.calNum.full{background:#f003;color:#ff5c7a}
+/* ===== Density Colors (4 colors) ===== */
+.calNum.green{
+  background:rgba(34,197,94,.25);
+  color:#22c55e;
+}
+.calNum.yellow{
+  background:rgba(253,224,71,.25);
+  color:#fde047;
+}
+.calNum.orange{
+  background:rgba(251,146,60,.25);
+  color:#fb923c;
+}
+.calNum.red{
+  background:rgba(239,68,68,.28);
+  color:#ef4444;
+}
 
-/* ===== SUMMARY ===== */
+/* ================= SUMMARY ================= */
 .summaryGrid{
   display:grid;
   grid-template-columns:repeat(2,1fr);
@@ -86,9 +109,9 @@ body{
 .summaryCard.bank{border:2px solid #6ee7ff}
 .summaryCard.sindy{border:2px solid #f472b6}
 .summaryCard.assist{border:2px solid #4ade80}
-.summaryCard.total{border:2px solid #fff}
+.summaryCard.total{border:2px solid #ffffff}
 
-/* ===== TABS ===== */
+/* ================= TABS ================= */
 .tabs{display:flex;gap:12px}
 .tab{
   flex:1;
@@ -100,10 +123,19 @@ body{
 }
 .tab.active{outline:2px solid #6ee7ff}
 
-/* ===== TABLE ===== */
+/* ================= TABLE ================= */
 table{width:100%;border-collapse:collapse}
-th,td{padding:12px;border-bottom:1px solid rgba(255,255,255,.1)}
-td .stylist{
+th,td{
+  padding:12px;
+  border-bottom:1px solid rgba(255,255,255,.1);
+}
+td a{
+  color:#6ee7ff;
+  text-decoration:none;
+}
+td a:hover{text-decoration:underline}
+
+.stylist{
   padding:4px 10px;
   border-radius:12px;
   font-weight:900;
@@ -112,11 +144,13 @@ td .stylist{
 .stylist.sindy{border:1px solid #f472b6}
 .stylist.assist{border:1px solid #4ade80}
 
-/* ===== MODAL ===== */
+/* ================= MODAL ================= */
 .overlay{
-  position:fixed;inset:0;
+  position:fixed;
+  inset:0;
   background:rgba(0,0,0,.85);
-  display:grid;place-items:center;
+  display:grid;
+  place-items:center;
   z-index:999;
 }
 .modal{
