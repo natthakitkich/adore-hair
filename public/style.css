@@ -12,6 +12,10 @@
   --danger:#ff5c7a;
   --ok:#2cff9c;
 
+  --bank:#6ee7ff;
+  --sindy:#ff8ab3;
+  --assist:#2cff9c;
+
   --stroke:rgba(255,255,255,.08);
   --shadow:0 14px 40px rgba(0,0,0,.45);
 }
@@ -35,7 +39,6 @@ body{
 }
 
 .hidden{display:none!important}
-.row{display:flex;gap:16px;align-items:center}
 .muted{color:var(--muted)}
 .msg{font-size:13px}
 .msg.err{color:var(--danger)}
@@ -54,28 +57,100 @@ input,select{
   outline:none;
 }
 
+label{
+  font-size:13px;
+  color:var(--muted);
+}
+
 .primary{
-  width:100%;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#061022;
+  border:none;
   padding:14px;
   border-radius:16px;
   font-weight:900;
-  border:none;
   cursor:pointer;
-  background:linear-gradient(135deg,var(--accent),var(--accent2));
-  color:#061022;
 }
 
 .ghost{
   background:rgba(255,255,255,.06);
   border:1px solid var(--stroke);
   color:var(--text);
-  padding:10px 18px;
+  padding:10px 14px;
   border-radius:14px;
   cursor:pointer;
 }
 
 /* =========================
-   OVERLAY / LOGIN
+   TOPBAR
+========================= */
+.topbar{
+  position:sticky;
+  top:0;
+  z-index:10;
+  padding:18px 22px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  background:rgba(0,0,0,.35);
+  backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--stroke);
+}
+
+.brand{
+  display:flex;
+  gap:12px;
+  align-items:center;
+}
+
+.avatar{
+  width:40px;
+  height:40px;
+  border-radius:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:900;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#061022;
+}
+
+.avatar.big{
+  width:72px;
+  height:72px;
+  font-size:32px;
+}
+
+.title{font-weight:900}
+.subtitle{font-size:12px;color:var(--muted)}
+
+/* =========================
+   LAYOUT
+========================= */
+.wrap{
+  width:min(1100px,94vw);
+  margin:18px auto 64px;
+}
+
+.panel{
+  background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
+  border:1px solid var(--stroke);
+  border-radius:22px;
+  padding:18px;
+  box-shadow:var(--shadow);
+  margin-top:16px;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+}
+
+.full{grid-column:1/-1}
+
+/* =========================
+   OVERLAY / MODAL
 ========================= */
 .overlay{
   position:fixed;
@@ -103,38 +178,159 @@ input,select{
   text-align:center;
 }
 
-#pin{
-  max-width:280px;
+.loginBox input{
   text-align:center;
   letter-spacing:6px;
   font-size:22px;
 }
 
+.loginBox button{
+  width:100%;
+}
+
+/* =========================
+   CALENDAR
+========================= */
+.calendarHeader{
+  display:grid;
+  grid-template-columns:48px 1fr 48px;
+  align-items:center;
+}
+
+.calendarTitle{
+  font-size:22px;
+  font-weight:900;
+}
+
+.calWeekHead,
+.calGrid{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:10px;
+  margin-top:12px;
+}
+
+.calCell{
+  aspect-ratio:1/1;
+  border-radius:18px;
+  background:rgba(0,0,0,.28);
+  border:1px solid var(--stroke);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.calCell.selected{
+  outline:2px solid rgba(110,231,255,.45);
+}
+
+.calNum{
+  width:42px;
+  height:42px;
+  border-radius:999px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:900;
+}
+
+/* ===== DENSITY COLORS (CORRECT LOGIC) ===== */
+.calNum.d0{background:none;border:none;color:var(--text)}
+.calNum.d1{background:rgba(44,255,156,.25);border:1px solid rgba(44,255,156,.6);color:#2cff9c}
+.calNum.d2{background:rgba(253,224,71,.25);border:1px solid rgba(253,224,71,.6);color:#fde047}
+.calNum.d3{background:rgba(251,146,60,.25);border:1px solid rgba(251,146,60,.6);color:#fb923c}
+.calNum.d4{background:rgba(255,92,122,.25);border:1px solid rgba(255,92,122,.6);color:#ff5c7a}
+
+/* =========================
+   SUMMARY
+========================= */
+.summary{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:14px;
+}
+
+.box{
+  padding:16px;
+  border-radius:20px;
+  background:rgba(0,0,0,.32);
+  border:1px solid var(--stroke);
+  font-weight:900;
+  text-align:center;
+}
+
+/* =========================
+   TABS
+========================= */
+.tabs{
+  display:flex;
+  gap:12px;
+}
+
+.tab{
+  flex:1;
+  padding:14px;
+  border-radius:20px;
+  border:1px solid var(--stroke);
+  background:rgba(0,0,0,.32);
+  font-weight:900;
+  cursor:pointer;
+  text-align:center;
+}
+
+.tab.active{
+  background:rgba(110,231,255,.16);
+  outline:2px solid rgba(110,231,255,.4);
+}
+
+/* =========================
+   TABLE
+========================= */
+table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:13px;
+}
+
+th,td{
+  padding:12px;
+  border-bottom:1px solid var(--stroke);
+}
+
+th{color:var(--muted)}
+
 /* =========================
    STYLIST BADGE
 ========================= */
-.stylist{
-  padding:6px 14px;
+.badge{
+  padding:6px 12px;
   border-radius:999px;
   font-weight:900;
-  font-size:13px;
-  display:inline-block;
+  font-size:12px;
 }
 
-.stylist.bank{
-  color:#6ee7ff;
-  border:1px solid rgba(110,231,255,.6);
-  background:rgba(110,231,255,.15);
+.badge.bank{
+  background:rgba(110,231,255,.18);
+  border:1px solid var(--bank);
+  color:var(--bank);
 }
 
-.stylist.sindy{
-  color:#ff8fb1;
-  border:1px solid rgba(255,143,177,.6);
-  background:rgba(255,143,177,.15);
+.badge.sindy{
+  background:rgba(255,138,179,.18);
+  border:1px solid var(--sindy);
+  color:var(--sindy);
 }
 
-.stylist.assist{
-  color:#2cff9c;
-  border:1px solid rgba(44,255,156,.6);
-  background:rgba(44,255,156,.15);
+.badge.assist{
+  background:rgba(44,255,156,.18);
+  border:1px solid var(--assist);
+  color:var(--assist);
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media(max-width:720px){
+  .grid{grid-template-columns:1fr}
+  .summary{grid-template-columns:1fr 1fr}
 }
