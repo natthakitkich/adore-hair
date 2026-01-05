@@ -1,178 +1,128 @@
-/* =========================
-   THEME VARIABLES
-========================= */
-:root{
-  --bg:#0b0f1a;
-  --text:#e9eefc;
-  --muted:#9aa6c5;
-
-  --accent:#6ee7ff;
-  --accent2:#a78bfa;
-
-  --danger:#ff5c7a;
-  --ok:#2cff9c;
-
-  --stroke:rgba(255,255,255,.08);
-  --shadow:0 14px 40px rgba(0,0,0,.45);
-}
-
-/* =========================
-   BASE
-========================= */
+/* ===== BASE ===== */
 *{box-sizing:border-box}
 body{
   margin:0;
-  font-family: ui-sans-serif, system-ui;
-  background:
-    radial-gradient(1200px 700px at 15% 10%, #1a2b5a 0%, transparent 60%),
-    radial-gradient(900px 600px at 90% 20%, #3b1b5a 0%, transparent 55%),
-    var(--bg);
-  color:var(--text);
+  font-family: system-ui, -apple-system;
+  background:#0b0f1a;
+  color:#e9eefc;
 }
 .hidden{display:none!important}
-.row{display:flex;gap:16px;align-items:center}
-.muted{color:var(--muted)}
-.msg.err{color:var(--danger)}
+.row{display:flex;gap:12px;align-items:center}
 
-/* =========================
-   INPUT / BUTTON
-========================= */
-input,select{
-  width:100%;
-  padding:14px;
-  font-size:16px;
-  border-radius:16px;
-  border:1px solid var(--stroke);
-  background:rgba(0,0,0,.28);
-  color:var(--text);
-}
-.primary{
-  background:linear-gradient(135deg,var(--accent),var(--accent2));
-  border:none;
-  border-radius:16px;
-  font-weight:900;
-  padding:14px;
-}
-.ghost{
-  background:rgba(255,255,255,.06);
-  border:1px solid var(--stroke);
-  color:var(--text);
-  padding:8px 14px;
-  border-radius:14px;
-}
-
-/* =========================
-   TOPBAR / LAYOUT
-========================= */
+/* ===== TOPBAR ===== */
 .topbar{
-  position:sticky;
-  top:0;
-  z-index:10;
-  padding:18px 22px;
+  padding:16px;
   display:flex;
   justify-content:space-between;
-  background:rgba(0,0,0,.35);
-  backdrop-filter:blur(14px);
-  border-bottom:1px solid var(--stroke);
+  background:rgba(0,0,0,.4);
 }
 .avatar{
-  width:40px;height:40px;border-radius:14px;
+  width:40px;height:40px;border-radius:12px;
+  background:#6ee7ff;
+  color:#061022;
   display:flex;align-items:center;justify-content:center;
   font-weight:900;
-  background:linear-gradient(135deg,var(--accent),var(--accent2));
-  color:#061022;
 }
 .avatar.big{width:72px;height:72px;font-size:32px}
-.wrap{width:min(1100px,94vw);margin:18px auto 64px}
+
+/* ===== PANEL ===== */
+.wrap{max-width:1100px;margin:0 auto;padding:16px}
 .panel{
-  background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
-  border:1px solid var(--stroke);
-  border-radius:22px;
-  padding:18px;
-  box-shadow:var(--shadow);
+  background:rgba(255,255,255,.05);
+  border-radius:20px;
+  padding:16px;
   margin-top:16px;
 }
 
-/* =========================
-   CALENDAR (เหมือนภาพ)
-========================= */
+/* ===== CALENDAR ===== */
+.calendarPanel{overflow:hidden}
 .calendarHeader{
   display:grid;
-  grid-template-columns:48px 1fr 48px;
+  grid-template-columns:44px 1fr 44px;
   align-items:center;
-  margin-bottom:10px;
 }
-.calendarTitle{
-  font-size:28px;
-  font-weight:900;
-}
-.calendarSubtitle{
-  font-size:14px;
-  color:var(--muted);
-}
+.calendarTitle{font-size:26px;font-weight:900;text-align:center}
+.calendarSubtitle{text-align:center;font-size:13px;color:#9aa6c5}
 .calWeekHead,.calGrid{
   display:grid;
   grid-template-columns:repeat(7,1fr);
-  gap:14px;
+  gap:10px;
   text-align:center;
 }
-.calWeekHead{
-  font-size:14px;
-  color:var(--muted);
-  margin:16px 0;
-}
+.calGrid{margin-top:12px}
 .calCell{
   aspect-ratio:1/1;
-  border-radius:50%;
   display:flex;
   align-items:center;
   justify-content:center;
-  cursor:pointer;
 }
 .calNum{
-  width:52px;height:52px;border-radius:50%;
+  width:42px;height:42px;border-radius:50%;
   display:flex;align-items:center;justify-content:center;
-  font-size:20px;font-weight:900;
+  font-weight:900;
 }
+.calCell.selected{outline:2px solid #fff}
 
-/* density colors */
-.calNum.low{
-  background:rgba(44,255,156,.25);
-  color:#2cff9c;
-}
-.calNum.mid{
-  background:rgba(110,231,255,.25);
-  color:#6ee7ff;
-}
-.calNum.high{
-  background:rgba(253,224,71,.25);
-  color:#fde047;
-}
-.calNum.full{
-  background:rgba(255,92,122,.25);
-  color:#ff5c7a;
-}
-.calCell.selected{
-  outline:3px solid rgba(255,255,255,.5);
-}
+/* density */
+.calNum.low{background:#1f3;color:#0f0}
+.calNum.mid{background:#0ff3;color:#6ee7ff}
+.calNum.high{background:#ff03;color:#fde047}
+.calNum.full{background:#f003;color:#ff5c7a}
 
-/* =========================
-   TABS / TABLE
-========================= */
+/* ===== SUMMARY ===== */
+.summaryGrid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:12px;
+}
+.summaryCard{
+  padding:20px;
+  border-radius:18px;
+  font-size:20px;
+  font-weight:900;
+  display:flex;
+  justify-content:space-between;
+}
+.summaryCard.bank{border:2px solid #6ee7ff}
+.summaryCard.sindy{border:2px solid #f472b6}
+.summaryCard.assist{border:2px solid #4ade80}
+.summaryCard.total{border:2px solid #fff}
+
+/* ===== TABS ===== */
 .tabs{display:flex;gap:12px}
 .tab{
   flex:1;
   padding:14px;
-  border-radius:20px;
-  border:1px solid var(--stroke);
-  background:rgba(0,0,0,.32);
-  font-weight:900;
+  border-radius:16px;
+  background:rgba(0,0,0,.4);
   text-align:center;
+  font-weight:900;
 }
-.tab.active{
-  background:rgba(110,231,255,.16);
-  outline:2px solid rgba(110,231,255,.4);
-}
+.tab.active{outline:2px solid #6ee7ff}
+
+/* ===== TABLE ===== */
 table{width:100%;border-collapse:collapse}
-th,td{padding:12px;border-bottom:1px solid var(--stroke)}
-th{color:var(--muted)}
+th,td{padding:12px;border-bottom:1px solid rgba(255,255,255,.1)}
+td .stylist{
+  padding:4px 10px;
+  border-radius:12px;
+  font-weight:900;
+}
+.stylist.bank{border:1px solid #6ee7ff}
+.stylist.sindy{border:1px solid #f472b6}
+.stylist.assist{border:1px solid #4ade80}
+
+/* ===== MODAL ===== */
+.overlay{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.85);
+  display:grid;place-items:center;
+  z-index:999;
+}
+.modal{
+  background:#111827;
+  border-radius:24px;
+  padding:24px;
+  width:90%;
+  max-width:420px;
+}
