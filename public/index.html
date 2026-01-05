@@ -8,19 +8,13 @@
 </head>
 <body>
 
-<!-- LOGIN OVERLAY -->
+<!-- LOGIN -->
 <div id="loginOverlay" class="overlay">
   <div class="loginCard">
     <div class="loginAvatar">A</div>
     <h1>เข้าสู่ระบบ</h1>
     <p class="muted">กรุณาใส่ PIN 4 หลัก</p>
-    <input
-      id="pinInput"
-      type="password"
-      inputmode="numeric"
-      maxlength="4"
-      placeholder="••••"
-    />
+    <input id="pinInput" type="password" inputmode="numeric" maxlength="4" placeholder="••••" />
     <button id="loginBtn" class="primary">Login</button>
     <div id="loginMsg" class="msg"></div>
   </div>
@@ -32,9 +26,7 @@
     <div class="avatar">A</div>
     <div>
       <div class="title">Adore hair studio</div>
-      <div class="subtitle">
-        Owner Queue · 13:00–22:00 · แยกตามช่าง
-      </div>
+      <div class="subtitle">Owner Queue · 13:00–22:00 · แยกตามช่าง</div>
     </div>
   </div>
 
@@ -67,13 +59,30 @@
     กรุณาเลือกวันจากปฏิทิน
   </section>
 
-  <!-- STYLIST TABS -->
+  <!-- STYLIST -->
   <section class="panel">
     <div id="stylistTabs" class="tabs"></div>
   </section>
 
   <!-- SUMMARY -->
   <section id="summary" class="panel summary"></section>
+
+  <!-- QUEUE TABLE -->
+  <section class="panel">
+    <table class="queueTable">
+      <thead>
+        <tr>
+          <th>เวลา</th>
+          <th>ช่าง</th>
+          <th>เพศ</th>
+          <th>ชื่อ</th>
+          <th>บริการ</th>
+          <th>โทร</th>
+        </tr>
+      </thead>
+      <tbody id="queueBody"></tbody>
+    </table>
+  </section>
 
 </main>
 
