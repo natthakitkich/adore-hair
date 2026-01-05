@@ -8,52 +8,60 @@
 </head>
 <body>
 
-  <!-- LOGIN OVERLAY -->
-  <div id="loginOverlay" class="overlay hidden">
-    <div class="loginCard">
-      <div class="loginAvatar">A</div>
-      <h1>เข้าสู่ระบบ</h1>
-      <p class="muted">กรุณาใส่ PIN 4 หลัก</p>
+<!-- LOGIN -->
+<div id="loginOverlay" class="overlay hidden">
+  <div class="loginCard">
+    <div class="loginAvatar">A</div>
+    <h1>เข้าสู่ระบบ</h1>
+    <p class="muted">กรุณาใส่ PIN 4 หลัก</p>
+    <input id="pin" type="password" inputmode="numeric" maxlength="4" placeholder="••••" />
+    <button id="loginBtn" class="primary">Login</button>
+    <div id="loginMsg" class="msg err"></div>
+  </div>
+</div>
 
-      <input
-        id="pin"
-        type="password"
-        inputmode="numeric"
-        maxlength="4"
-        placeholder="••••"
-      />
+<div id="app" class="hidden">
 
-      <button id="loginBtn" class="primary">Login</button>
-      <div id="loginMsg" class="msg err"></div>
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="avatar">A</div>
+      <div>
+        <div class="title">Adore hair studio</div>
+        <div class="subtitle">Owner Queue · 13:00–22:00 · แยกตามช่าง</div>
+      </div>
     </div>
-  </div>
 
-  <!-- APP -->
-  <div id="app" class="hidden">
+    <div class="topActions">
+      <div class="dateBox" id="topDate">Jan 5, 2026</div>
+      <button id="logoutBtn" class="ghost">Logout</button>
+    </div>
+  </header>
 
-    <!-- TOP BAR -->
-    <header class="topbar">
-      <div class="brand">
-        <div class="avatar">A</div>
-        <div>
-          <div class="title">Adore hair studio</div>
-          <div class="subtitle">Owner Queue · 13:00–22:00 · แยกตามช่าง</div>
+  <main class="wrap">
+
+    <!-- CALENDAR -->
+    <section class="panel calendarPanel">
+      <div class="calendarHeader">
+        <button id="prevMonth" class="calNav">‹</button>
+        <div class="calendarTitle">
+          <div id="calendarMonth">มกราคม 2569</div>
+          <div class="calendarSub">ระดับสีแสดงความหนาแน่นของคิว</div>
         </div>
+        <button id="nextMonth" class="calNav">›</button>
       </div>
 
-      <div class="topActions">
-        <div class="dateBox" id="topDate">Jan 5, 2026</div>
-        <button id="logoutBtn" class="ghost">Logout</button>
+      <div class="calendarWeek">
+        <div>อา</div><div>จ</div><div>อ</div><div>พ</div>
+        <div>พฤ</div><div>ศ</div><div>ส</div>
       </div>
-    </header>
 
-    <!-- MAIN -->
-    <main class="wrap">
-      <!-- calendar / tabs จะมา phase ถัดไป -->
-    </main>
+      <div id="calendarGrid" class="calendarGrid"></div>
+    </section>
 
-  </div>
+  </main>
+</div>
 
-  <script src="./app.js"></script>
+<script src="./app.js"></script>
 </body>
 </html>
