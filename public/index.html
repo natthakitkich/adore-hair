@@ -20,7 +20,6 @@
   </div>
 </div>
 
-<!-- TOP BAR -->
 <header class="topbar">
   <div class="brand">
     <div class="avatar">A</div>
@@ -44,35 +43,31 @@
       <div id="calendarTitle" class="calendarTitle"></div>
       <button id="nextMonth" class="navBtn">›</button>
     </div>
-
     <div class="calendarWeek">
       <span>อา</span><span>จ</span><span>อ</span>
       <span>พ</span><span>พฤ</span><span>ศ</span><span>ส</span>
     </div>
-
     <div id="calendarGrid" class="calendarGrid"></div>
   </section>
 
-  <!-- DAY STATUS -->
   <section class="panel center">
     <div id="dayStatus" class="muted">กรุณาเลือกวันจากปฏิทิน</div>
   </section>
 
-  <!-- ADD BOOKING -->
+  <!-- ADD -->
   <section class="panel hidden" id="addBookingPanel">
     <h3>เพิ่มคิวใหม่</h3>
 
     <select id="addTime"></select>
-
     <select id="addStylist">
-      <option value="Bank">Bank</option>
-      <option value="Sindy">Sindy</option>
-      <option value="Assist">Assist</option>
+      <option>Bank</option>
+      <option>Sindy</option>
+      <option>Assist</option>
     </select>
 
     <div class="row">
-      <label><input type="radio" name="addGender" value="male" /> 👨 ชาย</label>
-      <label><input type="radio" name="addGender" value="female" /> 👩 หญิง</label>
+      <label><input type="radio" name="addGender" value="male"> 👨</label>
+      <label><input type="radio" name="addGender" value="female"> 👩</label>
     </div>
 
     <input id="addName" placeholder="ชื่อลูกค้า" />
@@ -82,7 +77,7 @@
     <button id="addBookingBtn" class="primary">บันทึกคิว</button>
   </section>
 
-  <!-- STYLIST -->
+  <!-- TABS -->
   <section class="panel">
     <div id="stylistTabs" class="tabs"></div>
   </section>
@@ -90,7 +85,7 @@
   <!-- SUMMARY -->
   <section id="summary" class="panel summary"></section>
 
-  <!-- QUEUE TABLE -->
+  <!-- TABLE -->
   <section class="panel">
     <table class="queueTable">
       <thead>
@@ -101,6 +96,7 @@
           <th>ชื่อ</th>
           <th>บริการ</th>
           <th>โทร</th>
+          <th></th>
         </tr>
       </thead>
       <tbody id="queueBody"></tbody>
@@ -108,6 +104,31 @@
   </section>
 
 </main>
+
+<!-- EDIT MODAL -->
+<div id="editOverlay" class="overlay hidden">
+  <div class="loginCard">
+    <h2>แก้ไขคิว</h2>
+
+    <input id="editDate" type="date" />
+    <select id="editTime"></select>
+
+    <input id="editStylist" disabled />
+    <input id="editName" />
+    <input id="editPhone" />
+
+    <div class="row">
+      <label><input type="radio" name="editGender" value="male"> 👨</label>
+      <label><input type="radio" name="editGender" value="female"> 👩</label>
+    </div>
+
+    <input id="editService" />
+
+    <button id="saveEditBtn" class="primary">บันทึก</button>
+    <button id="deleteEditBtn" class="danger">ลบคิว</button>
+    <button id="closeEditBtn" class="ghost">ปิด</button>
+  </div>
+</div>
 
 <script src="app.js"></script>
 </body>
