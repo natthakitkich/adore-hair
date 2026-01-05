@@ -1,149 +1,66 @@
-/* =========================
-   GLOBAL STATE
-========================= */
-var currentDate = new Date();
-var selectedDate = null;
+/* =================================================
+   Adore Hair – app.js (AUTH PHASE)
+================================================= */
 
-// mock หรือ backend จริงต้อง return รูปแบบนี้
-// {
-//   "2026-01-05": 3,
-//   "2026-01-06": 6
-// }
-var queueDensityByDate = {};
+const OWNER_PIN = '1234';
+const AUTH_KEY = 'adore_owner_logged_in';
 
-/* =========================
-   UTILS (Safari-safe)
-========================= */
-function pad(n) {
-  return n < 10 ? '0' + n : n;
-}
+const loginOverlay = document.getElementById('loginOverlay');
+const loginBtn = document.getElementById('loginBtn');
+const pinInput = document.getElementById('pin');
+const loginMsg = document.getElementById('loginMsg');
 
-function formatDateKey(date) {
-  return date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate());
-}
-
-function daysInMonth(year, month) {
-  return new Date(year, month + 1, 0).getDate();
-}
+const app = document.getElementById('app');
+const logoutBtn = document.getElementById('logoutBtn');
 
 /* =========================
-   DENSITY CLASS
+   AUTH
 ========================= */
-function getDensityClass(count) {
-  if (count >= 7) return 'density-full';
-  if (count >= 5) return 'density-high';
-  if (count >= 3) return 'density-mid';
-  if (count >= 1) return 'density-low';
-  return '';
+function isLoggedIn(){
+  return localStorage.getItem(AUTH_KEY) === '1';
 }
 
-/* =========================
-   CALENDAR RENDER
-========================= */
-function renderCalendar() {
-  var calGrid = document.getElementById('calGrid');
-  if (!calGrid) return;
+function showLogin(){
+  loginOverlay.classList.remove('hidden');
+  app.classList.add('hidden');
+}
 
-  calGrid.innerHTML = '';
+function showApp(){
+  loginOverlay.classList.add('hidden');
+  app.classList.remove('hidden');
+}
 
-  var year = currentDate.getFullYear();
-  var month = currentDate.getMonth();
-
-  var firstDay = new Date(year, month, 1).getDay(); // 0 = Sun
-  var totalDays = daysInMonth(year, month);
-
-  // ✅ empty cells before day 1
-  for (var i = 0; i < firstDay; i++) {
-    var empty = document.createElement('div');
-    empty.className = 'calCell';
-    empty.style.visibility = 'hidden';
-    calGrid.appendChild(empty);
+loginBtn.onclick = () => {
+  if (pinInput.value === OWNER_PIN) {
+    localStorage.setItem(AUTH_KEY, '1');
+    pinInput.value = '';
+    loginMsg.textContent = '';
+    showApp();
+    initApp();
+  } else {
+    loginMsg.textContent = 'PIN ไม่ถูกต้อง';
   }
+};
 
-  // days
-  for (var d = 1; d <= totalDays; d++) {
-    (function (day) {
-      var cell = document.createElement('div');
-      cell.className = 'calCell';
-
-      var num = document.createElement('div');
-      num.className = 'calNum';
-      num.innerText = day;
-
-      var dateObj = new Date(year, month, day);
-      var key = formatDateKey(dateObj);
-      var count = queueDensityByDate[key] || 0;
-      var densityClass = getDensityClass(count);
-
-      if (densityClass) {
-        num.className += ' ' + densityClass;
-      }
-
-      cell.appendChild(num);
-
-      cell.onclick = function () {
-        selectedDate = dateObj;
-        updateSelectedCell();
-      };
-
-      calGrid.appendChild(cell);
-    })(d);
-  }
-
-  updateSelectedCell();
-}
-
-/* =========================
-   SELECTED DAY HIGHLIGHT
-========================= */
-function updateSelectedCell() {
-  var cells = document.querySelectorAll('.calCell');
-  for (var i = 0; i < cells.length; i++) {
-    cells[i].classList.remove('selected');
-  }
-
-  if (!selectedDate) return;
-
-  var year = currentDate.getFullYear();
-  var month = currentDate.getMonth();
-  if (
-    selectedDate.getFullYear() !== year ||
-    selectedDate.getMonth() !== month
-  ) return;
-
-  var day = selectedDate.getDate();
-  var firstDay = new Date(year, month, 1).getDay();
-  var index = firstDay + day - 1;
-
-  if (cells[index]) {
-    cells[index].classList.add('selected');
-  }
-}
-
-/* =========================
-   MONTH NAV
-========================= */
-function prevMonth() {
-  currentDate.setMonth(currentDate.getMonth() - 1);
-  renderCalendar();
-}
-
-function nextMonth() {
-  currentDate.setMonth(currentDate.getMonth() + 1);
-  renderCalendar();
-}
+logoutBtn.onclick = () => {
+  localStorage.removeItem(AUTH_KEY);
+  location.reload();
+};
 
 /* =========================
    INIT
 ========================= */
-function initCalendar(densityMap) {
-  queueDensityByDate = densityMap || {};
-  renderCalendar();
+function initApp(){
+  // รอบถัดไปจะเริ่ม render calendar / tabs / queue
+  console.log('AUTH OK – READY FOR NEXT PHASE');
 }
 
 /* =========================
-   EXPOSE (for existing code)
+   BOOT
 ========================= */
-window.initCalendar = initCalendar;
-window.prevMonth = prevMonth;
-window.nextMonth = nextMonth;
+if (isLoggedIn()) {
+  showApp();
+  initApp();
+} else {
+  showLogin();
+}
