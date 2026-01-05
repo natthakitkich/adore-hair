@@ -8,18 +8,45 @@
 </head>
 <body>
 
-<!-- LOGIN -->
-<div id="loginOverlay" class="overlay">
+<!-- ========== LOGIN ========== -->
+<div id="loginOverlay" class="overlay hidden">
   <div class="loginCard">
     <div class="loginAvatar">A</div>
     <h1>เข้าสู่ระบบ</h1>
     <p class="muted">กรุณาใส่ PIN 4 หลัก</p>
-    <input id="pinInput" type="password" inputmode="numeric" maxlength="4" placeholder="••••" />
+    <input id="pinInput" type="password" inputmode="numeric" maxlength="4" />
     <button id="loginBtn" class="primary">Login</button>
     <div id="loginMsg" class="msg"></div>
   </div>
 </div>
 
+<!-- ========== EDIT QUEUE (LOCKED BY DEFAULT) ========== -->
+<div id="editOverlay" class="overlay hidden">
+  <div class="loginCard">
+    <h2>แก้ไขคิว</h2>
+
+    <input id="editDate" type="date" />
+    <select id="editTime"></select>
+
+    <input id="editStylist" disabled />
+
+    <input id="editName" placeholder="ชื่อลูกค้า" />
+    <input id="editPhone" placeholder="เบอร์โทร" />
+
+    <div class="row">
+      <label><input type="radio" name="editGender" value="male"> 👨 ชาย</label>
+      <label><input type="radio" name="editGender" value="female"> 👩 หญิง</label>
+    </div>
+
+    <input id="editService" placeholder="บริการ" />
+
+    <button id="saveEditBtn" class="primary">บันทึก</button>
+    <button id="deleteEditBtn" class="danger">ลบคิว</button>
+    <button id="closeEditBtn" class="ghost">ปิด</button>
+  </div>
+</div>
+
+<!-- ========== TOP BAR ========== -->
 <header class="topbar">
   <div class="brand">
     <div class="avatar">A</div>
@@ -28,15 +55,16 @@
       <div class="subtitle">Owner Queue · 13:00–22:00 · แยกตามช่าง</div>
     </div>
   </div>
+
   <div class="topActions">
     <div id="topDate" class="dateBadge"></div>
     <button id="logoutBtn" class="ghost">Logout</button>
   </div>
 </header>
 
+<!-- ========== MAIN ========== -->
 <main class="wrap">
 
-  <!-- CALENDAR -->
   <section class="panel">
     <div class="calendarHeader">
       <button id="prevMonth" class="navBtn">‹</button>
@@ -52,20 +80,16 @@
     <div id="calendarGrid" class="calendarGrid"></div>
   </section>
 
-  <!-- DAY STATUS -->
   <section class="panel center">
     <div id="dayStatus" class="muted">กรุณาเลือกวันจากปฏิทิน</div>
   </section>
 
-  <!-- STYLIST -->
   <section class="panel">
     <div id="stylistTabs" class="tabs"></div>
   </section>
 
-  <!-- SUMMARY -->
   <section id="summary" class="panel summary"></section>
 
-  <!-- QUEUE TABLE -->
   <section class="panel">
     <table class="queueTable">
       <thead>
@@ -84,34 +108,6 @@
   </section>
 
 </main>
-
-<!-- EDIT MODAL -->
-<div id="editOverlay" class="overlay hidden">
-  <div class="loginCard">
-
-    <h2>แก้ไขคิว</h2>
-
-    <input id="editDate" type="date" />
-    <select id="editTime"></select>
-
-    <input id="editStylist" disabled />
-
-    <input id="editName" placeholder="ชื่อลูกค้า" />
-    <input id="editPhone" placeholder="เบอร์โทร" />
-
-    <div class="row">
-      <label><input type="radio" name="editGender" value="male" /> 👨 ชาย</label>
-      <label><input type="radio" name="editGender" value="female" /> 👩 หญิง</label>
-    </div>
-
-    <input id="editService" placeholder="บริการ" />
-
-    <button id="saveEditBtn" class="primary">บันทึก</button>
-    <button id="deleteEditBtn" class="danger">ลบคิว</button>
-    <button id="closeEditBtn" class="ghost">ปิด</button>
-
-  </div>
-</div>
 
 <script src="app.js"></script>
 </body>
