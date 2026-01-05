@@ -1,48 +1,17 @@
-/* =================================================
-   Adore Hair – Version Basic SAFE
-   (calendar-days ถูกถอดออก)
-================================================= */
-
 const API = '';
 
 let bookings = [];
 let currentDate = '';
 let currentStylist = 'Bank';
-let editingId = null;
 
-/* =========================
-   LOGIN (BASIC)
-========================= */
-const loginOverlay = document.getElementById('loginOverlay');
-const loginBtn = document.getElementById('loginBtn');
-const pinInput = document.getElementById('pin');
-const loginMsg = document.getElementById('loginMsg');
-const logoutBtn = document.getElementById('logoutBtn');
+function formatTime(time) {
+  return time.slice(0, 5);
+}
 
-const OWNER_PIN = '1234';
-
-loginBtn.onclick = () => {
-  if (pinInput.value === OWNER_PIN) {
-    loginOverlay.classList.add('hidden');
-    pinInput.value = '';
-    loginMsg.textContent = '';
-    init();
-  } else {
-    loginMsg.textContent = 'PIN ไม่ถูกต้อง';
-  }
-};
-
-logoutBtn.onclick = () => location.reload();
-
-/* =========================
-   INIT (BASIC)
-========================= */
 function init() {
   const dateInput = document.getElementById('date');
-  const today = new Date().toISOString().slice(0, 10);
-
-  currentDate = today;
-  dateInput.value = today;
+  currentDate = new Date().toISOString().slice(0, 10);
+  dateInput.value = currentDate;
 
   dateInput.onchange = () => {
     currentDate = dateInput.value;
@@ -54,6 +23,7 @@ function init() {
       document.querySelector('.tab.active').classList.remove('active');
       tab.classList.add('active');
       currentStylist = tab.dataset.tab;
+      renderTime();
       renderTable();
       updateSummary();
     };
@@ -62,79 +32,55 @@ function init() {
   loadBookings();
 }
 
-/* =========================
-   UTIL
-========================= */
-function formatTime(time) {
-  return time ? time.slice(0, 5) : '';
-}
-
-/* =========================
-   LOAD BOOKINGS (BASIC)
-========================= */
 async function loadBookings() {
   const res = await fetch(`${API}/bookings?date=${currentDate}`);
   bookings = await res.json();
-
-  renderTimeSlots();
+  renderTime();
   renderTable();
   updateSummary();
 }
 
-/* =========================
-   TIME SLOTS (BASIC)
-========================= */
-function renderTimeSlots() {
-  const timeSelect = document.getElementById('time');
-  timeSelect.innerHTML = '';
+function renderTime() {
+  const time = document.getElementById('time');
+  time.innerHTML = '';
 
   for (let h = 13; h <= 22; h++) {
-    const time = `${String(h).padStart(2, '0')}:00:00`;
-
-    const exist = bookings.find(
-      b => b.time === time && b.stylist === currentStylist
+    const t = `${String(h).padStart(2, '0')}:00:00`;
+    const used = bookings.find(
+      b => b.time === t && b.stylist === currentStylist
     );
 
-    const option = document.createElement('option');
-    option.value = time;
-    option.textContent = formatTime(time);
-
-    if (exist) option.disabled = true;
-    timeSelect.appendChild(option);
+    const o = document.createElement('option');
+    o.value = t;
+    o.textContent = formatTime(t);
+    if (used) o.disabled = true;
+    time.appendChild(o);
   }
 }
 
-/* =========================
-   FORM SUBMIT (BASIC)
-========================= */
 document.getElementById('bookingForm').onsubmit = async e => {
   e.preventDefault();
 
-  const gender = document.querySelector('[name=gender]:checked')?.value;
-
-  const payload = {
-    date: currentDate,
-    time: document.getElementById('time').value,
-    stylist: currentStylist,
-    name: document.getElementById('name').value,
-    phone: document.getElementById('phone').value,
-    gender,
-    service: document.getElementById('service').value
-  };
+  const gender = document.querySelector('[name=gender]:checked').value;
 
   await fetch(`${API}/bookings`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
+    body: JSON.stringify({
+      date: currentDate,
+      time: time.value,
+      stylist: currentStylist,
+      name: name.value,
+      phone: phone.value,
+      gender,
+      service: service.value
+    })
   });
 
   e.target.reset();
   loadBookings();
 };
 
-/* =========================
-   TABLE (BASIC + NEW)
-========================= */
 function renderTable() {
   const list = document.getElementById('list');
   list.innerHTML = '';
@@ -145,87 +91,25 @@ function renderTable() {
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${formatTime(b.time)}</td>
-        <td><span class="badge stylist-${b.stylist.toLowerCase()}">${b.stylist}</span></td>
+        <td>${b.stylist}</td>
         <td>${b.gender === 'male' ? '👨' : '👩'}</td>
         <td>${b.name}</td>
         <td>${b.service || ''}</td>
         <td>${b.phone || ''}</td>
-        <td><button class="ghost">ลบ/แก้ไขคิว</button></td>
       `;
-      tr.querySelector('button').onclick = () => openEdit(b);
       list.appendChild(tr);
     });
 }
 
-/* =========================
-   SUMMARY (BASIC)
-========================= */
 function updateSummary() {
   const bank = bookings.filter(b => b.stylist === 'Bank').length;
   const sindy = bookings.filter(b => b.stylist === 'Sindy').length;
   const assist = bookings.filter(b => b.stylist === 'Assist').length;
 
-  document.getElementById('countBank').textContent = bank;
-  document.getElementById('countSindy').textContent = sindy;
-  document.getElementById('countAssist').textContent = assist;
-  document.getElementById('countTotal').textContent = bank + sindy + assist;
+  countBank.textContent = bank;
+  countSindy.textContent = sindy;
+  countAssist.textContent = assist;
+  countTotal.textContent = bank + sindy + assist;
 }
 
-/* =========================
-   EDIT MODAL (NEW)
-========================= */
-const editOverlay = document.getElementById('editOverlay');
-const editTime = document.getElementById('editTime');
-const editStylist = document.getElementById('editStylist');
-const editName = document.getElementById('editName');
-const editPhone = document.getElementById('editPhone');
-const editService = document.getElementById('editService');
-
-function openEdit(b) {
-  editingId = b.id;
-  editTime.value = formatTime(b.time);
-  editStylist.value = b.stylist;
-  editName.value = b.name;
-  editPhone.value = b.phone || '';
-  editService.value = b.service || '';
-
-  document.querySelectorAll('[name=editGender]').forEach(r => {
-    r.checked = r.value === b.gender;
-  });
-
-  editOverlay.classList.remove('hidden');
-}
-
-document.getElementById('saveEdit').onclick = async () => {
-  const gender = document.querySelector('[name=editGender]:checked')?.value;
-
-  await fetch(`${API}/bookings/${editingId}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      name: editName.value,
-      phone: editPhone.value,
-      gender,
-      service: editService.value
-    })
-  });
-
-  alert('ข้อมูลถูกแก้ไขแล้ว');
-  closeEdit();
-  loadBookings();
-};
-
-document.getElementById('deleteEdit').onclick = async () => {
-  if (!confirm('ยืนยันการลบคิวนี้?')) return;
-
-  await fetch(`${API}/bookings/${editingId}`, { method: 'DELETE' });
-  closeEdit();
-  loadBookings();
-};
-
-document.getElementById('closeEdit').onclick = closeEdit;
-
-function closeEdit() {
-  editOverlay.classList.add('hidden');
-  editingId = null;
-}
+init();
