@@ -1,11 +1,3 @@
-/* =================================================
-   ADORE HAIR – STABLE STYLE (Safari iOS Safe)
-   Source of Truth: Reference Calendar (Final Image)
-================================================= */
-
-/* =========================
-   THEME VARIABLES
-========================= */
 :root{
   --bg:#0b0f1a;
   --text:#e9eefc;
@@ -14,19 +6,11 @@
   --accent:#6ee7ff;
   --accent2:#a78bfa;
 
-  --green:#2cff9c;
-  --yellow:#fde047;
-  --orange:#fb923c;
-  --red:#ff5c7a;
-
+  --danger:#ff5c7a;
   --stroke:rgba(255,255,255,.08);
-  --glass:rgba(20,25,45,.75);
-  --shadow:0 14px 40px rgba(0,0,0,.45);
+  --shadow:0 20px 60px rgba(0,0,0,.6);
 }
 
-/* =========================
-   BASE
-========================= */
 *{
   box-sizing:border-box;
   -webkit-tap-highlight-color:transparent;
@@ -34,85 +18,117 @@
 
 body{
   margin:0;
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
-  color:var(--text);
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
   background:
     radial-gradient(1200px 700px at 15% 10%, #1a2b5a 0%, transparent 60%),
     radial-gradient(900px 600px at 90% 20%, #3b1b5a 0%, transparent 55%),
     var(--bg);
+  color:var(--text);
 }
 
-.hidden{display:none!important}
-.muted{color:var(--muted)}
+.hidden{display:none !important;}
+.muted{color:var(--muted);}
+.msg{font-size:13px;}
+.msg.err{color:var(--danger);}
 
 /* =========================
-   INPUT / BUTTON
+   LOGIN OVERLAY (CRITICAL)
 ========================= */
-input,select{
-  width:100%;
-  padding:12px 14px;
-  font-size:16px;
-  border-radius:14px;
-  border:1px solid var(--stroke);
-  background:rgba(0,0,0,.35);
-  color:var(--text);
-  outline:none;
+.overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.88);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:9999;
 }
 
-.primary{
-  border:none;
-  padding:12px 18px;
-  border-radius:999px;
+.loginCard{
+  width:320px;
+  padding:28px 22px 26px;
+  border-radius:26px;
+  text-align:center;
+  background:linear-gradient(180deg,rgba(30,40,80,.95),rgba(10,12,22,.95));
+  border:1px solid rgba(255,255,255,.12);
+  box-shadow:var(--shadow);
+}
+
+.loginAvatar{
+  width:64px;
+  height:64px;
+  border-radius:18px;
+  margin:0 auto 12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:28px;
   font-weight:900;
   background:linear-gradient(135deg,var(--accent),var(--accent2));
   color:#061022;
 }
 
-.ghost{
-  background:rgba(255,255,255,.06);
+.loginCard h1{
+  margin:6px 0 6px;
+  font-size:22px;
+}
+
+.loginCard input{
+  width:100%;
+  margin-top:14px;
+  padding:14px;
+  font-size:20px;
+  letter-spacing:6px;
+  text-align:center;
+  border-radius:16px;
   border:1px solid var(--stroke);
+  background:rgba(0,0,0,.35);
   color:var(--text);
-  padding:10px 16px;
-  border-radius:999px;
+}
+
+.primary{
+  width:100%;
+  margin-top:14px;
+  padding:14px;
+  border:none;
+  border-radius:16px;
+  font-weight:900;
+  cursor:pointer;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#061022;
 }
 
 /* =========================
-   TOP BAR (REFERENCE MATCH)
+   TOP BAR
 ========================= */
 .topbar{
   position:sticky;
   top:0;
-  z-index:20;
-  padding:16px 18px;
-  background:linear-gradient(180deg,rgba(10,15,30,.9),rgba(10,15,30,.75));
-  backdrop-filter:blur(12px);
-  border-bottom:1px solid var(--stroke);
-}
-
-.topbar-inner{
-  max-width:1100px;
-  margin:auto;
+  z-index:50;
+  padding:18px 20px;
   display:flex;
-  align-items:center;
   justify-content:space-between;
-  gap:12px;
+  align-items:center;
+  background:rgba(0,0,0,.35);
+  backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--stroke);
 }
 
 .brand{
   display:flex;
-  align-items:center;
   gap:12px;
+  align-items:center;
 }
 
 .avatar{
-  width:44px;
-  height:44px;
+  width:42px;
+  height:42px;
   border-radius:14px;
-  background:linear-gradient(135deg,var(--accent),var(--accent2));
   display:flex;
   align-items:center;
   justify-content:center;
   font-weight:900;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
   color:#061022;
 }
 
@@ -126,18 +142,13 @@ input,select{
   color:var(--muted);
 }
 
-.top-actions{
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-
-/* small date picker in top bar */
-#date{
-  max-width:140px;
-  text-align:center;
-  font-size:14px;
-  padding:8px 10px;
+.ghost{
+  padding:10px 16px;
+  border-radius:14px;
+  background:rgba(255,255,255,.08);
+  border:1px solid var(--stroke);
+  color:var(--text);
+  cursor:pointer;
 }
 
 /* =========================
@@ -146,237 +157,4 @@ input,select{
 .wrap{
   width:min(1100px,94vw);
   margin:18px auto 64px;
-}
-
-.panel{
-  background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
-  border:1px solid var(--stroke);
-  border-radius:26px;
-  padding:18px;
-  box-shadow:var(--shadow);
-  margin-top:16px;
-}
-
-/* =========================
-   CALENDAR (REFERENCE STYLE)
-========================= */
-.calendarHeader{
-  display:grid;
-  grid-template-columns:44px 1fr 44px;
-  align-items:center;
-  margin-bottom:8px;
-}
-
-.calendarHeader button{
-  width:44px;
-  height:44px;
-  border-radius:50%;
-  border:1px solid var(--stroke);
-  background:rgba(255,255,255,.06);
-  color:var(--text);
-}
-
-.calendarTitle{
-  text-align:center;
-  font-size:22px;
-  font-weight:900;
-}
-
-.calendarSubtitle{
-  text-align:center;
-  font-size:12px;
-  color:var(--muted);
-  margin-bottom:10px;
-}
-
-.calWeek{
-  display:grid;
-  grid-template-columns:repeat(7,1fr);
-  text-align:center;
-  font-size:12px;
-  color:var(--muted);
-}
-
-.calGrid{
-  display:grid;
-  grid-template-columns:repeat(7,1fr);
-  gap:10px;
-  margin-top:10px;
-}
-
-.calCell{
-  height:52px;
-  border-radius:999px;
-  background:rgba(0,0,0,.35);
-  border:1px solid var(--stroke);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-
-.calCell.selected{
-  outline:2px solid rgba(110,231,255,.45);
-}
-
-.calNum{
-  width:100%;
-  height:100%;
-  border-radius:999px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:900;
-}
-
-/* density colors (CRITICAL) */
-.calNum.density-low{
-  background:rgba(44,255,156,.25);
-  color:var(--green);
-  border:1px solid rgba(44,255,156,.6);
-}
-
-.calNum.density-mid{
-  background:rgba(253,224,71,.22);
-  color:var(--yellow);
-  border:1px solid rgba(253,224,71,.6);
-}
-
-.calNum.density-high{
-  background:rgba(251,146,60,.22);
-  color:var(--orange);
-  border:1px solid rgba(251,146,60,.6);
-}
-
-.calNum.density-full{
-  background:rgba(255,92,122,.25);
-  color:var(--red);
-  border:1px solid rgba(255,92,122,.6);
-}
-
-/* =========================
-   DAY STATUS / CLOSED
-========================= */
-.dayStatus{
-  text-align:center;
-  font-size:14px;
-  margin-bottom:8px;
-}
-
-.dayAction{
-  display:flex;
-  justify-content:center;
-}
-
-.dayAction button{
-  padding:10px 20px;
-  border-radius:999px;
-  font-weight:900;
-  border:none;
-}
-
-.dayAction .close{
-  background:var(--red);
-  color:#fff;
-}
-
-.dayAction .open{
-  background:var(--green);
-  color:#062016;
-}
-
-/* =========================
-   TABS (STYLIST)
-========================= */
-.tabs{
-  display:flex;
-  gap:12px;
-}
-
-.tab{
-  flex:1;
-  padding:14px;
-  border-radius:999px;
-  border:1px solid var(--stroke);
-  background:rgba(0,0,0,.35);
-  font-weight:900;
-  text-align:center;
-}
-
-.tab.active{
-  outline:2px solid rgba(110,231,255,.6);
-  background:rgba(110,231,255,.15);
-}
-
-/* =========================
-   SUMMARY
-========================= */
-.summary{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:14px;
-}
-
-.box{
-  border-radius:22px;
-  background:rgba(0,0,0,.35);
-  border:1px solid var(--stroke);
-  padding:18px;
-  text-align:center;
-}
-
-.box .num{
-  font-size:28px;
-  font-weight:900;
-}
-
-/* =========================
-   TABLE
-========================= */
-table{
-  width:100%;
-  border-collapse:collapse;
-  font-size:14px;
-}
-
-th,td{
-  padding:12px;
-  border-bottom:1px solid var(--stroke);
-}
-
-th{
-  color:var(--muted);
-  text-align:left;
-}
-
-/* stylist badge */
-.stylist-bank{
-  padding:6px 12px;
-  border-radius:999px;
-  background:rgba(110,231,255,.2);
-  color:var(--accent);
-  border:1px solid rgba(110,231,255,.5);
-}
-
-.stylist-sindy{
-  padding:6px 12px;
-  border-radius:999px;
-  background:rgba(167,139,250,.2);
-  color:var(--accent2);
-  border:1px solid rgba(167,139,250,.5);
-}
-
-.stylist-assist{
-  padding:6px 12px;
-  border-radius:999px;
-  background:rgba(44,255,156,.2);
-  color:var(--green);
-  border:1px solid rgba(44,255,156,.5);
-}
-
-/* =========================
-   RESPONSIVE (Safari iOS)
-========================= */
-@media(max-width:720px){
-  .calendarTitle{font-size:20px}
-  .calCell{height:48px}
 }
