@@ -380,7 +380,13 @@ th{color:var(--muted)}
     drop-shadow(0 6px 12px rgba(0,0,0,.35));
   transition:transform .35s ease, filter .35s ease;
 }
+/* =========================
+   TOPBAR LOGO OVERRIDE
+========================= */
 .topbar .avatar img{
-  transform:none !important;
+  width:92%;
+  height:92%;
+  object-fit:contain;
+  transform:none;
   filter:drop-shadow(0 4px 8px rgba(0,0,0,.35));
 }
