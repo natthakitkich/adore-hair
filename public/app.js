@@ -5,6 +5,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const AUTH_KEY = 'adore_owner_auth';
   const API = '';
 
+  const START_HOUR = 13;
+  const END_HOUR = 22;
+  const STYLISTS = ['Bank', 'Sindy', 'Assist'];
+
   /* ================= ELEMENTS ================= */
   const loginOverlay = document.getElementById('loginOverlay');
   const loginBtn = document.getElementById('loginBtn');
@@ -20,45 +24,33 @@ document.addEventListener('DOMContentLoaded', () => {
   const stylistTabsEl = document.getElementById('stylistTabs');
   const summaryEl = document.getElementById('summary');
   const queueBody = document.getElementById('queueBody');
-
   const dayStatus = document.getElementById('dayStatus');
-  const closeDayBtn = document.getElementById('closeDayBtn');
-  const openDayBtn = document.getElementById('openDayBtn');
 
   /* ================= STATE ================= */
   let currentMonth = new Date();
   let selectedDate = null;
   let bookings = [];
+  let activeStylist = 'Bank';
 
-  const stylists = ['Bank', 'Sindy', 'Assist'];
-
-  /* ================= LOGIN ================= */
-  const isAuthed = localStorage.getItem(AUTH_KEY) === 'true';
-
-  if (isAuthed) {
+  /* ================= AUTH ================= */
+  if (localStorage.getItem(AUTH_KEY) === 'true') {
     hideLogin();
-    bootApp();
+    boot();
   } else {
     showLogin();
   }
 
-  loginBtn.onclick = tryLogin;
+  loginBtn.onclick = login;
+  pinInput.addEventListener('keydown', e => e.key === 'Enter' && login());
 
-  pinInput.addEventListener('keydown', e => {
-    if (e.key === 'Enter') tryLogin();
-  });
-
-  function tryLogin() {
+  function login() {
     if (pinInput.value !== OWNER_PIN) {
       loginMsg.textContent = 'PIN ไม่ถูกต้อง';
       return;
     }
-
     localStorage.setItem(AUTH_KEY, 'true');
-    pinInput.value = '';
-    loginMsg.textContent = '';
     hideLogin();
-    bootApp();
+    boot();
   }
 
   logoutBtn.onclick = () => {
@@ -66,16 +58,11 @@ document.addEventListener('DOMContentLoaded', () => {
     location.reload();
   };
 
-  function showLogin() {
-    loginOverlay.style.display = 'flex';
-  }
-
-  function hideLogin() {
-    loginOverlay.style.display = 'none';
-  }
+  function showLogin() { loginOverlay.style.display = 'flex'; }
+  function hideLogin() { loginOverlay.style.display = 'none'; }
 
   /* ================= BOOT ================= */
-  function bootApp() {
+  function boot() {
     renderTopDate();
     initCalendar();
     renderStylistTabs();
@@ -83,23 +70,19 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function renderTopDate() {
-    const el = document.getElementById('topDate');
-    el.textContent = new Date().toLocaleDateString('th-TH', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
-    });
+    document.getElementById('topDate').textContent =
+      new Date().toLocaleDateString('th-TH', {
+        day:'numeric', month:'short', year:'numeric'
+      });
   }
 
   /* ================= CALENDAR ================= */
   function initCalendar() {
     renderCalendar();
-
     prevMonthBtn.onclick = () => {
       currentMonth.setMonth(currentMonth.getMonth() - 1);
       renderCalendar();
     };
-
     nextMonthBtn.onclick = () => {
       currentMonth.setMonth(currentMonth.getMonth() + 1);
       renderCalendar();
@@ -109,8 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderCalendar() {
     calendarGrid.innerHTML = '';
     calendarTitle.textContent = currentMonth.toLocaleDateString('th-TH', {
-      month: 'long',
-      year: 'numeric'
+      month:'long', year:'numeric'
     });
 
     const y = currentMonth.getFullYear();
@@ -123,43 +105,98 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     for (let d = 1; d <= daysInMonth; d++) {
-      const dateStr = `${y}-${String(m + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const dateStr =
+        `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
 
       const cell = document.createElement('div');
       cell.className = 'calCell';
+
+      const inner = document.createElement('div');
+      inner.className = 'calCellInner';
 
       const num = document.createElement('div');
       num.className = 'calNum';
       num.textContent = d;
 
+      inner.appendChild(num);
+      cell.appendChild(inner);
+
       cell.onclick = () => selectDate(dateStr, cell);
 
-      cell.appendChild(num);
       calendarGrid.appendChild(cell);
     }
   }
 
   /* ================= DATE SELECT ================= */
-  function selectDate(dateStr, cell) {
-    selectedDate = dateStr;
+  async function selectDate(date, cell) {
+    selectedDate = date;
 
-    document
-      .querySelectorAll('.calCell')
+    document.querySelectorAll('.calCell')
       .forEach(c => c.classList.remove('selected'));
-
     cell.classList.add('selected');
-    dayStatus.textContent = `เลือกวันที่ ${dateStr}`;
+
+    dayStatus.textContent = `วันที่ ${date}`;
+    await loadBookings();
+  }
+
+  /* ================= BOOKINGS ================= */
+  async function loadBookings() {
+    const res = await fetch(`${API}/bookings?date=${selectedDate}`);
+    bookings = await res.json();
+    renderQueue();
+    renderSummary();
+  }
+
+  function renderQueue() {
+    queueBody.innerHTML = '';
+
+    for (let h = START_HOUR; h <= END_HOUR; h++) {
+      const time = `${String(h).padStart(2,'0')}:00:00`;
+
+      const row = document.createElement('tr');
+
+      const booking = bookings.find(
+        b => b.time === time && b.stylist === activeStylist
+      );
+
+      row.innerHTML = `
+        <td>${time.slice(0,5)}</td>
+        <td>${activeStylist}</td>
+        <td>${booking ? (booking.gender === 'male' ? '👨' : '👩') : '-'}</td>
+        <td>${booking ? booking.name : 'ว่าง'}</td>
+        <td>${booking ? booking.service || '' : ''}</td>
+        <td>${booking ? booking.phone || '' : ''}</td>
+      `;
+
+      queueBody.appendChild(row);
+    }
   }
 
   /* ================= STYLIST ================= */
   function renderStylistTabs() {
     stylistTabsEl.innerHTML = '';
-    stylists.forEach(s => {
+    STYLISTS.forEach(s => {
       const tab = document.createElement('div');
-      tab.className = 'tab';
+      tab.className = 'tab' + (s === activeStylist ? ' active' : '');
       tab.textContent = s;
+      tab.onclick = () => {
+        activeStylist = s;
+        renderStylistTabs();
+        if (selectedDate) renderQueue();
+      };
       stylistTabsEl.appendChild(tab);
     });
+  }
+
+  /* ================= SUMMARY ================= */
+  function renderSummary() {
+    const count = s => bookings.filter(b => b.stylist === s).length;
+    summaryEl.innerHTML = `
+      <div class="panel">Bank<br><b>${count('Bank')}</b></div>
+      <div class="panel">Sindy<br><b>${count('Sindy')}</b></div>
+      <div class="panel">Assist<br><b>${count('Assist')}</b></div>
+      <div class="panel">รวม<br><b>${bookings.length}</b></div>
+    `;
   }
 
 });
