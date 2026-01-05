@@ -23,66 +23,78 @@ app.get('/', (_, res) => {
   res.sendFile(path.join(__dirname, 'public/index.html'));
 });
 
-/* ===== BOOKINGS ===== */
+/* GET BOOKINGS */
 app.get('/bookings', async (req, res) => {
   const { date } = req.query;
-  let q = supabase.from('bookings').select('*').order('time');
-  if (date) q = q.eq('date', date);
-  const { data } = await q;
+  let query = supabase.from('bookings').select('*').order('time');
+
+  if (date) query = query.eq('date', date);
+
+  const { data, error } = await query;
+  if (error) return res.status(500).json(error);
+
   res.json(data || []);
 });
 
+/* CREATE BOOKING */
 app.post('/bookings', async (req, res) => {
   const { date, time, stylist, name, gender, phone, service } = req.body;
+
   if (!date || !time || !stylist || !name || !gender) {
-    return res.status(400).json({ error: 'ข้อมูลไม่ครบ' });
+    return res.status(400).json({ error: 'Missing required fields' });
   }
 
-  const { data: exists } = await supabase
+  const { data: exist } = await supabase
     .from('bookings')
-    .select('id')
+    .select('*')
     .eq('date', date)
     .eq('time', time)
-    .eq('stylist', stylist)
-    .limit(1);
+    .eq('stylist', stylist);
 
-  if (exists?.length) {
-    return res.status(409).json({ error: 'เวลานี้ถูกจองแล้ว' });
+  if (exist && exist.length > 0) {
+    return res.status(409).json({ error: 'Slot already booked' });
   }
 
-  await supabase.from('bookings').insert([{ date, time, stylist, name, gender, phone, service }]);
-  res.json({ ok: true });
+  const { data, error } = await supabase
+    .from('bookings')
+    .insert([{ date, time, stylist, name, gender, phone, service }])
+    .select()
+    .single();
+
+  if (error) return res.status(500).json(error);
+
+  res.json(data);
 });
 
+/* UPDATE BOOKING (LOCK TIME & STYLIST) */
+app.put('/bookings/:id', async (req, res) => {
+  const { id } = req.params;
+  const { name, phone, gender, service } = req.body;
+
+  const { error } = await supabase
+    .from('bookings')
+    .update({ name, phone, gender, service })
+    .eq('id', id);
+
+  if (error) return res.status(500).json(error);
+
+  res.json({ success: true });
+});
+
+/* DELETE BOOKING */
 app.delete('/bookings/:id', async (req, res) => {
-  await supabase.from('bookings').delete().eq('id', req.params.id);
-  res.json({ ok: true });
+  const { id } = req.params;
+
+  const { error } = await supabase
+    .from('bookings')
+    .delete()
+    .eq('id', id);
+
+  if (error) return res.status(500).json(error);
+
+  res.json({ success: true });
 });
 
-/* ===== SLOTS ===== */
-app.get('/slots', async (req, res) => {
-  const { date } = req.query;
-  if (!date) return res.json({ slots: {} });
-
-  const slots = {};
-  for (let h = 13; h <= 22; h++) {
-    slots[`${String(h).padStart(2,'0')}:00`] = { Bank:false, Sindy:false, Assist:false };
-  }
-
-  const { data } = await supabase.from('bookings').select('time,stylist').eq('date', date);
-  (data || []).forEach(b => slots[b.time] && (slots[b.time][b.stylist] = true));
-  res.json({ slots });
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
-
-/* ===== CALENDAR DAYS ===== */
-app.get('/calendar-days', async (_, res) => {
-  const { data } = await supabase.from('bookings').select('date');
-  const map = {};
-  (data || []).forEach(b => {
-    const d = b.date;
-    map[d] = (map[d] || 0) + 1;
-  });
-  res.json(map);
-});
-
-app.listen(PORT, () => console.log('Server running'));
