@@ -150,6 +150,43 @@ label{
   margin-top:16px;
 }
 
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+}
+
+.full{grid-column:1/-1}
+
+/* =========================
+   OVERLAY / MODAL
+========================= */
+.overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.85);
+  display:grid;
+  place-items:center;
+  z-index:999;
+}
+
+.modal{
+  width:min(420px,92vw);
+  background:linear-gradient(180deg,rgba(20,25,45,.96),rgba(10,12,22,.96));
+  border-radius:26px;
+  border:1px solid rgba(255,255,255,.15);
+  box-shadow:0 22px 90px rgba(0,0,0,.65);
+}
+
+.modalBody{
+  padding:28px;
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+  align-items:center;
+  text-align:center;
+}
+
 /* =========================
    CALENDAR
 ========================= */
@@ -160,9 +197,7 @@ label{
   margin-bottom:12px;
 }
 
-.calendarCenter{
-  text-align:center;
-}
+.calendarCenter{text-align:center}
 
 .calendarTitle{
   font-size:22px;
@@ -217,7 +252,9 @@ label{
   font-weight:900;
 }
 
-/* ===== DENSITY COLORS (ใช้ของเดิม แต่ map ใหม่) ===== */
+/* ===== DENSITY COLORS (สำคัญ) ===== */
+/* 0 คิว = ไม่มี class */
+
 .calNum.density-low{
   background:rgba(44,255,156,.22);
   color:#2cff9c;
@@ -243,7 +280,48 @@ label{
 }
 
 /* =========================
-   TABLE (โทรได้ iOS)
+   TABS
+========================= */
+.tabs{
+  display:flex;
+  gap:12px;
+}
+
+.tab{
+  flex:1;
+  padding:14px;
+  border-radius:20px;
+  border:1px solid var(--stroke);
+  background:rgba(0,0,0,.32);
+  font-weight:900;
+  cursor:pointer;
+  text-align:center;
+}
+
+.tab.active{
+  background:rgba(110,231,255,.16);
+  outline:2px solid rgba(110,231,255,.4);
+}
+
+/* =========================
+   SUMMARY
+========================= */
+.summary{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:14px;
+}
+
+.box{
+  padding:16px;
+  border-radius:20px;
+  background:rgba(0,0,0,.32);
+  border:1px solid var(--stroke);
+  font-weight:900;
+}
+
+/* =========================
+   TABLE
 ========================= */
 table{
   width:100%;
@@ -256,19 +334,23 @@ th,td{
   border-bottom:1px solid var(--stroke);
 }
 
+th{
+  color:var(--muted);
+  font-weight:900;
+  text-align:left;
+}
+
 td a{
   color:var(--accent);
   text-decoration:none;
-}
-
-td a:active{
-  opacity:.7;
 }
 
 /* =========================
    RESPONSIVE
 ========================= */
 @media(max-width:720px){
+  .grid{grid-template-columns:1fr}
+  .summary{grid-template-columns:1fr 1fr}
   .topbar{
     flex-direction:column;
     align-items:flex-start;
