@@ -380,4 +380,7 @@ th{color:var(--muted)}
     drop-shadow(0 6px 12px rgba(0,0,0,.35));
   transition:transform .35s ease, filter .35s ease;
 }
-
+.topbar .avatar img{
+  transform:none !important;
+  filter:drop-shadow(0 4px 8px rgba(0,0,0,.35));
+}
