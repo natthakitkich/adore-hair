@@ -22,12 +22,18 @@
         id="pin"
         type="password"
         inputmode="numeric"
-        pattern="[0-9]*"
         maxlength="4"
-        placeholder="••••"
+        placeholder="PIN"
       />
 
-      <button id="loginBtn" class="primary">Login</button>
+      <button
+        id="loginBtn"
+        class="primary"
+        type="button"
+      >
+        Login
+      </button>
+
       <div id="loginMsg" class="msg err"></div>
     </div>
   </div>
@@ -41,29 +47,25 @@
     <div class="modalBody">
       <h2>แก้ไขคิว</h2>
 
-      <!-- locked -->
+      <input id="editTime" disabled />
       <input id="editStylist" disabled />
-      <input id="editDate" type="date" />
-      <select id="editTime"></select>
 
-      <!-- editable -->
       <input id="editName" placeholder="ชื่อลูกค้า" />
       <input id="editPhone" placeholder="เบอร์โทร" />
 
       <div class="row">
         <label>
-          <input type="radio" name="editGender" value="male" />
-          👨 ชาย
+          <input type="radio" name="editGender" value="male" /> 👨 ชาย
         </label>
         <label>
-          <input type="radio" name="editGender" value="female" />
-          👩 หญิง
+          <input type="radio" name="editGender" value="female" /> 👩 หญิง
         </label>
       </div>
 
       <input id="editService" placeholder="ทำอะไร" />
 
       <button id="saveEdit" class="primary">บันทึกการแก้ไข</button>
+      <button id="deleteEdit" class="ghost">ลบคิว</button>
       <button id="closeEdit" class="ghost">ปิด</button>
     </div>
   </div>
@@ -77,7 +79,9 @@
     <div class="avatar">A</div>
     <div>
       <div class="title">Adore hair studio</div>
-      <div class="subtitle">Owner Queue · 13:00–22:00 · แยกตามช่าง</div>
+      <div class="subtitle">
+        Owner Queue · 13:00–22:00 · แยกตามช่าง
+      </div>
     </div>
   </div>
 
@@ -85,39 +89,15 @@
 </div>
 
 <!-- =========================
-     MAIN CONTENT
+     MAIN CONTENT (เดิม)
 ========================= -->
 <div class="wrap">
 
-  <!-- CALENDAR -->
-  <div class="panel calendarPanel">
-    <div class="calendarHeader">
-      <button id="prevMonth" class="ghost">‹</button>
-      <div class="calendarCenter">
-        <div id="calendarTitle" class="calendarTitle"></div>
-        <div class="calendarSubtitle">ระดับสีแสดงความหนาแน่นของคิว</div>
-      </div>
-      <button id="nextMonth" class="ghost">›</button>
-    </div>
-
-    <div class="calWeekHead">
-      <div>อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div>ส</div>
-    </div>
-
-    <div id="calendarDays" class="calGrid"></div>
-  </div>
-
-  <!-- SUMMARY -->
   <div class="panel">
-    <div class="summary">
-      <div class="box">Bank: <span id="sumBank">0</span></div>
-      <div class="box">Sindy: <span id="sumSindy">0</span></div>
-      <div class="box">Assist: <span id="sumAssist">0</span></div>
-      <div class="box">รวม: <span id="sumTotal">0</span></div>
-    </div>
+    <label for="date">เลือกวันที่</label>
+    <input type="date" id="date" />
   </div>
 
-  <!-- TABS -->
   <div class="panel">
     <div class="tabs">
       <div class="tab active" data-tab="Bank">Bank</div>
@@ -126,7 +106,15 @@
     </div>
   </div>
 
-  <!-- BOOKING FORM -->
+  <div class="panel">
+    <div class="summary">
+      <div class="box">Bank: <span id="countBank">0</span></div>
+      <div class="box">Sindy: <span id="countSindy">0</span></div>
+      <div class="box">Assist: <span id="countAssist">0</span></div>
+      <div class="box">รวม: <span id="countTotal">0</span></div>
+    </div>
+  </div>
+
   <div class="panel">
     <form id="bookingForm" class="grid">
       <div>
@@ -147,7 +135,7 @@
       <div>
         <label>เพศ</label>
         <div class="row">
-          <label><input type="radio" name="gender" value="male" /> 👨</label>
+          <label><input type="radio" name="gender" value="male" required /> 👨</label>
           <label><input type="radio" name="gender" value="female" /> 👩</label>
         </div>
       </div>
@@ -163,7 +151,6 @@
     </form>
   </div>
 
-  <!-- TABLE -->
   <div class="panel">
     <table>
       <thead>
