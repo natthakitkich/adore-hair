@@ -1,5 +1,5 @@
 /* =================================================
-   Adore Hair – app.js (Develop + Calendar Density)
+   Adore Hair – app.js (Calendar Integrated / Stable)
 ================================================= */
 
 const API = '';
@@ -8,15 +8,14 @@ const API = '';
    GLOBAL STATE
 ========================= */
 let bookings = [];
+let calendarDensity = {};
+
 let currentDate = '';
 let currentStylist = 'Bank';
-
-// DENSITY
-let calendarDensity = {};
 let currentMonth = new Date();
 
 /* =========================
-   LOGIN CONTROL (DEVELOP)
+   LOGIN CONTROL
 ========================= */
 const loginOverlay = document.getElementById('loginOverlay');
 const loginBtn = document.getElementById('loginBtn');
@@ -28,6 +27,7 @@ const OWNER_PIN = '1234';
 
 loginBtn.onclick = () => {
   if (pinInput.value === OWNER_PIN) {
+    document.body.style.overflow = 'auto';
     loginOverlay.classList.add('hidden');
     pinInput.value = '';
     loginMsg.textContent = '';
@@ -43,30 +43,18 @@ logoutBtn.onclick = () => location.reload();
    INIT
 ========================= */
 function init() {
-  const dateInput = document.getElementById('date');
-  const today = new Date().toISOString().slice(0, 10);
+  const today = new Date();
+  currentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  currentDate = today.toISOString().slice(0, 10);
 
-  currentDate = today;
-  dateInput.value = today;
+  bindTabs();
+  bindCalendarNav();
 
-  dateInput.onchange = () => {
-    currentDate = dateInput.value;
-    loadBookings();
+  loadCalendarDensity().then(() => {
+    renderCalendar();
     highlightSelectedDate();
-  };
-
-  document.querySelectorAll('.tab').forEach(tab => {
-    tab.onclick = () => {
-      document.querySelector('.tab.active').classList.remove('active');
-      tab.classList.add('active');
-      currentStylist = tab.dataset.tab;
-      renderTimeOptions();
-      renderTable();
-      updateSummary();
-    };
   });
 
-  loadCalendarDensity(); // DENSITY
   loadBookings();
 }
 
@@ -77,8 +65,108 @@ function formatTime(time) {
   return time ? time.slice(0, 5) : '';
 }
 
+function pad(n) {
+  return String(n).padStart(2, '0');
+}
+
 /* =========================
-   LOAD BOOKINGS (BASIC)
+   CALENDAR NAV
+========================= */
+function bindCalendarNav() {
+  document.getElementById('prevMonth').onclick = () => {
+    currentMonth.setMonth(currentMonth.getMonth() - 1);
+    loadCalendarDensity().then(renderCalendar);
+  };
+
+  document.getElementById('nextMonth').onclick = () => {
+    currentMonth.setMonth(currentMonth.getMonth() + 1);
+    loadCalendarDensity().then(renderCalendar);
+  };
+}
+
+/* =========================
+   LOAD CALENDAR DENSITY
+========================= */
+async function loadCalendarDensity() {
+  try {
+    const res = await fetch(`${API}/calendar-days`);
+    calendarDensity = await res.json();
+  } catch {
+    calendarDensity = {};
+  }
+}
+
+/* =========================
+   RENDER CALENDAR
+========================= */
+function renderCalendar() {
+  const title = document.getElementById('calendarTitle');
+  const grid = document.getElementById('calendarDays');
+
+  title.textContent = currentMonth.toLocaleString('th-TH', {
+    month: 'long',
+    year: 'numeric'
+  });
+
+  grid.innerHTML = '';
+
+  const year = currentMonth.getFullYear();
+  const month = currentMonth.getMonth();
+
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  for (let i = 0; i < firstDay; i++) {
+    grid.appendChild(document.createElement('div'));
+  }
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${year}-${pad(month + 1)}-${pad(d)}`;
+    const count = calendarDensity[dateStr] || 0;
+
+    const cell = document.createElement('div');
+    cell.className = 'calCell';
+
+    const num = document.createElement('div');
+    num.className = 'calNum';
+
+    if (count >= 7) num.classList.add('density-full');
+    else if (count >= 5) num.classList.add('density-high');
+    else if (count >= 3) num.classList.add('density-mid');
+    else if (count >= 1) num.classList.add('density-low');
+
+    num.textContent = d;
+    cell.appendChild(num);
+
+    cell.onclick = () => {
+      currentDate = dateStr;
+      loadBookings();
+      highlightSelectedDate();
+    };
+
+    grid.appendChild(cell);
+  }
+}
+
+/* =========================
+   HIGHLIGHT SELECTED DATE
+========================= */
+function highlightSelectedDate() {
+  document.querySelectorAll('.calCell').forEach(c =>
+    c.classList.remove('selected')
+  );
+
+  const day = Number(currentDate.slice(-2));
+
+  [...document.querySelectorAll('.calCell')].forEach(c => {
+    if (c.textContent.trim() === String(day)) {
+      c.classList.add('selected');
+    }
+  });
+}
+
+/* =========================
+   LOAD BOOKINGS
 ========================= */
 async function loadBookings() {
   const res = await fetch(`${API}/bookings?date=${currentDate}`);
@@ -90,110 +178,45 @@ async function loadBookings() {
 }
 
 /* =========================
-   LOAD CALENDAR DENSITY (NEW)
-========================= */
-async function loadCalendarDensity() {
-  try {
-    const res = await fetch(`${API}/calendar-days`);
-    calendarDensity = await res.json();
-  } catch {
-    calendarDensity = {};
-  }
-  renderCalendar();
-}
-
-/* =========================
-   CALENDAR RENDER (DENSITY)
-========================= */
-function renderCalendar() {
-  const calendarDays = document.getElementById('calendarDays');
-  const calendarTitle = document.getElementById('calendarTitle');
-
-  if (!calendarDays || !calendarTitle) return;
-
-  calendarDays.innerHTML = '';
-  calendarTitle.textContent = currentMonth.toLocaleString('th-TH', {
-    month: 'long',
-    year: 'numeric'
-  });
-
-  const year = currentMonth.getFullYear();
-  const month = currentMonth.getMonth();
-  const firstDay = new Date(year, month, 1).getDay();
-  const totalDays = new Date(year, month + 1, 0).getDate();
-
-  for (let i = 0; i < firstDay; i++) {
-    calendarDays.appendChild(document.createElement('div'));
-  }
-
-  for (let day = 1; day <= totalDays; day++) {
-    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    const count = calendarDensity[dateStr] || 0;
-
-    const cell = document.createElement('div');
-    cell.className = 'calCell';
-    if (dateStr === currentDate) cell.classList.add('selected');
-
-    const num = document.createElement('div');
-    num.className = 'calNum';
-
-    if (count >= 7) num.classList.add('density-full');
-    else if (count >= 5) num.classList.add('density-high');
-    else if (count >= 3) num.classList.add('density-mid');
-    else if (count >= 1) num.classList.add('density-low');
-
-    num.textContent = day;
-    cell.appendChild(num);
-
-    cell.onclick = () => {
-      currentDate = dateStr;
-      document.getElementById('date').value = dateStr;
-      loadBookings();
-      highlightSelectedDate();
-    };
-
-    calendarDays.appendChild(cell);
-  }
-}
-
-/* =========================
-   HIGHLIGHT SELECTED DATE
-========================= */
-function highlightSelectedDate() {
-  document.querySelectorAll('.calCell').forEach(c =>
-    c.classList.remove('selected')
-  );
-  const target = [...document.querySelectorAll('.calCell')].find(
-    c => c.textContent.trim() === String(Number(currentDate.slice(-2)))
-  );
-  if (target) target.classList.add('selected');
-}
-
-/* =========================
-   TIME OPTIONS (BASIC)
+   TIME OPTIONS
 ========================= */
 function renderTimeOptions() {
   const timeSelect = document.getElementById('time');
   timeSelect.innerHTML = '';
 
   for (let h = 13; h <= 22; h++) {
-    const time = `${String(h).padStart(2, '0')}:00:00`;
-
+    const time = `${pad(h)}:00:00`;
     const booked = bookings.find(
       b => b.time === time && b.stylist === currentStylist
     );
 
-    const option = document.createElement('option');
-    option.value = time;
-    option.textContent = formatTime(time);
-    if (booked) option.disabled = true;
+    const opt = document.createElement('option');
+    opt.value = time;
+    opt.textContent = formatTime(time);
+    if (booked) opt.disabled = true;
 
-    timeSelect.appendChild(option);
+    timeSelect.appendChild(opt);
   }
 }
 
 /* =========================
-   FORM SUBMIT (BASIC)
+   TABS
+========================= */
+function bindTabs() {
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.onclick = () => {
+      document.querySelector('.tab.active').classList.remove('active');
+      tab.classList.add('active');
+      currentStylist = tab.dataset.tab;
+      renderTimeOptions();
+      renderTable();
+      updateSummary();
+    };
+  });
+}
+
+/* =========================
+   FORM SUBMIT
 ========================= */
 document.getElementById('bookingForm').onsubmit = async e => {
   e.preventDefault();
@@ -219,13 +242,13 @@ document.getElementById('bookingForm').onsubmit = async e => {
   });
 
   e.target.reset();
-  loadCalendarDensity(); // refresh density
+  await loadCalendarDensity();
+  renderCalendar();
   loadBookings();
 };
 
 /* =========================
-   TABLE / SUMMARY / EDIT
-   (เหมือน Develop เดิม)
+   TABLE
 ========================= */
 function renderTable() {
   const list = document.getElementById('list');
@@ -249,6 +272,9 @@ function renderTable() {
     });
 }
 
+/* =========================
+   SUMMARY
+========================= */
 function updateSummary() {
   const bank = bookings.filter(b => b.stylist === 'Bank').length;
   const sindy = bookings.filter(b => b.stylist === 'Sindy').length;
@@ -262,7 +288,7 @@ function updateSummary() {
 }
 
 /* =========================
-   EDIT MODAL (DEVELOP)
+   EDIT MODAL
 ========================= */
 const editOverlay = document.getElementById('editOverlay');
 const editTime = document.getElementById('editTime');
@@ -303,7 +329,8 @@ document.getElementById('saveEdit').onclick = async () => {
 
   alert('ข้อมูลถูกแก้ไขแล้ว');
   closeEditModal();
-  loadCalendarDensity();
+  await loadCalendarDensity();
+  renderCalendar();
   loadBookings();
 };
 
@@ -313,7 +340,8 @@ document.getElementById('deleteEdit').onclick = async () => {
   await fetch(`${API}/bookings/${editingId}`, { method: 'DELETE' });
 
   closeEditModal();
-  loadCalendarDensity();
+  await loadCalendarDensity();
+  renderCalendar();
   loadBookings();
 };
 
