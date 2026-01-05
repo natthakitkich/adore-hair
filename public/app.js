@@ -9,33 +9,28 @@ document.addEventListener('DOMContentLoaded', () => {
   const loginMsg = document.getElementById('loginMsg');
   const logoutBtn = document.getElementById('logoutBtn');
 
-  /* ===== AUTH ===== */
+  /* ===== AUTH INIT ===== */
   if (localStorage.getItem(AUTH_KEY) === 'true') {
-    hideLogin();
+    loginOverlay.style.display = 'none';
     boot();
-  } else {
-    showLogin();
   }
 
-  loginBtn.onclick = () => {
-    if (pinInput.value !== OWNER_PIN) {
+  loginBtn.addEventListener('click', () => {
+    const pin = pinInput.value.trim();
+    if (pin !== OWNER_PIN) {
       loginMsg.textContent = 'PIN ไม่ถูกต้อง';
       return;
     }
     localStorage.setItem(AUTH_KEY, 'true');
-    hideLogin();
+    loginOverlay.style.display = 'none';
     boot();
-  };
+  });
 
-  logoutBtn.onclick = () => {
+  logoutBtn.addEventListener('click', () => {
     localStorage.removeItem(AUTH_KEY);
     location.reload();
-  };
+  });
 
-  function showLogin(){ loginOverlay.classList.remove('hidden'); }
-  function hideLogin(){ loginOverlay.classList.add('hidden'); }
-
-  /* ===== BOOT ===== */
   function boot(){
     renderTopDate();
     initCalendar();
@@ -53,14 +48,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function initCalendar(){
     renderCalendar();
-    document.getElementById('prevMonth').onclick=()=>{
+    document.getElementById('prevMonth').addEventListener('click',()=>{
       currentMonth.setMonth(currentMonth.getMonth()-1);
       renderCalendar();
-    };
-    document.getElementById('nextMonth').onclick=()=>{
+    });
+    document.getElementById('nextMonth').addEventListener('click',()=>{
       currentMonth.setMonth(currentMonth.getMonth()+1);
       renderCalendar();
-    };
+    });
   }
 
   function renderCalendar(){
@@ -76,7 +71,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const days=new Date(y,m+1,0).getDate();
 
     for(let i=0;i<first;i++) grid.appendChild(document.createElement('div'));
-
     for(let d=1;d<=days;d++){
       const c=document.createElement('div');
       c.className='calCell';
@@ -96,12 +90,14 @@ document.addEventListener('DOMContentLoaded', () => {
       const t=document.createElement('div');
       t.className='tab'+(s===active?' active':'');
       t.textContent=s;
-      t.onclick=()=>{active=s;renderTabs();};
+      t.addEventListener('click',()=>{
+        active=s;
+        renderTabs();
+      });
       wrap.appendChild(t);
     });
   }
 
-  /* ===== SUMMARY ===== */
   function renderSummary(){
     document.getElementById('summary').innerHTML=`
       <div class="panel">Bank<br><b>0</b></div>
