@@ -8,13 +8,19 @@
 </head>
 <body>
 
-<!-- LOGIN -->
+<!-- LOGIN OVERLAY -->
 <div id="loginOverlay" class="overlay">
   <div class="loginCard">
     <div class="loginAvatar">A</div>
     <h1>เข้าสู่ระบบ</h1>
     <p class="muted">กรุณาใส่ PIN 4 หลัก</p>
-    <input id="pinInput" type="password" inputmode="numeric" maxlength="4" placeholder="••••" />
+    <input
+      id="pinInput"
+      type="password"
+      inputmode="numeric"
+      maxlength="4"
+      placeholder="••••"
+    />
     <button id="loginBtn" class="primary">Login</button>
     <div id="loginMsg" class="msg"></div>
   </div>
@@ -26,7 +32,9 @@
     <div class="avatar">A</div>
     <div>
       <div class="title">Adore hair studio</div>
-      <div class="subtitle">Owner Queue · 13:00–22:00 · แยกตามช่าง</div>
+      <div class="subtitle">
+        Owner Queue · 13:00–22:00 · แยกตามช่าง
+      </div>
     </div>
   </div>
 
@@ -47,18 +55,19 @@
     </div>
 
     <div class="calendarWeek">
-      <span>อา</span><span>จ</span><span>อ</span><span>พ</span><span>พฤ</span><span>ศ</span><span>ส</span>
+      <span>อา</span><span>จ</span><span>อ</span>
+      <span>พ</span><span>พฤ</span><span>ศ</span><span>ส</span>
     </div>
 
     <div id="calendarGrid" class="calendarGrid"></div>
   </section>
 
   <!-- DAY STATUS -->
-  <section class="panel center muted" id="dayHint">
+  <section id="dayHint" class="panel center muted">
     กรุณาเลือกวันจากปฏิทิน
   </section>
 
-  <!-- STYLIST -->
+  <!-- STYLIST TABS -->
   <section class="panel">
     <div id="stylistTabs" class="tabs"></div>
   </section>
