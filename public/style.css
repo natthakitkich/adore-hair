@@ -390,3 +390,26 @@ th{color:var(--muted)}
   transform:none;
   filter:drop-shadow(0 4px 8px rgba(0,0,0,.35));
 }
+/* =========================
+   SUMMARY – COMPACT (MOBILE)
+========================= */
+@media (max-width: 768px){
+  .summary{
+    gap:10px;
+  }
+
+  .summary .box{
+    padding:14px 12px;   /* ↓ จาก 26px */
+    border-radius:16px; /* ↓ จาก 22px */
+  }
+
+  .summary .box strong,
+  .summary .box span{
+    font-size:22px;     /* ↓ จาก ~36px */
+    line-height:1.1;
+  }
+
+  .summary .box{
+    font-size:13px;
+  }
+}
