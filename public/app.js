@@ -3,76 +3,89 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ================= CONFIG ================= */
   const OWNER_PIN = '1234';
   const AUTH_KEY = 'adore_owner_auth';
+  const CLOSED_KEY = 'adore_closed_days';
+  const API = '';
 
   /* ================= ELEMENTS ================= */
   const loginOverlay = document.getElementById('loginOverlay');
-  const appRoot = document.getElementById('appRoot');
-
-  const pinInput = document.getElementById('pinInput');
   const loginBtn = document.getElementById('loginBtn');
+  const pinInput = document.getElementById('pinInput');
   const loginMsg = document.getElementById('loginMsg');
   const logoutBtn = document.getElementById('logoutBtn');
-  const topDate = document.getElementById('topDate');
 
   const calendarGrid = document.getElementById('calendarGrid');
   const calendarTitle = document.getElementById('calendarTitle');
   const prevMonthBtn = document.getElementById('prevMonth');
   const nextMonthBtn = document.getElementById('nextMonth');
-  const dayHint = document.getElementById('dayHint');
+
+  const dayStatus = document.getElementById('dayStatus');
+  const closeDayBtn = document.getElementById('closeDayBtn');
+  const openDayBtn = document.getElementById('openDayBtn');
+
+  const stylistTabsEl = document.getElementById('stylistTabs');
+  const summaryEl = document.getElementById('summary');
+  const queueBody = document.getElementById('queueBody');
 
   /* ================= STATE ================= */
   let currentMonth = new Date();
   let selectedDate = null;
+  let bookings = [];
+  let activeStylist = 'Bank';
 
-  /* ================= INIT ================= */
+  let closedDays = new Set(
+    JSON.parse(localStorage.getItem(CLOSED_KEY) || '[]')
+  );
+
+  const stylists = ['Bank', 'Sindy', 'Assist'];
+
+  /* ================= AUTH ================= */
   if (localStorage.getItem(AUTH_KEY) === 'true') {
-    showApp();
+    hideLogin();
+    bootApp();
   } else {
     showLogin();
   }
 
-  /* ================= LOGIN ================= */
   loginBtn.onclick = () => {
-    const pin = pinInput.value.replace(/\D/g, '');
-    if (pin !== OWNER_PIN) {
+    if (pinInput.value !== OWNER_PIN) {
       loginMsg.textContent = 'PIN ไม่ถูกต้อง';
       return;
     }
     localStorage.setItem(AUTH_KEY, 'true');
     pinInput.value = '';
     loginMsg.textContent = '';
-    showApp();
+    hideLogin();
+    bootApp();
   };
-
-  pinInput.addEventListener('input', () => {
-    pinInput.value = pinInput.value.replace(/\D/g, '').slice(0, 4);
-  });
 
   logoutBtn.onclick = () => {
     localStorage.removeItem(AUTH_KEY);
     location.reload();
   };
 
-  /* ================= UI ================= */
   function showLogin() {
-    loginOverlay.style.display = 'flex';
-    appRoot.style.display = 'none';
+    loginOverlay.classList.remove('hidden');
   }
 
-  function showApp() {
-    loginOverlay.style.display = 'none';
-    appRoot.style.display = 'block';
+  function hideLogin() {
+    loginOverlay.classList.add('hidden');
+  }
+
+  /* ================= BOOT ================= */
+  function bootApp() {
     renderTopDate();
     initCalendar();
+    renderStylistTabs();
+    lockUI();
   }
 
   function renderTopDate() {
-    if (!topDate) return;
-    topDate.textContent = new Date().toLocaleDateString('th-TH', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
-    });
+    document.getElementById('topDate').textContent =
+      new Date().toLocaleDateString('th-TH', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+      });
   }
 
   /* ================= CALENDAR ================= */
@@ -90,26 +103,26 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 
-  function renderCalendar() {
+  async function renderCalendar() {
     calendarGrid.innerHTML = '';
+    calendarTitle.textContent =
+      currentMonth.toLocaleDateString('th-TH', {
+        month: 'long',
+        year: 'numeric'
+      });
 
-    calendarTitle.textContent = currentMonth.toLocaleDateString('th-TH', {
-      month: 'long',
-      year: 'numeric'
-    });
+    const y = currentMonth.getFullYear();
+    const m = currentMonth.getMonth();
+    const firstDay = new Date(y, m, 1).getDay();
+    const daysInMonth = new Date(y, m + 1, 0).getDate();
 
-    const year = currentMonth.getFullYear();
-    const month = currentMonth.getMonth();
-    const firstDay = new Date(year, month, 1).getDay();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-    // empty cells
     for (let i = 0; i < firstDay; i++) {
       calendarGrid.appendChild(document.createElement('div'));
     }
 
     for (let d = 1; d <= daysInMonth; d++) {
-      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      const dateStr =
+        `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 
       const cell = document.createElement('div');
       cell.className = 'calCell';
@@ -118,19 +131,113 @@ document.addEventListener('DOMContentLoaded', () => {
       num.className = 'calNum';
       num.textContent = d;
 
-      if (dateStr === selectedDate) {
-        cell.style.outline = '2px solid rgba(110,231,255,.6)';
+      if (selectedDate === dateStr) {
+        cell.classList.add('selected');
       }
 
-      cell.onclick = () => {
-        selectedDate = dateStr;
-        dayHint.textContent = `เลือกวันที่ ${d}`;
-        renderCalendar();
-      };
+      if (closedDays.has(dateStr)) {
+        cell.classList.add('closed');
+        num.classList.add('closed');
+      }
+
+      cell.onclick = () => selectDate(dateStr);
 
       cell.appendChild(num);
       calendarGrid.appendChild(cell);
     }
+  }
+
+  /* ================= DATE SELECT ================= */
+  async function selectDate(dateStr) {
+    selectedDate = dateStr;
+
+    renderCalendar(); // refresh highlight
+
+    const isClosed = closedDays.has(dateStr);
+
+    dayStatus.textContent = isClosed
+      ? 'วันนี้เป็นวันหยุด'
+      : 'วันนี้เปิดทำการ';
+
+    closeDayBtn.classList.toggle('hidden', isClosed);
+    openDayBtn.classList.toggle('hidden', !isClosed);
+
+    if (isClosed) {
+      lockUI();
+      return;
+    }
+
+    unlockUI();
+    await loadBookings();
+
+    // 👉 auto scroll ไปส่วนคิว
+    document
+      .getElementById('stylistTabs')
+      .scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  /* ================= BOOKINGS ================= */
+  async function loadBookings() {
+    const res = await fetch(`${API}/bookings?date=${selectedDate}`);
+    bookings = await res.json();
+    renderQueue();
+    renderSummary();
+  }
+
+  function renderQueue() {
+    queueBody.innerHTML = '';
+
+    bookings
+      .sort((a, b) => a.time.localeCompare(b.time))
+      .forEach(b => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${b.time.slice(0, 5)}</td>
+          <td>${b.stylist}</td>
+          <td>${b.gender === 'male' ? '👨' : '👩'}</td>
+          <td>${b.name}</td>
+          <td>${b.service || ''}</td>
+          <td>${b.phone || ''}</td>
+        `;
+        queueBody.appendChild(tr);
+      });
+  }
+
+  /* ================= UI LOCK ================= */
+  function lockUI() {
+    stylistTabsEl.classList.add('hidden');
+    summaryEl.innerHTML = '';
+    queueBody.innerHTML = '';
+  }
+
+  function unlockUI() {
+    stylistTabsEl.classList.remove('hidden');
+  }
+
+  /* ================= STYLIST ================= */
+  function renderStylistTabs() {
+    stylistTabsEl.innerHTML = '';
+    stylists.forEach(s => {
+      const tab = document.createElement('div');
+      tab.className = 'tab' + (s === activeStylist ? ' active' : '');
+      tab.textContent = s;
+      tab.onclick = () => {
+        activeStylist = s;
+        renderStylistTabs();
+      };
+      stylistTabsEl.appendChild(tab);
+    });
+  }
+
+  /* ================= SUMMARY ================= */
+  function renderSummary() {
+    const count = s => bookings.filter(b => b.stylist === s).length;
+    summaryEl.innerHTML = `
+      <div class="panel">Bank<br><b>${count('Bank')}</b></div>
+      <div class="panel">Sindy<br><b>${count('Sindy')}</b></div>
+      <div class="panel">Assist<br><b>${count('Assist')}</b></div>
+      <div class="panel">รวม<br><b>${bookings.length}</b></div>
+    `;
   }
 
 });
