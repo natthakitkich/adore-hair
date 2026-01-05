@@ -1,5 +1,5 @@
 /* =================================================
-   Adore Hair – app.js (Develop + Calendar Density)
+   Adore Hair – app.js
 ================================================= */
 
 const API = '';
@@ -11,12 +11,12 @@ let bookings = [];
 let currentDate = '';
 let currentStylist = 'Bank';
 
-// DENSITY
+// calendar
 let calendarDensity = {};
 let currentMonth = new Date();
 
 /* =========================
-   LOGIN CONTROL
+   LOGIN
 ========================= */
 const loginOverlay = document.getElementById('loginOverlay');
 const loginBtn = document.getElementById('loginBtn');
@@ -60,13 +60,10 @@ function init() {
       document.querySelector('.tab.active').classList.remove('active');
       tab.classList.add('active');
       currentStylist = tab.dataset.tab;
-      renderTimeOptions();
-      renderTable();
-      updateSummary();
+      renderTimeOptions(); // 👉 แท็บยังมีผลกับการเพิ่มคิว
     };
   });
 
-  // month navigation
   document.getElementById('prevMonth').onclick = () => {
     currentMonth.setMonth(currentMonth.getMonth() - 1);
     renderCalendar();
@@ -96,12 +93,12 @@ async function loadBookings() {
   bookings = await res.json();
 
   renderTimeOptions();
-  renderTable();
+  renderTable();     // 👉 ตารางแสดงทุกช่าง
   updateSummary();
 }
 
 /* =========================
-   LOAD CALENDAR DENSITY
+   CALENDAR
 ========================= */
 async function loadCalendarDensity() {
   try {
@@ -113,13 +110,9 @@ async function loadCalendarDensity() {
   renderCalendar();
 }
 
-/* =========================
-   CALENDAR RENDER
-========================= */
 function renderCalendar() {
   const calendarDays = document.getElementById('calendarDays');
   const calendarTitle = document.getElementById('calendarTitle');
-
   if (!calendarDays || !calendarTitle) return;
 
   calendarDays.innerHTML = '';
@@ -167,23 +160,14 @@ function renderCalendar() {
   }
 }
 
-/* =========================
-   HIGHLIGHT SELECTED DATE
-========================= */
 function highlightSelectedDate() {
   document.querySelectorAll('.calCell').forEach(c =>
     c.classList.remove('selected')
   );
-
-  const target = [...document.querySelectorAll('.calCell')].find(
-    c => c.textContent.trim() === String(Number(currentDate.slice(-2)))
-  );
-
-  if (target) target.classList.add('selected');
 }
 
 /* =========================
-   TIME OPTIONS
+   TIME OPTIONS (ตามช่างที่เลือก)
 ========================= */
 function renderTimeOptions() {
   const timeSelect = document.getElementById('time');
@@ -237,14 +221,15 @@ document.getElementById('bookingForm').onsubmit = async e => {
 };
 
 /* =========================
-   TABLE / SUMMARY
+   TABLE – แสดงทุกช่าง
 ========================= */
 function renderTable() {
   const list = document.getElementById('list');
   list.innerHTML = '';
 
   bookings
-    .filter(b => b.stylist === currentStylist)
+    .slice()
+    .sort((a, b) => a.time.localeCompare(b.time))
     .forEach(b => {
       const stylistClass =
         b.stylist === 'Bank'
@@ -268,6 +253,9 @@ function renderTable() {
     });
 }
 
+/* =========================
+   SUMMARY
+========================= */
 function updateSummary() {
   const bank = bookings.filter(b => b.stylist === 'Bank').length;
   const sindy = bookings.filter(b => b.stylist === 'Sindy').length;
