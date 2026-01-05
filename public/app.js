@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let selectedDate = null;
   let activeStylist = 'Bank';
   let bookings = [];
+  let dayDensityMap = {}; // { '2026-01-05': 7 }
 
   /* ================= AUTH ================= */
   if (localStorage.getItem(AUTH_KEY) === 'true') {
@@ -46,8 +47,9 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   /* ================= BOOT ================= */
-  function boot(){
+  async function boot(){
     renderTopDate();
+    await fetchCalendarDensity();
     renderCalendar();
     renderTabs();
     renderEmptySummary();
@@ -59,14 +61,35 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  /* ================= CALENDAR DENSITY ================= */
+  async function fetchCalendarDensity(){
+    try{
+      const res = await fetch('/calendar-days');
+      dayDensityMap = await res.json();
+    }catch(e){
+      console.error('density error',e);
+      dayDensityMap = {};
+    }
+  }
+
+  function getDensityClass(count){
+    if(count >= 20) return 'density-full';
+    if(count >= 15) return 'density-high';
+    if(count >= 8) return 'density-mid';
+    if(count >= 1) return 'density-low';
+    return '';
+  }
+
   /* ================= CALENDAR ================= */
-  document.getElementById('prevMonth').onclick = () => {
+  document.getElementById('prevMonth').onclick = async () => {
     currentMonth.setMonth(currentMonth.getMonth()-1);
+    await fetchCalendarDensity();
     renderCalendar();
   };
 
-  document.getElementById('nextMonth').onclick = () => {
+  document.getElementById('nextMonth').onclick = async () => {
     currentMonth.setMonth(currentMonth.getMonth()+1);
+    await fetchCalendarDensity();
     renderCalendar();
   };
 
@@ -85,16 +108,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     for(let d=1; d<=days; d++){
+      const key = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const count = dayDensityMap[key] || 0;
+
       const cell = document.createElement('div');
       cell.className = 'calCell';
-      cell.textContent = d;
+
+      const num = document.createElement('div');
+      num.className = 'calNum ' + getDensityClass(count);
+      num.textContent = d;
 
       cell.onclick = () => {
-        selectedDate = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        selectedDate = key;
         dayHint.textContent = `วันที่เลือก: ${d}`;
         fetchBookings();
       };
 
+      cell.appendChild(num);
       calendarGrid.appendChild(cell);
     }
   }
@@ -143,20 +173,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ================= TABLE ================= */
   function renderBookingTable(){
+    document.querySelectorAll('.bookingTable').forEach(e=>e.remove());
+
     const list = bookings.filter(b => b.stylist === activeStylist);
+    const section = document.createElement('section');
+    section.className = 'panel bookingTable';
 
     let html = `
-      <section class="panel">
-        <table style="width:100%;border-collapse:collapse">
-          <thead>
-            <tr style="color:#9aa6c5;text-align:left">
-              <th>เวลา</th>
-              <th>ช่าง</th>
-              <th>เพศ</th>
-              <th>ชื่อ</th>
-            </tr>
-          </thead>
-          <tbody>
+      <table style="width:100%;border-collapse:collapse">
+        <thead>
+          <tr style="color:#9aa6c5;text-align:left">
+            <th>เวลา</th><th>ช่าง</th><th>เพศ</th><th>ชื่อ</th>
+          </tr>
+        </thead><tbody>
     `;
 
     if(list.length === 0){
@@ -169,13 +198,13 @@ document.addEventListener('DOMContentLoaded', () => {
             <td>${b.stylist}</td>
             <td>${b.gender}</td>
             <td>${b.name}</td>
-          </tr>
-        `;
+          </tr>`;
       });
     }
 
-    html += `</tbody></table></section>`;
-    summary.insertAdjacentHTML('afterend', html);
+    html += `</tbody></table>`;
+    section.innerHTML = html;
+    summary.insertAdjacentElement('afterend', section);
   }
 
 });
