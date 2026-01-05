@@ -66,7 +66,7 @@ function init() {
     };
   });
 
-  loadCalendarDensity(); // DENSITY
+  loadCalendarDensity();
   loadBookings();
 }
 
@@ -78,7 +78,7 @@ function formatTime(time) {
 }
 
 /* =========================
-   LOAD BOOKINGS (BASIC)
+   LOAD BOOKINGS
 ========================= */
 async function loadBookings() {
   const res = await fetch(`${API}/bookings?date=${currentDate}`);
@@ -90,7 +90,7 @@ async function loadBookings() {
 }
 
 /* =========================
-   LOAD CALENDAR DENSITY (NEW)
+   LOAD CALENDAR DENSITY
 ========================= */
 async function loadCalendarDensity() {
   try {
@@ -103,7 +103,7 @@ async function loadCalendarDensity() {
 }
 
 /* =========================
-   CALENDAR RENDER (DENSITY)
+   CALENDAR RENDER
 ========================= */
 function renderCalendar() {
   const calendarDays = document.getElementById('calendarDays');
@@ -163,14 +163,16 @@ function highlightSelectedDate() {
   document.querySelectorAll('.calCell').forEach(c =>
     c.classList.remove('selected')
   );
+
   const target = [...document.querySelectorAll('.calCell')].find(
     c => c.textContent.trim() === String(Number(currentDate.slice(-2)))
   );
+
   if (target) target.classList.add('selected');
 }
 
 /* =========================
-   TIME OPTIONS (BASIC)
+   TIME OPTIONS
 ========================= */
 function renderTimeOptions() {
   const timeSelect = document.getElementById('time');
@@ -193,7 +195,7 @@ function renderTimeOptions() {
 }
 
 /* =========================
-   FORM SUBMIT (BASIC)
+   FORM SUBMIT
 ========================= */
 document.getElementById('bookingForm').onsubmit = async e => {
   e.preventDefault();
@@ -219,13 +221,12 @@ document.getElementById('bookingForm').onsubmit = async e => {
   });
 
   e.target.reset();
-  loadCalendarDensity(); // refresh density
+  loadCalendarDensity();
   loadBookings();
 };
 
 /* =========================
-   TABLE / SUMMARY / EDIT
-   (เหมือน Develop เดิม)
+   TABLE / SUMMARY
 ========================= */
 function renderTable() {
   const list = document.getElementById('list');
@@ -234,10 +235,21 @@ function renderTable() {
   bookings
     .filter(b => b.stylist === currentStylist)
     .forEach(b => {
+      const stylistClass =
+        b.stylist === 'Bank'
+          ? 'stylist-bank'
+          : b.stylist === 'Sindy'
+          ? 'stylist-sindy'
+          : 'stylist-assist';
+
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${formatTime(b.time)}</td>
-        <td>${b.stylist}</td>
+        <td>
+          <span class="stylist-badge ${stylistClass}">
+            ${b.stylist}
+          </span>
+        </td>
         <td>${b.gender === 'male' ? '👨' : '👩'}</td>
         <td>${b.name}</td>
         <td>${b.service || ''}</td>
@@ -262,7 +274,7 @@ function updateSummary() {
 }
 
 /* =========================
-   EDIT MODAL (DEVELOP)
+   EDIT MODAL
 ========================= */
 const editOverlay = document.getElementById('editOverlay');
 const editTime = document.getElementById('editTime');
