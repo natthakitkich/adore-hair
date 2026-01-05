@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ================= CONFIG ================= */
   const OWNER_PIN = '1234';
   const AUTH_KEY = 'adore_owner_auth';
-  const API = ''; // ใช้ same origin
+  const API = '';
 
   /* ================= ELEMENTS ================= */
   const loginOverlay = document.getElementById('loginOverlay');
@@ -16,15 +16,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const calendarTitle = document.getElementById('calendarTitle');
   const calendarGrid = document.getElementById('calendarGrid');
   const dayHint = document.getElementById('dayHint');
+
   const stylistTabs = document.getElementById('stylistTabs');
   const summary = document.getElementById('summary');
+  const queueBody = document.getElementById('queueBody');
 
   /* ================= STATE ================= */
   let currentMonth = new Date();
   let selectedDate = null;
   let activeStylist = 'Bank';
-
-  let densityMap = {}; // { 'YYYY-MM-DD': count }
+  let densityMap = {};
+  let bookings = [];
 
   const stylists = ['Bank', 'Sindy', 'Assist'];
 
@@ -38,7 +40,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (pinInput.value === OWNER_PIN) {
       localStorage.setItem(AUTH_KEY, 'true');
       loginOverlay.classList.add('hidden');
-      loginMsg.textContent = '';
       boot();
     } else {
       loginMsg.textContent = 'PIN ไม่ถูกต้อง';
@@ -61,9 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderTopDate() {
     topDate.textContent = new Date().toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
+      month: 'short', day: 'numeric', year: 'numeric'
     });
   }
 
@@ -71,25 +70,18 @@ document.addEventListener('DOMContentLoaded', () => {
   async function loadCalendarDensity() {
     try {
       const res = await fetch(`${API}/calendar-days`);
-      const raw = await res.json();
-
-      /*
-        raw = { '2026-01-05': totalBookings }
-        → ใช้ตรง ๆ เพราะ backend นับรวมมาแล้ว
-      */
-      densityMap = raw || {};
-    } catch (e) {
+      densityMap = await res.json() || {};
+    } catch {
       densityMap = {};
     }
   }
 
-  function getDensityClass(dateKey) {
-    const count = Math.min(densityMap[dateKey] || 0, 20);
-
-    if (count >= 16) return 'density-full';
-    if (count >= 11) return 'density-high';
-    if (count >= 6) return 'density-mid';
-    if (count >= 1) return 'density-low';
+  function densityClass(dateKey) {
+    const c = Math.min(densityMap[dateKey] || 0, 20);
+    if (c >= 16) return 'density-full';
+    if (c >= 11) return 'density-high';
+    if (c >= 6) return 'density-mid';
+    if (c >= 1) return 'density-low';
     return '';
   }
 
@@ -107,20 +99,18 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderCalendar() {
     calendarGrid.innerHTML = '';
     calendarTitle.textContent = currentMonth.toLocaleDateString('th-TH', {
-      month: 'long',
-      year: 'numeric'
+      month: 'long', year: 'numeric'
     });
 
     const y = currentMonth.getFullYear();
     const m = currentMonth.getMonth();
-    const firstDay = new Date(y, m, 1).getDay();
-    const daysInMonth = new Date(y, m + 1, 0).getDate();
+    const first = new Date(y, m, 1).getDay();
+    const days = new Date(y, m + 1, 0).getDate();
 
-    for (let i = 0; i < firstDay; i++) {
-      calendarGrid.appendChild(document.createElement('div'));
-    }
+    for (let i = 0; i < first; i++) calendarGrid.appendChild(document.createElement('div'));
 
-    for (let d = 1; d <= daysInMonth; d++) {
+    for (let d = 1; d <= days; d++) {
+      const key = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
       const cell = document.createElement('div');
       cell.className = 'calCell';
 
@@ -128,49 +118,79 @@ document.addEventListener('DOMContentLoaded', () => {
       num.className = 'calNum';
       num.textContent = d;
 
-      const dateKey =
-        `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      const dc = densityClass(key);
+      if (dc) num.classList.add(dc);
 
-      const densityClass = getDensityClass(dateKey);
-      if (densityClass) num.classList.add(densityClass);
-
-      cell.onclick = () => selectDate(dateKey);
+      cell.onclick = () => selectDate(key);
 
       cell.appendChild(num);
       calendarGrid.appendChild(cell);
     }
   }
 
-  function selectDate(dateKey) {
+  async function selectDate(dateKey) {
     selectedDate = dateKey;
     dayHint.textContent = `วันที่เลือก: ${dateKey}`;
+    await loadBookings();
     renderSummary();
+    renderQueue();
   }
 
-  /* ================= STYLIST TABS ================= */
+  /* ================= BOOKINGS ================= */
+  async function loadBookings() {
+    if (!selectedDate) return;
+    const res = await fetch(`${API}/bookings?date=${selectedDate}`);
+    bookings = await res.json();
+  }
+
+  /* ================= STYLIST ================= */
   function renderStylistTabs() {
     stylistTabs.innerHTML = '';
     stylists.forEach(s => {
-      const tab = document.createElement('div');
-      tab.className = 'tab' + (s === activeStylist ? ' active' : '');
-      tab.textContent = s;
-      tab.onclick = () => {
+      const t = document.createElement('div');
+      t.className = 'tab' + (s === activeStylist ? ' active' : '');
+      t.textContent = s;
+      t.onclick = () => {
         activeStylist = s;
         renderStylistTabs();
-        renderSummary();
+        renderQueue();
       };
-      stylistTabs.appendChild(tab);
+      stylistTabs.appendChild(t);
     });
   }
 
   /* ================= SUMMARY ================= */
   function renderSummary() {
+    const count = name =>
+      bookings.filter(b => b.stylist === name).length;
+
     summary.innerHTML = `
-      <div class="panel">Bank<br><b>0</b></div>
-      <div class="panel">Sindy<br><b>0</b></div>
-      <div class="panel">Assist<br><b>0</b></div>
-      <div class="panel">รวม<br><b>0</b></div>
+      <div class="panel">Bank<br><b>${count('Bank')}</b></div>
+      <div class="panel">Sindy<br><b>${count('Sindy')}</b></div>
+      <div class="panel">Assist<br><b>${count('Assist')}</b></div>
+      <div class="panel">รวม<br><b>${bookings.length}</b></div>
     `;
+  }
+
+  /* ================= QUEUE TABLE ================= */
+  function renderQueue() {
+    queueBody.innerHTML = '';
+
+    bookings
+      .filter(b => b.stylist === activeStylist)
+      .sort((a,b)=>a.time.localeCompare(b.time))
+      .forEach(b => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${b.time.slice(0,5)}</td>
+          <td><span class="stylistBadge ${b.stylist.toLowerCase()}">${b.stylist}</span></td>
+          <td>${b.gender === 'male' ? '👨' : '👩'}</td>
+          <td>${b.name}</td>
+          <td>${b.service || ''}</td>
+          <td>${b.phone || ''}</td>
+        `;
+        queueBody.appendChild(tr);
+      });
   }
 
 });
