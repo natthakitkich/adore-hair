@@ -20,7 +20,6 @@
   </div>
 </div>
 
-<!-- TOP BAR -->
 <header class="topbar">
   <div class="brand">
     <div class="avatar">A</div>
@@ -29,14 +28,12 @@
       <div class="subtitle">Owner Queue · 13:00–22:00 · แยกตามช่าง</div>
     </div>
   </div>
-
   <div class="topRight">
     <div id="topDate" class="dateBadge"></div>
     <button id="logoutBtn" class="ghost">Logout</button>
   </div>
 </header>
 
-<!-- MAIN -->
 <main class="wrap">
 
   <!-- CALENDAR -->
@@ -54,6 +51,12 @@
     <div class="calendarGrid" id="calendarGrid"></div>
   </section>
 
+  <!-- DAY CONTROL -->
+  <section class="panel" id="dayControl">
+    <div id="dayStatus" class="muted">ยังไม่ได้เลือกวัน</div>
+    <button id="toggleClosedBtn" class="danger hidden"></button>
+  </section>
+
   <!-- STYLIST TABS -->
   <section class="panel">
     <div class="tabs" id="stylistTabs"></div>
@@ -61,23 +64,6 @@
 
   <!-- SUMMARY -->
   <section class="panel summary" id="summary"></section>
-
-  <!-- QUEUE TABLE -->
-  <section class="panel">
-    <table>
-      <thead>
-        <tr>
-          <th>เวลา</th>
-          <th>ช่าง</th>
-          <th>เพศ</th>
-          <th>ชื่อ</th>
-          <th>ทำอะไร</th>
-          <th>โทร</th>
-        </tr>
-      </thead>
-      <tbody id="queueTable"></tbody>
-    </table>
-  </section>
 
 </main>
 
