@@ -1,40 +1,54 @@
 /* =================================================
-   Adore Hair – app.js (Calendar Integrated / Stable)
+   Adore Hair Studio – app.js
+   Latest + Recover (Single State / Stable)
 ================================================= */
 
-const API = '';
+const API = "/api";
 
 /* =========================
    GLOBAL STATE
 ========================= */
-let bookings = [];
-let calendarDensity = {};
-
-let currentDate = '';
-let currentStylist = 'Bank';
+let currentDate = "";
 let currentMonth = new Date();
+let currentBarber = "Bank";
+let bookings = [];
+let editingId = null;
 
 /* =========================
-   LOGIN CONTROL
+   BARBER COLOR (FROM BASIC)
 ========================= */
-const loginOverlay = document.getElementById('loginOverlay');
-const loginBtn = document.getElementById('loginBtn');
-const pinInput = document.getElementById('pin');
-const loginMsg = document.getElementById('loginMsg');
-const logoutBtn = document.getElementById('logoutBtn');
+const BARBER_CLASS = {
+  Bank: "barber-bank",
+  Sindy: "barber-sindy",
+  Assist: "barber-assist",
+};
 
-const OWNER_PIN = '1234';
+/* =========================
+   LOGIN
+========================= */
+const loginOverlay = document.getElementById("loginOverlay");
+const loginBtn = document.getElementById("loginBtn");
+const pinInput = document.getElementById("pinInput");
+const loginMsg = document.getElementById("loginMsg");
+const logoutBtn = document.getElementById("logoutBtn");
 
-loginBtn.onclick = () => {
-  if (pinInput.value === OWNER_PIN) {
-    document.body.style.overflow = 'auto';
-    loginOverlay.classList.add('hidden');
-    pinInput.value = '';
-    loginMsg.textContent = '';
-    init();
-  } else {
-    loginMsg.textContent = 'PIN ไม่ถูกต้อง';
+loginBtn.onclick = async () => {
+  const pin = pinInput.value.trim();
+  if (!pin) return;
+
+  const res = await fetch(`${API}/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ pin }),
+  });
+
+  if (!res.ok) {
+    loginMsg.textContent = "PIN ไม่ถูกต้อง";
+    return;
   }
+
+  loginOverlay.classList.remove("show");
+  init();
 };
 
 logoutBtn.onclick = () => location.reload();
@@ -47,122 +61,67 @@ function init() {
   currentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
   currentDate = today.toISOString().slice(0, 10);
 
-  bindTabs();
   bindCalendarNav();
-
-  loadCalendarDensity().then(() => {
-    renderCalendar();
-    highlightSelectedDate();
-  });
-
+  bindTabs();
+  renderCalendar();
   loadBookings();
 }
 
 /* =========================
-   UTIL
-========================= */
-function formatTime(time) {
-  return time ? time.slice(0, 5) : '';
-}
-
-function pad(n) {
-  return String(n).padStart(2, '0');
-}
-
-/* =========================
-   CALENDAR NAV
+   CALENDAR
 ========================= */
 function bindCalendarNav() {
-  document.getElementById('prevMonth').onclick = () => {
+  document.getElementById("prevMonth").onclick = () => {
     currentMonth.setMonth(currentMonth.getMonth() - 1);
-    loadCalendarDensity().then(renderCalendar);
+    renderCalendar();
   };
 
-  document.getElementById('nextMonth').onclick = () => {
+  document.getElementById("nextMonth").onclick = () => {
     currentMonth.setMonth(currentMonth.getMonth() + 1);
-    loadCalendarDensity().then(renderCalendar);
+    renderCalendar();
   };
 }
 
-/* =========================
-   LOAD CALENDAR DENSITY
-========================= */
-async function loadCalendarDensity() {
-  try {
-    const res = await fetch(`${API}/calendar-days`);
-    calendarDensity = await res.json();
-  } catch {
-    calendarDensity = {};
-  }
-}
-
-/* =========================
-   RENDER CALENDAR
-========================= */
 function renderCalendar() {
-  const title = document.getElementById('calendarTitle');
-  const grid = document.getElementById('calendarDays');
+  const title = document.getElementById("calendarTitle");
+  const grid = document.getElementById("calendarGrid");
 
-  title.textContent = currentMonth.toLocaleString('th-TH', {
-    month: 'long',
-    year: 'numeric'
+  title.textContent = currentMonth.toLocaleString("th-TH", {
+    month: "long",
+    year: "numeric",
   });
 
-  grid.innerHTML = '';
+  grid.innerHTML = "";
 
   const year = currentMonth.getFullYear();
   const month = currentMonth.getMonth();
-
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
   for (let i = 0; i < firstDay; i++) {
-    grid.appendChild(document.createElement('div'));
+    const empty = document.createElement("div");
+    empty.className = "calDay empty";
+    grid.appendChild(empty);
   }
 
   for (let d = 1; d <= daysInMonth; d++) {
-    const dateStr = `${year}-${pad(month + 1)}-${pad(d)}`;
-    const count = calendarDensity[dateStr] || 0;
+    const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+    const cell = document.createElement("div");
+    cell.className = "calDay";
+    cell.textContent = d;
 
-    const cell = document.createElement('div');
-    cell.className = 'calCell';
-
-    const num = document.createElement('div');
-    num.className = 'calNum';
-
-    if (count >= 7) num.classList.add('density-full');
-    else if (count >= 5) num.classList.add('density-high');
-    else if (count >= 3) num.classList.add('density-mid');
-    else if (count >= 1) num.classList.add('density-low');
-
-    num.textContent = d;
-    cell.appendChild(num);
+    if (dateStr === currentDate) {
+      cell.classList.add("active");
+    }
 
     cell.onclick = () => {
       currentDate = dateStr;
+      renderCalendar();
       loadBookings();
-      highlightSelectedDate();
     };
 
     grid.appendChild(cell);
   }
-}
-
-/* =========================
-   HIGHLIGHT SELECTED DATE
-========================= */
-function highlightSelectedDate() {
-  document.querySelectorAll('.calCell').forEach(c =>
-    c.classList.remove('selected')
-  );
-
-  const day = Number(currentDate.slice(-2));
-
-  [...document.querySelectorAll('.calCell')].forEach(c => {
-    if (c.textContent.trim() === String(day)) {
-      c.classList.add('selected');
-    }
-  });
 }
 
 /* =========================
@@ -181,33 +140,33 @@ async function loadBookings() {
    TIME OPTIONS
 ========================= */
 function renderTimeOptions() {
-  const timeSelect = document.getElementById('time');
-  timeSelect.innerHTML = '';
+  const select = document.getElementById("timeSelect");
+  select.innerHTML = "";
 
   for (let h = 13; h <= 22; h++) {
-    const time = `${pad(h)}:00:00`;
-    const booked = bookings.find(
-      b => b.time === time && b.stylist === currentStylist
+    const time = `${String(h).padStart(2, "0")}:00`;
+    const isBooked = bookings.some(
+      (b) => b.time === time && b.barber === currentBarber
     );
 
-    const opt = document.createElement('option');
+    const opt = document.createElement("option");
     opt.value = time;
-    opt.textContent = formatTime(time);
-    if (booked) opt.disabled = true;
+    opt.textContent = time;
+    if (isBooked) opt.disabled = true;
 
-    timeSelect.appendChild(opt);
+    select.appendChild(opt);
   }
 }
 
 /* =========================
-   TABS
+   BARBER TABS
 ========================= */
 function bindTabs() {
-  document.querySelectorAll('.tab').forEach(tab => {
+  document.querySelectorAll(".tab").forEach((tab) => {
     tab.onclick = () => {
-      document.querySelector('.tab.active').classList.remove('active');
-      tab.classList.add('active');
-      currentStylist = tab.dataset.tab;
+      document.querySelector(".tab.active").classList.remove("active");
+      tab.classList.add("active");
+      currentBarber = tab.dataset.barber;
       renderTimeOptions();
       renderTable();
       updateSummary();
@@ -218,32 +177,26 @@ function bindTabs() {
 /* =========================
    FORM SUBMIT
 ========================= */
-document.getElementById('bookingForm').onsubmit = async e => {
+document.getElementById("bookingForm").onsubmit = async (e) => {
   e.preventDefault();
 
-  const gender = document.querySelector('[name=gender]:checked')?.value;
-  if (!gender) {
-    alert('กรุณาเลือกเพศ');
-    return;
-  }
+  const gender = document.querySelector('input[name="gender"]:checked')?.value;
 
   await fetch(`${API}/bookings`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       date: currentDate,
-      time: document.getElementById('time').value,
-      stylist: currentStylist,
-      name: document.getElementById('name').value,
-      phone: document.getElementById('phone').value,
+      time: document.getElementById("timeSelect").value,
+      barber: currentBarber,
+      name: document.getElementById("nameInput").value,
+      phone: document.getElementById("phoneInput").value,
       gender,
-      service: document.getElementById('service').value
-    })
+      service: document.getElementById("serviceInput").value,
+    }),
   });
 
   e.target.reset();
-  await loadCalendarDensity();
-  renderCalendar();
   loadBookings();
 };
 
@@ -251,24 +204,27 @@ document.getElementById('bookingForm').onsubmit = async e => {
    TABLE
 ========================= */
 function renderTable() {
-  const list = document.getElementById('list');
-  list.innerHTML = '';
+  const tbody = document.getElementById("bookingTable");
+  tbody.innerHTML = "";
 
   bookings
-    .filter(b => b.stylist === currentStylist)
-    .forEach(b => {
-      const tr = document.createElement('tr');
+    .filter((b) => b.barber === currentBarber)
+    .forEach((b) => {
+      const tr = document.createElement("tr");
+      tr.classList.add(BARBER_CLASS[b.barber]);
+
       tr.innerHTML = `
-        <td>${formatTime(b.time)}</td>
-        <td>${b.stylist}</td>
-        <td>${b.gender === 'male' ? '👨' : '👩'}</td>
+        <td>${b.time}</td>
+        <td>${b.barber}</td>
+        <td>${b.gender === "male" ? "ชาย" : "หญิง"}</td>
         <td>${b.name}</td>
-        <td>${b.service || ''}</td>
-        <td>${b.phone || ''}</td>
-        <td><button class="ghost">ลบ/แก้ไขคิว</button></td>
+        <td>${b.service || ""}</td>
+        <td>${b.phone || ""}</td>
+        <td><button class="ghost">ลบ/แก้ไข</button></td>
       `;
-      tr.querySelector('button').onclick = () => openEditModal(b);
-      list.appendChild(tr);
+
+      tr.querySelector("button").onclick = () => openEditModal(b);
+      tbody.appendChild(tr);
     });
 }
 
@@ -276,78 +232,69 @@ function renderTable() {
    SUMMARY
 ========================= */
 function updateSummary() {
-  const bank = bookings.filter(b => b.stylist === 'Bank').length;
-  const sindy = bookings.filter(b => b.stylist === 'Sindy').length;
-  const assist = bookings.filter(b => b.stylist === 'Assist').length;
+  const bank = bookings.filter((b) => b.barber === "Bank").length;
+  const sindy = bookings.filter((b) => b.barber === "Sindy").length;
+  const assist = bookings.filter((b) => b.barber === "Assist").length;
 
-  document.getElementById('countBank').textContent = bank;
-  document.getElementById('countSindy').textContent = sindy;
-  document.getElementById('countAssist').textContent = assist;
-  document.getElementById('countTotal').textContent =
+  document.getElementById("sumBank").textContent = bank;
+  document.getElementById("sumSindy").textContent = sindy;
+  document.getElementById("sumAssist").textContent = assist;
+  document.getElementById("sumTotal").textContent =
     bank + sindy + assist;
 }
 
 /* =========================
    EDIT MODAL
 ========================= */
-const editOverlay = document.getElementById('editOverlay');
-const editTime = document.getElementById('editTime');
-const editStylist = document.getElementById('editStylist');
-const editName = document.getElementById('editName');
-const editPhone = document.getElementById('editPhone');
-const editService = document.getElementById('editService');
-let editingId = null;
+const editOverlay = document.getElementById("editOverlay");
 
 function openEditModal(b) {
   editingId = b.id;
-  editTime.value = formatTime(b.time);
-  editStylist.value = b.stylist;
-  editName.value = b.name;
-  editPhone.value = b.phone || '';
-  editService.value = b.service || '';
 
-  document.querySelectorAll('[name=editGender]').forEach(r => {
-    r.checked = r.value === b.gender;
-  });
+  document.getElementById("editTime").value = b.time;
+  document.getElementById("editBarber").value = b.barber;
+  document.getElementById("editName").value = b.name;
+  document.getElementById("editPhone").value = b.phone || "";
+  document.getElementById("editService").value = b.service || "";
 
-  editOverlay.classList.remove('hidden');
+  document
+    .querySelectorAll('input[name="editGender"]')
+    .forEach((r) => (r.checked = r.value === b.gender));
+
+  editOverlay.classList.add("show");
 }
 
-document.getElementById('saveEdit').onclick = async () => {
-  const gender = document.querySelector('[name=editGender]:checked')?.value;
+document.getElementById("closeEditBtn").onclick = () => {
+  editOverlay.classList.remove("show");
+};
+
+document.getElementById("saveEditBtn").onclick = async () => {
+  const gender = document.querySelector(
+    'input[name="editGender"]:checked'
+  )?.value;
 
   await fetch(`${API}/bookings/${editingId}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      name: editName.value,
-      phone: editPhone.value,
+      name: document.getElementById("editName").value,
+      phone: document.getElementById("editPhone").value,
       gender,
-      service: editService.value
-    })
+      service: document.getElementById("editService").value,
+    }),
   });
 
-  alert('ข้อมูลถูกแก้ไขแล้ว');
-  closeEditModal();
-  await loadCalendarDensity();
-  renderCalendar();
+  editOverlay.classList.remove("show");
   loadBookings();
 };
 
-document.getElementById('deleteEdit').onclick = async () => {
-  if (!confirm('ยืนยันการลบคิวนี้?')) return;
+document.getElementById("deleteEditBtn").onclick = async () => {
+  if (!confirm("ยืนยันการลบคิวนี้?")) return;
 
-  await fetch(`${API}/bookings/${editingId}`, { method: 'DELETE' });
+  await fetch(`${API}/bookings/${editingId}`, {
+    method: "DELETE",
+  });
 
-  closeEditModal();
-  await loadCalendarDensity();
-  renderCalendar();
+  editOverlay.classList.remove("show");
   loadBookings();
 };
-
-document.getElementById('closeEdit').onclick = closeEditModal;
-
-function closeEditModal() {
-  editOverlay.classList.add('hidden');
-  editingId = null;
-}
