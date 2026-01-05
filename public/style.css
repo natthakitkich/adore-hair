@@ -12,10 +12,6 @@
   --danger:#ff5c7a;
   --ok:#2cff9c;
 
-  --bank:#6ee7ff;
-  --sindy:#ff8ab3;
-  --assist:#2cff9c;
-
   --stroke:rgba(255,255,255,.08);
   --shadow:0 14px 40px rgba(0,0,0,.45);
 }
@@ -39,6 +35,7 @@ body{
 }
 
 .hidden{display:none!important}
+.row{display:flex;gap:16px;align-items:center}
 .muted{color:var(--muted)}
 .msg{font-size:13px}
 .msg.err{color:var(--danger)}
@@ -55,6 +52,11 @@ input,select{
   background:rgba(0,0,0,.28);
   color:var(--text);
   outline:none;
+}
+
+input:disabled{
+  opacity:.6;
+  cursor:not-allowed;
 }
 
 label{
@@ -76,7 +78,7 @@ label{
   background:rgba(255,255,255,.06);
   border:1px solid var(--stroke);
   color:var(--text);
-  padding:10px 14px;
+  padding:8px 14px;
   border-radius:14px;
   cursor:pointer;
 }
@@ -121,8 +123,15 @@ label{
   font-size:32px;
 }
 
-.title{font-weight:900}
-.subtitle{font-size:12px;color:var(--muted)}
+.title{
+  font-weight:900;
+  font-size:16px;
+}
+
+.subtitle{
+  font-size:12px;
+  color:var(--muted);
+}
 
 /* =========================
    LAYOUT
@@ -141,53 +150,6 @@ label{
   margin-top:16px;
 }
 
-.grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:14px;
-}
-
-.full{grid-column:1/-1}
-
-/* =========================
-   OVERLAY / MODAL
-========================= */
-.overlay{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.85);
-  display:grid;
-  place-items:center;
-  z-index:999;
-}
-
-.modal{
-  width:min(420px,92vw);
-  background:linear-gradient(180deg,rgba(20,25,45,.96),rgba(10,12,22,.96));
-  border-radius:26px;
-  border:1px solid rgba(255,255,255,.15);
-  box-shadow:0 22px 90px rgba(0,0,0,.65);
-}
-
-.modalBody{
-  padding:28px;
-  display:flex;
-  flex-direction:column;
-  gap:16px;
-  align-items:center;
-  text-align:center;
-}
-
-.loginBox input{
-  text-align:center;
-  letter-spacing:6px;
-  font-size:22px;
-}
-
-.loginBox button{
-  width:100%;
-}
-
 /* =========================
    CALENDAR
 ========================= */
@@ -195,6 +157,11 @@ label{
   display:grid;
   grid-template-columns:48px 1fr 48px;
   align-items:center;
+  margin-bottom:12px;
+}
+
+.calendarCenter{
+  text-align:center;
 }
 
 .calendarTitle{
@@ -202,12 +169,27 @@ label{
   font-weight:900;
 }
 
-.calWeekHead,
+.calendarSubtitle{
+  font-size:13px;
+  color:var(--muted);
+  margin-top:2px;
+}
+
+.calWeekHead{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:10px;
+  text-align:center;
+  font-size:12px;
+  color:var(--muted);
+  margin-top:14px;
+}
+
 .calGrid{
   display:grid;
   grid-template-columns:repeat(7,1fr);
   gap:10px;
-  margin-top:12px;
+  margin-top:10px;
 }
 
 .calCell{
@@ -218,6 +200,7 @@ label{
   display:flex;
   align-items:center;
   justify-content:center;
+  cursor:pointer;
 }
 
 .calCell.selected{
@@ -225,8 +208,8 @@ label{
 }
 
 .calNum{
-  width:42px;
-  height:42px;
+  width:40px;
+  height:40px;
   border-radius:999px;
   display:flex;
   align-items:center;
@@ -234,57 +217,33 @@ label{
   font-weight:900;
 }
 
-/* ===== DENSITY COLORS (CORRECT LOGIC) ===== */
-.calNum.d0{background:none;border:none;color:var(--text)}
-.calNum.d1{background:rgba(44,255,156,.25);border:1px solid rgba(44,255,156,.6);color:#2cff9c}
-.calNum.d2{background:rgba(253,224,71,.25);border:1px solid rgba(253,224,71,.6);color:#fde047}
-.calNum.d3{background:rgba(251,146,60,.25);border:1px solid rgba(251,146,60,.6);color:#fb923c}
-.calNum.d4{background:rgba(255,92,122,.25);border:1px solid rgba(255,92,122,.6);color:#ff5c7a}
-
-/* =========================
-   SUMMARY
-========================= */
-.summary{
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:14px;
+/* ===== DENSITY COLORS (ใช้ของเดิม แต่ map ใหม่) ===== */
+.calNum.density-low{
+  background:rgba(44,255,156,.22);
+  color:#2cff9c;
+  border:1px solid rgba(44,255,156,.55);
 }
 
-.box{
-  padding:16px;
-  border-radius:20px;
-  background:rgba(0,0,0,.32);
-  border:1px solid var(--stroke);
-  font-weight:900;
-  text-align:center;
+.calNum.density-mid{
+  background:rgba(253,224,71,.22);
+  color:#fde047;
+  border:1px solid rgba(253,224,71,.55);
 }
 
-/* =========================
-   TABS
-========================= */
-.tabs{
-  display:flex;
-  gap:12px;
+.calNum.density-high{
+  background:rgba(251,146,60,.22);
+  color:#fb923c;
+  border:1px solid rgba(251,146,60,.55);
 }
 
-.tab{
-  flex:1;
-  padding:14px;
-  border-radius:20px;
-  border:1px solid var(--stroke);
-  background:rgba(0,0,0,.32);
-  font-weight:900;
-  cursor:pointer;
-  text-align:center;
-}
-
-.tab.active{
-  background:rgba(110,231,255,.16);
-  outline:2px solid rgba(110,231,255,.4);
+.calNum.density-full{
+  background:rgba(255,92,122,.22);
+  color:#ff5c7a;
+  border:1px solid rgba(255,92,122,.55);
 }
 
 /* =========================
-   TABLE
+   TABLE (โทรได้ iOS)
 ========================= */
 table{
   width:100%;
@@ -297,40 +256,22 @@ th,td{
   border-bottom:1px solid var(--stroke);
 }
 
-th{color:var(--muted)}
-
-/* =========================
-   STYLIST BADGE
-========================= */
-.badge{
-  padding:6px 12px;
-  border-radius:999px;
-  font-weight:900;
-  font-size:12px;
+td a{
+  color:var(--accent);
+  text-decoration:none;
 }
 
-.badge.bank{
-  background:rgba(110,231,255,.18);
-  border:1px solid var(--bank);
-  color:var(--bank);
-}
-
-.badge.sindy{
-  background:rgba(255,138,179,.18);
-  border:1px solid var(--sindy);
-  color:var(--sindy);
-}
-
-.badge.assist{
-  background:rgba(44,255,156,.18);
-  border:1px solid var(--assist);
-  color:var(--assist);
+td a:active{
+  opacity:.7;
 }
 
 /* =========================
    RESPONSIVE
 ========================= */
 @media(max-width:720px){
-  .grid{grid-template-columns:1fr}
-  .summary{grid-template-columns:1fr 1fr}
+  .topbar{
+    flex-direction:column;
+    align-items:flex-start;
+    gap:12px;
+  }
 }
