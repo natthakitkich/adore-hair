@@ -1,10 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-  /* ================= CONFIG ================= */
   const OWNER_PIN = '1234';
   const AUTH_KEY = 'adore_owner_auth';
 
-  /* ================= ELEMENTS ================= */
+  const body = document.body;
   const loginOverlay = document.getElementById('loginOverlay');
   const loginBtn = document.getElementById('loginBtn');
   const pinInput = document.getElementById('pinInput');
@@ -12,22 +11,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const logoutBtn = document.getElementById('logoutBtn');
   const topDate = document.getElementById('topDate');
 
-  /* ================= LOGIN STATE ================= */
-  const isAuthed = localStorage.getItem(AUTH_KEY) === 'true';
-
-  if (isAuthed) {
-    hideLogin();
-    bootApp();
+  /* ================= INIT ================= */
+  if (localStorage.getItem(AUTH_KEY) === 'true') {
+    setAuthed();
   } else {
-    showLogin();
+    setLoggedOut();
   }
 
   /* ================= LOGIN ================= */
   loginBtn.onclick = () => {
-    const raw = pinInput.value || '';
-
-    // ✅ iOS Safari safe normalize
-    const pin = raw.replace(/\D/g, '').trim();
+    const pin = pinInput.value.replace(/\D/g, '');
 
     if (pin !== OWNER_PIN) {
       loginMsg.textContent = 'PIN ไม่ถูกต้อง';
@@ -37,11 +30,9 @@ document.addEventListener('DOMContentLoaded', () => {
     localStorage.setItem(AUTH_KEY, 'true');
     pinInput.value = '';
     loginMsg.textContent = '';
-    hideLogin();
-    bootApp();
+    setAuthed();
   };
 
-  // ป้องกัน Safari ใส่ค่าเพี้ยน
   pinInput.addEventListener('input', () => {
     pinInput.value = pinInput.value.replace(/\D/g, '').slice(0, 4);
   });
@@ -52,27 +43,23 @@ document.addEventListener('DOMContentLoaded', () => {
     location.reload();
   };
 
-  /* ================= UI HELPERS ================= */
-  function showLogin() {
-    loginOverlay.classList.remove('hidden');
-  }
-
-  function hideLogin() {
-    loginOverlay.classList.add('hidden');
-  }
-
-  /* ================= APP BOOT ================= */
-  function bootApp() {
+  /* ================= STATE ================= */
+  function setAuthed(){
+    body.classList.add('authed');
     renderTopDate();
-    console.log('✅ Login success – App booted');
+    console.log('✅ AUTHED');
   }
 
-  function renderTopDate() {
+  function setLoggedOut(){
+    body.classList.remove('authed');
+  }
+
+  function renderTopDate(){
     if (!topDate) return;
     topDate.textContent = new Date().toLocaleDateString('th-TH', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
+      day:'numeric',
+      month:'short',
+      year:'numeric'
     });
   }
 
