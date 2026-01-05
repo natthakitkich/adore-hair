@@ -15,15 +15,7 @@
     <div class="loginAvatar">A</div>
     <h1>เข้าสู่ระบบ</h1>
     <p class="muted">กรุณาใส่ PIN 4 หลัก</p>
-
-    <input
-      id="pinInput"
-      type="password"
-      inputmode="numeric"
-      maxlength="4"
-      placeholder="••••"
-    />
-
+    <input id="pinInput" type="password" inputmode="numeric" maxlength="4" placeholder="••••" />
     <button id="loginBtn" class="primary">Login</button>
     <div id="loginMsg" class="msg"></div>
   </div>
@@ -50,12 +42,29 @@
 
   <!-- MAIN -->
   <main class="wrap">
-    <section class="panel center">
-      <b>Phase A ผ่านแล้ว</b><br/>
-      โครงสร้าง App พร้อมใช้งาน
-    </section>
-  </main>
 
+    <!-- CALENDAR -->
+    <section class="panel">
+      <div class="calendarHeader">
+        <button id="prevMonth" class="navBtn">‹</button>
+        <div id="calendarTitle" class="calendarTitle"></div>
+        <button id="nextMonth" class="navBtn">›</button>
+      </div>
+
+      <div class="calendarWeek">
+        <span>อา</span><span>จ</span><span>อ</span>
+        <span>พ</span><span>พฤ</span><span>ศ</span><span>ส</span>
+      </div>
+
+      <div id="calendarGrid" class="calendarGrid"></div>
+    </section>
+
+    <!-- DAY HINT -->
+    <section class="panel center muted" id="dayHint">
+      กรุณาเลือกวันจากปฏิทิน
+    </section>
+
+  </main>
 </div>
 
 <script src="app.js"></script>
