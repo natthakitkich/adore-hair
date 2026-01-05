@@ -3,8 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ================= CONFIG ================= */
   const OWNER_PIN = '1234';
   const AUTH_KEY = 'adore_owner_auth';
-
-  const API = ''; // same origin
+  const API = '';
 
   /* ================= ELEMENTS ================= */
   const loginOverlay = document.getElementById('loginOverlay');
@@ -21,40 +20,50 @@ document.addEventListener('DOMContentLoaded', () => {
   const stylistTabsEl = document.getElementById('stylistTabs');
   const summaryEl = document.getElementById('summary');
   const queueBody = document.getElementById('queueBody');
-
   const dayStatus = document.getElementById('dayStatus');
-  const closeDayBtn = document.getElementById('closeDayBtn');
-  const openDayBtn = document.getElementById('openDayBtn');
 
   /* ================= STATE ================= */
-  let currentMonth = todayTH();
+  let currentMonth;
   let selectedDate = null;
   let bookings = [];
+  let calendarDensity = {};
   let activeStylist = 'Bank';
 
   const stylists = ['Bank', 'Sindy', 'Assist'];
 
-  /* ================= AUTH ================= */
-  const isAuthed = localStorage.getItem(AUTH_KEY) === 'true';
-
-  if (isAuthed) {
-    hideLogin();
-    bootApp();
-  } else {
-    showLogin();
+  /* ================= TIMEZONE (TH) ================= */
+  function getTodayTH() {
+    const now = new Date();
+    const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+    return new Date(utc + 7 * 60 * 60000);
   }
 
-  loginBtn.onclick = () => {
-    if (pinInput.value !== OWNER_PIN) {
-      loginMsg.textContent = 'PIN ไม่ถูกต้อง';
-      return;
-    }
-    localStorage.setItem(AUTH_KEY, 'true');
-    pinInput.value = '';
-    loginMsg.textContent = '';
-    hideLogin();
-    bootApp();
-  };
+  function dateKey(d) {
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+
+  /* ================= AUTH (ONE TIME ONLY) ================= */
+  const isAuthed = localStorage.getItem(AUTH_KEY) === 'true';
+
+  if (!isAuthed) {
+    showLogin();
+    bindLogin();
+    return; // ⛔ สำคัญ: หยุดตรงนี้
+  }
+
+  hideLogin();
+  bootApp();
+
+  function bindLogin() {
+    loginBtn.onclick = () => {
+      if (pinInput.value !== OWNER_PIN) {
+        loginMsg.textContent = 'PIN ไม่ถูกต้อง';
+        return;
+      }
+      localStorage.setItem(AUTH_KEY, 'true');
+      location.reload(); // clean boot
+    };
+  }
 
   logoutBtn.onclick = () => {
     localStorage.removeItem(AUTH_KEY);
@@ -64,54 +73,53 @@ document.addEventListener('DOMContentLoaded', () => {
   function showLogin() {
     loginOverlay.classList.remove('hidden');
   }
+
   function hideLogin() {
     loginOverlay.classList.add('hidden');
   }
 
   /* ================= BOOT ================= */
-  function bootApp() {
+  async function bootApp() {
     renderTopDate();
-    initCalendar();
+
+    currentMonth = getTodayTH();
+
+    calendarDensity = await fetchCalendarDensity();
+    renderCalendar();
+
     renderStylistTabs();
-    autoSelectToday();
+
+    // เลือกวันนี้อัตโนมัติ (หลัง render เสร็จ)
+    const todayKey = dateKey(getTodayTH());
+    selectDate(todayKey);
   }
 
   function renderTopDate() {
     const el = document.getElementById('topDate');
-    el.textContent = todayTH().toLocaleDateString('th-TH', {
+    el.textContent = getTodayTH().toLocaleDateString('th-TH', {
       day: 'numeric',
       month: 'short',
       year: 'numeric'
     });
   }
 
-  /* ================= TIMEZONE (TH) ================= */
-  function todayTH() {
-    const now = new Date();
-    const utc = now.getTime() + now.getTimezoneOffset() * 60000;
-    return new Date(utc + 7 * 60 * 60000);
-  }
-
-  function toDateKey(d) {
-    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-  }
-
   /* ================= CALENDAR ================= */
-  function initCalendar() {
-    renderCalendar();
+  async function fetchCalendarDensity() {
+    try {
+      const res = await fetch(`${API}/calendar-days`);
+      const raw = await res.json();
 
-    prevMonthBtn.onclick = () => {
-      currentMonth.setMonth(currentMonth.getMonth() - 1);
-      renderCalendar();
-    };
-
-    nextMonthBtn.onclick = () => {
-      currentMonth.setMonth(currentMonth.getMonth() + 1);
-      renderCalendar();
-    };
+      const map = {};
+      Object.keys(raw).forEach(k => {
+        map[k] = Math.min(raw[k], 20); // max 20
+      });
+      return map;
+    } catch {
+      return {};
+    }
   }
 
-  async function renderCalendar() {
+  function renderCalendar() {
     calendarGrid.innerHTML = '';
 
     calendarTitle.textContent = currentMonth.toLocaleDateString('th-TH', {
@@ -124,15 +132,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const firstDay = new Date(y, m, 1).getDay();
     const daysInMonth = new Date(y, m + 1, 0).getDate();
 
-    const densityMap = await fetchCalendarDensity();
-
     for (let i = 0; i < firstDay; i++) {
       calendarGrid.appendChild(document.createElement('div'));
     }
 
     for (let d = 1; d <= daysInMonth; d++) {
-      const dateObj = new Date(y, m, d);
-      const dateKey = toDateKey(dateObj);
+      const dObj = new Date(y, m, d);
+      const key = dateKey(dObj);
 
       const cell = document.createElement('div');
       cell.className = 'calCell';
@@ -144,8 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
       num.className = 'calNum';
       num.textContent = d;
 
-      const count = densityMap[dateKey] || 0;
-
+      const count = calendarDensity[key] || 0;
       if (count > 0) {
         if (count <= 5) num.classList.add('density-low');
         else if (count <= 10) num.classList.add('density-mid');
@@ -153,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
         else num.classList.add('density-full');
       }
 
-      inner.onclick = () => selectDate(dateKey);
+      inner.onclick = () => selectDate(key);
 
       inner.appendChild(num);
       cell.appendChild(inner);
@@ -161,32 +166,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  async function fetchCalendarDensity() {
-    try {
-      const res = await fetch(`${API}/calendar-days`);
-      const raw = await res.json();
+  prevMonthBtn.onclick = () => {
+    currentMonth.setMonth(currentMonth.getMonth() - 1);
+    renderCalendar();
+  };
 
-      const map = {};
-      Object.keys(raw).forEach(k => {
-        // นับเฉพาะ Bank + Sindy (backend ส่งรวมมาแล้ว)
-        map[k] = Math.min(raw[k], 20);
-      });
-      return map;
-    } catch {
-      return {};
-    }
-  }
+  nextMonthBtn.onclick = () => {
+    currentMonth.setMonth(currentMonth.getMonth() + 1);
+    renderCalendar();
+  };
 
   /* ================= DATE SELECT ================= */
-  async function autoSelectToday() {
-    const today = todayTH();
-    const key = toDateKey(today);
-    await selectDate(key);
-  }
-
-  async function selectDate(dateKey) {
-    selectedDate = dateKey;
-    dayStatus.textContent = `วันที่ ${dateKey}`;
+  async function selectDate(key) {
+    selectedDate = key;
+    dayStatus.textContent = `วันที่ ${key}`;
     await loadBookings();
   }
 
@@ -236,7 +229,6 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ================= SUMMARY ================= */
   function renderSummary() {
     const count = s => bookings.filter(b => b.stylist === s).length;
-
     summaryEl.innerHTML = `
       <div class="panel stylist-bank">Bank<br><b>${count('Bank')}</b></div>
       <div class="panel stylist-sindy">Sindy<br><b>${count('Sindy')}</b></div>
