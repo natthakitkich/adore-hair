@@ -206,3 +206,34 @@ button{
   background:rgba(255,255,255,.08);
   color:#fff;
 }
+/* CLOSED DAY */
+.calCell.closed{
+  opacity:.45;
+}
+
+.calNum.closed{
+  background:rgba(255,92,122,.25);
+  color:#ff5c7a;
+  border:1px solid rgba(255,92,122,.6);
+  position:relative;
+}
+
+.calNum.closed::after{
+  content:"⛔";
+  position:absolute;
+  font-size:14px;
+  bottom:-6px;
+  right:-6px;
+}
+
+#dayControl{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  align-items:center;
+}
+
+.danger{
+  background:#ff5c7a;
+  color:#fff;
+}
