@@ -254,3 +254,20 @@ button{
   background:rgba(255,255,255,.1);
   color:#fff;
 }
+
+.calCell.closed{
+  opacity:.4;
+}
+
+.calNum.closed::after{
+  content:"⛔";
+  position:absolute;
+  bottom:-6px;
+  right:-6px;
+  font-size:14px;
+}
+
+.locked{
+  opacity:.5;
+  pointer-events:none;
+}
