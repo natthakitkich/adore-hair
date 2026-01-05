@@ -14,6 +14,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const logoutBtn = document.getElementById('logoutBtn');
   const topDate = document.getElementById('topDate');
 
+  const calendarGrid = document.getElementById('calendarGrid');
+  const calendarTitle = document.getElementById('calendarTitle');
+  const prevMonthBtn = document.getElementById('prevMonth');
+  const nextMonthBtn = document.getElementById('nextMonth');
+  const dayHint = document.getElementById('dayHint');
+
+  /* ================= STATE ================= */
+  let currentMonth = new Date();
+  let selectedDate = null;
+
   /* ================= INIT ================= */
   if (localStorage.getItem(AUTH_KEY) === 'true') {
     showApp();
@@ -24,12 +34,10 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ================= LOGIN ================= */
   loginBtn.onclick = () => {
     const pin = pinInput.value.replace(/\D/g, '');
-
     if (pin !== OWNER_PIN) {
       loginMsg.textContent = 'PIN ไม่ถูกต้อง';
       return;
     }
-
     localStorage.setItem(AUTH_KEY, 'true');
     pinInput.value = '';
     loginMsg.textContent = '';
@@ -40,13 +48,12 @@ document.addEventListener('DOMContentLoaded', () => {
     pinInput.value = pinInput.value.replace(/\D/g, '').slice(0, 4);
   });
 
-  /* ================= LOGOUT ================= */
   logoutBtn.onclick = () => {
     localStorage.removeItem(AUTH_KEY);
     location.reload();
   };
 
-  /* ================= UI STATE ================= */
+  /* ================= UI ================= */
   function showLogin() {
     loginOverlay.style.display = 'flex';
     appRoot.style.display = 'none';
@@ -56,6 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loginOverlay.style.display = 'none';
     appRoot.style.display = 'block';
     renderTopDate();
+    initCalendar();
   }
 
   function renderTopDate() {
@@ -65,6 +73,64 @@ document.addEventListener('DOMContentLoaded', () => {
       month: 'short',
       year: 'numeric'
     });
+  }
+
+  /* ================= CALENDAR ================= */
+  function initCalendar() {
+    renderCalendar();
+
+    prevMonthBtn.onclick = () => {
+      currentMonth.setMonth(currentMonth.getMonth() - 1);
+      renderCalendar();
+    };
+
+    nextMonthBtn.onclick = () => {
+      currentMonth.setMonth(currentMonth.getMonth() + 1);
+      renderCalendar();
+    };
+  }
+
+  function renderCalendar() {
+    calendarGrid.innerHTML = '';
+
+    calendarTitle.textContent = currentMonth.toLocaleDateString('th-TH', {
+      month: 'long',
+      year: 'numeric'
+    });
+
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    // empty cells
+    for (let i = 0; i < firstDay; i++) {
+      calendarGrid.appendChild(document.createElement('div'));
+    }
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+
+      const cell = document.createElement('div');
+      cell.className = 'calCell';
+
+      const num = document.createElement('div');
+      num.className = 'calNum';
+      num.textContent = d;
+
+      if (dateStr === selectedDate) {
+        cell.style.outline = '2px solid rgba(110,231,255,.6)';
+      }
+
+      cell.onclick = () => {
+        selectedDate = dateStr;
+        dayHint.textContent = `เลือกวันที่ ${d}`;
+        renderCalendar();
+      };
+
+      cell.appendChild(num);
+      calendarGrid.appendChild(cell);
+    }
   }
 
 });
