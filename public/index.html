@@ -9,7 +9,7 @@
 <body>
 
 <!-- =========================
-     LOGIN OVERLAY
+     LOGIN OVERLAY (ENTRY)
 ========================= -->
 <div id="loginOverlay" class="overlay">
   <div class="modal">
@@ -23,14 +23,10 @@
         type="password"
         inputmode="numeric"
         maxlength="4"
-        placeholder="PIN"
+        placeholder="••••"
       />
 
-      <button
-        id="loginBtn"
-        class="primary"
-        type="button"
-      >
+      <button id="loginBtn" class="primary" type="button">
         Login
       </button>
 
@@ -74,7 +70,7 @@
 <!-- =========================
      TOP BAR
 ========================= -->
-<div class="topbar">
+<div class="topbar hidden" id="topbar">
   <div class="brand">
     <div class="avatar">A</div>
     <div>
@@ -89,9 +85,39 @@
 </div>
 
 <!-- =========================
-     MAIN CONTENT (เดิม)
+     CALENDAR VIEW (NEW)
 ========================= -->
-<div class="wrap">
+<div class="calendarWrap hidden" id="calendarView">
+  <div class="calendarHeader">
+    <button id="prevMonth" class="ghost">‹</button>
+    <div class="calendarTitle" id="calendarTitle">—</div>
+    <button id="nextMonth" class="ghost">›</button>
+  </div>
+
+  <div class="calendarGrid">
+    <div class="dayLabel">อา</div>
+    <div class="dayLabel">จ</div>
+    <div class="dayLabel">อ</div>
+    <div class="dayLabel">พ</div>
+    <div class="dayLabel">พฤ</div>
+    <div class="dayLabel">ศ</div>
+    <div class="dayLabel">ส</div>
+
+    <!-- JS จะ render day cells ตรงนี้ -->
+    <div id="calendarDays" class="calendarDays"></div>
+  </div>
+
+  <div class="calendarLegend">
+    <span class="dot low"></span> คิวน้อย
+    <span class="dot mid"></span> คิวปานกลาง
+    <span class="dot high"></span> คิวหนาแน่น
+  </div>
+</div>
+
+<!-- =========================
+     MAIN BOOKING VIEW
+========================= -->
+<div class="wrap hidden" id="bookingView">
 
   <div class="panel">
     <label for="date">เลือกวันที่</label>
