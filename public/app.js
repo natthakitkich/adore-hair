@@ -1,143 +1,118 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-  /* =====================
-     CONFIG
-  ===================== */
   const OWNER_PIN = '1234';
-  const AUTH_KEY = 'adore_owner_auth';
+  const AUTH_KEY = 'adore_auth';
 
-  /* =====================
-     ELEMENTS
-  ===================== */
   const loginOverlay = document.getElementById('loginOverlay');
+  const pinInput = document.getElementById('pinInput');
   const loginBtn = document.getElementById('loginBtn');
-  const pinInput = document.getElementById('pin');
   const loginMsg = document.getElementById('loginMsg');
   const logoutBtn = document.getElementById('logoutBtn');
 
-  const dayStatus = document.getElementById('dayStatus');
   const calendarGrid = document.getElementById('calendarGrid');
   const calendarTitle = document.getElementById('calendarTitle');
+  const dayHint = document.getElementById('dayHint');
+  const stylistTabs = document.getElementById('stylistTabs');
+  const summary = document.getElementById('summary');
+  const topDate = document.getElementById('topDate');
 
-  /* =====================
-     STATE
-  ===================== */
-  let selectedDate = null;   // YYYY-MM-DD
   let currentMonth = new Date();
+  let selectedDate = null;
+  let activeStylist = 'Bank';
 
-  /* =====================
-     AUTH
-  ===================== */
+  /* ===== AUTH ===== */
   if (localStorage.getItem(AUTH_KEY) === 'true') {
-    loginOverlay.style.display = 'none';
+    loginOverlay.classList.add('hidden');
     boot();
   }
 
-  loginBtn.addEventListener('click', () => {
-    if (pinInput.value.trim() !== OWNER_PIN) {
+  loginBtn.onclick = () => {
+    if (pinInput.value === OWNER_PIN) {
+      localStorage.setItem(AUTH_KEY, 'true');
+      loginOverlay.classList.add('hidden');
+      boot();
+    } else {
       loginMsg.textContent = 'PIN ไม่ถูกต้อง';
-      return;
     }
-    localStorage.setItem(AUTH_KEY, 'true');
-    loginOverlay.style.display = 'none';
-    boot();
-  });
+  };
 
-  logoutBtn.addEventListener('click', () => {
+  logoutBtn.onclick = () => {
     localStorage.removeItem(AUTH_KEY);
     location.reload();
-  });
+  };
 
-  /* =====================
-     BOOT
-  ===================== */
-  function boot() {
+  /* ===== BOOT ===== */
+  function boot(){
     renderTopDate();
     renderCalendar();
-    updateDayStatus();
+    renderTabs();
+    renderSummary();
   }
 
-  function renderTopDate() {
-    document.getElementById('topDate').textContent =
-      new Date().toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric'
-      });
+  function renderTopDate(){
+    topDate.textContent = new Date().toLocaleDateString('en-US',{
+      month:'short',day:'numeric',year:'numeric'
+    });
   }
 
-  /* =====================
-     CALENDAR
-  ===================== */
-  document.getElementById('prevMonth').addEventListener('click', () => {
-    currentMonth.setMonth(currentMonth.getMonth() - 1);
+  /* ===== CALENDAR ===== */
+  document.getElementById('prevMonth').onclick = () => {
+    currentMonth.setMonth(currentMonth.getMonth()-1);
     renderCalendar();
-  });
-
-  document.getElementById('nextMonth').addEventListener('click', () => {
-    currentMonth.setMonth(currentMonth.getMonth() + 1);
+  };
+  document.getElementById('nextMonth').onclick = () => {
+    currentMonth.setMonth(currentMonth.getMonth()+1);
     renderCalendar();
-  });
+  };
 
-  function renderCalendar() {
+  function renderCalendar(){
     calendarGrid.innerHTML = '';
-
-    const year = currentMonth.getFullYear();
-    const month = currentMonth.getMonth();
-
     calendarTitle.textContent =
-      currentMonth.toLocaleDateString('th-TH', {
-        month: 'long',
-        year: 'numeric'
-      });
+      currentMonth.toLocaleDateString('th-TH',{month:'long',year:'numeric'});
 
-    const firstDay = new Date(year, month, 1).getDay();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const y = currentMonth.getFullYear();
+    const m = currentMonth.getMonth();
+    const first = new Date(y,m,1).getDay();
+    const days = new Date(y,m+1,0).getDate();
 
-    // ช่องว่างก่อนวันแรก
-    for (let i = 0; i < firstDay; i++) {
+    for(let i=0;i<first;i++){
       calendarGrid.appendChild(document.createElement('div'));
     }
 
-    // วันจริง
-    for (let d = 1; d <= daysInMonth; d++) {
+    for(let d=1;d<=days;d++){
       const cell = document.createElement('div');
       cell.className = 'calCell';
       cell.textContent = d;
 
-      const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-
-      if (key === selectedDate) {
-        cell.style.outline = '2px solid #6ee7ff';
-      }
-
-      cell.addEventListener('click', () => {
-        selectedDate = key;
-        renderCalendar();
-        updateDayStatus();
-      });
+      cell.onclick = () => {
+        selectedDate = `${y}-${m+1}-${d}`;
+        dayHint.textContent = `เลือกวันที่ ${d}`;
+      };
 
       calendarGrid.appendChild(cell);
     }
   }
 
-  /* =====================
-     DAY STATUS
-  ===================== */
-  function updateDayStatus() {
-    if (!selectedDate) {
-      dayStatus.textContent = 'กรุณาเลือกวันจากปฏิทิน';
-      return;
-    }
+  /* ===== TABS ===== */
+  function renderTabs(){
+    stylistTabs.innerHTML='';
+    ['Bank','Sindy','Assist'].forEach(name=>{
+      const t=document.createElement('div');
+      t.className='tab'+(name===activeStylist?' active':'');
+      t.textContent=name;
+      t.onclick=()=>{activeStylist=name;renderTabs();};
+      stylistTabs.appendChild(t);
+    });
+  }
 
-    const d = new Date(selectedDate);
-    dayStatus.textContent =
-      'วันที่เลือก: ' +
-      d.toLocaleDateString('th-TH', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric'
-      });
+  /* ===== SUMMARY ===== */
+  function renderSummary(){
+    summary.innerHTML=`
+      <div class="panel">Bank<br><b>0</b></div>
+      <div class="panel">Sindy<br><b>0</b></div>
+      <div class="panel">Assist<br><b>0</b></div>
+      <div class="panel">รวม<br><b>0</b></div>
+    `;
   }
 
 });
