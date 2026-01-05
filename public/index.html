@@ -8,19 +8,25 @@
 </head>
 <body>
 
-<!-- LOGIN -->
+<!-- ================= LOGIN ================= -->
 <div id="loginOverlay" class="overlay">
   <div class="loginCard">
     <div class="loginAvatar">A</div>
     <h1>เข้าสู่ระบบ</h1>
     <p class="muted">กรุณาใส่ PIN 4 หลัก</p>
-    <input id="pinInput" type="password" inputmode="numeric" maxlength="4" placeholder="••••" />
+    <input
+      id="pinInput"
+      type="password"
+      inputmode="numeric"
+      maxlength="4"
+      placeholder="••••"
+    />
     <button id="loginBtn" class="primary">Login</button>
     <div id="loginMsg" class="msg"></div>
   </div>
 </div>
 
-<!-- TOP BAR -->
+<!-- ================= TOP BAR ================= -->
 <header class="topbar">
   <div class="brand">
     <div class="avatar">A</div>
@@ -36,6 +42,7 @@
   </div>
 </header>
 
+<!-- ================= MAIN ================= -->
 <main class="wrap">
 
   <!-- CALENDAR -->
@@ -61,7 +68,7 @@
     <button id="openDayBtn" class="primary hidden">ยกเลิกวันหยุด</button>
   </section>
 
-  <!-- STYLIST -->
+  <!-- STYLIST TABS -->
   <section class="panel">
     <div id="stylistTabs" class="tabs"></div>
   </section>
@@ -80,6 +87,7 @@
           <th>ชื่อ</th>
           <th>บริการ</th>
           <th>โทร</th>
+          <th></th>
         </tr>
       </thead>
       <tbody id="queueBody"></tbody>
@@ -87,6 +95,49 @@
   </section>
 
 </main>
+
+<!-- ================= EDIT QUEUE MODAL ================= -->
+<div id="editOverlay" class="overlay hidden">
+  <div class="loginCard">
+
+    <h2>แก้ไขคิว</h2>
+
+    <!-- วันที่ -->
+    <input id="editDate" type="date" />
+
+    <!-- เวลา -->
+    <select id="editTime"></select>
+
+    <!-- ช่าง (ล็อก ไม่ให้แก้) -->
+    <input id="editStylist" disabled />
+
+    <!-- ชื่อลูกค้า -->
+    <input id="editName" placeholder="ชื่อลูกค้า" />
+
+    <!-- เบอร์โทร -->
+    <input id="editPhone" placeholder="เบอร์โทร" />
+
+    <!-- เพศ -->
+    <div class="row">
+      <label>
+        <input type="radio" name="editGender" value="male" />
+        👨 ชาย
+      </label>
+      <label>
+        <input type="radio" name="editGender" value="female" />
+        👩 หญิง
+      </label>
+    </div>
+
+    <!-- บริการ -->
+    <input id="editService" placeholder="บริการ" />
+
+    <button id="saveEditBtn" class="primary">บันทึก</button>
+    <button id="deleteEditBtn" class="danger">ลบคิว</button>
+    <button id="closeEditBtn" class="ghost">ปิด</button>
+
+  </div>
+</div>
 
 <script src="app.js"></script>
 </body>
