@@ -271,3 +271,15 @@ button{
   opacity:.5;
   pointer-events:none;
 }
+/* ===== AUTH STATE ===== */
+#appRoot{
+  display:none;
+}
+
+body.authed #appRoot{
+  display:block;
+}
+
+body.authed #loginOverlay{
+  display:none !important;
+}
