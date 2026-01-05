@@ -1,13 +1,14 @@
 /* ==================================================
-   ADORE HAIR – STABLE STYLE (SAFE OVERLAY VERSION)
-   Based on BASIC (No Override / No Chaos)
+   ADORE HAIR – STABLE STYLE (RECOVER + LATEST)
+   - No override chaos
+   - Login / Calendar / Table safe
 ================================================== */
 
 /* ---------- ROOT ---------- */
 :root {
   --bg:#0b0f1a;
-  --panel:rgba(255,255,255,.06);
-  --panel-soft:rgba(255,255,255,.03);
+  --panel:#12172a;
+  --panel-soft:#0f1424;
   --stroke:rgba(255,255,255,.08);
 
   --text:#e9eefc;
@@ -15,6 +16,10 @@
 
   --accent:#6ee7ff;
   --accent2:#a78bfa;
+
+  --bank:#4fc3ff;
+  --sindy:#c084fc;
+  --assist:#4ade80;
 
   --danger:#ff5c7a;
 
@@ -38,8 +43,6 @@ body {
 }
 
 .hidden { display:none; }
-
-/* ---------- TEXT ---------- */
 .muted { color:var(--muted); }
 
 /* ---------- INPUT / BUTTON ---------- */
@@ -49,7 +52,7 @@ input,select {
   font-size:16px;
   border-radius:var(--radius-md);
   border:1px solid var(--stroke);
-  background:rgba(0,0,0,.35);
+  background:#0b1022;
   color:var(--text);
 }
 
@@ -58,15 +61,15 @@ button {
   cursor:pointer;
 }
 
-button.primary {
+.primary {
   background:linear-gradient(135deg,var(--accent),var(--accent2));
   color:#061022;
   padding:14px;
   border-radius:var(--radius-md);
-  font-weight:700;
+  font-weight:800;
 }
 
-button.ghost {
+.ghost {
   background:rgba(255,255,255,.06);
   border:1px solid var(--stroke);
   color:var(--text);
@@ -83,8 +86,8 @@ button.ghost {
   display:flex;
   justify-content:space-between;
   align-items:center;
-  background:rgba(0,0,0,.35);
-  backdrop-filter:blur(14px);
+  background:rgba(0,0,0,.45);
+  backdrop-filter:blur(12px);
   border-bottom:1px solid var(--stroke);
 }
 
@@ -97,7 +100,7 @@ button.ghost {
 .avatar {
   width:40px;
   height:40px;
-  border-radius:var(--radius-md);
+  border-radius:14px;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -112,7 +115,7 @@ button.ghost {
   font-size:32px;
 }
 
-.title { font-weight:800; }
+.title { font-weight:900; }
 .subtitle { font-size:12px; color:var(--muted); }
 
 /* ---------- LAYOUT ---------- */
@@ -130,19 +133,17 @@ button.ghost {
   margin-top:16px;
 }
 
-/* ---------- OVERLAY (SAFE) ---------- */
+/* ---------- OVERLAY / MODAL ---------- */
 .overlay {
   position:fixed;
   inset:0;
   background:rgba(0,0,0,.85);
-  display:none;              /* สำคัญ: ซ่อนเป็น default */
+  display:none;
   place-items:center;
   z-index:999;
 }
 
-.overlay.show {
-  display:grid;
-}
+.overlay.show { display:grid; }
 
 .modal {
   width:min(420px,92vw);
@@ -161,7 +162,7 @@ button.ghost {
   text-align:center;
 }
 
-#pin {
+#pinInput {
   text-align:center;
   letter-spacing:6px;
   font-size:22px;
@@ -174,15 +175,17 @@ button.ghost {
   justify-content:space-between;
 }
 
-.calendarTitle { font-weight:800; }
+.calendarTitle {
+  font-weight:900;
+}
 
 .calWeekHead {
   display:grid;
   grid-template-columns:repeat(7,1fr);
   text-align:center;
   margin-top:12px;
-  color:var(--muted);
   font-size:12px;
+  color:var(--muted);
 }
 
 .calGrid {
@@ -195,7 +198,7 @@ button.ghost {
 .calDay {
   aspect-ratio:1/1;
   border-radius:50%;
-  background:rgba(0,0,0,.35);
+  background:#0b1022;
   border:1px solid var(--stroke);
   display:flex;
   align-items:center;
@@ -224,11 +227,11 @@ button.ghost {
 .tab {
   flex:1;
   padding:14px;
-  border-radius:var(--radius-lg);
-  background:rgba(0,0,0,.35);
+  border-radius:20px;
+  background:#0b1022;
   border:1px solid var(--stroke);
   text-align:center;
-  font-weight:700;
+  font-weight:800;
 }
 
 .tab.active {
@@ -243,9 +246,9 @@ button.ghost {
 }
 
 .summaryItem {
-  background:rgba(0,0,0,.35);
+  background:#0b1022;
   border:1px solid var(--stroke);
-  border-radius:var(--radius-lg);
+  border-radius:20px;
   padding:14px;
   text-align:center;
 }
@@ -257,7 +260,7 @@ button.ghost {
 
 .summaryValue {
   font-size:26px;
-  font-weight:800;
+  font-weight:900;
 }
 
 /* ---------- FORM ---------- */
@@ -285,8 +288,21 @@ th,td {
 
 th {
   color:var(--muted);
-  font-weight:700;
+  font-weight:900;
   text-align:left;
+}
+
+/* ---------- BARBER COLOR (FROM BASIC) ---------- */
+.barber-bank {
+  border-left:4px solid var(--bank);
+}
+
+.barber-sindy {
+  border-left:4px solid var(--sindy);
+}
+
+.barber-assist {
+  border-left:4px solid var(--assist);
 }
 
 /* ---------- RESPONSIVE ---------- */
