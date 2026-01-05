@@ -1,245 +1,200 @@
 const API = '';
 const OWNER_PIN = '1234';
 
+let bookings = [];
+let currentDate = todayTH();
+let currentMonth = new Date(currentDate);
+let currentStylist = 'Bank';
+
 /* =========================
-   LOGIN CONTROL (FIX)
+   TIME (TH)
 ========================= */
-const loginOverlay = document.getElementById('loginOverlay');
-const loginBtn = document.getElementById('loginBtn');
-const pinInput = document.getElementById('pin');
-const loginMsg = document.getElementById('loginMsg');
-const logoutBtn = document.getElementById('logoutBtn');
+function todayTH(){
+  return new Date(
+    new Date().toLocaleString('en-US',{ timeZone:'Asia/Bangkok' })
+  ).toISOString().slice(0,10);
+}
+
+/* =========================
+   LOGIN
+========================= */
+if(localStorage.getItem('adore_login') === '1'){
+  loginOverlay.classList.add('hidden');
+  init();
+}
 
 loginBtn.onclick = () => {
-  const pin = pinInput.value.trim();
-  loginMsg.textContent = '';
-
-  if (pin.length !== 4) {
-    loginMsg.textContent = 'กรุณาใส่ PIN 4 หลัก';
-    return;
-  }
-
-  if (pin === OWNER_PIN) {
-    localStorage.setItem('adore_logged_in', '1');
+  if(pin.value === OWNER_PIN){
+    localStorage.setItem('adore_login','1');
     loginOverlay.classList.add('hidden');
-    pinInput.value = '';
     init();
-  } else {
+  }else{
     loginMsg.textContent = 'PIN ไม่ถูกต้อง';
   }
 };
 
 logoutBtn.onclick = () => {
-  localStorage.removeItem('adore_logged_in');
+  localStorage.removeItem('adore_login');
   location.reload();
 };
 
-document.addEventListener('DOMContentLoaded', () => {
-  const logged = localStorage.getItem('adore_logged_in') === '1';
-  if (logged) {
-    loginOverlay.classList.add('hidden');
-    init();
-  } else {
-    loginOverlay.classList.remove('hidden');
-  }
-});
-
 /* =========================
-   GLOBAL STATE (เดิม)
+   INIT
 ========================= */
-let bookings = [];
-let currentDate = '';
-let currentStylist = 'Bank';
+function init(){
+  loadCalendarDensity();
+  loadBookings();
 
-/* =========================
-   INIT (เดิม)
-========================= */
-function init() {
-  const dateInput = document.getElementById('date');
-  const today = new Date().toISOString().slice(0, 10);
-
-  currentDate = today;
-  dateInput.value = today;
-
-  dateInput.onchange = () => {
-    currentDate = dateInput.value;
-    loadBookings();
-  };
-
-  document.querySelectorAll('.tab').forEach(tab => {
-    tab.onclick = () => {
+  document.querySelectorAll('.tab').forEach(tab=>{
+    tab.onclick = ()=>{
       document.querySelector('.tab.active').classList.remove('active');
       tab.classList.add('active');
       currentStylist = tab.dataset.tab;
       renderTimeOptions();
-      renderTable();
-      updateSummary();
     };
   });
 
-  loadBookings();
+  prevMonth.onclick = ()=>{
+    currentMonth.setMonth(currentMonth.getMonth() - 1);
+    renderCalendar();
+  };
+
+  nextMonth.onclick = ()=>{
+    currentMonth.setMonth(currentMonth.getMonth() + 1);
+    renderCalendar();
+  };
 }
 
 /* =========================
-   LOAD BOOKINGS (เดิม)
+   LOAD
 ========================= */
-async function loadBookings() {
+async function loadBookings(){
   const res = await fetch(`${API}/bookings?date=${currentDate}`);
   bookings = await res.json();
-
   renderTimeOptions();
   renderTable();
-  updateSummary();
+}
+
+async function loadCalendarDensity(){
+  const res = await fetch(`${API}/calendar-days`);
+  window.allDays = await res.json();
+  renderCalendar();
 }
 
 /* =========================
-   TIME OPTIONS (เดิม)
+   CALENDAR
 ========================= */
-function renderTimeOptions() {
-  const timeSelect = document.getElementById('time');
-  timeSelect.innerHTML = '';
+function renderCalendar(){
+  calendarDays.innerHTML = '';
+  calendarTitle.textContent =
+    currentMonth.toLocaleDateString('th-TH',{ month:'long', year:'numeric' });
 
-  for (let h = 13; h <= 22; h++) {
-    const time = `${String(h).padStart(2, '0')}:00:00`;
+  const y = currentMonth.getFullYear();
+  const m = currentMonth.getMonth();
+  const firstDay = new Date(y,m,1).getDay();
+  const totalDays = new Date(y,m+1,0).getDate();
 
-    const booked = bookings.find(
-      b => b.time === time && b.stylist === currentStylist
-    );
+  for(let i=0;i<firstDay;i++){
+    calendarDays.appendChild(document.createElement('div'));
+  }
 
-    const option = document.createElement('option');
-    option.value = time;
-    option.textContent = time.slice(0, 5);
-    if (booked) option.disabled = true;
+  for(let d=1; d<=totalDays; d++){
+    const date = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
 
-    timeSelect.appendChild(option);
+    const count = bookings.filter(b =>
+      b.date === date &&
+      (b.stylist === 'Bank' || b.stylist === 'Sindy')
+    ).length;
+
+    const cell = document.createElement('div');
+    cell.className = 'calCell';
+    if(date === currentDate) cell.classList.add('selected');
+
+    const num = document.createElement('div');
+    num.className = 'calNum';
+
+    if(count >= 1 && count <= 5) num.classList.add('density-low');
+    else if(count <= 10) num.classList.add('density-mid');
+    else if(count <= 15) num.classList.add('density-high');
+    else if(count >= 16) num.classList.add('density-full');
+
+    num.textContent = d;
+    cell.appendChild(num);
+
+    cell.onclick = ()=>{
+      currentDate = date;
+      loadBookings();
+      renderCalendar();
+    };
+
+    calendarDays.appendChild(cell);
   }
 }
 
 /* =========================
-   FORM SUBMIT (เดิม)
+   TIME OPTIONS
 ========================= */
-document.getElementById('bookingForm').onsubmit = async e => {
+function renderTimeOptions(){
+  time.innerHTML = '';
+  for(let h=13; h<=22; h++){
+    const t = `${String(h).padStart(2,'0')}:00:00`;
+    const opt = document.createElement('option');
+    opt.value = t;
+    opt.textContent = t.slice(0,5);
+    if(bookings.find(b=>b.time===t && b.stylist===currentStylist)){
+      opt.disabled = true;
+    }
+    time.appendChild(opt);
+  }
+}
+
+/* =========================
+   FORM
+========================= */
+bookingForm.onsubmit = async e => {
   e.preventDefault();
-
   const gender = document.querySelector('[name=gender]:checked')?.value;
-  if (!gender) {
-    alert('กรุณาเลือกเพศ');
-    return;
-  }
 
-  await fetch(`${API}/bookings`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
+  await fetch(`${API}/bookings`,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
       date: currentDate,
-      time: document.getElementById('time').value,
+      time: time.value,
       stylist: currentStylist,
-      name: document.getElementById('name').value,
-      phone: document.getElementById('phone').value,
+      name: name.value,
+      phone: phone.value,
       gender,
-      service: document.getElementById('service').value
+      service: service.value
     })
   });
 
   e.target.reset();
+  loadCalendarDensity();
   loadBookings();
 };
 
 /* =========================
-   TABLE / SUMMARY / EDIT
-   (เดิมทั้งหมด)
+   TABLE (tel:)
 ========================= */
-function renderTable() {
-  const list = document.getElementById('list');
+function renderTable(){
   list.innerHTML = '';
+  bookings.forEach(b=>{
+    const phone = b.phone
+      ? `<a href="tel:${b.phone.replace(/[^0-9+]/g,'')}">${b.phone}</a>`
+      : '';
 
-  bookings
-    .filter(b => b.stylist === currentStylist)
-    .forEach(b => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${b.time.slice(0, 5)}</td>
-        <td>${b.stylist}</td>
-        <td>${b.gender === 'male' ? '👨' : '👩'}</td>
-        <td>${b.name}</td>
-        <td>${b.service || ''}</td>
-        <td>${b.phone || ''}</td>
-        <td><button class="ghost">ลบ/แก้ไขคิว</button></td>
-      `;
-      tr.querySelector('button').onclick = () => openEditModal(b);
-      list.appendChild(tr);
-    });
-}
-
-function updateSummary() {
-  const bank = bookings.filter(b => b.stylist === 'Bank').length;
-  const sindy = bookings.filter(b => b.stylist === 'Sindy').length;
-  const assist = bookings.filter(b => b.stylist === 'Assist').length;
-
-  document.getElementById('countBank').textContent = bank;
-  document.getElementById('countSindy').textContent = sindy;
-  document.getElementById('countAssist').textContent = assist;
-  document.getElementById('countTotal').textContent =
-    bank + sindy + assist;
-}
-
-/* =========================
-   EDIT MODAL (เดิม)
-========================= */
-const editOverlay = document.getElementById('editOverlay');
-const editTime = document.getElementById('editTime');
-const editStylist = document.getElementById('editStylist');
-const editName = document.getElementById('editName');
-const editPhone = document.getElementById('editPhone');
-const editService = document.getElementById('editService');
-let editingId = null;
-
-function openEditModal(b) {
-  editingId = b.id;
-  editTime.value = b.time.slice(0, 5);
-  editStylist.value = b.stylist;
-  editName.value = b.name;
-  editPhone.value = b.phone || '';
-  editService.value = b.service || '';
-
-  document.querySelectorAll('[name=editGender]').forEach(r => {
-    r.checked = r.value === b.gender;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${b.time.slice(0,5)}</td>
+      <td>${b.stylist}</td>
+      <td>${b.gender === 'male' ? '👨' : '👩'}</td>
+      <td>${b.name}</td>
+      <td>${b.service || ''}</td>
+      <td>${phone}</td>
+      <td><button class="ghost">แก้ไข</button></td>
+    `;
+    tr.querySelector('button').onclick = ()=>openEditModal(b);
+    list.appendChild(tr);
   });
-
-  editOverlay.classList.remove('hidden');
-}
-
-document.getElementById('saveEdit').onclick = async () => {
-  const gender = document.querySelector('[name=editGender]:checked')?.value;
-
-  await fetch(`${API}/bookings/${editingId}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      name: editName.value,
-      phone: editPhone.value,
-      gender,
-      service: editService.value
-    })
-  });
-
-  alert('ข้อมูลถูกแก้ไขแล้ว');
-  closeEditModal();
-  loadBookings();
-};
-
-document.getElementById('deleteEdit').onclick = async () => {
-  if (!confirm('ยืนยันการลบคิวนี้?')) return;
-
-  await fetch(`${API}/bookings/${editingId}`, { method: 'DELETE' });
-
-  closeEditModal();
-  loadBookings();
-};
-
-document.getElementById('closeEdit').onclick = closeEditModal;
-
-function closeEditModal() {
-  editOverlay.classList.add('hidden');
-  editingId = null;
 }
