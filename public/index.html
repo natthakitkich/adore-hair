@@ -2,119 +2,155 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Adore Hair – Owner Queue</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Adore hair studio</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-<!-- ================= LOGIN OVERLAY ================= -->
+<!-- =========================
+     LOGIN OVERLAY
+========================= -->
 <div id="loginOverlay" class="overlay">
   <div class="modal">
-    <div class="modalBody loginBox">
+    <div class="modalBody">
       <div class="avatar big">A</div>
       <h2>เข้าสู่ระบบ</h2>
       <p class="muted">กรุณาใส่ PIN 4 หลัก</p>
 
       <input
-        id="pinInput"
+        id="pin"
         type="password"
         inputmode="numeric"
         maxlength="4"
-        placeholder="••••"
+        placeholder="PIN"
       />
 
-      <button id="loginBtn" class="primary">Login</button>
-      <p id="loginError" class="msg err hidden">PIN ไม่ถูกต้อง</p>
+      <button
+        id="loginBtn"
+        class="primary"
+        type="button"
+      >
+        Login
+      </button>
+
+      <div id="loginMsg" class="msg err"></div>
     </div>
   </div>
 </div>
 
-<!-- ================= TOP BAR ================= -->
+<!-- =========================
+     EDIT BOOKING MODAL
+========================= -->
+<div id="editOverlay" class="overlay hidden">
+  <div class="modal">
+    <div class="modalBody">
+      <h2>แก้ไขคิว</h2>
+
+      <input id="editTime" disabled />
+      <input id="editStylist" disabled />
+
+      <input id="editName" placeholder="ชื่อลูกค้า" />
+      <input id="editPhone" placeholder="เบอร์โทร" />
+
+      <div class="row">
+        <label>
+          <input type="radio" name="editGender" value="male" /> 👨 ชาย
+        </label>
+        <label>
+          <input type="radio" name="editGender" value="female" /> 👩 หญิง
+        </label>
+      </div>
+
+      <input id="editService" placeholder="ทำอะไร" />
+
+      <button id="saveEdit" class="primary">บันทึกการแก้ไข</button>
+      <button id="deleteEdit" class="ghost">ลบคิว</button>
+      <button id="closeEdit" class="ghost">ปิด</button>
+    </div>
+  </div>
+</div>
+
+<!-- =========================
+     TOP BAR
+========================= -->
 <div class="topbar">
   <div class="brand">
     <div class="avatar">A</div>
     <div>
       <div class="title">Adore hair studio</div>
-      <div class="subtitle">Owner Queue · 13:00–22:00 · แยกตามช่าง</div>
+      <div class="subtitle">
+        Owner Queue · 13:00–22:00 · แยกตามช่าง
+      </div>
     </div>
   </div>
+
   <button id="logoutBtn" class="ghost">Logout</button>
 </div>
 
+<!-- =========================
+     MAIN CONTENT (เดิม)
+========================= -->
 <div class="wrap">
 
-  <!-- ================= CALENDAR ================= -->
   <div class="panel">
-    <div class="calendarHeader">
-      <button id="prevMonth" class="ghost">‹</button>
-      <div class="calendarCenter">
-        <div id="calendarTitle" class="calendarTitle"></div>
-        <div class="calendarSubtitle">ระดับสีแสดงความหนาแน่นของคิว</div>
-      </div>
-      <button id="nextMonth" class="ghost">›</button>
-    </div>
-
-    <div class="calWeekHead">
-      <div>อา</div><div>จ</div><div>อ</div><div>พ</div>
-      <div>พฤ</div><div>ศ</div><div>ส</div>
-    </div>
-
-    <div id="calendarGrid" class="calGrid"></div>
+    <label for="date">เลือกวันที่</label>
+    <input type="date" id="date" />
   </div>
 
-  <!-- ================= SUMMARY ================= -->
-  <div class="panel summary">
-    <div class="box">Bank<br><span id="sumBank">0</span></div>
-    <div class="box">Sindy<br><span id="sumSindy">0</span></div>
-    <div class="box">Assist<br><span id="sumAssist">0</span></div>
-    <div class="box">รวม<br><span id="sumTotal">0</span></div>
-  </div>
-
-  <!-- ================= TABS ================= -->
-  <div class="panel tabs">
-    <div class="tab active" data-stylist="Bank">Bank</div>
-    <div class="tab" data-stylist="Sindy">Sindy</div>
-    <div class="tab" data-stylist="Assist">Assist</div>
-  </div>
-
-  <!-- ================= ADD BOOKING ================= -->
   <div class="panel">
-    <div class="grid">
+    <div class="tabs">
+      <div class="tab active" data-tab="Bank">Bank</div>
+      <div class="tab" data-tab="Sindy">Sindy</div>
+      <div class="tab" data-tab="Assist">Assist</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="summary">
+      <div class="box">Bank: <span id="countBank">0</span></div>
+      <div class="box">Sindy: <span id="countSindy">0</span></div>
+      <div class="box">Assist: <span id="countAssist">0</span></div>
+      <div class="box">รวม: <span id="countTotal">0</span></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <form id="bookingForm" class="grid">
       <div>
         <label>เวลา</label>
-        <select id="timeSelect"></select>
+        <select id="time"></select>
       </div>
+
       <div>
-        <label>ช่าง</label>
-        <input id="stylistInput" disabled />
-      </div>
-      <div class="full">
         <label>ชื่อลูกค้า</label>
-        <input id="custName" />
+        <input id="name" required />
       </div>
+
       <div>
         <label>เบอร์โทร</label>
-        <input id="custPhone" inputmode="tel" />
+        <input id="phone" />
       </div>
+
       <div>
         <label>เพศ</label>
-        <select id="custGender">
-          <option value="male">ชาย</option>
-          <option value="female">หญิง</option>
-        </select>
+        <div class="row">
+          <label><input type="radio" name="gender" value="male" required /> 👨</label>
+          <label><input type="radio" name="gender" value="female" /> 👩</label>
+        </div>
       </div>
+
       <div class="full">
         <label>ทำอะไร</label>
         <input id="service" />
       </div>
+
       <div class="full">
-        <button id="addBookingBtn" class="primary">เพิ่มคิว</button>
+        <button type="submit" class="primary">เพิ่มคิว</button>
       </div>
-    </div>
+    </form>
   </div>
 
-  <!-- ================= TABLE ================= -->
   <div class="panel">
     <table>
       <thead>
@@ -123,37 +159,15 @@
           <th>ช่าง</th>
           <th>เพศ</th>
           <th>ชื่อ</th>
+          <th>ทำอะไร</th>
           <th>โทร</th>
           <th>จัดการ</th>
         </tr>
       </thead>
-      <tbody id="bookingTable"></tbody>
+      <tbody id="list"></tbody>
     </table>
   </div>
 
-</div>
-
-<!-- ================= EDIT MODAL ================= -->
-<div id="editOverlay" class="overlay hidden">
-  <div class="modal">
-    <div class="modalBody">
-      <h2>แก้ไขคิว</h2>
-
-      <input id="editStylist" disabled />
-      <input id="editDate" disabled />
-      <select id="editTime"></select>
-      <input id="editName" />
-      <input id="editPhone" />
-      <select id="editGender">
-        <option value="male">ชาย</option>
-        <option value="female">หญิง</option>
-      </select>
-      <input id="editService" />
-
-      <button id="saveEditBtn" class="primary">บันทึกการแก้ไข</button>
-      <button id="closeEditBtn" class="ghost">ปิด</button>
-    </div>
-  </div>
 </div>
 
 <script src="app.js"></script>
