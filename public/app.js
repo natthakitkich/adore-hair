@@ -16,7 +16,7 @@ let calendarDensity = {};
 let currentMonth = new Date();
 
 /* =========================
-   LOGIN CONTROL (DEVELOP)
+   LOGIN CONTROL
 ========================= */
 const loginOverlay = document.getElementById('loginOverlay');
 const loginBtn = document.getElementById('loginBtn');
@@ -65,6 +65,17 @@ function init() {
       updateSummary();
     };
   });
+
+  // month navigation
+  document.getElementById('prevMonth').onclick = () => {
+    currentMonth.setMonth(currentMonth.getMonth() - 1);
+    renderCalendar();
+  };
+
+  document.getElementById('nextMonth').onclick = () => {
+    currentMonth.setMonth(currentMonth.getMonth() + 1);
+    renderCalendar();
+  };
 
   loadCalendarDensity();
   loadBookings();
@@ -245,11 +256,7 @@ function renderTable() {
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${formatTime(b.time)}</td>
-        <td>
-          <span class="stylist-badge ${stylistClass}">
-            ${b.stylist}
-          </span>
-        </td>
+        <td><span class="stylist-badge ${stylistClass}">${b.stylist}</span></td>
         <td>${b.gender === 'male' ? '👨' : '👩'}</td>
         <td>${b.name}</td>
         <td>${b.service || ''}</td>
