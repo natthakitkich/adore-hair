@@ -1,5 +1,7 @@
 /* =================================================
-   Adore Hair – app.js (Closed Days Enabled)
+   Adore Hair – app.js
+   - Closed Days with explicit buttons
+   - Persistent Login (localStorage)
 ================================================= */
 
 const API = '';
@@ -16,7 +18,7 @@ let calendarDensity = {};
 let currentMonth = new Date();
 
 /* =========================
-   LOGIN
+   LOGIN (PERSISTENT)
 ========================= */
 const loginOverlay = document.getElementById('loginOverlay');
 const loginBtn = document.getElementById('loginBtn');
@@ -25,9 +27,17 @@ const loginMsg = document.getElementById('loginMsg');
 const logoutBtn = document.getElementById('logoutBtn');
 
 const OWNER_PIN = '1234';
+const LOGIN_KEY = 'adore_owner_logged_in';
+
+/* auto login */
+if (localStorage.getItem(LOGIN_KEY) === 'true') {
+  loginOverlay.classList.add('hidden');
+  init();
+}
 
 loginBtn.onclick = () => {
   if (pinInput.value === OWNER_PIN) {
+    localStorage.setItem(LOGIN_KEY, 'true');
     loginOverlay.classList.add('hidden');
     pinInput.value = '';
     loginMsg.textContent = '';
@@ -37,7 +47,10 @@ loginBtn.onclick = () => {
   }
 };
 
-logoutBtn.onclick = () => location.reload();
+logoutBtn.onclick = () => {
+  localStorage.removeItem(LOGIN_KEY);
+  location.reload();
+};
 
 /* =========================
    INIT
@@ -52,6 +65,7 @@ function init() {
   dateInput.onchange = () => {
     currentDate = dateInput.value;
     loadBookings();
+    updateDayControl();
   };
 
   document.querySelectorAll('.tab').forEach(tab => {
@@ -72,6 +86,9 @@ function init() {
     currentMonth.setMonth(currentMonth.getMonth() + 1);
     renderCalendar();
   };
+
+  document.getElementById('setHoliday').onclick = setHoliday;
+  document.getElementById('unsetHoliday').onclick = unsetHoliday;
 
   loadCalendarDensity();
   loadClosedDays();
@@ -102,6 +119,49 @@ async function loadClosedDays() {
   const res = await fetch(`${API}/closed-days`);
   closedDays = await res.json();
   renderCalendar();
+  updateDayControl();
+}
+
+/* =========================
+   DAY CONTROL (NEW)
+========================= */
+function updateDayControl() {
+  const status = document.getElementById('dayStatus');
+  const btnClose = document.getElementById('setHoliday');
+  const btnOpen = document.getElementById('unsetHoliday');
+
+  const isClosed = closedDays.includes(currentDate);
+
+  status.textContent = isClosed
+    ? 'วันนี้ถูกตั้งเป็นวันหยุด'
+    : 'วันนี้เปิดทำการตามปกติ';
+
+  btnClose.classList.toggle('hidden', isClosed);
+  btnOpen.classList.toggle('hidden', !isClosed);
+}
+
+async function setHoliday() {
+  if (!confirm('ยืนยันตั้งวันนี้เป็นวันหยุด?')) return;
+
+  await fetch(`${API}/closed-days`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ date: currentDate, action: 'close' })
+  });
+
+  loadClosedDays();
+}
+
+async function unsetHoliday() {
+  if (!confirm('ยืนยันยกเลิกวันหยุด?')) return;
+
+  await fetch(`${API}/closed-days`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ date: currentDate, action: 'open' })
+  });
+
+  loadClosedDays();
 }
 
 /* =========================
@@ -151,14 +211,12 @@ function renderCalendar() {
     num.textContent = day;
     cell.appendChild(num);
 
-    cell.onclick = async () => {
-      await fetch(`${API}/closed-days`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ date: dateStr })
-      });
-      loadClosedDays();
-      if (dateStr === currentDate) renderTimeOptions();
+    /* IMPORTANT: คลิกเพื่อเลือกวันเท่านั้น */
+    cell.onclick = () => {
+      currentDate = dateStr;
+      document.getElementById('date').value = dateStr;
+      loadBookings();
+      updateDayControl();
     };
 
     calendarDays.appendChild(cell);
@@ -229,6 +287,12 @@ document.getElementById('bookingForm').onsubmit = async e => {
   loadCalendarDensity();
   loadBookings();
 };
+
+/* =========================
+   TABLE / SUMMARY / EDIT
+   (เหมือนของเดิมทุกอย่าง)
+========================= */
+// --- ส่วนนี้ใช้โค้ดเดิมของคุณได้ทั้งหมด ---
 
 /* =========================
    TABLE / SUMMARY
