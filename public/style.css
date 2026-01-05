@@ -139,6 +139,7 @@ input,select{
   place-items:center;
   font-weight:900;
   color:#061022;
+  overflow:hidden; /* ✅ บรรทัดนี้สำคัญมาก */
 }
 
 .avatar.big{
