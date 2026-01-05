@@ -2,14 +2,14 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Adore Hair Studio – Owner Queue</title>
-  <link rel="stylesheet" href="./style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Adore Hair Studio</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-<!-- LOGIN -->
-<div id="loginOverlay" class="overlay hidden">
+<!-- LOGIN OVERLAY -->
+<div id="loginOverlay" class="overlay">
   <div class="loginCard">
     <div class="loginAvatar">A</div>
     <h1>เข้าสู่ระบบ</h1>
@@ -20,48 +20,67 @@
   </div>
 </div>
 
-<div id="app" class="hidden">
+<!-- TOP BAR -->
+<header class="topbar">
+  <div class="brand">
+    <div class="avatar">A</div>
+    <div>
+      <div class="title">Adore hair studio</div>
+      <div class="subtitle">Owner Queue · 13:00–22:00 · แยกตามช่าง</div>
+    </div>
+  </div>
 
-  <!-- TOP BAR -->
-  <header class="topbar">
-    <div class="brand">
-      <div class="avatar">A</div>
-      <div>
-        <div class="title">Adore hair studio</div>
-        <div class="subtitle">Owner Queue · 13:00–22:00 · แยกตามช่าง</div>
-      </div>
+  <div class="topRight">
+    <div id="topDate" class="dateBadge"></div>
+    <button id="logoutBtn" class="ghost">Logout</button>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main class="wrap">
+
+  <!-- CALENDAR -->
+  <section class="panel" id="calendarPanel">
+    <div class="calendarHeader">
+      <button id="prevMonth" class="ghost">‹</button>
+      <div class="calendarTitle" id="calendarTitle"></div>
+      <button id="nextMonth" class="ghost">›</button>
     </div>
 
-    <div class="topActions">
-      <div class="dateBox" id="topDate">Jan 5, 2026</div>
-      <button id="logoutBtn" class="ghost">Logout</button>
+    <div class="calendarWeek">
+      <span>อา</span><span>จ</span><span>อ</span><span>พ</span><span>พฤ</span><span>ศ</span><span>ส</span>
     </div>
-  </header>
 
-  <main class="wrap">
+    <div class="calendarGrid" id="calendarGrid"></div>
+  </section>
 
-    <!-- CALENDAR -->
-    <section class="panel calendarPanel">
-      <div class="calendarHeader">
-        <button id="prevMonth" class="calNav">‹</button>
-        <div class="calendarTitle">
-          <div id="calendarMonth">มกราคม 2569</div>
-          <div class="calendarSub">ระดับสีแสดงความหนาแน่นของคิว</div>
-        </div>
-        <button id="nextMonth" class="calNav">›</button>
-      </div>
+  <!-- STYLIST TABS -->
+  <section class="panel">
+    <div class="tabs" id="stylistTabs"></div>
+  </section>
 
-      <div class="calendarWeek">
-        <div>อา</div><div>จ</div><div>อ</div><div>พ</div>
-        <div>พฤ</div><div>ศ</div><div>ส</div>
-      </div>
+  <!-- SUMMARY -->
+  <section class="panel summary" id="summary"></section>
 
-      <div id="calendarGrid" class="calendarGrid"></div>
-    </section>
+  <!-- QUEUE TABLE -->
+  <section class="panel">
+    <table>
+      <thead>
+        <tr>
+          <th>เวลา</th>
+          <th>ช่าง</th>
+          <th>เพศ</th>
+          <th>ชื่อ</th>
+          <th>ทำอะไร</th>
+          <th>โทร</th>
+        </tr>
+      </thead>
+      <tbody id="queueTable"></tbody>
+    </table>
+  </section>
 
-  </main>
-</div>
+</main>
 
-<script src="./app.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
