@@ -8,33 +8,21 @@
 </head>
 <body>
 
-  <!-- =========================
-       LOGIN OVERLAY
-  ========================== -->
+  <!-- LOGIN OVERLAY -->
   <div id="loginOverlay" class="overlay">
     <div class="modal">
       <div class="modalBody">
         <div class="avatar big">A</div>
         <h2>เข้าสู่ระบบ</h2>
         <p class="muted">กรุณาใส่ PIN 4 หลัก</p>
-
-        <input
-          id="pin"
-          type="password"
-          inputmode="numeric"
-          maxlength="4"
-          placeholder="PIN"
-        />
-
+        <input id="pin" type="password" inputmode="numeric" maxlength="4" />
         <button id="loginBtn" class="primary">Login</button>
         <div id="loginMsg" class="msg err"></div>
       </div>
     </div>
   </div>
 
-  <!-- =========================
-       TOP BAR
-  ========================== -->
+  <!-- TOP BAR -->
   <div class="topbar">
     <div class="brand">
       <div class="avatar">A</div>
@@ -48,16 +36,12 @@
 
   <div class="wrap">
 
-    <!-- =========================
-         CALENDAR (RETURNED)
-    ========================== -->
+    <!-- CALENDAR -->
     <div class="panel">
       <div class="calendarHeader">
         <button id="prevMonth" class="ghost">◀</button>
         <div class="calendarCenter">
-          <div id="calendarTitle" class="calendarTitle">
-            <!-- JS ใส่เดือน / ปี -->
-          </div>
+          <div id="calendarTitle" class="calendarTitle"></div>
           <div class="calendarSubtitle">เลือกวันที่เพื่อดูคิว</div>
         </div>
         <button id="nextMonth" class="ghost">▶</button>
@@ -68,14 +52,10 @@
         <div>พฤ</div><div>ศ</div><div>ส</div>
       </div>
 
-      <div id="calendarDays" class="calGrid">
-        <!-- JS render วัน -->
-      </div>
+      <div id="calendarDays" class="calGrid"></div>
     </div>
 
-    <!-- =========================
-         STYLIST TABS
-    ========================== -->
+    <!-- TABS -->
     <div class="panel">
       <div class="tabs">
         <div class="tab active" data-tab="Bank">Bank</div>
@@ -84,39 +64,43 @@
       </div>
     </div>
 
-    <!-- =========================
-         SUMMARY
-    ========================== -->
+    <!-- SUMMARY (GROUPED LIKE OLD VERSION) -->
     <div class="panel">
-      <div class="summary">
-        <div class="box">Bank: <span id="countBank">0</span></div>
-        <div class="box">Sindy: <span id="countSindy">0</span></div>
-        <div class="box">Assist: <span id="countAssist">0</span></div>
-        <div class="box">รวม: <span id="countTotal">0</span></div>
+      <div class="summary summary-compact">
+        <div class="summaryItem">
+          <div class="summaryLabel">Bank</div>
+          <div class="summaryValue" id="countBank">0</div>
+        </div>
+        <div class="summaryItem">
+          <div class="summaryLabel">Sindy</div>
+          <div class="summaryValue" id="countSindy">0</div>
+        </div>
+        <div class="summaryItem">
+          <div class="summaryLabel">Assist</div>
+          <div class="summaryValue" id="countAssist">0</div>
+        </div>
+        <div class="summaryItem total">
+          <div class="summaryLabel">รวม</div>
+          <div class="summaryValue" id="countTotal">0</div>
+        </div>
       </div>
     </div>
 
-    <!-- =========================
-         ADD BOOKING FORM
-    ========================== -->
+    <!-- ADD BOOKING FORM -->
     <div class="panel">
       <form id="bookingForm" class="grid">
-
         <div>
           <label>เวลา</label>
           <select id="time"></select>
         </div>
-
         <div>
           <label>ชื่อลูกค้า</label>
           <input id="name" required />
         </div>
-
         <div>
           <label>เบอร์โทร</label>
           <input id="phone" />
         </div>
-
         <div>
           <label>เพศ</label>
           <div class="row">
@@ -124,22 +108,17 @@
             <label><input type="radio" name="gender" value="female" /> 👩 หญิง</label>
           </div>
         </div>
-
         <div class="full">
           <label>ทำอะไร</label>
           <input id="service" />
         </div>
-
         <div class="full">
           <button class="primary" type="submit">เพิ่มคิว</button>
         </div>
-
       </form>
     </div>
 
-    <!-- =========================
-         BOOKING TABLE
-    ========================== -->
+    <!-- TABLE -->
     <div class="panel">
       <table>
         <thead>
@@ -153,34 +132,26 @@
             <th>จัดการ</th>
           </tr>
         </thead>
-        <tbody id="list">
-          <!-- JS render rows -->
-        </tbody>
+        <tbody id="list"></tbody>
       </table>
     </div>
 
   </div>
 
-  <!-- =========================
-       EDIT MODAL
-  ========================== -->
+  <!-- EDIT MODAL -->
   <div id="editOverlay" class="overlay hidden">
     <div class="modal">
       <div class="modalBody">
         <h2>แก้ไขคิว</h2>
-
         <input id="editTime" disabled />
         <input id="editStylist" disabled />
         <input id="editName" />
         <input id="editPhone" />
-
         <div class="row">
           <label><input type="radio" name="editGender" value="male" /> 👨 ชาย</label>
           <label><input type="radio" name="editGender" value="female" /> 👩 หญิง</label>
         </div>
-
         <input id="editService" />
-
         <button id="saveEdit" class="primary">บันทึกการแก้ไข</button>
         <button id="deleteEdit" class="ghost">ลบคิว</button>
         <button id="closeEdit" class="ghost">ปิด</button>
