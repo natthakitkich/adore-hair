@@ -36,7 +36,7 @@
 </div>
 
 <!-- =========================
-     EDIT BOOKING MODAL (เดิม)
+     EDIT BOOKING MODAL
 ========================= -->
 <div id="editOverlay" class="overlay hidden">
   <div class="modal">
@@ -85,7 +85,7 @@
 </div>
 
 <!-- =========================
-     MAIN CONTENT (SINGLE PAGE)
+     MAIN CONTENT
 ========================= -->
 <div class="wrap">
 
@@ -113,6 +113,7 @@
       <span class="dot low"></span> คิวน้อย
       <span class="dot mid"></span> ปานกลาง
       <span class="dot high"></span> หนาแน่น
+      <span class="dot closed"></span> ปิดร้าน
     </div>
   </section>
 
@@ -165,7 +166,9 @@
       </div>
 
       <div class="full">
-        <button type="submit" class="primary">เพิ่มคิว</button>
+        <button type="submit" id="submitBooking" class="primary">
+          เพิ่มคิว
+        </button>
       </div>
     </form>
   </section>
@@ -186,6 +189,19 @@
       </thead>
       <tbody id="list"></tbody>
     </table>
+  </section>
+
+  <!-- ===== STORE STATUS BAR (NEW) ===== -->
+  <section class="panel" id="storeStatusBar">
+    <div class="row" style="justify-content:space-between">
+      <div id="storeStatusText">
+        —
+      </div>
+
+      <button id="toggleStoreBtn" class="ghost">
+        —
+      </button>
+    </div>
   </section>
 
 </div>
