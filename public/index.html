@@ -52,11 +52,9 @@
     <div id="calendarGrid" class="calendarGrid"></div>
   </section>
 
-  <!-- DAY CONTROL -->
+  <!-- DAY STATUS -->
   <section class="panel center">
     <div id="dayStatus" class="muted">กรุณาเลือกวันจากปฏิทิน</div>
-    <button id="closeDayBtn" class="danger hidden">ตั้งเป็นวันหยุด</button>
-    <button id="openDayBtn" class="primary hidden">ยกเลิกวันหยุด</button>
   </section>
 
   <!-- STYLIST -->
@@ -86,6 +84,34 @@
   </section>
 
 </main>
+
+<!-- EDIT MODAL -->
+<div id="editOverlay" class="overlay hidden">
+  <div class="loginCard">
+
+    <h2>แก้ไขคิว</h2>
+
+    <input id="editDate" type="date" />
+    <select id="editTime"></select>
+
+    <input id="editStylist" disabled />
+
+    <input id="editName" placeholder="ชื่อลูกค้า" />
+    <input id="editPhone" placeholder="เบอร์โทร" />
+
+    <div class="row">
+      <label><input type="radio" name="editGender" value="male" /> 👨 ชาย</label>
+      <label><input type="radio" name="editGender" value="female" /> 👩 หญิง</label>
+    </div>
+
+    <input id="editService" placeholder="บริการ" />
+
+    <button id="saveEditBtn" class="primary">บันทึก</button>
+    <button id="deleteEditBtn" class="danger">ลบคิว</button>
+    <button id="closeEditBtn" class="ghost">ปิด</button>
+
+  </div>
+</div>
 
 <script src="app.js"></script>
 </body>
