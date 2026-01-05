@@ -1,3 +1,4 @@
+/* ================= ROOT ================= */
 :root{
   --bg:#0b0f1a;
   --text:#e9eefc;
@@ -8,7 +9,7 @@
   --stroke:rgba(255,255,255,.08);
 }
 
-/* ===== BASE ===== */
+/* ================= BASE ================= */
 *{ box-sizing:border-box }
 
 body{
@@ -24,7 +25,7 @@ body{
 .hidden{ display:none }
 .center{ text-align:center }
 
-/* ===== TOP BAR ===== */
+/* ================= TOP BAR ================= */
 .topbar{
   position:sticky;
   top:0;
@@ -55,15 +56,8 @@ body{
   color:#061022;
 }
 
-.title{
-  font-weight:900;
-  font-size:15px;
-}
-
-.subtitle{
-  font-size:11px;
-  color:var(--muted);
-}
+.title{ font-weight:900; font-size:15px }
+.subtitle{ font-size:11px; color:var(--muted) }
 
 .topActions{
   display:flex;
@@ -79,7 +73,7 @@ body{
   background:rgba(255,255,255,.08);
 }
 
-/* ===== LAYOUT ===== */
+/* ================= LAYOUT ================= */
 .wrap{
   width:min(1100px,94vw);
   margin:18px auto 72px;
@@ -93,7 +87,7 @@ body{
   margin-bottom:18px;
 }
 
-/* ===== CALENDAR ===== */
+/* ================= CALENDAR ================= */
 .calendarHeader{
   display:grid;
   grid-template-columns:36px 1fr 36px;
@@ -132,25 +126,21 @@ body{
   gap:10px;
 }
 
-/* ===== CALENDAR CIRCLE (FINAL) ===== */
+/* circle safe for iOS */
 .calCell{
-  aspect-ratio:1/1;
+  position:relative;
+  width:100%;
+  padding-top:100%;
+}
+
+.calCellInner{
+  position:absolute;
+  inset:0;
   border-radius:50%;
   background:rgba(0,0,0,.35);
   display:flex;
   align-items:center;
   justify-content:center;
-  cursor:pointer;
-  transition:.15s;
-}
-
-.calCell.selected{
-  outline:3px solid rgba(110,231,255,.85);
-  background:rgba(110,231,255,.15);
-}
-
-.calCell.closed{
-  opacity:.4;
 }
 
 .calNum{
@@ -163,11 +153,8 @@ body{
   font-weight:900;
 }
 
-/* ===== TABS ===== */
-.tabs{
-  display:flex;
-  gap:12px;
-}
+/* ================= TABS ================= */
+.tabs{ display:flex; gap:12px }
 
 .tab{
   flex:1;
@@ -177,14 +164,13 @@ body{
   border:1px solid var(--stroke);
   font-weight:900;
   text-align:center;
-  cursor:pointer;
 }
 
 .tab.active{
-  outline:2px solid rgba(110,231,255,.5);
+  outline:2px solid rgba(110,231,255,.6);
 }
 
-/* ===== SUMMARY ===== */
+/* ================= SUMMARY ================= */
 .summary{
   display:grid;
   grid-template-columns:repeat(2,1fr);
@@ -196,25 +182,34 @@ body{
   font-weight:900;
 }
 
-/* ===== LOGIN ===== */
+/* ================= OVERLAY / MODAL ================= */
 .overlay{
   position:fixed;
   inset:0;
   background:rgba(0,0,0,.85);
   display:flex;
-  align-items:center;
+  align-items:flex-end; /* iOS sheet style */
   justify-content:center;
   z-index:999;
 }
 
 .loginCard{
-  width:320px;
-  padding:28px;
+  width:100%;
+  max-width:420px;
+  max-height:85vh;
+  overflow-y:auto;
+  padding:24px;
   background:#0f1426;
-  border-radius:26px;
+  border-radius:26px 26px 0 0;
   text-align:center;
 }
 
+/* iOS scroll safe */
+.loginCard{
+  -webkit-overflow-scrolling:touch;
+}
+
+/* ================= LOGIN ================= */
 .loginAvatar{
   width:64px;
   height:64px;
@@ -228,7 +223,8 @@ body{
   color:#061022;
 }
 
-input{
+/* ================= FORM ================= */
+input, select{
   width:100%;
   padding:14px;
   margin-top:12px;
@@ -237,9 +233,15 @@ input{
   background:#000;
   color:#fff;
   text-align:center;
-  font-size:18px;
+  font-size:16px;
 }
 
+input:disabled{
+  background:#111;
+  color:var(--muted);
+}
+
+/* ================= BUTTONS ================= */
 button{
   margin-top:14px;
   padding:14px;
@@ -256,5 +258,10 @@ button{
 
 .ghost{
   background:rgba(255,255,255,.1);
+  color:#fff;
+}
+
+.danger{
+  background:var(--danger);
   color:#fff;
 }
