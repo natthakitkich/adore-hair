@@ -26,13 +26,13 @@ body{
   color:var(--text);
 }
 
-.hidden{display:none !important;}
+.hidden{display:none!important;}
 .muted{color:var(--muted);}
 .msg{font-size:13px;}
 .msg.err{color:var(--danger);}
 
 /* =========================
-   LOGIN OVERLAY (CRITICAL)
+   LOGIN
 ========================= */
 .overlay{
   position:fixed;
@@ -46,7 +46,7 @@ body{
 
 .loginCard{
   width:320px;
-  padding:28px 22px 26px;
+  padding:28px 22px;
   border-radius:26px;
   text-align:center;
   background:linear-gradient(180deg,rgba(30,40,80,.95),rgba(10,12,22,.95));
@@ -66,11 +66,6 @@ body{
   font-weight:900;
   background:linear-gradient(135deg,var(--accent),var(--accent2));
   color:#061022;
-}
-
-.loginCard h1{
-  margin:6px 0 6px;
-  font-size:22px;
 }
 
 .loginCard input{
@@ -121,9 +116,9 @@ body{
 }
 
 .avatar{
-  width:42px;
-  height:42px;
-  border-radius:14px;
+  width:44px;
+  height:44px;
+  border-radius:16px;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -134,12 +129,29 @@ body{
 
 .title{
   font-weight:900;
-  font-size:16px;
+  font-size:17px;
 }
 
 .subtitle{
   font-size:12px;
   color:var(--muted);
+}
+
+/* actions */
+.topActions{
+  display:flex;
+  gap:12px;
+  align-items:center;
+}
+
+.dateBox{
+  padding:10px 14px;
+  border-radius:14px;
+  background:rgba(255,255,255,.08);
+  border:1px solid var(--stroke);
+  font-size:14px;
+  font-weight:700;
+  cursor:pointer;
 }
 
 .ghost{
