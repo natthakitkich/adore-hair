@@ -34,7 +34,7 @@ app.get('/', (_, res) => {
   res.sendFile(path.join(__dirname, 'public/index.html'));
 });
 
-/* ---------- BASIC ----------
+/* ---------- BOOKINGS ----------
    Get bookings by date
 ---------------------------- */
 app.get('/bookings', async (req, res) => {
@@ -58,8 +58,8 @@ app.get('/bookings', async (req, res) => {
   res.json(data || []);
 });
 
-/* ---------- DEVELOP ----------
-   Get calendar density (NEW)
+/* ---------- CALENDAR ----------
+   Get calendar density
 ---------------------------- */
 app.get('/calendar-days', async (_, res) => {
   const { data, error } = await supabase
@@ -71,7 +71,6 @@ app.get('/calendar-days', async (_, res) => {
   }
 
   const map = {};
-
   data.forEach(b => {
     map[b.date] = (map[b.date] || 0) + 1;
   });
@@ -79,7 +78,7 @@ app.get('/calendar-days', async (_, res) => {
   res.json(map);
 });
 
-/* ---------- BASIC ----------
+/* ---------- BOOKINGS ----------
    Create booking
 ---------------------------- */
 app.post('/bookings', async (req, res) => {
@@ -87,6 +86,17 @@ app.post('/bookings', async (req, res) => {
 
   if (!date || !time || !stylist || !name || !gender) {
     return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  // ❗️เช็กวันปิดร้านก่อน
+  const { data: closed } = await supabase
+    .from('closed_days')
+    .select('id')
+    .eq('date', date)
+    .limit(1);
+
+  if (closed && closed.length > 0) {
+    return res.status(403).json({ error: 'Store is closed on this date' });
   }
 
   const { data: exist } = await supabase
@@ -113,7 +123,7 @@ app.post('/bookings', async (req, res) => {
   res.json(data);
 });
 
-/* ---------- DEVELOP ----------
+/* ---------- BOOKINGS ----------
    Update booking
 ---------------------------- */
 app.put('/bookings/:id', async (req, res) => {
@@ -132,7 +142,7 @@ app.put('/bookings/:id', async (req, res) => {
   res.json({ success: true });
 });
 
-/* ---------- BASIC ----------
+/* ---------- BOOKINGS ----------
    Delete booking
 ---------------------------- */
 app.delete('/bookings/:id', async (req, res) => {
@@ -142,6 +152,60 @@ app.delete('/bookings/:id', async (req, res) => {
     .from('bookings')
     .delete()
     .eq('id', id);
+
+  if (error) {
+    return res.status(500).json(error);
+  }
+
+  res.json({ success: true });
+});
+
+/* ---------- CLOSED DAYS ----------
+   Get all closed days
+---------------------------- */
+app.get('/closed-days', async (_, res) => {
+  const { data, error } = await supabase
+    .from('closed_days')
+    .select('date');
+
+  if (error) {
+    return res.status(500).json(error);
+  }
+
+  res.json(data.map(d => d.date));
+});
+
+/* ---------- CLOSED DAYS ----------
+   Close store on date
+---------------------------- */
+app.post('/closed-days', async (req, res) => {
+  const { date } = req.body;
+
+  if (!date) {
+    return res.status(400).json({ error: 'Date required' });
+  }
+
+  const { error } = await supabase
+    .from('closed_days')
+    .insert([{ date }]);
+
+  if (error) {
+    return res.status(500).json(error);
+  }
+
+  res.json({ success: true });
+});
+
+/* ---------- CLOSED DAYS ----------
+   Open store (remove closed day)
+---------------------------- */
+app.delete('/closed-days/:date', async (req, res) => {
+  const { date } = req.params;
+
+  const { error } = await supabase
+    .from('closed_days')
+    .delete()
+    .eq('date', date);
 
   if (error) {
     return res.status(500).json(error);
