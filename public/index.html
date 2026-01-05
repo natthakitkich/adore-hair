@@ -14,7 +14,7 @@
     <div class="loginAvatar">A</div>
     <h1>เข้าสู่ระบบ</h1>
     <p class="muted">กรุณาใส่ PIN 4 หลัก</p>
-    <input id="pinInput" type="password" inputmode="numeric" maxlength="4" />
+    <input id="pinInput" type="password" inputmode="numeric" maxlength="4" placeholder="••••" />
     <button id="loginBtn" class="primary">Login</button>
     <div id="loginMsg" class="msg"></div>
   </div>
@@ -29,7 +29,6 @@
       <div class="subtitle">Owner Queue · 13:00–22:00 · แยกตามช่าง</div>
     </div>
   </div>
-
   <div class="topActions">
     <div id="topDate" class="dateBadge"></div>
     <button id="logoutBtn" class="ghost">Logout</button>
@@ -59,6 +58,30 @@
     <div id="dayStatus" class="muted">กรุณาเลือกวันจากปฏิทิน</div>
   </section>
 
+  <!-- ADD BOOKING -->
+  <section class="panel hidden" id="addBookingPanel">
+    <h3>เพิ่มคิวใหม่</h3>
+
+    <select id="addTime"></select>
+
+    <select id="addStylist">
+      <option value="Bank">Bank</option>
+      <option value="Sindy">Sindy</option>
+      <option value="Assist">Assist</option>
+    </select>
+
+    <div class="row">
+      <label><input type="radio" name="addGender" value="male" /> 👨 ชาย</label>
+      <label><input type="radio" name="addGender" value="female" /> 👩 หญิง</label>
+    </div>
+
+    <input id="addName" placeholder="ชื่อลูกค้า" />
+    <input id="addPhone" placeholder="เบอร์โทร" />
+    <input id="addService" placeholder="บริการ" />
+
+    <button id="addBookingBtn" class="primary">บันทึกคิว</button>
+  </section>
+
   <!-- STYLIST -->
   <section class="panel">
     <div id="stylistTabs" class="tabs"></div>
@@ -67,7 +90,7 @@
   <!-- SUMMARY -->
   <section id="summary" class="panel summary"></section>
 
-  <!-- QUEUE -->
+  <!-- QUEUE TABLE -->
   <section class="panel">
     <table class="queueTable">
       <thead>
@@ -76,6 +99,8 @@
           <th>ช่าง</th>
           <th>เพศ</th>
           <th>ชื่อ</th>
+          <th>บริการ</th>
+          <th>โทร</th>
         </tr>
       </thead>
       <tbody id="queueBody"></tbody>
