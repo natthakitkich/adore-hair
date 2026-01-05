@@ -8,21 +8,28 @@
 </head>
 <body>
 
-<!-- ================= LOGIN (GATE) ================= -->
-<div id="loginOverlay" class="overlay">
+<!-- ================= LOGIN OVERLAY ================= -->
+<div id="loginOverlay" class="overlay hidden">
   <div class="loginCard">
     <div class="loginAvatar">A</div>
     <h1>เข้าสู่ระบบ</h1>
     <p class="muted">กรุณาใส่ PIN 4 หลัก</p>
-    <input id="pinInput" type="password" inputmode="numeric" maxlength="4" placeholder="••••" />
+
+    <input
+      id="pinInput"
+      type="password"
+      inputmode="numeric"
+      autocomplete="one-time-code"
+      maxlength="4"
+      placeholder="••••"
+    />
+
     <button id="loginBtn" class="primary">Login</button>
     <div id="loginMsg" class="msg"></div>
   </div>
 </div>
 
-<!-- ================= APP ================= -->
-<div id="appRoot" class="hidden">
-
+<!-- ================= TOP BAR ================= -->
 <header class="topbar">
   <div class="brand">
     <div class="avatar">A</div>
@@ -38,47 +45,12 @@
   </div>
 </header>
 
+<!-- ================= MAIN ================= -->
 <main class="wrap">
-
-  <!-- CALENDAR -->
-  <section class="panel">
-    <div class="calendarHeader">
-      <button id="prevMonth" class="navBtn">‹</button>
-      <div id="calendarTitle" class="calendarTitle"></div>
-      <button id="nextMonth" class="navBtn">›</button>
-    </div>
-    <div class="calendarWeek">
-      <span>อา</span><span>จ</span><span>อ</span>
-      <span>พ</span><span>พฤ</span><span>ศ</span><span>ส</span>
-    </div>
-    <div id="calendarGrid" class="calendarGrid"></div>
+  <section class="panel center muted">
+    เข้าระบบแล้ว ระบบจะโหลดข้อมูลอัตโนมัติ
   </section>
-
-  <section class="panel center">
-    <div id="dayStatus" class="muted">กรุณาเลือกวันจากปฏิทิน</div>
-  </section>
-
-  <section class="panel">
-    <div id="stylistTabs" class="tabs"></div>
-  </section>
-
-  <section id="summary" class="panel summary"></section>
-
-  <section class="panel">
-    <table class="queueTable">
-      <thead>
-        <tr>
-          <th>เวลา</th><th>ช่าง</th><th>เพศ</th>
-          <th>ชื่อ</th><th>บริการ</th><th>โทร</th><th></th>
-        </tr>
-      </thead>
-      <tbody id="queueBody"></tbody>
-    </table>
-  </section>
-
 </main>
-
-</div>
 
 <script src="app.js"></script>
 </body>
