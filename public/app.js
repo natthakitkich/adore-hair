@@ -1,70 +1,125 @@
 /* =========================
-   AUTH / LOGIN
+   AUTH
 ========================= */
 
+const OWNER_PIN = '1234';
 let isAuthed = false;
-const AUTH_KEY = 'adore_auth';
-const OWNER_PIN = '1234'; // เปลี่ยนได้
 
-function initAuth() {
-  isAuthed = localStorage.getItem(AUTH_KEY) === '1';
-  toggleAuthUI();
-}
+const loginOverlay = document.getElementById('loginOverlay');
+const loginBtn = document.getElementById('loginBtn');
+const pinInput = document.getElementById('pin');
+const loginMsg = document.getElementById('loginMsg');
+const logoutBtn = document.getElementById('logoutBtn');
 
-function toggleAuthUI() {
-  const overlay = document.getElementById('loginOverlay');
-  if (!overlay) return;
-
-  if (isAuthed) {
-    overlay.classList.add('hidden');
-    init(); // ⭐ เข้า main app หลัง login
+loginBtn.onclick = () => {
+  if (pinInput.value === OWNER_PIN) {
+    isAuthed = true;
+    loginOverlay.classList.add('hidden');
+    bootApp();
   } else {
-    overlay.classList.remove('hidden');
+    loginMsg.textContent = 'PIN ไม่ถูกต้อง';
+  }
+};
+
+logoutBtn.onclick = () => location.reload();
+
+/* =========================
+   APP BOOT
+========================= */
+
+function bootApp(){
+  renderTopDate();
+  renderCalendar();
+  renderStylistTabs();
+  renderSummary();
+  renderQueueTable();
+}
+
+/* =========================
+   TOP DATE
+========================= */
+
+function renderTopDate(){
+  document.getElementById('topDate').textContent =
+    new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+}
+
+/* =========================
+   CALENDAR
+========================= */
+
+let currentMonth = new Date();
+
+function renderCalendar(){
+  const grid = document.getElementById('calendarGrid');
+  const title = document.getElementById('calendarTitle');
+
+  grid.innerHTML = '';
+  title.textContent = currentMonth.toLocaleDateString('th-TH',{month:'long',year:'numeric'});
+
+  const year = currentMonth.getFullYear();
+  const month = currentMonth.getMonth();
+  const firstDay = new Date(year,month,1).getDay();
+  const total = new Date(year,month+1,0).getDate();
+
+  for(let i=0;i<firstDay;i++){
+    grid.appendChild(document.createElement('div'));
+  }
+
+  for(let d=1;d<=total;d++){
+    const cell = document.createElement('div');
+    cell.className = 'calCell';
+    cell.textContent = d;
+    grid.appendChild(cell);
   }
 }
 
-function bindAuthUI() {
-  const loginBtn = document.getElementById('loginBtn');
-  const logoutBtn = document.getElementById('logoutBtn');
-  const pinInput = document.getElementById('pin');
-  const loginMsg = document.getElementById('loginMsg');
+document.getElementById('prevMonth').onclick = ()=>{
+  currentMonth.setMonth(currentMonth.getMonth()-1);
+  renderCalendar();
+};
+document.getElementById('nextMonth').onclick = ()=>{
+  currentMonth.setMonth(currentMonth.getMonth()+1);
+  renderCalendar();
+};
 
-  if (loginBtn) {
-    loginBtn.addEventListener('click', (e) => {
-      e.preventDefault(); // ⭐ สำคัญมาก (Safari iOS)
+/* =========================
+   STYLIST
+========================= */
 
-      const pin = (pinInput.value || '').trim();
+const stylists = ['Bank','Sindy','Assist'];
+let activeStylist = 'Bank';
 
-      if (pin.length !== 4) {
-        loginMsg.textContent = 'กรุณาใส่ PIN 4 หลัก';
-        return;
-      }
-
-      if (pin !== OWNER_PIN) {
-        loginMsg.textContent = 'PIN ไม่ถูกต้อง';
-        return;
-      }
-
-      // ✅ ผ่าน
-      localStorage.setItem(AUTH_KEY, '1');
-      isAuthed = true;
-
-      pinInput.value = '';
-      loginMsg.textContent = '';
-
-      toggleAuthUI();
-    });
-  }
-
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      localStorage.removeItem(AUTH_KEY);
-      isAuthed = false;
-      toggleAuthUI();
-    });
-  }
+function renderStylistTabs(){
+  const wrap = document.getElementById('stylistTabs');
+  wrap.innerHTML = '';
+  stylists.forEach(s=>{
+    const b = document.createElement('div');
+    b.className = 'tab'+(s===activeStylist?' active':'');
+    b.textContent = s;
+    b.onclick = ()=>{ activeStylist=s; renderStylistTabs(); };
+    wrap.appendChild(b);
+  });
 }
 
-bindAuthUI();
-initAuth();
+/* =========================
+   SUMMARY
+========================= */
+
+function renderSummary(){
+  const el = document.getElementById('summary');
+  el.innerHTML = `
+    <div class="panel">Bank<br><b>0</b></div>
+    <div class="panel">Sindy<br><b>0</b></div>
+    <div class="panel">Assist<br><b>0</b></div>
+    <div class="panel">รวม<br><b>0</b></div>
+  `;
+}
+
+/* =========================
+   QUEUE TABLE
+========================= */
+
+function renderQueueTable(){
+  document.getElementById('queueTable').innerHTML = '';
+}
