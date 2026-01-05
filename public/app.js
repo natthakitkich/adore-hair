@@ -10,25 +10,26 @@ const pinInput = document.getElementById('pin');
 const loginMsg = document.getElementById('loginMsg');
 const logoutBtn = document.getElementById('logoutBtn');
 
-const topbar = document.getElementById('topbar');
-const calendarView = document.getElementById('calendarView');
-const bookingView = document.getElementById('bookingView');
-
 const calendarTitle = document.getElementById('calendarTitle');
 const calendarDaysEl = document.getElementById('calendarDays');
 const prevMonthBtn = document.getElementById('prevMonth');
 const nextMonthBtn = document.getElementById('nextMonth');
 
+const bookingForm = document.getElementById('bookingForm');
+const timeSelect = document.getElementById('time');
+const listEl = document.getElementById('list');
+
 /* =========================
-   GLOBAL STATE
+   STATE
 ========================= */
 let bookings = [];
 let calendarDensity = {};
-let currentDate = '';
-let currentStylist = 'Bank';
 
-let viewMonth = new Date().getMonth();
-let viewYear = new Date().getFullYear();
+let selectedStylist = 'Bank';
+let selectedDate = getTodayTH();
+
+let viewMonth = new Date(selectedDate).getMonth();
+let viewYear = new Date(selectedDate).getFullYear();
 
 /* =========================
    LOGIN
@@ -48,8 +49,8 @@ loginBtn.onclick = () => {
   }
 
   localStorage.setItem('adore_logged_in', '1');
-  pinInput.value = '';
-  showCalendar();
+  loginOverlay.classList.add('hidden');
+  init();
 };
 
 logoutBtn.onclick = () => {
@@ -58,39 +59,19 @@ logoutBtn.onclick = () => {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-  const logged = localStorage.getItem('adore_logged_in') === '1';
-  if (logged) {
-    showCalendar();
-  } else {
-    showLogin();
+  if (localStorage.getItem('adore_logged_in') === '1') {
+    loginOverlay.classList.add('hidden');
+    init();
   }
 });
 
 /* =========================
-   VIEW CONTROL
+   INIT
 ========================= */
-function showLogin() {
-  loginOverlay.classList.remove('hidden');
-  topbar.classList.add('hidden');
-  calendarView.classList.add('hidden');
-  bookingView.classList.add('hidden');
-}
-
-function showCalendar() {
-  loginOverlay.classList.add('hidden');
-  topbar.classList.remove('hidden');
-  calendarView.classList.remove('hidden');
-  bookingView.classList.add('hidden');
-
+function init() {
+  bindStylistTabs();
   loadCalendar();
-}
-
-function showBooking(date) {
-  calendarView.classList.add('hidden');
-  bookingView.classList.remove('hidden');
-
-  currentDate = date;
-  initBooking();
+  loadBookings();
 }
 
 /* =========================
@@ -113,26 +94,29 @@ function renderCalendar() {
     firstDay.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' });
 
   for (let i = 0; i < startDay; i++) {
-    const empty = document.createElement('div');
-    empty.className = 'day off';
-    calendarDaysEl.appendChild(empty);
+    calendarDaysEl.appendChild(document.createElement('div'));
   }
 
   for (let d = 1; d <= daysInMonth; d++) {
     const date = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
     const count = calendarDensity[date] || 0;
 
-    const dayEl = document.createElement('div');
-    dayEl.className = 'day';
+    const el = document.createElement('div');
+    el.className = 'day';
+    el.textContent = d;
 
-    if (count > 0 && count <= 5) dayEl.classList.add('low');
-    if (count > 5 && count <= 10) dayEl.classList.add('mid');
-    if (count > 10) dayEl.classList.add('high');
+    if (date === selectedDate) el.classList.add('today');
+    if (count > 0 && count <= 5) el.classList.add('low');
+    if (count > 5 && count <= 10) el.classList.add('mid');
+    if (count > 10) el.classList.add('high');
 
-    dayEl.textContent = d;
-    dayEl.onclick = () => showBooking(date);
+    el.onclick = () => {
+      selectedDate = date;
+      loadBookings();
+      renderCalendar();
+    };
 
-    calendarDaysEl.appendChild(dayEl);
+    calendarDaysEl.appendChild(el);
   }
 }
 
@@ -155,63 +139,50 @@ nextMonthBtn.onclick = () => {
 };
 
 /* =========================
-   BOOKING (เดิม + adapt)
+   BOOKINGS
 ========================= */
-function initBooking() {
-  const dateInput = document.getElementById('date');
-  dateInput.value = currentDate;
+async function loadBookings() {
+  const res = await fetch(`${API}/bookings?date=${selectedDate}`);
+  bookings = await res.json();
 
-  dateInput.onchange = () => {
-    currentDate = dateInput.value;
-    loadBookings();
-  };
+  renderSummary();
+  renderTimeOptions();
+  renderTable();
+}
 
+function bindStylistTabs() {
   document.querySelectorAll('.tab').forEach(tab => {
     tab.onclick = () => {
       document.querySelector('.tab.active').classList.remove('active');
       tab.classList.add('active');
-      currentStylist = tab.dataset.tab;
+      selectedStylist = tab.dataset.tab;
       renderTimeOptions();
-      renderTable();
-      updateSummary();
     };
   });
-
-  loadBookings();
-}
-
-async function loadBookings() {
-  const res = await fetch(`${API}/bookings?date=${currentDate}`);
-  bookings = await res.json();
-
-  renderTimeOptions();
-  renderTable();
-  updateSummary();
 }
 
 function renderTimeOptions() {
-  const timeSelect = document.getElementById('time');
   timeSelect.innerHTML = '';
 
   for (let h = 13; h <= 22; h++) {
     const time = `${String(h).padStart(2, '0')}:00:00`;
     const booked = bookings.find(
-      b => b.time === time && b.stylist === currentStylist
+      b => b.time === time && b.stylist === selectedStylist
     );
 
-    const option = document.createElement('option');
-    option.value = time;
-    option.textContent = time.slice(0, 5);
-    if (booked) option.disabled = true;
+    const opt = document.createElement('option');
+    opt.value = time;
+    opt.textContent = time.slice(0, 5);
+    if (booked) opt.disabled = true;
 
-    timeSelect.appendChild(option);
+    timeSelect.appendChild(opt);
   }
 }
 
 /* =========================
    FORM SUBMIT
 ========================= */
-document.getElementById('bookingForm').onsubmit = async e => {
+bookingForm.onsubmit = async e => {
   e.preventDefault();
 
   const gender = document.querySelector('[name=gender]:checked')?.value;
@@ -221,9 +192,9 @@ document.getElementById('bookingForm').onsubmit = async e => {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      date: currentDate,
-      time: document.getElementById('time').value,
-      stylist: currentStylist,
+      date: selectedDate,
+      time: timeSelect.value,
+      stylist: selectedStylist,
       name: document.getElementById('name').value,
       phone: document.getElementById('phone').value,
       gender,
@@ -231,37 +202,17 @@ document.getElementById('bookingForm').onsubmit = async e => {
     })
   });
 
-  e.target.reset();
+  bookingForm.reset();
+  alert('บันทึกคิวเรียบร้อยแล้ว');
+
   loadBookings();
   loadCalendar();
 };
 
 /* =========================
-   TABLE / SUMMARY / EDIT
+   SUMMARY
 ========================= */
-function renderTable() {
-  const list = document.getElementById('list');
-  list.innerHTML = '';
-
-  bookings
-    .filter(b => b.stylist === currentStylist)
-    .forEach(b => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${b.time.slice(0, 5)}</td>
-        <td>${b.stylist}</td>
-        <td>${b.gender === 'male' ? '👨' : '👩'}</td>
-        <td>${b.name}</td>
-        <td>${b.service || ''}</td>
-        <td>${b.phone || ''}</td>
-        <td><button class="ghost">ลบ/แก้ไขคิว</button></td>
-      `;
-      tr.querySelector('button').onclick = () => openEditModal(b);
-      list.appendChild(tr);
-    });
-}
-
-function updateSummary() {
+function renderSummary() {
   const bank = bookings.filter(b => b.stylist === 'Bank').length;
   const sindy = bookings.filter(b => b.stylist === 'Sindy').length;
   const assist = bookings.filter(b => b.stylist === 'Assist').length;
@@ -269,8 +220,29 @@ function updateSummary() {
   document.getElementById('countBank').textContent = bank;
   document.getElementById('countSindy').textContent = sindy;
   document.getElementById('countAssist').textContent = assist;
-  document.getElementById('countTotal').textContent =
-    bank + sindy + assist;
+  document.getElementById('countTotal').textContent = bank + sindy + assist;
+}
+
+/* =========================
+   TABLE
+========================= */
+function renderTable() {
+  listEl.innerHTML = '';
+
+  bookings.forEach(b => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${b.time.slice(0, 5)}</td>
+      <td><span class="badge ${b.stylist}">${b.stylist}</span></td>
+      <td>${b.gender === 'male' ? '👨' : '👩'}</td>
+      <td>${b.name}</td>
+      <td>${b.service || ''}</td>
+      <td>${b.phone || ''}</td>
+      <td><button class="ghost">จัดการ</button></td>
+    `;
+    tr.querySelector('button').onclick = () => openEditModal(b);
+    listEl.appendChild(tr);
+  });
 }
 
 /* =========================
@@ -313,7 +285,7 @@ document.getElementById('saveEdit').onclick = async () => {
     })
   });
 
-  closeEditModal();
+  editOverlay.classList.add('hidden');
   loadBookings();
   loadCalendar();
 };
@@ -323,14 +295,19 @@ document.getElementById('deleteEdit').onclick = async () => {
 
   await fetch(`${API}/bookings/${editingId}`, { method: 'DELETE' });
 
-  closeEditModal();
+  editOverlay.classList.add('hidden');
   loadBookings();
   loadCalendar();
 };
 
-document.getElementById('closeEdit').onclick = closeEditModal;
-
-function closeEditModal() {
+document.getElementById('closeEdit').onclick = () =>
   editOverlay.classList.add('hidden');
-  editingId = null;
+
+/* =========================
+   UTIL
+========================= */
+function getTodayTH() {
+  return new Date().toLocaleDateString('sv-SE', {
+    timeZone: 'Asia/Bangkok'
+  });
 }
