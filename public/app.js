@@ -1,52 +1,42 @@
 const API = '';
+const OWNER_PIN = '1234';
 
 let bookings = [];
 let currentStylist = 'Bank';
-let calendarDensity = {};
-let currentMonth = new Date();
-let currentDate = getTodayTH();
+let currentDate = todayTH();
+let currentMonth = new Date(currentDate);
 
-/* =========================
-   TIME TH
-========================= */
-function getTodayTH(){
+/* ===== TIME TH ===== */
+function todayTH(){
   return new Date(
     new Date().toLocaleString('en-US',{timeZone:'Asia/Bangkok'})
   ).toISOString().slice(0,10);
 }
 
-/* =========================
-   LOGIN 기억
-========================= */
-const OWNER_PIN = '1234';
+/* ===== LOGIN ===== */
+const loginOverlay = document.getElementById('loginOverlay');
 if(localStorage.getItem('adore_login')==='1'){
-  document.getElementById('loginOverlay').classList.add('hidden');
+  loginOverlay.classList.add('hidden');
   init();
 }
 document.getElementById('loginBtn').onclick=()=>{
-  if(document.getElementById('pin').value===OWNER_PIN){
+  if(pin.value===OWNER_PIN){
     localStorage.setItem('adore_login','1');
-    location.reload();
+    loginOverlay.classList.add('hidden');
+    init();
+  }else{
+    loginMsg.textContent='PIN ไม่ถูกต้อง';
   }
 };
-document.getElementById('logoutBtn').onclick=()=>{
+logoutBtn.onclick=()=>{
   localStorage.removeItem('adore_login');
   location.reload();
 };
 
-/* =========================
-   INIT
-========================= */
+/* ===== INIT ===== */
 function init(){
-  document.getElementById('date').value=currentDate;
   loadCalendarDensity();
   loadBookings();
-
-  document.getElementById('date').onchange=e=>{
-    currentDate=e.target.value;
-    loadBookings();
-    highlightDate();
-  };
 
   document.querySelectorAll('.tab').forEach(t=>{
     t.onclick=()=>{
@@ -54,53 +44,42 @@ function init(){
       t.classList.add('active');
       currentStylist=t.dataset.tab;
       renderTime();
-      renderTable();
-      updateSummary();
     };
   });
 
-  document.getElementById('prevMonth').onclick=()=>{
-    currentMonth.setMonth(currentMonth.getMonth()-1);
-    renderCalendar();
-  };
-  document.getElementById('nextMonth').onclick=()=>{
-    currentMonth.setMonth(currentMonth.getMonth()+1);
-    renderCalendar();
-  };
+  prevMonth.onclick=()=>{currentMonth.setMonth(currentMonth.getMonth()-1);renderCalendar()};
+  nextMonth.onclick=()=>{currentMonth.setMonth(currentMonth.getMonth()+1);renderCalendar()};
 }
 
-/* =========================
-   LOAD
-========================= */
+/* ===== LOAD ===== */
 async function loadBookings(){
-  const r=await fetch(`${API}/bookings?date=${currentDate}`);
-  bookings=await r.json();
-  renderTime();renderTable();updateSummary();
+  const r = await fetch(`${API}/bookings?date=${currentDate}`);
+  bookings = await r.json();
+  renderTime();
+  renderTable();
+  renderSummary();
 }
 async function loadCalendarDensity(){
-  const r=await fetch(`${API}/calendar-days`);
-  calendarDensity=await r.json();
+  const r = await fetch(`${API}/calendar-days`);
+  window.density = await r.json();
   renderCalendar();
 }
 
-/* =========================
-   CALENDAR
-========================= */
+/* ===== CALENDAR ===== */
 function renderCalendar(){
-  const days=document.getElementById('calendarDays');
-  days.innerHTML='';
-  document.getElementById('calendarTitle').textContent=
+  calendarDays.innerHTML='';
+  calendarTitle.textContent =
     currentMonth.toLocaleDateString('th-TH',{month:'long',year:'numeric'});
 
   const y=currentMonth.getFullYear(),m=currentMonth.getMonth();
   const first=new Date(y,m,1).getDay();
   const total=new Date(y,m+1,0).getDate();
 
-  for(let i=0;i<first;i++)days.appendChild(document.createElement('div'));
+  for(let i=0;i<first;i++)calendarDays.appendChild(document.createElement('div'));
 
   for(let d=1;d<=total;d++){
     const date=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const count=calendarDensity[date]||0;
+    const count=(window.density?.[date])||0;
     const pct=(count/20)*100;
 
     const cell=document.createElement('div');
@@ -118,37 +97,20 @@ function renderCalendar(){
     cell.appendChild(num);
     cell.onclick=()=>{
       currentDate=date;
-      document.getElementById('date').value=date;
       loadBookings();
-      highlightDate();
+      renderCalendar();
     };
-    days.appendChild(cell);
+    calendarDays.appendChild(cell);
   }
-}
-function highlightDate(){
-  document.querySelectorAll('.calCell').forEach(c=>c.classList.remove('selected'));
-  [...document.querySelectorAll('.calCell')].find(c=>c.textContent==Number(currentDate.slice(-2)))?.classList.add('selected');
 }
 
-/* =========================
-   BOOKING
-========================= */
-function renderTime(){
-  const sel=document.getElementById('time');
-  sel.innerHTML='';
-  for(let h=13;h<=22;h++){
-    const t=`${String(h).padStart(2,'0')}:00:00`;
-    const o=document.createElement('option');
-    o.value=t;o.textContent=t.slice(0,5);
-    if(bookings.find(b=>b.time===t&&b.stylist===currentStylist))o.disabled=true;
-    sel.appendChild(o);
-  }
-}
-document.getElementById('bookingForm').onsubmit=async e=>{
+/* ===== FORM ===== */
+bookingForm.onsubmit=async e=>{
   e.preventDefault();
   const gender=document.querySelector('[name=gender]:checked')?.value;
   await fetch(`${API}/bookings`,{
-    method:'POST',headers:{'Content-Type':'application/json'},
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
     body:JSON.stringify({
       date:currentDate,
       time:time.value,
@@ -160,27 +122,47 @@ document.getElementById('bookingForm').onsubmit=async e=>{
     })
   });
   e.target.reset();
-  loadCalendarDensity();loadBookings();
+  loadCalendarDensity();
+  loadBookings();
 };
 
-/* =========================
-   TABLE / SUMMARY
-========================= */
-function renderTable(){
-  list.innerHTML='';
-  bookings.filter(b=>b.stylist===currentStylist).forEach(b=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${b.time.slice(0,5)}</td><td>${b.stylist}</td><td>${b.gender==='male'?'👨':'👩'}</td><td>${b.name}</td><td>${b.service||''}</td><td>${b.phone||''}</td><td><button class="ghost">ลบ/แก้</button></td>`;
-    tr.querySelector('button').onclick=()=>openEditModal(b);
-    list.appendChild(tr);
-  });
+/* ===== TIME ===== */
+function renderTime(){
+  time.innerHTML='';
+  for(let h=13;h<=22;h++){
+    const t=`${String(h).padStart(2,'0')}:00:00`;
+    const o=document.createElement('option');
+    o.value=t;o.textContent=t.slice(0,5);
+    if(bookings.find(b=>b.time===t&&b.stylist===currentStylist))o.disabled=true;
+    time.appendChild(o);
+  }
 }
-function updateSummary(){
+
+/* ===== SUMMARY ===== */
+function renderSummary(){
   const b=bookings.filter(x=>x.stylist==='Bank').length;
   const s=bookings.filter(x=>x.stylist==='Sindy').length;
   const a=bookings.filter(x=>x.stylist==='Assist').length;
-  countBank.textContent=b;
-  countSindy.textContent=s;
-  countAssist.textContent=a;
-  countTotal.textContent=b+s+a;
+  sumBank.textContent=b;
+  sumSindy.textContent=s;
+  sumAssist.textContent=a;
+  sumTotal.textContent=b+s+a;
+}
+
+/* ===== TABLE ===== */
+function renderTable(){
+  list.innerHTML='';
+  bookings.forEach(b=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td>${b.time.slice(0,5)}</td>
+      <td><span class="stylist ${b.stylist.toLowerCase()}">${b.stylist}</span></td>
+      <td>${b.gender==='male'?'👨':'👩'}</td>
+      <td>${b.name}</td>
+      <td>${b.service||''}</td>
+      <td>${b.phone||''}</td>
+      <td><button class="ghost">แก้ไข</button></td>`;
+    tr.querySelector('button').onclick=()=>openEditModal(b);
+    list.appendChild(tr);
+  });
 }
