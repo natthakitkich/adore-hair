@@ -8,18 +8,19 @@
 </head>
 <body>
 
-<!-- LOGIN -->
-<div id="loginOverlay" class="overlay">
+<!-- LOGIN OVERLAY -->
+<div id="loginOverlay" class="overlay hidden">
   <div class="loginCard">
     <div class="loginAvatar">A</div>
     <h1>เข้าสู่ระบบ</h1>
     <p class="muted">กรุณาใส่ PIN 4 หลัก</p>
-    <input id="pin" type="password" inputmode="numeric" maxlength="4" />
+    <input id="pin" type="password" inputmode="numeric" maxlength="4" placeholder="••••" />
     <button id="loginBtn" class="primary">Login</button>
     <div id="loginMsg" class="msg err"></div>
   </div>
 </div>
 
+<!-- TOP BAR -->
 <header class="topbar">
   <div class="brand">
     <div class="avatar">A</div>
@@ -28,16 +29,21 @@
       <div class="subtitle">Owner Queue · 13:00–22:00 · แยกตามช่าง</div>
     </div>
   </div>
-  <button id="logoutBtn" class="ghost">Logout</button>
+
+  <div class="topRight">
+    <div id="topDate" class="dateBadge small"></div>
+    <button id="logoutBtn" class="ghost small">Logout</button>
+  </div>
 </header>
 
+<!-- MAIN -->
 <main class="wrap">
 
   <!-- CALENDAR -->
   <section class="panel">
     <div class="calendarHeader">
       <button id="prevMonth" class="ghost">‹</button>
-      <div id="calendarTitle" class="calendarTitle"></div>
+      <div class="calendarTitle" id="calendarTitle"></div>
       <button id="nextMonth" class="ghost">›</button>
     </div>
 
@@ -45,25 +51,23 @@
       <span>อา</span><span>จ</span><span>อ</span><span>พ</span><span>พฤ</span><span>ศ</span><span>ส</span>
     </div>
 
-    <div id="calendarGrid" class="calendarGrid"></div>
+    <div class="calendarGrid" id="calendarGrid"></div>
   </section>
 
-  <!-- DAY CONTROL -->
-  <section class="panel" id="dayControl">
-    <div id="dayStatus" class="muted">กรุณาเลือกวันจากปฏิทิน</div>
-    <button id="toggleClosedBtn" class="danger hidden"></button>
+  <!-- DAY STATUS -->
+  <section class="panel muted" id="dayStatus">
+    กรุณาเลือกวันจากปฏิทิน
   </section>
+
+  <!-- STYLIST TABS -->
+  <section class="panel">
+    <div class="tabs" id="stylistTabs"></div>
+  </section>
+
+  <!-- SUMMARY -->
+  <section class="panel summary" id="summary"></section>
 
 </main>
-
-<!-- CLOSED DAY -->
-<div id="closedOverlay" class="overlay hidden">
-  <div class="loginCard">
-    <h2>วันนี้เป็นวันหยุด</h2>
-    <p class="muted">ไม่สามารถจัดการคิวได้</p>
-    <button id="closeClosedOverlay" class="ghost">รับทราบ</button>
-  </div>
-</div>
 
 <script src="app.js"></script>
 </body>
