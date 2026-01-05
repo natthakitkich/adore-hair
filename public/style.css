@@ -4,31 +4,38 @@
   --muted:#9aa6c5;
   --accent:#6ee7ff;
   --accent2:#a78bfa;
+  --danger:#ff5c7a;
   --stroke:rgba(255,255,255,.08);
 }
 
-*{ box-sizing:border-box }
+*{box-sizing:border-box}
 
 body{
   margin:0;
   font-family:-apple-system,system-ui;
-  background:radial-gradient(1000px 600px at 20% 10%, #1a2b5a, transparent),
-             radial-gradient(800px 500px at 80% 20%, #3b1b5a, transparent),
-             var(--bg);
+  background:
+    radial-gradient(1200px 600px at 20% 10%, #1a2b5a, transparent),
+    radial-gradient(900px 500px at 80% 20%, #3b1b5a, transparent),
+    var(--bg);
   color:var(--text);
 }
 
+.hidden{display:none}
 .muted{color:var(--muted)}
+.center{text-align:center}
 
+/* TOP BAR */
 .topbar{
   position:sticky;
   top:0;
   z-index:10;
+  padding:18px;
   display:flex;
   justify-content:space-between;
   align-items:center;
-  padding:16px;
+  gap:16px;
   background:rgba(0,0,0,.35);
+  backdrop-filter:blur(14px);
 }
 
 .brand{display:flex;gap:12px;align-items:center}
@@ -36,21 +43,24 @@ body{
 .avatar{
   width:44px;height:44px;
   border-radius:14px;
-  background:linear-gradient(135deg,var(--accent),var(--accent2));
   display:flex;align-items:center;justify-content:center;
-  font-weight:900;color:#061022;
+  font-weight:900;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#061022;
 }
 
-.topRight{display:flex;gap:10px;align-items:center}
+.topActions{
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
 
 .dateBadge{
-  padding:10px 14px;
+  padding:8px 14px;
   border-radius:14px;
   background:rgba(255,255,255,.08);
   font-size:14px;
 }
-
-.small{height:40px;display:flex;align-items:center}
 
 .wrap{
   width:min(1100px,94vw);
@@ -65,11 +75,27 @@ body{
   margin-bottom:18px;
 }
 
-/* ===== CALENDAR ===== */
+/* CALENDAR */
 .calendarHeader{
   display:grid;
-  grid-template-columns:48px 1fr 48px;
+  grid-template-columns:44px 1fr 44px;
   align-items:center;
+  margin-bottom:10px;
+}
+
+.calendarTitle{
+  text-align:center;
+  font-size:22px;
+  font-weight:900;
+}
+
+.navBtn{
+  background:rgba(255,255,255,.08);
+  border:none;
+  border-radius:12px;
+  color:#fff;
+  font-size:20px;
+  height:40px;
 }
 
 .calendarWeek{
@@ -83,21 +109,26 @@ body{
 .calendarGrid{
   display:grid;
   grid-template-columns:repeat(7,1fr);
-  gap:10px;
-  margin-top:10px;
+  gap:12px;
+  margin-top:14px;
 }
 
 .calCell{
-  height:52px;
-  border-radius:16px;
+  aspect-ratio:1/1;
+  border-radius:50%;
   background:rgba(0,0,0,.35);
   display:flex;
   align-items:center;
   justify-content:center;
+  font-weight:900;
+  cursor:pointer;
 }
 
-/* ===== TABS ===== */
-.tabs{display:flex;gap:12px}
+/* TABS */
+.tabs{
+  display:flex;
+  gap:12px;
+}
 
 .tab{
   flex:1;
@@ -105,22 +136,22 @@ body{
   border-radius:18px;
   background:rgba(0,0,0,.35);
   border:1px solid var(--stroke);
-  text-align:center;
   font-weight:900;
+  text-align:center;
 }
 
 .tab.active{
-  outline:2px solid rgba(110,231,255,.5);
+  outline:2px solid rgba(110,231,255,.55);
 }
 
-/* ===== SUMMARY ===== */
+/* SUMMARY */
 .summary{
   display:grid;
   grid-template-columns:repeat(2,1fr);
   gap:12px;
 }
 
-/* ===== LOGIN ===== */
+/* LOGIN */
 .overlay{
   position:fixed;
   inset:0;
@@ -162,19 +193,13 @@ input{
 }
 
 button{
+  margin-top:14px;
   padding:14px;
   width:100%;
   border-radius:16px;
   border:none;
   font-weight:900;
-  margin-top:14px;
 }
 
-.primary{
-  background:linear-gradient(135deg,var(--accent),var(--accent2));
-}
-
-.ghost{
-  background:rgba(255,255,255,.08);
-  color:#fff;
-}
+.primary{background:linear-gradient(135deg,var(--accent),var(--accent2))}
+.ghost{background:rgba(255,255,255,.08);color:#fff}
