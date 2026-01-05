@@ -8,63 +8,81 @@
   --stroke:rgba(255,255,255,.08);
 }
 
-*{box-sizing:border-box}
+/* ===== BASE ===== */
+*{ box-sizing:border-box }
 
 body{
   margin:0;
-  font-family:-apple-system,system-ui;
+  font-family:-apple-system,system-ui,Segoe UI,Roboto;
   background:
-    radial-gradient(1200px 600px at 20% 10%, #1a2b5a, transparent),
-    radial-gradient(900px 500px at 80% 20%, #3b1b5a, transparent),
+    radial-gradient(1000px 600px at 20% 10%, #1a2b5a, transparent),
+    radial-gradient(800px 500px at 80% 20%, #3b1b5a, transparent),
     var(--bg);
   color:var(--text);
 }
 
-.hidden{display:none}
-.muted{color:var(--muted)}
-.center{text-align:center}
+.hidden{ display:none }
+.center{ text-align:center }
 
-/* TOP BAR */
+/* ===== TOP BAR ===== */
 .topbar{
   position:sticky;
   top:0;
   z-index:10;
-  padding:18px;
+  padding:14px 18px;
   display:flex;
   justify-content:space-between;
   align-items:center;
-  gap:16px;
   background:rgba(0,0,0,.35);
   backdrop-filter:blur(14px);
 }
 
-.brand{display:flex;gap:12px;align-items:center}
+.brand{
+  display:flex;
+  gap:12px;
+  align-items:center;
+}
 
 .avatar{
-  width:44px;height:44px;
+  width:40px;
+  height:40px;
   border-radius:14px;
-  display:flex;align-items:center;justify-content:center;
+  display:flex;
+  align-items:center;
+  justify-content:center;
   font-weight:900;
   background:linear-gradient(135deg,var(--accent),var(--accent2));
   color:#061022;
 }
 
+.title{
+  font-weight:900;
+  font-size:15px;
+}
+
+.subtitle{
+  font-size:11px;
+  color:var(--muted);
+}
+
 .topActions{
   display:flex;
-  gap:10px;
   align-items:center;
+  gap:10px;
 }
 
 .dateBadge{
-  padding:8px 14px;
-  border-radius:14px;
+  padding:6px 10px;
+  border-radius:12px;
+  font-size:12px;
+  font-weight:700;
   background:rgba(255,255,255,.08);
-  font-size:14px;
 }
 
+/* ===== LAYOUT ===== */
 .wrap{
   width:min(1100px,94vw);
-  margin:20px auto 80px;
+  margin:18px auto 72px;
 }
 
 .panel{
@@ -75,44 +93,46 @@ body{
   margin-bottom:18px;
 }
 
-/* CALENDAR */
+/* ===== CALENDAR ===== */
 .calendarHeader{
   display:grid;
-  grid-template-columns:44px 1fr 44px;
+  grid-template-columns:36px 1fr 36px;
   align-items:center;
   margin-bottom:10px;
 }
 
 .calendarTitle{
   text-align:center;
-  font-size:22px;
+  font-size:20px;
   font-weight:900;
 }
 
 .navBtn{
   background:rgba(255,255,255,.08);
   border:none;
-  border-radius:12px;
   color:#fff;
-  font-size:20px;
-  height:40px;
+  font-size:18px;
+  border-radius:12px;
+  height:36px;
+  width:36px;
 }
 
 .calendarWeek{
   display:grid;
   grid-template-columns:repeat(7,1fr);
   text-align:center;
-  font-size:12px;
+  font-size:11px;
   color:var(--muted);
+  margin-bottom:6px;
 }
 
 .calendarGrid{
   display:grid;
   grid-template-columns:repeat(7,1fr);
-  gap:12px;
-  margin-top:14px;
+  gap:10px;
 }
 
+/* 👉 จุดสำคัญ: วงกลมจริง */
 .calCell{
   aspect-ratio:1/1;
   border-radius:50%;
@@ -120,11 +140,26 @@ body{
   display:flex;
   align-items:center;
   justify-content:center;
-  font-weight:900;
   cursor:pointer;
 }
 
-/* TABS */
+.calNum{
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:900;
+}
+
+/* ===== DAY HINT ===== */
+#dayHint{
+  font-size:13px;
+  color:var(--muted);
+}
+
+/* ===== TABS ===== */
 .tabs{
   display:flex;
   gap:12px;
@@ -133,25 +168,31 @@ body{
 .tab{
   flex:1;
   padding:14px;
-  border-radius:18px;
+  border-radius:20px;
   background:rgba(0,0,0,.35);
   border:1px solid var(--stroke);
   font-weight:900;
   text-align:center;
+  cursor:pointer;
 }
 
 .tab.active{
-  outline:2px solid rgba(110,231,255,.55);
+  outline:2px solid rgba(110,231,255,.5);
 }
 
-/* SUMMARY */
+/* ===== SUMMARY ===== */
 .summary{
   display:grid;
   grid-template-columns:repeat(2,1fr);
-  gap:12px;
+  gap:14px;
 }
 
-/* LOGIN */
+.summary .panel{
+  text-align:center;
+  font-weight:900;
+}
+
+/* ===== LOGIN ===== */
 .overlay{
   position:fixed;
   inset:0;
@@ -166,15 +207,18 @@ body{
   width:320px;
   padding:28px;
   background:#0f1426;
-  border-radius:24px;
+  border-radius:26px;
   text-align:center;
 }
 
 .loginAvatar{
-  width:64px;height:64px;
+  width:64px;
+  height:64px;
   margin:0 auto 12px;
   border-radius:20px;
-  display:flex;align-items:center;justify-content:center;
+  display:flex;
+  align-items:center;
+  justify-content:center;
   font-size:32px;
   background:linear-gradient(135deg,var(--accent),var(--accent2));
   color:#061022;
@@ -201,40 +245,12 @@ button{
   font-weight:900;
 }
 
-.primary{background:linear-gradient(135deg,var(--accent),var(--accent2))}
-.ghost{background:rgba(255,255,255,.08);color:#fff}
-
-/* ===== CALENDAR DENSITY ===== */
-.calNum{
-  width:40px;
-  height:40px;
-  border-radius:50%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:700;
+.primary{
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#061022;
 }
 
-.density-low{
-  background:rgba(44,255,156,.22);
-  color:#2cff9c;
-  border:1px solid rgba(44,255,156,.6);
-}
-
-.density-mid{
-  background:rgba(253,224,71,.22);
-  color:#fde047;
-  border:1px solid rgba(253,224,71,.6);
-}
-
-.density-high{
-  background:rgba(251,146,60,.22);
-  color:#fb923c;
-  border:1px solid rgba(251,146,60,.6);
-}
-
-.density-full{
-  background:rgba(255,92,122,.22);
-  color:#ff5c7a;
-  border:1px solid rgba(255,92,122,.6);
+.ghost{
+  background:rgba(255,255,255,.1);
+  color:#fff;
 }
