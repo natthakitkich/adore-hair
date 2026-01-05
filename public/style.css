@@ -372,8 +372,8 @@ th{color:var(--muted)}
    LOGO AVATAR
 ========================= */
 .avatar img{
-  width:78%;
-  height:78%;
+  width:85%;
+  height:85%;
   object-fit:contain;
   border-radius:50%;
   filter:
