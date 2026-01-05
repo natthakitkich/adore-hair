@@ -1,5 +1,5 @@
 /* =========================
-   THEME VARIABLES
+   THEME VARIABLES (เดิม)
 ========================= */
 :root{
   --bg:#0b0f1a;
@@ -24,8 +24,12 @@
   -webkit-tap-highlight-color:transparent;
 }
 
-body{
+html, body{
   margin:0;
+  padding:0;
+}
+
+body{
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
   background:
     radial-gradient(1200px 700px at 15% 10%, #1a2b5a 0%, transparent 60%),
@@ -34,6 +38,9 @@ body{
   color:var(--text);
 }
 
+/* =========================
+   UTIL
+========================= */
 .hidden{display:none!important}
 .row{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
 .muted{color:var(--muted)}
@@ -104,19 +111,91 @@ label{
 }
 
 /* =========================
+   OVERLAY / LOGIN (FIX)
+   ✔ บังจริง
+   ✔ ไม่ทะลุ
+========================= */
+.overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.85);
+  z-index:9999;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.modal{
+  width:min(420px,92vw);
+  background:linear-gradient(
+    180deg,
+    rgba(20,25,45,.96),
+    rgba(10,12,22,.96)
+  );
+  border-radius:26px;
+  border:1px solid rgba(255,255,255,.15);
+  box-shadow:0 22px 90px rgba(0,0,0,.65);
+}
+
+.modalBody{
+  padding:28px;
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+  align-items:center;
+  text-align:center;
+}
+
+/* =========================
    TOPBAR
+   ⚠️ แก้ backdrop-filter ให้ปลอดภัย
 ========================= */
 .topbar{
   position:sticky;
   top:0;
-  z-index:10;
+  z-index:20;
   padding:18px 22px;
   display:flex;
   justify-content:space-between;
   align-items:center;
-  background:rgba(0,0,0,.35);
-  backdrop-filter:blur(14px);
+
+  /* ใช้สีทึบแทน blur */
+  background:rgba(8,10,20,.92);
   border-bottom:1px solid var(--stroke);
+}
+
+.brand{
+  display:flex;
+  gap:12px;
+  align-items:center;
+}
+
+.avatar{
+  width:40px;
+  height:40px;
+  border-radius:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:900;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#061022;
+}
+
+.avatar.big{
+  width:72px;
+  height:72px;
+  font-size:32px;
+}
+
+.title{
+  font-weight:900;
+  font-size:16px;
+}
+
+.subtitle{
+  font-size:12px;
+  color:var(--muted);
 }
 
 /* =========================
@@ -128,7 +207,11 @@ label{
 }
 
 .panel{
-  background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
+  background:linear-gradient(
+    180deg,
+    rgba(255,255,255,.06),
+    rgba(255,255,255,.02)
+  );
   border:1px solid var(--stroke);
   border-radius:22px;
   padding:18px;
@@ -137,8 +220,42 @@ label{
 }
 
 /* =========================
-   CALENDAR (FIXED)
+   CALENDAR (STABLE)
+   ✔ ไม่มี aspect-ratio
+   ✔ iOS ไม่เพี้ยน
 ========================= */
+.calendarHeader{
+  display:grid;
+  grid-template-columns:40px 1fr 40px;
+  align-items:center;
+  margin-bottom:12px;
+}
+
+.calendarCenter{
+  text-align:center;
+}
+
+.calendarTitle{
+  font-size:22px;
+  font-weight:900;
+}
+
+.calendarSubtitle{
+  font-size:13px;
+  color:var(--muted);
+  margin-top:2px;
+}
+
+.calWeekHead{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:10px;
+  text-align:center;
+  font-size:12px;
+  color:var(--muted);
+  margin-top:14px;
+}
+
 .calGrid{
   display:grid;
   grid-template-columns:repeat(7,1fr);
@@ -147,14 +264,13 @@ label{
 }
 
 .calCell{
-  min-height:56px;              /* ✅ แทน aspect-ratio */
+  height:56px; /* 🔒 FIXED HEIGHT */
   border-radius:18px;
   background:rgba(0,0,0,.28);
   border:1px solid var(--stroke);
   display:flex;
   align-items:center;
   justify-content:center;
-  cursor:pointer;
 }
 
 .calCell.selected{
@@ -197,7 +313,7 @@ label{
    CLOSED DAY (VISUAL ONLY)
 ========================= */
 .calCell.closed{
-  opacity:.45;          /* ❌ ไม่ disable pointer-events */
+  opacity:.45;
 }
 
 .calNum.closed{
