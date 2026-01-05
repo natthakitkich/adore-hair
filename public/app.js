@@ -1,66 +1,52 @@
 document.addEventListener('DOMContentLoaded', () => {
 
   const OWNER_PIN = '1234';
-  const AUTH_KEY = 'adore_owner_auth';
+  const AUTH_KEY = 'adore_auth';
 
-  const body = document.body;
-  const loginOverlay = document.getElementById('loginOverlay');
+  const overlay = document.getElementById('loginOverlay');
+  const app = document.getElementById('app');
+  const pinInput = document.getElementById('pin');
   const loginBtn = document.getElementById('loginBtn');
-  const pinInput = document.getElementById('pinInput');
-  const loginMsg = document.getElementById('loginMsg');
   const logoutBtn = document.getElementById('logoutBtn');
-  const topDate = document.getElementById('topDate');
+  const msg = document.getElementById('msg');
 
-  /* ================= INIT ================= */
+  /* ===== INIT ===== */
   if (localStorage.getItem(AUTH_KEY) === 'true') {
-    setAuthed();
+    showApp();
   } else {
-    setLoggedOut();
+    showLogin();
   }
 
-  /* ================= LOGIN ================= */
+  /* ===== LOGIN ===== */
   loginBtn.onclick = () => {
-    const pin = pinInput.value.replace(/\D/g, '');
+    const pin = pinInput.value.trim();
 
     if (pin !== OWNER_PIN) {
-      loginMsg.textContent = 'PIN ไม่ถูกต้อง';
+      msg.textContent = 'PIN ไม่ถูกต้อง';
       return;
     }
 
     localStorage.setItem(AUTH_KEY, 'true');
     pinInput.value = '';
-    loginMsg.textContent = '';
-    setAuthed();
+    msg.textContent = '';
+    showApp();
   };
 
-  pinInput.addEventListener('input', () => {
-    pinInput.value = pinInput.value.replace(/\D/g, '').slice(0, 4);
-  });
-
-  /* ================= LOGOUT ================= */
+  /* ===== LOGOUT ===== */
   logoutBtn.onclick = () => {
     localStorage.removeItem(AUTH_KEY);
     location.reload();
   };
 
-  /* ================= STATE ================= */
-  function setAuthed(){
-    body.classList.add('authed');
-    renderTopDate();
-    console.log('✅ AUTHED');
+  /* ===== UI ===== */
+  function showLogin(){
+    overlay.style.display = 'flex';
+    app.style.display = 'none';
   }
 
-  function setLoggedOut(){
-    body.classList.remove('authed');
-  }
-
-  function renderTopDate(){
-    if (!topDate) return;
-    topDate.textContent = new Date().toLocaleDateString('th-TH', {
-      day:'numeric',
-      month:'short',
-      year:'numeric'
-    });
+  function showApp(){
+    overlay.style.display = 'none';
+    app.style.display = 'block';
   }
 
 });
