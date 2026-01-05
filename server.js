@@ -1,103 +1,158 @@
-// =================================================
-// Adore Hair – server.js (ES MODULE FIX)
-// =================================================
+import express from 'express';
+import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { createClient } from '@supabase/supabase-js';
 
-import express from "express";
-import path from "path";
-import fs from "fs";
-import { fileURLToPath } from "url";
+/* =========================
+   BASIC SETUP
+========================= */
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// __dirname replacement for ES module
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// ============================
-// MIDDLEWARE
-// ============================
+app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, 'public')));
 
-// ============================
-// SIMPLE DB (เดิม)
-// ============================
-const DB_PATH = path.join(__dirname, "data.json");
+/* =========================
+   SUPABASE CLIENT
+========================= */
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
-function readDB() {
-  if (!fs.existsSync(DB_PATH)) return { bookings: [] };
-  return JSON.parse(fs.readFileSync(DB_PATH, "utf-8"));
-}
+/* =========================
+   ROUTES
+========================= */
 
-function writeDB(data) {
-  fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
-}
-
-// ============================
-// LOGIN
-// ============================
-app.post("/api/login", (req, res) => {
-  const { pin } = req.body;
-  if (pin === "1234") return res.sendStatus(200);
-  res.sendStatus(401);
+// serve frontend
+app.get('/', (_, res) => {
+  res.sendFile(path.join(__dirname, 'public/index.html'));
 });
 
-// ============================
-// GET BOOKINGS
-// ============================
-app.get("/api/bookings", (req, res) => {
+/* ---------- BASIC ----------
+   Get bookings by date
+---------------------------- */
+app.get('/bookings', async (req, res) => {
   const { date } = req.query;
-  const db = readDB();
-  const result = db.bookings.filter(b => b.date === date);
-  res.json(result);
+
+  let query = supabase
+    .from('bookings')
+    .select('*')
+    .order('time', { ascending: true });
+
+  if (date) {
+    query = query.eq('date', date);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    return res.status(500).json(error);
+  }
+
+  res.json(data || []);
 });
 
-// ============================
-// ADD BOOKING
-// ============================
-app.post("/api/bookings", (req, res) => {
-  const db = readDB();
-  const booking = { id: Date.now(), ...req.body };
-  db.bookings.push(booking);
-  writeDB(db);
-  res.json(booking);
+/* ---------- DEVELOP ----------
+   Get calendar density (NEW)
+---------------------------- */
+app.get('/calendar-days', async (_, res) => {
+  const { data, error } = await supabase
+    .from('bookings')
+    .select('date');
+
+  if (error) {
+    return res.status(500).json(error);
+  }
+
+  const map = {};
+
+  data.forEach(b => {
+    map[b.date] = (map[b.date] || 0) + 1;
+  });
+
+  res.json(map);
 });
 
-// ============================
-// UPDATE BOOKING
-// ============================
-app.put("/api/bookings/:id", (req, res) => {
-  const db = readDB();
-  const id = Number(req.params.id);
-  db.bookings = db.bookings.map(b =>
-    b.id === id ? { ...b, ...req.body } : b
-  );
-  writeDB(db);
-  res.sendStatus(200);
+/* ---------- BASIC ----------
+   Create booking
+---------------------------- */
+app.post('/bookings', async (req, res) => {
+  const { date, time, stylist, name, gender, phone, service } = req.body;
+
+  if (!date || !time || !stylist || !name || !gender) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  const { data: exist } = await supabase
+    .from('bookings')
+    .select('id')
+    .eq('date', date)
+    .eq('time', time)
+    .eq('stylist', stylist);
+
+  if (exist && exist.length > 0) {
+    return res.status(409).json({ error: 'Slot already booked' });
+  }
+
+  const { data, error } = await supabase
+    .from('bookings')
+    .insert([{ date, time, stylist, name, gender, phone, service }])
+    .select()
+    .single();
+
+  if (error) {
+    return res.status(500).json(error);
+  }
+
+  res.json(data);
 });
 
-// ============================
-// DELETE BOOKING
-// ============================
-app.delete("/api/bookings/:id", (req, res) => {
-  const db = readDB();
-  const id = Number(req.params.id);
-  db.bookings = db.bookings.filter(b => b.id !== id);
-  writeDB(db);
-  res.sendStatus(200);
+/* ---------- DEVELOP ----------
+   Update booking
+---------------------------- */
+app.put('/bookings/:id', async (req, res) => {
+  const { id } = req.params;
+  const { name, phone, gender, service } = req.body;
+
+  const { error } = await supabase
+    .from('bookings')
+    .update({ name, phone, gender, service })
+    .eq('id', id);
+
+  if (error) {
+    return res.status(500).json(error);
+  }
+
+  res.json({ success: true });
 });
 
-// ============================
-// SPA FALLBACK
-// ============================
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+/* ---------- BASIC ----------
+   Delete booking
+---------------------------- */
+app.delete('/bookings/:id', async (req, res) => {
+  const { id } = req.params;
+
+  const { error } = await supabase
+    .from('bookings')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    return res.status(500).json(error);
+  }
+
+  res.json({ success: true });
 });
 
-// ============================
-// START SERVER
-// ============================
+/* =========================
+   START SERVER
+========================= */
 app.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
+  console.log(`Adore Hair server running on port ${PORT}`);
 });
