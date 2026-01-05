@@ -1,23 +1,17 @@
 /* =================================================
-   Adore Hair – Version Basic (Frontend Logic)
-   + Upgrade: format time / edit booking
+   Adore Hair – Version Basic SAFE
+   (calendar-days ถูกถอดออก)
 ================================================= */
 
-/* =========================
-   GLOBAL STATE (BASIC)
-========================= */
 const API = '';
 
 let bookings = [];
 let currentDate = '';
-let currentMonth = new Date();
 let currentStylist = 'Bank';
-
-// NEW: state สำหรับแก้ไขคิว
 let editingId = null;
 
 /* =========================
-   LOGIN SYSTEM (BASIC)
+   LOGIN (BASIC)
 ========================= */
 const loginOverlay = document.getElementById('loginOverlay');
 const loginBtn = document.getElementById('loginBtn');
@@ -25,25 +19,23 @@ const pinInput = document.getElementById('pin');
 const loginMsg = document.getElementById('loginMsg');
 const logoutBtn = document.getElementById('logoutBtn');
 
-const OWNER_PIN = '1234'; // BASIC
+const OWNER_PIN = '1234';
 
 loginBtn.onclick = () => {
   if (pinInput.value === OWNER_PIN) {
     loginOverlay.classList.add('hidden');
     pinInput.value = '';
     loginMsg.textContent = '';
-    init(); // BASIC flow
+    init();
   } else {
     loginMsg.textContent = 'PIN ไม่ถูกต้อง';
   }
 };
 
-logoutBtn.onclick = () => {
-  location.reload();
-};
+logoutBtn.onclick = () => location.reload();
 
 /* =========================
-   INIT (BASIC FLOW)
+   INIT (BASIC)
 ========================= */
 function init() {
   const dateInput = document.getElementById('date');
@@ -55,27 +47,24 @@ function init() {
   dateInput.onchange = () => {
     currentDate = dateInput.value;
     loadBookings();
-    loadCalendarDays(); // BASIC
   };
 
-  // BASIC: tab stylist
   document.querySelectorAll('.tab').forEach(tab => {
     tab.onclick = () => {
       document.querySelector('.tab.active').classList.remove('active');
       tab.classList.add('active');
       currentStylist = tab.dataset.tab;
       renderTable();
+      updateSummary();
     };
   });
 
-  loadCalendarDays(); // BASIC
-  loadBookings();     // BASIC
+  loadBookings();
 }
 
 /* =========================
    UTIL
 ========================= */
-// NEW: ตัดวินาทีออกจากเวลา
 function formatTime(time) {
   return time ? time.slice(0, 5) : '';
 }
@@ -87,74 +76,13 @@ async function loadBookings() {
   const res = await fetch(`${API}/bookings?date=${currentDate}`);
   bookings = await res.json();
 
-  renderTimeSlots(); // BASIC
-  renderTable();     // BASIC
-  updateSummary();   // BASIC
+  renderTimeSlots();
+  renderTable();
+  updateSummary();
 }
 
 /* =========================
-   LOAD CALENDAR DAYS (BASIC)
-========================= */
-async function loadCalendarDays() {
-  const res = await fetch(`${API}/calendar-days`);
-  const days = await res.json();
-  renderCalendar(days);
-}
-
-/* =========================
-   CALENDAR RENDER (BASIC)
-========================= */
-function renderCalendar(daysData) {
-  const calendarDays = document.getElementById('calendarDays');
-  const title = document.getElementById('calendarTitle');
-
-  calendarDays.innerHTML = '';
-  title.textContent = currentMonth.toLocaleString('th-TH', {
-    month: 'long',
-    year: 'numeric'
-  });
-
-  const year = currentMonth.getFullYear();
-  const month = currentMonth.getMonth();
-  const firstDay = new Date(year, month, 1).getDay();
-  const totalDays = new Date(year, month + 1, 0).getDate();
-
-  for (let i = 0; i < firstDay; i++) {
-    calendarDays.appendChild(document.createElement('div'));
-  }
-
-  for (let day = 1; day <= totalDays; day++) {
-    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    const count = daysData[dateStr] || 0;
-
-    const cell = document.createElement('div');
-    cell.className = 'calCell';
-    if (dateStr === currentDate) cell.classList.add('selected');
-
-    const num = document.createElement('div');
-    num.className = 'calNum';
-
-    if (count >= 6) num.classList.add('density-full');
-    else if (count >= 4) num.classList.add('density-high');
-    else if (count >= 2) num.classList.add('density-mid');
-    else if (count >= 1) num.classList.add('density-low');
-
-    num.textContent = day;
-    cell.appendChild(num);
-
-    cell.onclick = () => {
-      currentDate = dateStr;
-      document.getElementById('date').value = dateStr;
-      loadBookings();
-      loadCalendarDays();
-    };
-
-    calendarDays.appendChild(cell);
-  }
-}
-
-/* =========================
-   TIME SLOT SYSTEM (BASIC)
+   TIME SLOTS (BASIC)
 ========================= */
 function renderTimeSlots() {
   const timeSelect = document.getElementById('time');
@@ -163,23 +91,21 @@ function renderTimeSlots() {
   for (let h = 13; h <= 22; h++) {
     const time = `${String(h).padStart(2, '0')}:00:00`;
 
-    const exist = bookings.find(b =>
-      b.time === time &&
-      b.stylist === currentStylist
+    const exist = bookings.find(
+      b => b.time === time && b.stylist === currentStylist
     );
 
     const option = document.createElement('option');
     option.value = time;
-    option.textContent = formatTime(time); // NEW: แสดง HH:MM
+    option.textContent = formatTime(time);
 
     if (exist) option.disabled = true;
-
     timeSelect.appendChild(option);
   }
 }
 
 /* =========================
-   BOOKING FORM SUBMIT (BASIC)
+   FORM SUBMIT (BASIC)
 ========================= */
 document.getElementById('bookingForm').onsubmit = async e => {
   e.preventDefault();
@@ -207,7 +133,7 @@ document.getElementById('bookingForm').onsubmit = async e => {
 };
 
 /* =========================
-   TABLE RENDER (BASIC + NEW BUTTON)
+   TABLE (BASIC + NEW)
 ========================= */
 function renderTable() {
   const list = document.getElementById('list');
@@ -217,18 +143,16 @@ function renderTable() {
     .filter(b => b.stylist === currentStylist)
     .forEach(b => {
       const tr = document.createElement('tr');
-
       tr.innerHTML = `
-        <td>${formatTime(b.time)}</td> <!-- NEW -->
+        <td>${formatTime(b.time)}</td>
         <td><span class="badge stylist-${b.stylist.toLowerCase()}">${b.stylist}</span></td>
         <td>${b.gender === 'male' ? '👨' : '👩'}</td>
         <td>${b.name}</td>
         <td>${b.service || ''}</td>
         <td>${b.phone || ''}</td>
-        <td><button class="ghost">ลบ/แก้ไขคิว</button></td> <!-- NEW -->
+        <td><button class="ghost">ลบ/แก้ไขคิว</button></td>
       `;
-
-      tr.querySelector('button').onclick = () => openEdit(b); // NEW
+      tr.querySelector('button').onclick = () => openEdit(b);
       list.appendChild(tr);
     });
 }
@@ -248,7 +172,7 @@ function updateSummary() {
 }
 
 /* =========================
-   EDIT BOOKING MODAL (NEW)
+   EDIT MODAL (NEW)
 ========================= */
 const editOverlay = document.getElementById('editOverlay');
 const editTime = document.getElementById('editTime');
@@ -259,7 +183,6 @@ const editService = document.getElementById('editService');
 
 function openEdit(b) {
   editingId = b.id;
-
   editTime.value = formatTime(b.time);
   editStylist.value = b.stylist;
   editName.value = b.name;
