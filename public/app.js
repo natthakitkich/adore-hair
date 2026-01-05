@@ -1,51 +1,93 @@
 document.addEventListener('DOMContentLoaded', () => {
 
+  /* =========================
+     CONFIG
+  ========================= */
   const OWNER_PIN = '1234';
   const AUTH_KEY = 'adore_owner_auth';
   const CLOSED_KEY = 'adore_closed_days';
 
+  /* =========================
+     ELEMENTS
+  ========================= */
   const loginOverlay = document.getElementById('loginOverlay');
   const loginBtn = document.getElementById('loginBtn');
   const pinInput = document.getElementById('pin');
   const loginMsg = document.getElementById('loginMsg');
   const logoutBtn = document.getElementById('logoutBtn');
 
+  const dayStatus = document.getElementById('dayStatus');
+  const toggleClosedBtn = document.getElementById('toggleClosedBtn');
+
+  /* =========================
+     STATE
+  ========================= */
   let selectedDate = null;
   let closedDays = new Set(JSON.parse(localStorage.getItem(CLOSED_KEY) || '[]'));
 
+  /* =========================
+     AUTH CHECK
+  ========================= */
   if (localStorage.getItem(AUTH_KEY) === 'true') {
-    loginOverlay.classList.add('hidden');
+    hideLogin();
     bootApp();
+  } else {
+    showLogin();
   }
 
+  /* =========================
+     LOGIN
+  ========================= */
   loginBtn.onclick = () => {
-    if (pinInput.value === OWNER_PIN) {
-      localStorage.setItem(AUTH_KEY, 'true');
-      loginOverlay.classList.add('hidden');
-      bootApp();
-    } else {
+    const pin = pinInput.value.trim();
+    if (pin !== OWNER_PIN) {
       loginMsg.textContent = 'PIN ไม่ถูกต้อง';
+      return;
     }
+    localStorage.setItem(AUTH_KEY, 'true');
+    pinInput.value = '';
+    loginMsg.textContent = '';
+    hideLogin();
+    bootApp();
   };
+
+  pinInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') loginBtn.click();
+  });
 
   logoutBtn.onclick = () => {
     localStorage.removeItem(AUTH_KEY);
     location.reload();
   };
 
+  function showLogin(){ loginOverlay.classList.remove('hidden'); }
+  function hideLogin(){ loginOverlay.classList.add('hidden'); }
+
+  /* =========================
+     BOOT
+  ========================= */
   function bootApp(){
     renderTopDate();
     initCalendar();
     renderStylistTabs();
     renderSummary();
+    lockQueueUI(); // default = lock until date selected
   }
 
+  /* =========================
+     TOP DATE
+  ========================= */
   function renderTopDate(){
-    document.getElementById('topDate').textContent =
-      new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+    const el = document.getElementById('topDate');
+    if (!el) return;
+    el.textContent = new Date().toLocaleDateString('en-US',{
+      month:'short',day:'numeric',year:'numeric'
+    });
   }
 
-  /* ===== CALENDAR ===== */
+  /* =========================
+     CALENDAR
+  ========================= */
   let currentMonth = new Date();
 
   function initCalendar(){
@@ -65,24 +107,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const title = document.getElementById('calendarTitle');
     grid.innerHTML = '';
 
-    title.textContent = currentMonth.toLocaleDateString('th-TH',{month:'long',year:'numeric'});
+    title.textContent = currentMonth.toLocaleDateString('th-TH',{
+      month:'long',year:'numeric'
+    });
 
     const y = currentMonth.getFullYear();
     const m = currentMonth.getMonth();
-    const first = new Date(y,m,1).getDay();
-    const days = new Date(y,m+1,0).getDate();
+    const firstDay = new Date(y,m,1).getDay();
+    const daysInMonth = new Date(y,m+1,0).getDate();
 
-    for(let i=0;i<first;i++) grid.appendChild(document.createElement('div'));
+    for(let i=0;i<firstDay;i++) grid.appendChild(document.createElement('div'));
 
-    for(let d=1;d<=days;d++){
-      const dateKey = `${y}-${m+1}-${d}`;
+    for(let d=1;d<=daysInMonth;d++){
+      const key = `${y}-${m+1}-${d}`;
       const cell = document.createElement('div');
-      cell.className='calCell';
+      cell.className = 'calCell';
 
       const num = document.createElement('div');
-      num.className='calNum';
-      num.textContent=d;
+      num.className = 'calNum';
+      num.textContent = d;
 
+      // ===== density demo (Bank + Sindy max 20)
       const bank = Math.floor(Math.random()*11);
       const sindy = Math.floor(Math.random()*11);
       const total = bank + sindy;
@@ -92,35 +137,36 @@ document.addEventListener('DOMContentLoaded', () => {
       else if(total<=15) num.classList.add('density-high');
       else num.classList.add('density-full');
 
-      if(closedDays.has(dateKey)){
+      if(closedDays.has(key)){
         cell.classList.add('closed');
         num.classList.add('closed');
       }
 
-      cell.onclick = () => selectDate(dateKey);
-
+      cell.onclick = () => selectDate(key);
       cell.appendChild(num);
       grid.appendChild(cell);
     }
   }
 
-  /* ===== DAY CONTROL ===== */
+  /* =========================
+     DAY CONTROL
+  ========================= */
   function selectDate(key){
     selectedDate = key;
-    const isClosed = closedDays.has(key);
-    const status = document.getElementById('dayStatus');
-    const btn = document.getElementById('toggleClosedBtn');
+    const closed = isClosedDay(key);
 
-    status.textContent = isClosed
-      ? 'วันนี้ถูกตั้งเป็นวันหยุด'
+    dayStatus.textContent = closed
+      ? 'วันนี้เป็นวันหยุด ไม่สามารถจัดการคิวได้'
       : 'วันนี้เปิดทำการตามปกติ';
 
-    btn.textContent = isClosed
+    toggleClosedBtn.textContent = closed
       ? 'ยกเลิกวันหยุด'
       : 'ตั้งเป็นวันหยุด';
 
-    btn.classList.remove('hidden');
-    btn.onclick = () => toggleClosed(key);
+    toggleClosedBtn.classList.remove('hidden');
+    toggleClosedBtn.onclick = () => toggleClosed(key);
+
+    closed ? lockQueueUI() : unlockQueueUI();
   }
 
   function toggleClosed(key){
@@ -134,25 +180,53 @@ document.addEventListener('DOMContentLoaded', () => {
     selectDate(key);
   }
 
-  /* ===== TABS ===== */
-  const stylists=['Bank','Sindy','Assist'];
-  let active='Bank';
+  function isClosedDay(key){
+    return closedDays.has(key);
+  }
+
+  /* =========================
+     QUEUE LOCK / UNLOCK
+  ========================= */
+  function lockQueueUI(){
+    document.getElementById('stylistTabs')?.classList.add('hidden');
+    document.getElementById('summary')?.classList.add('hidden');
+  }
+
+  function unlockQueueUI(){
+    document.getElementById('stylistTabs')?.classList.remove('hidden');
+    document.getElementById('summary')?.classList.remove('hidden');
+  }
+
+  /* =========================
+     STYLIST TABS
+  ========================= */
+  const stylists = ['Bank','Sindy','Assist'];
+  let activeStylist = 'Bank';
 
   function renderStylistTabs(){
-    const wrap=document.getElementById('stylistTabs');
-    wrap.innerHTML='';
-    stylists.forEach(s=>{
-      const t=document.createElement('div');
-      t.className='tab'+(s===active?' active':'');
-      t.textContent=s;
-      t.onclick=()=>{active=s;renderStylistTabs();};
-      wrap.appendChild(t);
+    const wrap = document.getElementById('stylistTabs');
+    if(!wrap) return;
+    wrap.innerHTML = '';
+    stylists.forEach(name=>{
+      const tab = document.createElement('div');
+      tab.className = 'tab' + (name===activeStylist?' active':'');
+      tab.textContent = name;
+      tab.onclick = () => {
+        if(isClosedDay(selectedDate)) return;
+        activeStylist = name;
+        renderStylistTabs();
+      };
+      wrap.appendChild(tab);
     });
   }
 
-  /* ===== SUMMARY ===== */
+  /* =========================
+     SUMMARY
+  ========================= */
   function renderSummary(){
-    document.getElementById('summary').innerHTML=`
+    const el = document.getElementById('summary');
+    if(!el) return;
+    el.innerHTML = `
       <div class="panel">Bank<br><b>0</b></div>
       <div class="panel">Sindy<br><b>0</b></div>
       <div class="panel">Assist<br><b>0</b></div>
