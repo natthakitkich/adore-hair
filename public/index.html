@@ -6,66 +6,83 @@
   <title>Adore Hair Studio</title>
   <link rel="stylesheet" href="style.css" />
 </head>
-
 <body>
 
-<!-- ================= LOGIN OVERLAY ================= -->
-<div id="loginOverlay" class="overlay" style="display:none">
+<!-- LOGIN -->
+<div id="loginOverlay" class="overlay">
   <div class="loginCard">
     <div class="loginAvatar">A</div>
     <h1>เข้าสู่ระบบ</h1>
     <p class="muted">กรุณาใส่ PIN 4 หลัก</p>
-    <input id="pinInput" type="password" inputmode="numeric" maxlength="4" placeholder="••••" />
+    <input id="pinInput" type="password" inputmode="numeric" maxlength="4" />
     <button id="loginBtn" class="primary">Login</button>
     <div id="loginMsg" class="msg"></div>
   </div>
 </div>
 
-<!-- ================= APP ROOT ================= -->
-<div id="appRoot" style="display:none">
+<!-- TOP BAR -->
+<header class="topbar">
+  <div class="brand">
+    <div class="avatar">A</div>
+    <div>
+      <div class="title">Adore hair studio</div>
+      <div class="subtitle">Owner Queue · 13:00–22:00 · แยกตามช่าง</div>
+    </div>
+  </div>
 
-  <!-- TOP BAR -->
-  <header class="topbar">
-    <div class="brand">
-      <div class="avatar">A</div>
-      <div>
-        <div class="title">Adore hair studio</div>
-        <div class="subtitle">Owner Queue · 13:00–22:00 · แยกตามช่าง</div>
-      </div>
+  <div class="topActions">
+    <div id="topDate" class="dateBadge"></div>
+    <button id="logoutBtn" class="ghost">Logout</button>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- CALENDAR -->
+  <section class="panel">
+    <div class="calendarHeader">
+      <button id="prevMonth" class="navBtn">‹</button>
+      <div id="calendarTitle" class="calendarTitle"></div>
+      <button id="nextMonth" class="navBtn">›</button>
     </div>
 
-    <div class="topActions">
-      <div id="topDate" class="dateBadge"></div>
-      <button id="logoutBtn" class="ghost">Logout</button>
+    <div class="calendarWeek">
+      <span>อา</span><span>จ</span><span>อ</span>
+      <span>พ</span><span>พฤ</span><span>ศ</span><span>ส</span>
     </div>
-  </header>
 
-  <!-- MAIN -->
-  <main class="wrap">
+    <div id="calendarGrid" class="calendarGrid"></div>
+  </section>
 
-    <!-- CALENDAR -->
-    <section class="panel">
-      <div class="calendarHeader">
-        <button id="prevMonth" class="navBtn">‹</button>
-        <div id="calendarTitle" class="calendarTitle"></div>
-        <button id="nextMonth" class="navBtn">›</button>
-      </div>
+  <!-- DAY STATUS -->
+  <section class="panel center">
+    <div id="dayStatus" class="muted">กรุณาเลือกวันจากปฏิทิน</div>
+  </section>
 
-      <div class="calendarWeek">
-        <span>อา</span><span>จ</span><span>อ</span>
-        <span>พ</span><span>พฤ</span><span>ศ</span><span>ส</span>
-      </div>
+  <!-- STYLIST -->
+  <section class="panel">
+    <div id="stylistTabs" class="tabs"></div>
+  </section>
 
-      <div id="calendarGrid" class="calendarGrid"></div>
-    </section>
+  <!-- SUMMARY -->
+  <section id="summary" class="panel summary"></section>
 
-    <!-- DAY HINT -->
-    <section class="panel center muted" id="dayHint">
-      กรุณาเลือกวันจากปฏิทิน
-    </section>
+  <!-- QUEUE -->
+  <section class="panel">
+    <table class="queueTable">
+      <thead>
+        <tr>
+          <th>เวลา</th>
+          <th>ช่าง</th>
+          <th>เพศ</th>
+          <th>ชื่อ</th>
+        </tr>
+      </thead>
+      <tbody id="queueBody"></tbody>
+    </table>
+  </section>
 
-  </main>
-</div>
+</main>
 
 <script src="app.js"></script>
 </body>
