@@ -18,7 +18,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 /* =========================
-   SUPABASE CLIENT (BASIC)
+   SUPABASE CLIENT
 ========================= */
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -29,9 +29,7 @@ const supabase = createClient(
    ROUTES
 ========================= */
 
-/* ---------- BASIC ----------
-   Serve frontend
----------------------------- */
+// serve frontend
 app.get('/', (_, res) => {
   res.sendFile(path.join(__dirname, 'public/index.html'));
 });
@@ -60,6 +58,27 @@ app.get('/bookings', async (req, res) => {
   res.json(data || []);
 });
 
+/* ---------- DEVELOP ----------
+   Get calendar density (NEW)
+---------------------------- */
+app.get('/calendar-days', async (_, res) => {
+  const { data, error } = await supabase
+    .from('bookings')
+    .select('date');
+
+  if (error) {
+    return res.status(500).json(error);
+  }
+
+  const map = {};
+
+  data.forEach(b => {
+    map[b.date] = (map[b.date] || 0) + 1;
+  });
+
+  res.json(map);
+});
+
 /* ---------- BASIC ----------
    Create booking
 ---------------------------- */
@@ -70,17 +89,12 @@ app.post('/bookings', async (req, res) => {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
-  // BASIC: prevent duplicate slot
-  const { data: exist, error: existError } = await supabase
+  const { data: exist } = await supabase
     .from('bookings')
     .select('id')
     .eq('date', date)
     .eq('time', time)
     .eq('stylist', stylist);
-
-  if (existError) {
-    return res.status(500).json(existError);
-  }
 
   if (exist && exist.length > 0) {
     return res.status(409).json({ error: 'Slot already booked' });
@@ -100,21 +114,15 @@ app.post('/bookings', async (req, res) => {
 });
 
 /* ---------- DEVELOP ----------
-   Update booking (LOCK date/time/stylist)
+   Update booking
 ---------------------------- */
 app.put('/bookings/:id', async (req, res) => {
   const { id } = req.params;
   const { name, phone, gender, service } = req.body;
 
-  // DEVELOP: allow update only specific fields
   const { error } = await supabase
     .from('bookings')
-    .update({
-      name,
-      phone,
-      gender,
-      service
-    })
+    .update({ name, phone, gender, service })
     .eq('id', id);
 
   if (error) {
@@ -146,5 +154,5 @@ app.delete('/bookings/:id', async (req, res) => {
    START SERVER
 ========================= */
 app.listen(PORT, () => {
-  console.log(`Adore Hair server (Develop) running on port ${PORT}`);
+  console.log(`Adore Hair server running on port ${PORT}`);
 });
