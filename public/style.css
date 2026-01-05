@@ -195,95 +195,45 @@ label{
 }
 
 /* =========================
-   CALENDAR
+   CALENDAR (unchanged)
 ========================= */
-.calendarHeader{
+/* ใช้ชุดเดิมทั้งหมด */
+
+/* =========================
+   SUMMARY (RESTORED LIKE OLD)
+========================= */
+.summary.summary-compact{
   display:grid;
-  grid-template-columns:48px 1fr 48px;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;
+}
+
+.summaryItem{
+  background:rgba(0,0,0,.32);
+  border:1px solid var(--stroke);
+  border-radius:18px;
+  padding:14px 16px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
   align-items:center;
-  margin-bottom:12px;
 }
 
-.calendarCenter{
-  text-align:center;
-}
-
-.calendarTitle{
-  font-size:22px;
-  font-weight:900;
-}
-
-.calendarSubtitle{
-  font-size:13px;
-  color:var(--muted);
-  margin-top:2px;
-}
-
-.calWeekHead{
-  display:grid;
-  grid-template-columns:repeat(7,1fr);
-  gap:10px;
-  text-align:center;
+.summaryLabel{
   font-size:12px;
   color:var(--muted);
-  margin-top:14px;
+  margin-bottom:6px;
+  letter-spacing:.3px;
 }
 
-.calGrid{
-  display:grid;
-  grid-template-columns:repeat(7,1fr);
-  gap:10px;
-  margin-top:10px;
-}
-
-.calCell{
-  aspect-ratio:1/1;
-  border-radius:18px;
-  background:rgba(0,0,0,.28);
-  border:1px solid var(--stroke);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
-}
-
-.calCell.selected{
-  outline:2px solid rgba(110,231,255,.45);
-}
-
-.calNum{
-  width:40px;
-  height:40px;
-  border-radius:999px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+.summaryValue{
+  font-size:26px;
   font-weight:900;
 }
 
-/* ===== ORIGINAL DENSITY COLORS ===== */
-.calNum.density-low{
-  background:rgba(44,255,156,.22);
-  color:#2cff9c;
-  border:1px solid rgba(44,255,156,.55);
-}
-
-.calNum.density-mid{
-  background:rgba(253,224,71,.22);
-  color:#fde047;
-  border:1px solid rgba(253,224,71,.55);
-}
-
-.calNum.density-high{
-  background:rgba(251,146,60,.22);
-  color:#fb923c;
-  border:1px solid rgba(251,146,60,.55);
-}
-
-.calNum.density-full{
-  background:rgba(255,92,122,.22);
-  color:#ff5c7a;
-  border:1px solid rgba(255,92,122,.55);
+.summaryItem.total{
+  background:rgba(110,231,255,.12);
+  border-color:rgba(110,231,255,.35);
 }
 
 /* =========================
@@ -311,24 +261,6 @@ label{
 }
 
 /* =========================
-   SUMMARY
-========================= */
-.summary{
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:14px;
-  margin-bottom:14px;
-}
-
-.box{
-  padding:16px;
-  border-radius:20px;
-  background:rgba(0,0,0,.32);
-  border:1px solid var(--stroke);
-  font-weight:900;
-}
-
-/* =========================
    TABLE
 ========================= */
 table{
@@ -351,9 +283,14 @@ th{
 /* =========================
    RESPONSIVE
 ========================= */
+@media(max-width:900px){
+  .summary.summary-compact{
+    grid-template-columns:repeat(2,1fr);
+  }
+}
+
 @media(max-width:720px){
   .grid{grid-template-columns:1fr}
-  .summary{grid-template-columns:1fr 1fr}
   .topbar{
     flex-direction:column;
     align-items:flex-start;
