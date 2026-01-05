@@ -1,0 +1,154 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2822
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 <!DOCTYPE html>\
+<html lang="th">\
+<head>\
+  <meta charset="UTF-8" />\
+  <meta name="viewport"\
+        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>\
+  <title>Adore hair studio</title>\
+  <link rel="stylesheet" href="style.css" />\
+</head>\
+<body>\
+\
+<!-- LOGIN OVERLAY -->\
+<div id="loginOverlay" class="overlay">\
+  <div class="modal">\
+    <div class="modalBody">\
+      <div class="avatar big">A</div>\
+      <h2>\uc0\u3648 \u3586 \u3657 \u3634 \u3626 \u3641 \u3656 \u3619 \u3632 \u3610 \u3610 </h2>\
+      <p class="muted">\uc0\u3651 \u3626 \u3656  PIN \u3648 \u3614 \u3639 \u3656 \u3629 \u3592 \u3633 \u3604 \u3585 \u3634 \u3619 \u3588 \u3636 \u3623 </p>\
+\
+      <input\
+        id="pin"\
+        type="password"\
+        inputmode="numeric"\
+        pattern="[0-9]*"\
+        placeholder="PIN"\
+        class="pinInput"\
+      />\
+\
+      <button id="loginBtn" class="primary">Login</button>\
+      <div id="loginMsg" class="msg err"></div>\
+    </div>\
+  </div>\
+</div>\
+\
+<!-- TOPBAR -->\
+<div class="topbar">\
+  <div class="brand">\
+    <div class="avatar">A</div>\
+    <div>\
+      <div class="title">Adore hair studio</div>\
+      <div class="subtitle">Owner Queue \'b7 13:00\'9622:00 \'b7 \uc0\u3649 \u3618 \u3585 \u3605 \u3634 \u3617 \u3594 \u3656 \u3634 \u3591 </div>\
+    </div>\
+  </div>\
+  <button id="logoutBtn" class="ghost">Logout</button>\
+</div>\
+\
+<div class="wrap">\
+\
+  <!-- DATE + CALENDAR -->\
+  <div class="panel">\
+    <div class="dateWrap">\
+      <div class="label">\uc0\u3648 \u3621 \u3639 \u3629 \u3585 \u3623 \u3633 \u3609 </div>\
+      <input type="date" id="date" />\
+    </div>\
+\
+    <div class="calendarHeader">\
+      <button id="prevMonth" class="ghost">\'8b</button>\
+\
+      <div class="calendarCenter">\
+        <div id="calendarTitle" class="calendarTitle"></div>\
+        <div class="calendarSubtitle">\uc0\u3619 \u3632 \u3604 \u3633 \u3610 \u3626 \u3637 \u3649 \u3626 \u3604 \u3591 \u3588 \u3623 \u3634 \u3617 \u3627 \u3609 \u3634 \u3649 \u3609 \u3656 \u3609 \u3586 \u3629 \u3591 \u3588 \u3636 \u3623 </div>\
+      </div>\
+\
+      <button id="nextMonth" class="ghost">\'9b</button>\
+    </div>\
+\
+    <div class="calWeekHead">\
+      <div>\uc0\u3629 \u3634 </div><div>\u3592 </div><div>\u3629 </div><div>\u3614 </div><div>\u3614 \u3620 </div><div>\u3624 </div><div>\u3626 </div>\
+    </div>\
+\
+    <div id="calendarDays" class="calGrid"></div>\
+  </div>\
+\
+  <!-- TABS -->\
+  <div class="panel tabs">\
+    <button class="tab active" data-tab="Bank">Bank</button>\
+    <button class="tab" data-tab="Sindy">Sindy</button>\
+    <button class="tab" data-tab="Assist">Assist</button>\
+  </div>\
+\
+  <!-- FORM -->\
+  <div class="panel">\
+    <form id="bookingForm" class="grid">\
+      <div class="full">\
+        <label>\uc0\u3648 \u3623 \u3621 \u3634 </label>\
+        <select id="time"></select>\
+      </div>\
+\
+      <div>\
+        <label>\uc0\u3594 \u3639 \u3656 \u3629 \u3621 \u3641 \u3585 \u3588 \u3657 \u3634 </label>\
+        <input id="name" required />\
+      </div>\
+\
+      <div>\
+        <label>\uc0\u3648 \u3610 \u3629 \u3619 \u3660 \u3650 \u3607 \u3619 </label>\
+        <input id="phone" />\
+      </div>\
+\
+      <div class="full">\
+        <label>\uc0\u3648 \u3614 \u3624 </label>\
+        <div class="row">\
+          <label><input type="radio" name="gender" value="male"> \uc0\u55357 \u56424  \u3594 \u3634 \u3618 </label>\
+          <label><input type="radio" name="gender" value="female"> \uc0\u55357 \u56425  \u3627 \u3597 \u3636 \u3591 </label>\
+        </div>\
+      </div>\
+\
+      <div class="full">\
+        <label>\uc0\u3607 \u3635 \u3629 \u3632 \u3652 \u3619 </label>\
+        <input id="service" />\
+      </div>\
+\
+      <div class="full">\
+        <button class="primary">\uc0\u3610 \u3633 \u3609 \u3607 \u3638 \u3585 \u3585 \u3634 \u3619 \u3592 \u3629 \u3591 </button>\
+      </div>\
+    </form>\
+  </div>\
+\
+  <!-- SUMMARY + TABLE -->\
+  <div class="panel">\
+    <div class="summary">\
+      <div class="box">Bank <span id="countBank">0</span></div>\
+      <div class="box">Sindy <span id="countSindy">0</span></div>\
+      <div class="box">Assist <span id="countAssist">0</span></div>\
+      <div class="box">\uc0\u3619 \u3623 \u3617  <span id="countTotal">0</span></div>\
+    </div>\
+\
+    <table>\
+      <thead>\
+        <tr>\
+          <th>\uc0\u3648 \u3623 \u3621 \u3634 </th>\
+          <th>\uc0\u3594 \u3656 \u3634 \u3591 </th>\
+          <th>\uc0\u3648 \u3614 \u3624 </th>\
+          <th>\uc0\u3594 \u3639 \u3656 \u3629 </th>\
+          <th>\uc0\u3607 \u3635 \u3629 \u3632 \u3652 \u3619 </th>\
+          <th>\uc0\u3650 \u3607 \u3619 </th>\
+          <th></th>\
+        </tr>\
+      </thead>\
+      <tbody id="list"></tbody>\
+    </table>\
+  </div>\
+\
+</div>\
+\
+<script src="app.js"></script>\
+</body>\
+</html>}
