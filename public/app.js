@@ -1,194 +1,123 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-  /* =========================
-     CONFIG
-  ========================= */
   const OWNER_PIN = '1234';
   const AUTH_KEY = 'adore_owner_auth';
 
-  /* =========================
-     ELEMENTS
-  ========================= */
   const loginOverlay = document.getElementById('loginOverlay');
   const loginBtn = document.getElementById('loginBtn');
   const pinInput = document.getElementById('pin');
   const loginMsg = document.getElementById('loginMsg');
   const logoutBtn = document.getElementById('logoutBtn');
 
-  /* =========================
-     AUTH CHECK (ON LOAD)
-  ========================= */
-  const isAuthed = localStorage.getItem(AUTH_KEY) === 'true';
-
-  if (isAuthed) {
-    hideLogin();
+  /* ===== AUTH ===== */
+  if (localStorage.getItem(AUTH_KEY) === 'true') {
+    loginOverlay.classList.add('hidden');
     bootApp();
-  } else {
-    showLogin();
   }
 
-  /* =========================
-     LOGIN
-  ========================= */
-  loginBtn.addEventListener('click', () => {
-    const pin = pinInput.value.trim();
-
-    if (pin.length !== 4) {
-      loginMsg.textContent = 'กรุณาใส่ PIN 4 หลัก';
-      return;
-    }
-
-    if (pin === OWNER_PIN) {
+  loginBtn.onclick = () => {
+    if (pinInput.value === OWNER_PIN) {
       localStorage.setItem(AUTH_KEY, 'true');
-      pinInput.value = '';
-      loginMsg.textContent = '';
-      hideLogin();
+      loginOverlay.classList.add('hidden');
       bootApp();
     } else {
       loginMsg.textContent = 'PIN ไม่ถูกต้อง';
     }
-  });
+  };
 
-  pinInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') loginBtn.click();
-  });
-
-  /* =========================
-     LOGOUT
-  ========================= */
-  logoutBtn.addEventListener('click', () => {
+  logoutBtn.onclick = () => {
     localStorage.removeItem(AUTH_KEY);
     location.reload();
-  });
+  };
 
-  /* =========================
-     UI HELPERS
-  ========================= */
-  function showLogin() {
-    loginOverlay.classList.remove('hidden');
-  }
-
-  function hideLogin() {
-    loginOverlay.classList.add('hidden');
-  }
-
-  /* =========================
-     APP BOOT
-  ========================= */
-  function bootApp() {
+  /* ===== BOOT ===== */
+  function bootApp(){
     renderTopDate();
     initCalendar();
     renderStylistTabs();
     renderSummary();
-    renderQueueTable();
   }
 
-  /* =========================
-     TOP DATE
-  ========================= */
-  function renderTopDate() {
-    const el = document.getElementById('topDate');
-    if (!el) return;
-    el.textContent = new Date().toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
+  function renderTopDate(){
+    document.getElementById('topDate').textContent =
+      new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
   }
 
-  /* =========================
-     CALENDAR
-  ========================= */
+  /* ===== CALENDAR ===== */
   let currentMonth = new Date();
 
-  function initCalendar() {
+  function initCalendar(){
     renderCalendar();
-
     document.getElementById('prevMonth').onclick = () => {
-      currentMonth.setMonth(currentMonth.getMonth() - 1);
+      currentMonth.setMonth(currentMonth.getMonth()-1);
       renderCalendar();
     };
-
     document.getElementById('nextMonth').onclick = () => {
-      currentMonth.setMonth(currentMonth.getMonth() + 1);
+      currentMonth.setMonth(currentMonth.getMonth()+1);
       renderCalendar();
     };
   }
 
-  function renderCalendar() {
+  function renderCalendar(){
     const grid = document.getElementById('calendarGrid');
     const title = document.getElementById('calendarTitle');
-    if (!grid || !title) return;
-
     grid.innerHTML = '';
-    title.textContent = currentMonth.toLocaleDateString('th-TH', {
-      month: 'long',
-      year: 'numeric'
-    });
 
-    const year = currentMonth.getFullYear();
-    const month = currentMonth.getMonth();
-    const firstDay = new Date(year, month, 1).getDay();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    title.textContent = currentMonth.toLocaleDateString('th-TH',{month:'long',year:'numeric'});
 
-    for (let i = 0; i < firstDay; i++) {
-      grid.appendChild(document.createElement('div'));
-    }
+    const y = currentMonth.getFullYear();
+    const m = currentMonth.getMonth();
+    const first = new Date(y,m,1).getDay();
+    const days = new Date(y,m+1,0).getDate();
 
-    for (let d = 1; d <= daysInMonth; d++) {
+    for(let i=0;i<first;i++) grid.appendChild(document.createElement('div'));
+
+    for(let d=1;d<=days;d++){
       const cell = document.createElement('div');
-      cell.className = 'calCell';
-      cell.textContent = d;
+      cell.className='calCell';
+
+      const num = document.createElement('div');
+      num.className='calNum';
+      num.textContent=d;
+
+      const bank = Math.floor(Math.random()*11);
+      const sindy = Math.floor(Math.random()*11);
+      const total = bank + sindy;
+
+      if(total<=5) num.classList.add('density-low');
+      else if(total<=10) num.classList.add('density-mid');
+      else if(total<=15) num.classList.add('density-high');
+      else num.classList.add('density-full');
+
+      cell.appendChild(num);
       grid.appendChild(cell);
     }
   }
 
-  /* =========================
-     STYLIST TABS
-  ========================= */
-  const stylists = ['Bank', 'Sindy', 'Assist'];
-  let activeStylist = 'Bank';
+  /* ===== TABS ===== */
+  const stylists=['Bank','Sindy','Assist'];
+  let active='Bank';
 
-  function renderStylistTabs() {
-    const wrap = document.getElementById('stylistTabs');
-    if (!wrap) return;
-
-    wrap.innerHTML = '';
-    stylists.forEach(name => {
-      const tab = document.createElement('div');
-      tab.className = 'tab' + (name === activeStylist ? ' active' : '');
-      tab.textContent = name;
-      tab.onclick = () => {
-        activeStylist = name;
-        renderStylistTabs();
-        renderQueueTable();
-      };
-      wrap.appendChild(tab);
+  function renderStylistTabs(){
+    const wrap=document.getElementById('stylistTabs');
+    wrap.innerHTML='';
+    stylists.forEach(s=>{
+      const t=document.createElement('div');
+      t.className='tab'+(s===active?' active':'');
+      t.textContent=s;
+      t.onclick=()=>{active=s;renderStylistTabs();};
+      wrap.appendChild(t);
     });
   }
 
-  /* =========================
-     SUMMARY
-  ========================= */
-  function renderSummary() {
-    const el = document.getElementById('summary');
-    if (!el) return;
-
-    el.innerHTML = `
+  /* ===== SUMMARY ===== */
+  function renderSummary(){
+    document.getElementById('summary').innerHTML=`
       <div class="panel">Bank<br><b>0</b></div>
       <div class="panel">Sindy<br><b>0</b></div>
       <div class="panel">Assist<br><b>0</b></div>
       <div class="panel">รวม<br><b>0</b></div>
     `;
-  }
-
-  /* =========================
-     QUEUE TABLE
-  ========================= */
-  function renderQueueTable() {
-    const tbody = document.getElementById('queueTable');
-    if (!tbody) return;
-    tbody.innerHTML = '';
   }
 
 });
