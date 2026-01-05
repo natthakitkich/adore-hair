@@ -5,8 +5,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const AUTH_KEY = 'adore_owner_auth';
   const API = '';
 
-  const START_HOUR = 13;
-  const END_HOUR = 22;
   const STYLISTS = ['Bank', 'Sindy', 'Assist'];
 
   /* ================= ELEMENTS ================= */
@@ -150,26 +148,33 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderQueue() {
     queueBody.innerHTML = '';
 
-    for (let h = START_HOUR; h <= END_HOUR; h++) {
-      const time = `${String(h).padStart(2,'0')}:00:00`;
+    const list = bookings
+      .filter(b => b.stylist === activeStylist)
+      .sort((a, b) => a.time.localeCompare(b.time));
 
-      const row = document.createElement('tr');
-
-      const booking = bookings.find(
-        b => b.time === time && b.stylist === activeStylist
-      );
-
-      row.innerHTML = `
-        <td>${time.slice(0,5)}</td>
-        <td>${activeStylist}</td>
-        <td>${booking ? (booking.gender === 'male' ? '👨' : '👩') : '-'}</td>
-        <td>${booking ? booking.name : 'ว่าง'}</td>
-        <td>${booking ? booking.service || '' : ''}</td>
-        <td>${booking ? booking.phone || '' : ''}</td>
+    if (list.length === 0) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td colspan="6" style="text-align:center;color:#9aa6c5">
+          ยังไม่มีคิวในวันนี้
+        </td>
       `;
-
-      queueBody.appendChild(row);
+      queueBody.appendChild(tr);
+      return;
     }
+
+    list.forEach(b => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${b.time.slice(0,5)}</td>
+        <td>${b.stylist}</td>
+        <td>${b.gender === 'male' ? '👨' : '👩'}</td>
+        <td>${b.name}</td>
+        <td>${b.service || ''}</td>
+        <td>${b.phone || ''}</td>
+      `;
+      queueBody.appendChild(tr);
+    });
   }
 
   /* ================= STYLIST ================= */
