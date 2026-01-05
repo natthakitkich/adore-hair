@@ -1,158 +1,163 @@
-import express from 'express';
-import cors from 'cors';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { createClient } from '@supabase/supabase-js';
+// ================================
+// Adore Hair Studio – Server
+// Latest + Recover Version
+// ================================
 
-/* =========================
-   BASIC SETUP
-========================= */
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const express = require("express");
+const cors = require("cors");
+const path = require("path");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// ================================
+// Middleware
+// ================================
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, "public")));
 
-/* =========================
-   SUPABASE CLIENT
-========================= */
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+// ================================
+// Simple Auth (PIN เดิม)
+// ================================
+const OWNER_PIN = "1234"; // ใช้ค่าเดิมของคุณ
 
-/* =========================
-   ROUTES
-========================= */
+// ================================
+// In-memory Database (โครงเดิม)
+// ================================
+// ❗ ห้ามเปลี่ยน key โดยไม่จำเป็น
+let bookings = [
+  {
+    id: 1,
+    date: "2025-12-28",
+    time: "13:00",
+    barber: "Bank",
+    gender: "male",
+    name: "เอิร์ท",
+    service: "ตัดผมชาย",
+    phone: "0936600933",
+  },
+  {
+    id: 2,
+    date: "2025-12-28",
+    time: "18:00",
+    barber: "Bank",
+    gender: "male",
+    name: "แทน",
+    service: "ตัดผมชาย",
+    phone: "06-3130-8483",
+  },
+];
 
-// serve frontend
-app.get('/', (_, res) => {
-  res.sendFile(path.join(__dirname, 'public/index.html'));
+// ================================
+// Utils
+// ================================
+function generateId() {
+  return Date.now();
+}
+
+// ================================
+// Routes – Auth
+// ================================
+app.post("/api/login", (req, res) => {
+  const { pin } = req.body;
+
+  if (!pin) {
+    return res.status(400).json({ success: false });
+  }
+
+  if (pin === OWNER_PIN) {
+    return res.json({ success: true });
+  }
+
+  return res.status(401).json({ success: false });
 });
 
-/* ---------- BASIC ----------
-   Get bookings by date
----------------------------- */
-app.get('/bookings', async (req, res) => {
+// ================================
+// Routes – Booking
+// ================================
+
+// ดึงคิวตามวัน
+app.get("/api/bookings", (req, res) => {
   const { date } = req.query;
 
-  let query = supabase
-    .from('bookings')
-    .select('*')
-    .order('time', { ascending: true });
-
-  if (date) {
-    query = query.eq('date', date);
+  if (!date) {
+    return res.json([]);
   }
 
-  const { data, error } = await query;
+  const result = bookings
+    .filter((b) => b.date === date)
+    .sort((a, b) => a.time.localeCompare(b.time));
 
-  if (error) {
-    return res.status(500).json(error);
-  }
-
-  res.json(data || []);
+  res.json(result);
 });
 
-/* ---------- DEVELOP ----------
-   Get calendar density (NEW)
----------------------------- */
-app.get('/calendar-days', async (_, res) => {
-  const { data, error } = await supabase
-    .from('bookings')
-    .select('date');
+// เพิ่มคิว
+app.post("/api/bookings", (req, res) => {
+  const booking = req.body;
 
-  if (error) {
-    return res.status(500).json(error);
+  if (
+    !booking.date ||
+    !booking.time ||
+    !booking.barber ||
+    !booking.name
+  ) {
+    return res.status(400).json({ success: false });
   }
 
-  const map = {};
+  const newBooking = {
+    id: generateId(),
+    date: booking.date,
+    time: booking.time,
+    barber: booking.barber,
+    gender: booking.gender || "",
+    name: booking.name,
+    service: booking.service || "",
+    phone: booking.phone || "",
+  };
 
-  data.forEach(b => {
-    map[b.date] = (map[b.date] || 0) + 1;
-  });
-
-  res.json(map);
+  bookings.push(newBooking);
+  res.json({ success: true });
 });
 
-/* ---------- BASIC ----------
-   Create booking
----------------------------- */
-app.post('/bookings', async (req, res) => {
-  const { date, time, stylist, name, gender, phone, service } = req.body;
+// แก้ไขคิว (เวลา + ช่าง ล็อกไว้)
+app.put("/api/bookings/:id", (req, res) => {
+  const id = Number(req.params.id);
+  const index = bookings.findIndex((b) => b.id === id);
 
-  if (!date || !time || !stylist || !name || !gender) {
-    return res.status(400).json({ error: 'Missing required fields' });
+  if (index === -1) {
+    return res.status(404).json({ success: false });
   }
 
-  const { data: exist } = await supabase
-    .from('bookings')
-    .select('id')
-    .eq('date', date)
-    .eq('time', time)
-    .eq('stylist', stylist);
-
-  if (exist && exist.length > 0) {
-    return res.status(409).json({ error: 'Slot already booked' });
-  }
-
-  const { data, error } = await supabase
-    .from('bookings')
-    .insert([{ date, time, stylist, name, gender, phone, service }])
-    .select()
-    .single();
-
-  if (error) {
-    return res.status(500).json(error);
-  }
-
-  res.json(data);
-});
-
-/* ---------- DEVELOP ----------
-   Update booking
----------------------------- */
-app.put('/bookings/:id', async (req, res) => {
-  const { id } = req.params;
-  const { name, phone, gender, service } = req.body;
-
-  const { error } = await supabase
-    .from('bookings')
-    .update({ name, phone, gender, service })
-    .eq('id', id);
-
-  if (error) {
-    return res.status(500).json(error);
-  }
+  // ❗ ไม่ให้แก้ date / time / barber
+  bookings[index] = {
+    ...bookings[index],
+    name: req.body.name,
+    gender: req.body.gender,
+    service: req.body.service,
+    phone: req.body.phone,
+  };
 
   res.json({ success: true });
 });
 
-/* ---------- BASIC ----------
-   Delete booking
----------------------------- */
-app.delete('/bookings/:id', async (req, res) => {
-  const { id } = req.params;
-
-  const { error } = await supabase
-    .from('bookings')
-    .delete()
-    .eq('id', id);
-
-  if (error) {
-    return res.status(500).json(error);
-  }
-
+// ลบคิว
+app.delete("/api/bookings/:id", (req, res) => {
+  const id = Number(req.params.id);
+  bookings = bookings.filter((b) => b.id !== id);
   res.json({ success: true });
 });
 
-/* =========================
-   START SERVER
-========================= */
+// ================================
+// Fallback – Frontend
+// ================================
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+// ================================
+// Start Server
+// ================================
 app.listen(PORT, () => {
-  console.log(`Adore Hair server running on port ${PORT}`);
+  console.log(`Adore Hair Server running on port ${PORT}`);
 });
