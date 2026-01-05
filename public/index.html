@@ -9,18 +9,17 @@
 <body>
 
 <!-- LOGIN OVERLAY -->
-<div id="loginOverlay" class="overlay hidden">
+<div id="loginOverlay" class="overlay">
   <div class="loginCard">
     <div class="loginAvatar">A</div>
     <h1>เข้าสู่ระบบ</h1>
     <p class="muted">กรุณาใส่ PIN 4 หลัก</p>
     <input id="pin" type="password" inputmode="numeric" maxlength="4" placeholder="••••" />
-    <button id="loginBtn" class="primary">Login</button>
+    <button id="loginBtn" class="primary" type="button">Login</button>
     <div id="loginMsg" class="msg err"></div>
   </div>
 </div>
 
-<!-- TOP BAR -->
 <header class="topbar">
   <div class="brand">
     <div class="avatar">A</div>
@@ -32,19 +31,16 @@
 
   <div class="topRight">
     <div id="topDate" class="dateBadge small"></div>
-    <button id="logoutBtn" class="ghost small">Logout</button>
+    <button id="logoutBtn" class="ghost small" type="button">Logout</button>
   </div>
 </header>
 
-<!-- MAIN -->
 <main class="wrap">
-
-  <!-- CALENDAR -->
   <section class="panel">
     <div class="calendarHeader">
-      <button id="prevMonth" class="ghost">‹</button>
+      <button id="prevMonth" class="ghost" type="button">‹</button>
       <div class="calendarTitle" id="calendarTitle"></div>
-      <button id="nextMonth" class="ghost">›</button>
+      <button id="nextMonth" class="ghost" type="button">›</button>
     </div>
 
     <div class="calendarWeek">
@@ -54,19 +50,15 @@
     <div class="calendarGrid" id="calendarGrid"></div>
   </section>
 
-  <!-- DAY STATUS -->
   <section class="panel muted" id="dayStatus">
     กรุณาเลือกวันจากปฏิทิน
   </section>
 
-  <!-- STYLIST TABS -->
   <section class="panel">
     <div class="tabs" id="stylistTabs"></div>
   </section>
 
-  <!-- SUMMARY -->
   <section class="panel summary" id="summary"></section>
-
 </main>
 
 <script src="app.js"></script>
