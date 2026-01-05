@@ -64,6 +64,11 @@ input,select{
   color:#061022;
 }
 
+.primary:disabled{
+  opacity:.4;
+  cursor:not-allowed;
+}
+
 .ghost{
   background:rgba(255,255,255,.06);
   border:1px solid var(--stroke);
@@ -198,6 +203,7 @@ input,select{
   cursor:pointer;
   border:1px solid var(--stroke);
   background:rgba(255,255,255,.04);
+  position:relative;
 }
 
 .day.today{
@@ -207,6 +213,21 @@ input,select{
 .day.low{color:var(--low);background:rgba(44,255,156,.15)}
 .day.mid{color:var(--mid);background:rgba(255,209,102,.15)}
 .day.high{color:var(--high);background:rgba(255,92,122,.15)}
+
+/* --- CLOSED DAY --- */
+.day.closed{
+  background:rgba(255,92,122,.15);
+  color:var(--danger);
+  border-color:rgba(255,92,122,.6);
+}
+
+.day.closed::after{
+  content:'⛔️';
+  position:absolute;
+  bottom:6px;
+  right:6px;
+  font-size:14px;
+}
 
 .calendarLegend{
   display:flex;
@@ -227,6 +248,7 @@ input,select{
 .dot.low{background:var(--low)}
 .dot.mid{background:var(--mid)}
 .dot.high{background:var(--high)}
+.dot.closed{background:var(--danger)}
 
 /* =========================
    SUMMARY
@@ -312,3 +334,28 @@ th{color:var(--muted)}
 .badge.Bank{background:rgba(110,231,255,.2);color:#6ee7ff}
 .badge.Sindy{background:rgba(255,143,177,.2);color:#ff8fb1}
 .badge.Assist{background:rgba(44,255,156,.2);color:#2cff9c}
+
+/* =========================
+   STORE STATUS BAR
+========================= */
+#storeStatusBar{
+  position:sticky;
+  bottom:0;
+  background:linear-gradient(180deg,rgba(10,12,22,.95),rgba(5,6,12,.95));
+}
+
+#storeStatusText{
+  font-weight:900;
+}
+
+#toggleStoreBtn.open{
+  background:rgba(44,255,156,.2);
+  color:var(--ok);
+  border-color:rgba(44,255,156,.6);
+}
+
+#toggleStoreBtn.closed{
+  background:rgba(255,92,122,.2);
+  color:var(--danger);
+  border-color:rgba(255,92,122,.6);
+}
