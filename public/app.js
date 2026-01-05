@@ -4,9 +4,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const AUTH_KEY = 'adore_owner_auth';
   const API = '';
 
-  const STYLISTS = ['Bank','Sindy','Assist'];
-  const START = 13;
-  const END = 22;
+  const stylists = ['Bank','Sindy','Assist'];
+  const START = 13, END = 22;
 
   const el = id => document.getElementById(id);
 
@@ -14,8 +13,9 @@ document.addEventListener('DOMContentLoaded', () => {
   let selectedDate = null;
   let bookings = [];
   let activeStylist = 'Bank';
+  let editing = null;
 
-  /* ========= AUTH ========= */
+  /* ===== AUTH ===== */
   if (localStorage.getItem(AUTH_KEY)==='true') boot();
   else el('loginOverlay').style.display='flex';
 
@@ -34,17 +34,18 @@ document.addEventListener('DOMContentLoaded', () => {
     location.reload();
   };
 
-  /* ========= BOOT ========= */
+  /* ===== BOOT ===== */
   function boot(){
     el('topDate').textContent = new Date().toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'});
     renderCalendar();
     renderStylistTabs();
   }
 
-  /* ========= CALENDAR ========= */
+  /* ===== CALENDAR ===== */
   function renderCalendar(){
     el('calendarGrid').innerHTML='';
-    el('calendarTitle').textContent = currentMonth.toLocaleDateString('th-TH',{month:'long',year:'numeric'});
+    el('calendarTitle').textContent =
+      currentMonth.toLocaleDateString('th-TH',{month:'long',year:'numeric'});
 
     const y=currentMonth.getFullYear(), m=currentMonth.getMonth();
     const first=new Date(y,m,1).getDay();
@@ -71,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
   el('prevMonth').onclick=()=>{currentMonth.setMonth(currentMonth.getMonth()-1);renderCalendar();};
   el('nextMonth').onclick=()=>{currentMonth.setMonth(currentMonth.getMonth()+1);renderCalendar();};
 
-  /* ========= DATE ========= */
+  /* ===== DATE ===== */
   async function selectDate(date,cell){
     selectedDate=date;
     document.querySelectorAll('.calCell').forEach(c=>c.classList.remove('selected'));
@@ -82,18 +83,15 @@ document.addEventListener('DOMContentLoaded', () => {
     await loadBookings();
   }
 
-  /* ========= ADD BOOKING ========= */
   function renderAddTimes(){
-    const sel=el('addTime');
-    sel.innerHTML='';
+    el('addTime').innerHTML='';
     for(let h=START;h<=END;h++){
       const t=`${String(h).padStart(2,'0')}:00:00`;
-      const opt=document.createElement('option');
-      opt.value=t; opt.textContent=t.slice(0,5);
-      sel.appendChild(opt);
+      el('addTime').innerHTML+=`<option value="${t}">${t.slice(0,5)}</option>`;
     }
   }
 
+  /* ===== ADD ===== */
   el('addBookingBtn').onclick=async()=>{
     const gender=document.querySelector('[name=addGender]:checked')?.value;
     if(!gender){alert('เลือกเพศ');return;}
@@ -112,21 +110,13 @@ document.addEventListener('DOMContentLoaded', () => {
       })
     });
 
-    if(!res.ok){
-      alert('คิวนี้ถูกจองแล้ว');
-      return;
-    }
-
-    el('addName').value='';
-    el('addPhone').value='';
-    el('addService').value='';
-    document.querySelectorAll('[name=addGender]').forEach(r=>r.checked=false);
+    if(!res.ok){ alert('คิวนี้ถูกจองแล้ว'); return; }
 
     await loadBookings();
     alert('เพิ่มคิวสำเร็จ');
   };
 
-  /* ========= BOOKINGS ========= */
+  /* ===== LOAD ===== */
   async function loadBookings(){
     const res=await fetch(`${API}/bookings?date=${selectedDate}`);
     bookings=await res.json();
@@ -136,8 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderQueue(){
     el('queueBody').innerHTML='';
-    bookings
-      .filter(b=>b.stylist===activeStylist)
+    bookings.filter(b=>b.stylist===activeStylist)
       .sort((a,b)=>a.time.localeCompare(b.time))
       .forEach(b=>{
         const tr=document.createElement('tr');
@@ -148,15 +137,86 @@ document.addEventListener('DOMContentLoaded', () => {
           <td>${b.name}</td>
           <td>${b.service||''}</td>
           <td>${b.phone||''}</td>
+          <td><button class="ghost">แก้ไข</button></td>
         `;
+        tr.querySelector('button').onclick=()=>openEdit(b);
         el('queueBody').appendChild(tr);
       });
   }
 
-  /* ========= STYLIST ========= */
+  /* ===== EDIT ===== */
+  function openEdit(b){
+    editing=b;
+    el('editDate').value=b.date;
+    el('editStylist').value=b.stylist;
+    el('editName').value=b.name;
+    el('editPhone').value=b.phone||'';
+    el('editService').value=b.service||'';
+
+    document.querySelectorAll('[name=editGender]').forEach(r=>{
+      r.checked=r.value===b.gender;
+    });
+
+    renderEditTimes(b);
+    el('editOverlay').classList.remove('hidden');
+  }
+
+  async function renderEditTimes(b){
+    el('editTime').innerHTML='';
+    const res=await fetch(`${API}/bookings?date=${b.date}`);
+    const list=await res.json();
+
+    for(let h=START;h<=END;h++){
+      const t=`${String(h).padStart(2,'0')}:00:00`;
+      const clash=list.find(x=>x.time===t && x.stylist===b.stylist && x.id!==b.id);
+      const opt=document.createElement('option');
+      opt.value=t; opt.textContent=t.slice(0,5);
+      if(clash) opt.disabled=true;
+      if(t===b.time) opt.selected=true;
+      el('editTime').appendChild(opt);
+    }
+  }
+
+  el('saveEditBtn').onclick=async()=>{
+    const gender=document.querySelector('[name=editGender]:checked')?.value;
+
+    const res=await fetch(`${API}/bookings/${editing.id}`,{
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        date:el('editDate').value,
+        time:el('editTime').value,
+        name:el('editName').value,
+        phone:el('editPhone').value,
+        gender,
+        service:el('editService').value
+      })
+    });
+
+    if(!res.ok){ alert('คิวนี้ถูกจองแล้ว'); return; }
+
+    closeEdit();
+    await loadBookings();
+    alert('แก้ไขคิวสำเร็จ');
+  };
+
+  el('deleteEditBtn').onclick=async()=>{
+    if(!confirm('ยืนยันลบคิวนี้?')) return;
+    await fetch(`${API}/bookings/${editing.id}`,{method:'DELETE'});
+    closeEdit();
+    await loadBookings();
+  };
+
+  el('closeEditBtn').onclick=closeEdit;
+  function closeEdit(){
+    el('editOverlay').classList.add('hidden');
+    editing=null;
+  }
+
+  /* ===== TABS ===== */
   function renderStylistTabs(){
     el('stylistTabs').innerHTML='';
-    STYLISTS.forEach(s=>{
+    stylists.forEach(s=>{
       const t=document.createElement('div');
       t.className='tab'+(s===activeStylist?' active':'');
       t.textContent=s;
@@ -165,7 +225,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  /* ========= SUMMARY ========= */
   function renderSummary(){
     const c=s=>bookings.filter(b=>b.stylist===s).length;
     el('summary').innerHTML=`
