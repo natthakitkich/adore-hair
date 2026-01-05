@@ -16,7 +16,25 @@ body{
   color:var(--text);
 }
 
-.hidden{display:none}
+/* ===== FIX START ===== */
+.hidden{
+  display:none !important;
+}
+
+.overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.8);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:999;
+}
+
+.overlay.hidden{
+  display:none !important;
+}
+/* ===== FIX END ===== */
 
 .topbar{
   padding:16px;
@@ -55,16 +73,6 @@ body{
   display:flex;
   align-items:center;
   justify-content:center;
-}
-
-.overlay{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.8);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  z-index:999;
 }
 
 .loginCard{
