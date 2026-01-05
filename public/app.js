@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ================= CONFIG ================= */
   const OWNER_PIN = '1234';
-  const AUTH_KEY = 'adore_auth';
+  const AUTH_KEY = 'adore_owner_auth';
 
   /* ================= ELEMENTS ================= */
   const loginOverlay = document.getElementById('loginOverlay');
@@ -11,19 +11,19 @@ document.addEventListener('DOMContentLoaded', () => {
   const loginMsg = document.getElementById('loginMsg');
   const logoutBtn = document.getElementById('logoutBtn');
 
-  const calendarGrid = document.getElementById('calendarGrid');
+  const topDate = document.getElementById('topDate');
   const calendarTitle = document.getElementById('calendarTitle');
+  const calendarGrid = document.getElementById('calendarGrid');
   const dayHint = document.getElementById('dayHint');
   const stylistTabs = document.getElementById('stylistTabs');
   const summary = document.getElementById('summary');
-  const topDate = document.getElementById('topDate');
 
   /* ================= STATE ================= */
   let currentMonth = new Date();
   let selectedDate = null;
   let activeStylist = 'Bank';
-  let bookings = [];
-  let dayDensityMap = {}; // { '2026-01-05': 7 }
+
+  const stylists = ['Bank', 'Sindy', 'Assist'];
 
   /* ================= AUTH ================= */
   if (localStorage.getItem(AUTH_KEY) === 'true') {
@@ -35,6 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (pinInput.value === OWNER_PIN) {
       localStorage.setItem(AUTH_KEY, 'true');
       loginOverlay.classList.add('hidden');
+      loginMsg.textContent = '';
       boot();
     } else {
       loginMsg.textContent = 'PIN ไม่ถูกต้อง';
@@ -47,164 +48,93 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   /* ================= BOOT ================= */
-  async function boot(){
+  function boot() {
     renderTopDate();
-    await fetchCalendarDensity();
     renderCalendar();
-    renderTabs();
-    renderEmptySummary();
+    renderStylistTabs();
+    renderSummary();
   }
 
-  function renderTopDate(){
-    topDate.textContent = new Date().toLocaleDateString('en-US',{
-      month:'short',day:'numeric',year:'numeric'
+  function renderTopDate() {
+    topDate.textContent = new Date().toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
     });
   }
 
-  /* ================= CALENDAR DENSITY ================= */
-  async function fetchCalendarDensity(){
-    try{
-      const res = await fetch('/calendar-days');
-      dayDensityMap = await res.json();
-    }catch(e){
-      console.error('density error',e);
-      dayDensityMap = {};
-    }
-  }
-
-  function getDensityClass(count){
-    if(count >= 20) return 'density-full';
-    if(count >= 15) return 'density-high';
-    if(count >= 8) return 'density-mid';
-    if(count >= 1) return 'density-low';
-    return '';
-  }
-
   /* ================= CALENDAR ================= */
-  document.getElementById('prevMonth').onclick = async () => {
-    currentMonth.setMonth(currentMonth.getMonth()-1);
-    await fetchCalendarDensity();
+  document.getElementById('prevMonth').onclick = () => {
+    currentMonth.setMonth(currentMonth.getMonth() - 1);
     renderCalendar();
   };
 
-  document.getElementById('nextMonth').onclick = async () => {
-    currentMonth.setMonth(currentMonth.getMonth()+1);
-    await fetchCalendarDensity();
+  document.getElementById('nextMonth').onclick = () => {
+    currentMonth.setMonth(currentMonth.getMonth() + 1);
     renderCalendar();
   };
 
-  function renderCalendar(){
+  function renderCalendar() {
     calendarGrid.innerHTML = '';
-    calendarTitle.textContent =
-      currentMonth.toLocaleDateString('th-TH',{month:'long',year:'numeric'});
+    calendarTitle.textContent = currentMonth.toLocaleDateString('th-TH', {
+      month: 'long',
+      year: 'numeric'
+    });
 
     const y = currentMonth.getFullYear();
     const m = currentMonth.getMonth();
-    const first = new Date(y,m,1).getDay();
-    const days = new Date(y,m+1,0).getDate();
+    const firstDay = new Date(y, m, 1).getDay();
+    const daysInMonth = new Date(y, m + 1, 0).getDate();
 
-    for(let i=0;i<first;i++){
+    for (let i = 0; i < firstDay; i++) {
       calendarGrid.appendChild(document.createElement('div'));
     }
 
-    for(let d=1; d<=days; d++){
-      const key = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-      const count = dayDensityMap[key] || 0;
-
+    for (let d = 1; d <= daysInMonth; d++) {
       const cell = document.createElement('div');
       cell.className = 'calCell';
 
       const num = document.createElement('div');
-      num.className = 'calNum ' + getDensityClass(count);
+      num.className = 'calNum';
       num.textContent = d;
 
-      cell.onclick = () => {
-        selectedDate = key;
-        dayHint.textContent = `วันที่เลือก: ${d}`;
-        fetchBookings();
-      };
+      cell.onclick = () => selectDate(d);
 
       cell.appendChild(num);
       calendarGrid.appendChild(cell);
     }
   }
 
-  /* ================= BOOKINGS ================= */
-  async function fetchBookings(){
-    try{
-      const res = await fetch(`/bookings?date=${selectedDate}`);
-      bookings = await res.json();
-      renderTabs();
-      renderSummary();
-      renderBookingTable();
-    }catch(err){
-      console.error(err);
-    }
+  function selectDate(day) {
+    selectedDate = day;
+    dayHint.textContent = `วันที่เลือก: ${day}`;
+    renderSummary();
   }
 
-  /* ================= TABS ================= */
-  function renderTabs(){
-    stylistTabs.innerHTML='';
-    ['Bank','Sindy','Assist'].forEach(name=>{
-      const t=document.createElement('div');
-      t.className='tab'+(name===activeStylist?' active':'');
-      t.textContent=name;
-      t.onclick=()=>{activeStylist=name;renderBookingTable();renderTabs();};
-      stylistTabs.appendChild(t);
+  /* ================= STYLIST TABS ================= */
+  function renderStylistTabs() {
+    stylistTabs.innerHTML = '';
+    stylists.forEach(s => {
+      const tab = document.createElement('div');
+      tab.className = 'tab' + (s === activeStylist ? ' active' : '');
+      tab.textContent = s;
+      tab.onclick = () => {
+        activeStylist = s;
+        renderStylistTabs();
+        renderSummary();
+      };
+      stylistTabs.appendChild(tab);
     });
   }
 
   /* ================= SUMMARY ================= */
-  function renderEmptySummary(){
-    summary.innerHTML = `<div class="center muted">ยังไม่มีข้อมูล</div>`;
-  }
-
-  function renderSummary(){
-    const count = { Bank:0, Sindy:0, Assist:0 };
-    bookings.forEach(b => count[b.stylist]++);
-
+  function renderSummary() {
     summary.innerHTML = `
-      <div class="panel">Bank<br><b>${count.Bank}</b></div>
-      <div class="panel">Sindy<br><b>${count.Sindy}</b></div>
-      <div class="panel">Assist<br><b>${count.Assist}</b></div>
-      <div class="panel">รวม<br><b>${bookings.length}</b></div>
+      <div class="panel">Bank<br><b>0</b></div>
+      <div class="panel">Sindy<br><b>0</b></div>
+      <div class="panel">Assist<br><b>0</b></div>
+      <div class="panel">รวม<br><b>0</b></div>
     `;
-  }
-
-  /* ================= TABLE ================= */
-  function renderBookingTable(){
-    document.querySelectorAll('.bookingTable').forEach(e=>e.remove());
-
-    const list = bookings.filter(b => b.stylist === activeStylist);
-    const section = document.createElement('section');
-    section.className = 'panel bookingTable';
-
-    let html = `
-      <table style="width:100%;border-collapse:collapse">
-        <thead>
-          <tr style="color:#9aa6c5;text-align:left">
-            <th>เวลา</th><th>ช่าง</th><th>เพศ</th><th>ชื่อ</th>
-          </tr>
-        </thead><tbody>
-    `;
-
-    if(list.length === 0){
-      html += `<tr><td colspan="4" class="muted">ไม่มีคิว</td></tr>`;
-    }else{
-      list.forEach(b=>{
-        html += `
-          <tr>
-            <td>${b.time}</td>
-            <td>${b.stylist}</td>
-            <td>${b.gender}</td>
-            <td>${b.name}</td>
-          </tr>`;
-      });
-    }
-
-    html += `</tbody></table>`;
-    section.innerHTML = html;
-    summary.insertAdjacentElement('afterend', section);
   }
 
 });
