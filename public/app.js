@@ -1,78 +1,58 @@
-/* =================================================
-   Adore Hair – app.js
-   - Closed Days with explicit buttons
-   - Persistent Login (localStorage)
-================================================= */
-
 const API = '';
+const OWNER_PIN = '1234';
+const LOGIN_KEY = 'adore_login';
 
-/* =========================
-   GLOBAL STATE
-========================= */
 let bookings = [];
 let closedDays = [];
 let currentDate = '';
 let currentStylist = 'Bank';
-
-let calendarDensity = {};
 let currentMonth = new Date();
 
-/* =========================
-   LOGIN (PERSISTENT)
-========================= */
-const loginOverlay = document.getElementById('loginOverlay');
-const loginBtn = document.getElementById('loginBtn');
-const pinInput = document.getElementById('pin');
-const loginMsg = document.getElementById('loginMsg');
-const logoutBtn = document.getElementById('logoutBtn');
+/* ===== LOGIN ===== */
+const overlay = document.getElementById('loginOverlay');
 
-const OWNER_PIN = '1234';
-const LOGIN_KEY = 'adore_owner_logged_in';
-
-/* auto login */
-if (localStorage.getItem(LOGIN_KEY) === 'true') {
-  loginOverlay.classList.add('hidden');
-  init();
-}
-
-loginBtn.onclick = () => {
-  if (pinInput.value === OWNER_PIN) {
-    localStorage.setItem(LOGIN_KEY, 'true');
-    loginOverlay.classList.add('hidden');
-    pinInput.value = '';
-    loginMsg.textContent = '';
+function requireLogin() {
+  if (localStorage.getItem(LOGIN_KEY) === 'true') {
+    overlay.classList.add('hidden');
     init();
   } else {
-    loginMsg.textContent = 'PIN ไม่ถูกต้อง';
+    overlay.classList.remove('hidden');
+  }
+}
+
+document.getElementById('loginBtn').onclick = () => {
+  if (document.getElementById('pin').value === OWNER_PIN) {
+    localStorage.setItem(LOGIN_KEY, 'true');
+    overlay.classList.add('hidden');
+    init();
+  } else {
+    document.getElementById('loginMsg').textContent = 'PIN ไม่ถูกต้อง';
   }
 };
 
-logoutBtn.onclick = () => {
+document.getElementById('logoutBtn').onclick = () => {
   localStorage.removeItem(LOGIN_KEY);
   location.reload();
 };
 
-/* =========================
-   INIT
-========================= */
+requireLogin();
+
+/* ===== INIT ===== */
 function init() {
-  const dateInput = document.getElementById('date');
-  const today = new Date().toISOString().slice(0, 10);
-
+  const today = new Date().toISOString().slice(0,10);
   currentDate = today;
-  dateInput.value = today;
+  document.getElementById('date').value = today;
 
-  dateInput.onchange = () => {
-    currentDate = dateInput.value;
-    loadBookings();
-    updateDayControl();
+  document.getElementById('date').onchange = e => {
+    currentDate = e.target.value;
+    loadAll();
   };
 
-  document.querySelectorAll('.tab').forEach(tab => {
-    tab.onclick = () => {
+  document.querySelectorAll('.tab').forEach(t => {
+    t.onclick = () => {
       document.querySelector('.tab.active').classList.remove('active');
-      tab.classList.add('active');
-      currentStylist = tab.dataset.tab;
+      t.classList.add('active');
+      currentStylist = t.dataset.tab;
       renderTimeOptions();
     };
   });
@@ -81,280 +61,134 @@ function init() {
     currentMonth.setMonth(currentMonth.getMonth() - 1);
     renderCalendar();
   };
-
   document.getElementById('nextMonth').onclick = () => {
     currentMonth.setMonth(currentMonth.getMonth() + 1);
     renderCalendar();
   };
 
-  document.getElementById('setHoliday').onclick = setHoliday;
-  document.getElementById('unsetHoliday').onclick = unsetHoliday;
+  document.getElementById('setHoliday').onclick = () => toggleHoliday(true);
+  document.getElementById('unsetHoliday').onclick = () => toggleHoliday(false);
 
-  loadCalendarDensity();
-  loadClosedDays();
-  loadBookings();
+  loadAll();
 }
 
-/* =========================
-   LOAD DATA
-========================= */
-async function loadBookings() {
-  const res = await fetch(`${API}/bookings?date=${currentDate}`);
-  bookings = await res.json();
+async function loadAll(){
+  await loadClosedDays();
+  await loadBookings();
+}
+
+/* ===== DATA ===== */
+async function loadBookings(){
+  bookings = await fetch(`${API}/bookings?date=${currentDate}`).then(r=>r.json());
   renderTimeOptions();
   renderTable();
   updateSummary();
 }
 
-async function loadCalendarDensity() {
-  try {
-    const res = await fetch(`${API}/calendar-days`);
-    calendarDensity = await res.json();
-  } catch {
-    calendarDensity = {};
-  }
-}
-
-async function loadClosedDays() {
-  const res = await fetch(`${API}/closed-days`);
-  closedDays = await res.json();
+async function loadClosedDays(){
+  closedDays = await fetch(`${API}/closed-days`).then(r=>r.json());
   renderCalendar();
   updateDayControl();
 }
 
-/* =========================
-   DAY CONTROL (NEW)
-========================= */
-function updateDayControl() {
-  const status = document.getElementById('dayStatus');
-  const btnClose = document.getElementById('setHoliday');
-  const btnOpen = document.getElementById('unsetHoliday');
+/* ===== CALENDAR ===== */
+function renderCalendar(){
+  const grid = document.getElementById('calendarDays');
+  const title = document.getElementById('calendarTitle');
+  grid.innerHTML = '';
+  title.textContent = currentMonth.toLocaleString('th-TH',{month:'long',year:'numeric'});
 
-  const isClosed = closedDays.includes(currentDate);
+  const y = currentMonth.getFullYear();
+  const m = currentMonth.getMonth();
+  const first = new Date(y,m,1).getDay();
+  const days = new Date(y,m+1,0).getDate();
 
-  status.textContent = isClosed
-    ? 'วันนี้ถูกตั้งเป็นวันหยุด'
-    : 'วันนี้เปิดทำการตามปกติ';
+  for(let i=0;i<first;i++) grid.appendChild(document.createElement('div'));
 
-  btnClose.classList.toggle('hidden', isClosed);
-  btnOpen.classList.toggle('hidden', !isClosed);
-}
-
-async function setHoliday() {
-  if (!confirm('ยืนยันตั้งวันนี้เป็นวันหยุด?')) return;
-
-  await fetch(`${API}/closed-days`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ date: currentDate, action: 'close' })
-  });
-
-  loadClosedDays();
-}
-
-async function unsetHoliday() {
-  if (!confirm('ยืนยันยกเลิกวันหยุด?')) return;
-
-  await fetch(`${API}/closed-days`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ date: currentDate, action: 'open' })
-  });
-
-  loadClosedDays();
-}
-
-/* =========================
-   CALENDAR
-========================= */
-function renderCalendar() {
-  const calendarDays = document.getElementById('calendarDays');
-  const calendarTitle = document.getElementById('calendarTitle');
-  if (!calendarDays || !calendarTitle) return;
-
-  calendarDays.innerHTML = '';
-  calendarTitle.textContent = currentMonth.toLocaleString('th-TH', {
-    month: 'long',
-    year: 'numeric'
-  });
-
-  const year = currentMonth.getFullYear();
-  const month = currentMonth.getMonth();
-  const firstDay = new Date(year, month, 1).getDay();
-  const totalDays = new Date(year, month + 1, 0).getDate();
-
-  for (let i = 0; i < firstDay; i++) {
-    calendarDays.appendChild(document.createElement('div'));
-  }
-
-  for (let day = 1; day <= totalDays; day++) {
-    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    const isClosed = closedDays.includes(dateStr);
-    const count = calendarDensity[dateStr] || 0;
-
+  for(let d=1;d<=days;d++){
+    const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const cell = document.createElement('div');
     cell.className = 'calCell';
-    if (dateStr === currentDate) cell.classList.add('selected');
-    if (isClosed) cell.classList.add('closed');
+    if(dateStr===currentDate) cell.classList.add('selected');
+    if(closedDays.includes(dateStr)) cell.classList.add('closed');
 
     const num = document.createElement('div');
     num.className = 'calNum';
-    if (isClosed) num.classList.add('closed');
+    if(closedDays.includes(dateStr)) num.classList.add('closed');
+    num.textContent = d;
 
-    if (!isClosed) {
-      if (count >= 7) num.classList.add('density-full');
-      else if (count >= 5) num.classList.add('density-high');
-      else if (count >= 3) num.classList.add('density-mid');
-      else if (count >= 1) num.classList.add('density-low');
-    }
-
-    num.textContent = day;
     cell.appendChild(num);
-
-    /* IMPORTANT: คลิกเพื่อเลือกวันเท่านั้น */
     cell.onclick = () => {
       currentDate = dateStr;
       document.getElementById('date').value = dateStr;
-      loadBookings();
-      updateDayControl();
+      loadAll();
     };
-
-    calendarDays.appendChild(cell);
+    grid.appendChild(cell);
   }
 }
 
-/* =========================
-   TIME OPTIONS
-========================= */
-function renderTimeOptions() {
-  const timeSelect = document.getElementById('time');
-  timeSelect.innerHTML = '';
-
-  if (closedDays.includes(currentDate)) {
-    const opt = document.createElement('option');
-    opt.textContent = 'ร้านปิดทำการ';
-    opt.disabled = true;
-    timeSelect.appendChild(opt);
-    return;
-  }
-
-  for (let h = 13; h <= 22; h++) {
-    const time = `${String(h).padStart(2, '0')}:00:00`;
-    const booked = bookings.find(
-      b => b.time === time && b.stylist === currentStylist
-    );
-
-    const opt = document.createElement('option');
-    opt.value = time;
-    opt.textContent = time.slice(0, 5);
-    if (booked) opt.disabled = true;
-    timeSelect.appendChild(opt);
-  }
+/* ===== DAY CONTROL ===== */
+function updateDayControl(){
+  const closed = closedDays.includes(currentDate);
+  document.getElementById('dayStatus').textContent =
+    closed ? 'วันนี้ปิดทำการ' : 'วันนี้เปิดทำการตามปกติ';
+  document.getElementById('setHoliday').classList.toggle('hidden', closed);
+  document.getElementById('unsetHoliday').classList.toggle('hidden', !closed);
 }
 
-/* =========================
-   FORM SUBMIT
-========================= */
-document.getElementById('bookingForm').onsubmit = async e => {
-  e.preventDefault();
-
-  if (closedDays.includes(currentDate)) {
-    alert('วันนี้ร้านปิดทำการ');
-    return;
-  }
-
-  const gender = document.querySelector('[name=gender]:checked')?.value;
-  if (!gender) {
-    alert('กรุณาเลือกเพศ');
-    return;
-  }
-
-  await fetch(`${API}/bookings`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      date: currentDate,
-      time: document.getElementById('time').value,
-      stylist: currentStylist,
-      name: document.getElementById('name').value,
-      phone: document.getElementById('phone').value,
-      gender,
-      service: document.getElementById('service').value
-    })
+async function toggleHoliday(close){
+  await fetch(`${API}/closed-days`,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({date:currentDate,action:close?'close':'open'})
   });
+  loadClosedDays();
+}
 
-  e.target.reset();
-  loadCalendarDensity();
-  loadBookings();
-};
+/* ===== TIME ===== */
+function renderTimeOptions(){
+  const sel = document.getElementById('time');
+  sel.innerHTML='';
+  if(closedDays.includes(currentDate)){
+    sel.innerHTML='<option disabled>ร้านปิดทำการ</option>';
+    return;
+  }
+  for(let h=13;h<=22;h++){
+    const t=`${String(h).padStart(2,'0')}:00:00`;
+    const used = bookings.find(b=>b.time===t && b.stylist===currentStylist);
+    const o=document.createElement('option');
+    o.value=t; o.textContent=t.slice(0,5);
+    if(used) o.disabled=true;
+    sel.appendChild(o);
+  }
+}
 
-/* =========================
-   TABLE / SUMMARY / EDIT
-   (เหมือนของเดิมทุกอย่าง)
-========================= */
-// --- ส่วนนี้ใช้โค้ดเดิมของคุณได้ทั้งหมด ---
+/* ===== TABLE ===== */
+function renderTable(){
+  const list=document.getElementById('list');
+  list.innerHTML='';
+  bookings.sort((a,b)=>a.time.localeCompare(b.time)).forEach(b=>{
+    const cls =
+      b.stylist==='Bank'?'stylist-bank':
+      b.stylist==='Sindy'?'stylist-sindy':'stylist-assist';
 
-/* =========================
-   TABLE / SUMMARY
-========================= */
-function renderTable() {
-  const list = document.getElementById('list');
-  list.innerHTML = '';
-
-  bookings
-    .sort((a, b) => a.time.localeCompare(b.time))
-    .forEach(b => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${b.time.slice(0, 5)}</td>
-        <td>${b.stylist}</td>
-        <td>${b.gender === 'male' ? '👨' : '👩'}</td>
+    list.innerHTML+=`
+      <tr>
+        <td>${b.time.slice(0,5)}</td>
+        <td><span class="stylist-badge ${cls}">${b.stylist}</span></td>
+        <td>${b.gender==='male'?'👨':'👩'}</td>
         <td>${b.name}</td>
-        <td>${b.service || ''}</td>
-        <td>${b.phone || ''}</td>
+        <td>${b.service||''}</td>
+        <td>${b.phone||''}</td>
         <td><button class="ghost">ลบ/แก้ไขคิว</button></td>
-      `;
-      tr.querySelector('button').onclick = () => openEditModal(b);
-      list.appendChild(tr);
-    });
-}
-
-function updateSummary() {
-  document.getElementById('countBank').textContent =
-    bookings.filter(b => b.stylist === 'Bank').length;
-  document.getElementById('countSindy').textContent =
-    bookings.filter(b => b.stylist === 'Sindy').length;
-  document.getElementById('countAssist').textContent =
-    bookings.filter(b => b.stylist === 'Assist').length;
-  document.getElementById('countTotal').textContent = bookings.length;
-}
-
-/* =========================
-   EDIT MODAL (เดิม)
-========================= */
-const editOverlay = document.getElementById('editOverlay');
-const editTime = document.getElementById('editTime');
-const editStylist = document.getElementById('editStylist');
-const editName = document.getElementById('editName');
-const editPhone = document.getElementById('editPhone');
-const editService = document.getElementById('editService');
-let editingId = null;
-
-function openEditModal(b) {
-  editingId = b.id;
-  editTime.value = b.time.slice(0, 5);
-  editStylist.value = b.stylist;
-  editName.value = b.name;
-  editPhone.value = b.phone || '';
-  editService.value = b.service || '';
-
-  document.querySelectorAll('[name=editGender]').forEach(r => {
-    r.checked = r.value === b.gender;
+      </tr>`;
   });
-
-  editOverlay.classList.remove('hidden');
 }
 
-document.getElementById('closeEdit').onclick = () => {
-  editOverlay.classList.add('hidden');
-};
+function updateSummary(){
+  const c = s => bookings.filter(b=>b.stylist===s).length;
+  countBank.textContent=c('Bank');
+  countSindy.textContent=c('Sindy');
+  countAssist.textContent=c('Assist');
+  countTotal.textContent=bookings.length;
+}
