@@ -19,25 +19,19 @@
 /* =========================
    BASE
 ========================= */
-*{
-  box-sizing:border-box;
-  -webkit-tap-highlight-color:transparent;
-}
-
+*{box-sizing:border-box}
 body{
   margin:0;
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+  font-family: ui-sans-serif, system-ui;
   background:
     radial-gradient(1200px 700px at 15% 10%, #1a2b5a 0%, transparent 60%),
     radial-gradient(900px 600px at 90% 20%, #3b1b5a 0%, transparent 55%),
     var(--bg);
   color:var(--text);
 }
-
 .hidden{display:none!important}
 .row{display:flex;gap:16px;align-items:center}
 .muted{color:var(--muted)}
-.msg{font-size:13px}
 .msg.err{color:var(--danger)}
 
 /* =========================
@@ -51,40 +45,24 @@ input,select{
   border:1px solid var(--stroke);
   background:rgba(0,0,0,.28);
   color:var(--text);
-  outline:none;
 }
-
-input:disabled{
-  opacity:.6;
-  cursor:not-allowed;
-}
-
-label{
-  font-size:13px;
-  color:var(--muted);
-}
-
 .primary{
   background:linear-gradient(135deg,var(--accent),var(--accent2));
-  color:#061022;
   border:none;
-  padding:14px;
   border-radius:16px;
   font-weight:900;
-  cursor:pointer;
+  padding:14px;
 }
-
 .ghost{
   background:rgba(255,255,255,.06);
   border:1px solid var(--stroke);
   color:var(--text);
   padding:8px 14px;
   border-radius:14px;
-  cursor:pointer;
 }
 
 /* =========================
-   TOPBAR
+   TOPBAR / LAYOUT
 ========================= */
 .topbar{
   position:sticky;
@@ -93,54 +71,19 @@ label{
   padding:18px 22px;
   display:flex;
   justify-content:space-between;
-  align-items:center;
   background:rgba(0,0,0,.35);
   backdrop-filter:blur(14px);
   border-bottom:1px solid var(--stroke);
 }
-
-.brand{
-  display:flex;
-  gap:12px;
-  align-items:center;
-}
-
 .avatar{
-  width:40px;
-  height:40px;
-  border-radius:14px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  width:40px;height:40px;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
   font-weight:900;
   background:linear-gradient(135deg,var(--accent),var(--accent2));
   color:#061022;
 }
-
-.avatar.big{
-  width:72px;
-  height:72px;
-  font-size:32px;
-}
-
-.title{
-  font-weight:900;
-  font-size:16px;
-}
-
-.subtitle{
-  font-size:12px;
-  color:var(--muted);
-}
-
-/* =========================
-   LAYOUT
-========================= */
-.wrap{
-  width:min(1100px,94vw);
-  margin:18px auto 64px;
-}
-
+.avatar.big{width:72px;height:72px;font-size:32px}
+.wrap{width:min(1100px,94vw);margin:18px auto 64px}
 .panel{
   background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
   border:1px solid var(--stroke);
@@ -150,150 +93,73 @@ label{
   margin-top:16px;
 }
 
-.grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:14px;
-}
-
-.full{grid-column:1/-1}
-
 /* =========================
-   OVERLAY / MODAL
-========================= */
-.overlay{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.85);
-  display:grid;
-  place-items:center;
-  z-index:999;
-}
-
-.modal{
-  width:min(420px,92vw);
-  background:linear-gradient(180deg,rgba(20,25,45,.96),rgba(10,12,22,.96));
-  border-radius:26px;
-  border:1px solid rgba(255,255,255,.15);
-  box-shadow:0 22px 90px rgba(0,0,0,.65);
-}
-
-.modalBody{
-  padding:28px;
-  display:flex;
-  flex-direction:column;
-  gap:16px;
-  align-items:center;
-  text-align:center;
-}
-
-/* PIN */
-#pin{
-  text-align:center;
-  letter-spacing:6px;
-  font-size:22px;
-}
-
-/* =========================
-   CALENDAR
+   CALENDAR (เหมือนภาพ)
 ========================= */
 .calendarHeader{
   display:grid;
   grid-template-columns:48px 1fr 48px;
   align-items:center;
-  margin-bottom:12px;
+  margin-bottom:10px;
 }
-
-.calendarCenter{
-  text-align:center;
-}
-
 .calendarTitle{
-  font-size:22px;
+  font-size:28px;
   font-weight:900;
 }
-
 .calendarSubtitle{
-  font-size:13px;
+  font-size:14px;
   color:var(--muted);
-  margin-top:2px;
 }
-
-.calWeekHead{
+.calWeekHead,.calGrid{
   display:grid;
   grid-template-columns:repeat(7,1fr);
-  gap:10px;
+  gap:14px;
   text-align:center;
-  font-size:12px;
+}
+.calWeekHead{
+  font-size:14px;
   color:var(--muted);
-  margin-top:14px;
+  margin:16px 0;
 }
-
-.calGrid{
-  display:grid;
-  grid-template-columns:repeat(7,1fr);
-  gap:10px;
-  margin-top:10px;
-}
-
 .calCell{
   aspect-ratio:1/1;
-  border-radius:18px;
-  background:rgba(0,0,0,.28);
-  border:1px solid var(--stroke);
+  border-radius:50%;
   display:flex;
   align-items:center;
   justify-content:center;
   cursor:pointer;
 }
-
-.calCell.selected{
-  outline:2px solid rgba(110,231,255,.45);
-}
-
 .calNum{
-  width:40px;
-  height:40px;
-  border-radius:999px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:900;
+  width:52px;height:52px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;font-weight:900;
 }
 
-/* ===== ORIGINAL DENSITY COLORS ===== */
-.calNum.density-low{
-  background:rgba(44,255,156,.22);
+/* density colors */
+.calNum.low{
+  background:rgba(44,255,156,.25);
   color:#2cff9c;
-  border:1px solid rgba(44,255,156,.55);
 }
-
-.calNum.density-mid{
-  background:rgba(253,224,71,.22);
+.calNum.mid{
+  background:rgba(110,231,255,.25);
+  color:#6ee7ff;
+}
+.calNum.high{
+  background:rgba(253,224,71,.25);
   color:#fde047;
-  border:1px solid rgba(253,224,71,.55);
 }
-
-.calNum.density-high{
-  background:rgba(251,146,60,.22);
-  color:#fb923c;
-  border:1px solid rgba(251,146,60,.55);
-}
-
-.calNum.density-full{
-  background:rgba(255,92,122,.22);
+.calNum.full{
+  background:rgba(255,92,122,.25);
   color:#ff5c7a;
-  border:1px solid rgba(255,92,122,.55);
+}
+.calCell.selected{
+  outline:3px solid rgba(255,255,255,.5);
 }
 
 /* =========================
-   TABS
+   TABS / TABLE
 ========================= */
-.tabs{
-  display:flex;
-  gap:12px;
-}
-
+.tabs{display:flex;gap:12px}
 .tab{
   flex:1;
   padding:14px;
@@ -301,62 +167,12 @@ label{
   border:1px solid var(--stroke);
   background:rgba(0,0,0,.32);
   font-weight:900;
-  cursor:pointer;
   text-align:center;
 }
-
 .tab.active{
   background:rgba(110,231,255,.16);
   outline:2px solid rgba(110,231,255,.4);
 }
-
-/* =========================
-   SUMMARY
-========================= */
-.summary{
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:14px;
-  margin-bottom:14px;
-}
-
-.box{
-  padding:16px;
-  border-radius:20px;
-  background:rgba(0,0,0,.32);
-  border:1px solid var(--stroke);
-  font-weight:900;
-}
-
-/* =========================
-   TABLE
-========================= */
-table{
-  width:100%;
-  border-collapse:collapse;
-  font-size:13px;
-}
-
-th,td{
-  padding:12px;
-  border-bottom:1px solid var(--stroke);
-}
-
-th{
-  color:var(--muted);
-  font-weight:900;
-  text-align:left;
-}
-
-/* =========================
-   RESPONSIVE
-========================= */
-@media(max-width:720px){
-  .grid{grid-template-columns:1fr}
-  .summary{grid-template-columns:1fr 1fr}
-  .topbar{
-    flex-direction:column;
-    align-items:flex-start;
-    gap:12px;
-  }
-}
+table{width:100%;border-collapse:collapse}
+th,td{padding:12px;border-bottom:1px solid var(--stroke)}
+th{color:var(--muted)}
