@@ -35,7 +35,7 @@ body{
 }
 
 .hidden{display:none!important}
-.row{display:flex;gap:16px;align-items:center}
+.row{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
 .muted{color:var(--muted)}
 .msg{font-size:13px}
 .msg.err{color:var(--danger)}
@@ -83,7 +83,6 @@ label{
   cursor:pointer;
 }
 
-/* ===== NEW: ACTION BUTTONS ===== */
 .ok{
   background:var(--ok);
   color:#062016;
@@ -96,7 +95,7 @@ label{
 
 .danger{
   background:var(--danger);
-  color:white;
+  color:#fff;
   border:none;
   padding:12px 18px;
   border-radius:16px;
@@ -120,32 +119,104 @@ label{
   border-bottom:1px solid var(--stroke);
 }
 
-/* ... (ส่วนบนทั้งหมดเหมือนเดิม) ... */
-
 /* =========================
-   CLOSED DAY (CALENDAR)
+   LAYOUT
 ========================= */
-.calCell.closed {
-  opacity: .35;
+.wrap{
+  width:min(1100px,94vw);
+  margin:18px auto 64px;
 }
 
-.calNum.closed {
-  background: rgba(255,92,122,.25);
-  color: #ff5c7a;
-  border: 1px solid rgba(255,92,122,.6);
-  position: relative;
-}
-
-.calNum.closed::after {
-  content: "⛔";
-  position: absolute;
-  font-size: 14px;
-  bottom: -6px;
-  right: -6px;
+.panel{
+  background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
+  border:1px solid var(--stroke);
+  border-radius:22px;
+  padding:18px;
+  box-shadow:var(--shadow);
+  margin-top:16px;
 }
 
 /* =========================
-   DAY CONTROL PANEL
+   CALENDAR (FIXED)
+========================= */
+.calGrid{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:10px;
+  margin-top:10px;
+}
+
+.calCell{
+  min-height:56px;              /* ✅ แทน aspect-ratio */
+  border-radius:18px;
+  background:rgba(0,0,0,.28);
+  border:1px solid var(--stroke);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+}
+
+.calCell.selected{
+  outline:2px solid rgba(110,231,255,.45);
+}
+
+.calNum{
+  width:40px;
+  height:40px;
+  border-radius:999px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:900;
+}
+
+/* density */
+.calNum.density-low{
+  background:rgba(44,255,156,.22);
+  color:#2cff9c;
+  border:1px solid rgba(44,255,156,.55);
+}
+.calNum.density-mid{
+  background:rgba(253,224,71,.22);
+  color:#fde047;
+  border:1px solid rgba(253,224,71,.55);
+}
+.calNum.density-high{
+  background:rgba(251,146,60,.22);
+  color:#fb923c;
+  border:1px solid rgba(251,146,60,.55);
+}
+.calNum.density-full{
+  background:rgba(255,92,122,.22);
+  color:#ff5c7a;
+  border:1px solid rgba(255,92,122,.55);
+}
+
+/* =========================
+   CLOSED DAY (VISUAL ONLY)
+========================= */
+.calCell.closed{
+  opacity:.45;          /* ❌ ไม่ disable pointer-events */
+}
+
+.calNum.closed{
+  background:rgba(255,92,122,.25);
+  color:#ff5c7a;
+  border:1px solid rgba(255,92,122,.6);
+  position:relative;
+}
+
+.calNum.closed::after{
+  content:"⛔";
+  position:absolute;
+  font-size:14px;
+  bottom:-6px;
+  right:-6px;
+}
+
+/* =========================
+   DAY CONTROL
 ========================= */
 #dayControl{
   display:flex;
@@ -153,7 +224,13 @@ label{
   gap:12px;
 }
 
-#dayControl .row{
-  justify-content:flex-start;
-  flex-wrap:wrap;
+/* =========================
+   RESPONSIVE
+========================= */
+@media(max-width:720px){
+  .topbar{
+    flex-direction:column;
+    align-items:flex-start;
+    gap:12px;
+  }
 }
