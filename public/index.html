@@ -1,0 +1,190 @@
+/* =================================================
+   Adore Hair – Version BASIC SAFE
+   ใช้กับ index.html ที่คุณส่งมาโดยตรง
+================================================= */
+
+const API = ''; // ใช้ origin เดียวกัน
+
+/* =========================
+   GLOBAL STATE
+========================= */
+let bookings = [];
+let currentDate = '';
+let currentStylist = 'Bank';
+
+/* =========================
+   LOGIN
+========================= */
+const loginOverlay = document.getElementById('loginOverlay');
+const pinInput = document.getElementById('pin');
+const loginBtn = document.getElementById('loginBtn');
+const loginMsg = document.getElementById('loginMsg');
+const logoutBtn = document.getElementById('logoutBtn');
+
+const OWNER_PIN = '1234';
+
+loginBtn.addEventListener('click', () => {
+  if (pinInput.value === OWNER_PIN) {
+    loginOverlay.style.display = 'none';
+    pinInput.value = '';
+    loginMsg.textContent = '';
+    init(); // เริ่มระบบหลัง login เท่านั้น
+  } else {
+    loginMsg.textContent = 'PIN ไม่ถูกต้อง';
+  }
+});
+
+logoutBtn.addEventListener('click', () => {
+  location.reload();
+});
+
+/* =========================
+   INIT
+========================= */
+function init() {
+  const dateInput = document.getElementById('date');
+
+  const today = new Date().toISOString().slice(0, 10);
+  currentDate = today;
+  dateInput.value = today;
+
+  dateInput.addEventListener('change', () => {
+    currentDate = dateInput.value;
+    loadBookings();
+  });
+
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelector('.tab.active').classList.remove('active');
+      tab.classList.add('active');
+      currentStylist = tab.dataset.tab;
+      renderTimeOptions();
+      renderTable();
+      updateSummary();
+    });
+  });
+
+  loadBookings();
+}
+
+/* =========================
+   UTIL
+========================= */
+function formatTime(time) {
+  // แสดง HH:MM (ตัดวินาที)
+  return time ? time.slice(0, 5) : '';
+}
+
+/* =========================
+   LOAD BOOKINGS
+========================= */
+async function loadBookings() {
+  try {
+    const res = await fetch(`${API}/bookings?date=${currentDate}`);
+    bookings = await res.json();
+  } catch (err) {
+    console.error('โหลดข้อมูลไม่สำเร็จ', err);
+    bookings = [];
+  }
+
+  renderTimeOptions();
+  renderTable();
+  updateSummary();
+}
+
+/* =========================
+   TIME SELECT
+========================= */
+function renderTimeOptions() {
+  const timeSelect = document.getElementById('time');
+  timeSelect.innerHTML = '';
+
+  for (let h = 13; h <= 22; h++) {
+    const time = `${String(h).padStart(2, '0')}:00:00`;
+
+    const booked = bookings.find(
+      b => b.time === time && b.stylist === currentStylist
+    );
+
+    const option = document.createElement('option');
+    option.value = time;
+    option.textContent = formatTime(time);
+    if (booked) option.disabled = true;
+
+    timeSelect.appendChild(option);
+  }
+}
+
+/* =========================
+   FORM SUBMIT
+========================= */
+document.getElementById('bookingForm').addEventListener('submit', async e => {
+  e.preventDefault();
+
+  const gender = document.querySelector('[name=gender]:checked')?.value;
+
+  if (!gender) {
+    alert('กรุณาเลือกเพศ');
+    return;
+  }
+
+  const payload = {
+    date: currentDate,
+    time: document.getElementById('time').value,
+    stylist: currentStylist,
+    name: document.getElementById('name').value,
+    phone: document.getElementById('phone').value,
+    gender,
+    service: document.getElementById('service').value
+  };
+
+  await fetch(`${API}/bookings`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+
+  e.target.reset();
+  loadBookings();
+});
+
+/* =========================
+   TABLE
+========================= */
+function renderTable() {
+  const list = document.getElementById('list');
+  list.innerHTML = '';
+
+  bookings
+    .filter(b => b.stylist === currentStylist)
+    .forEach(b => {
+      const tr = document.createElement('tr');
+
+      tr.innerHTML = `
+        <td>${formatTime(b.time)}</td>
+        <td>${b.stylist}</td>
+        <td>${b.gender === 'male' ? '👨' : '👩'}</td>
+        <td>${b.name}</td>
+        <td>${b.service || ''}</td>
+        <td>${b.phone || ''}</td>
+        <td></td>
+      `;
+
+      list.appendChild(tr);
+    });
+}
+
+/* =========================
+   SUMMARY
+========================= */
+function updateSummary() {
+  const bank = bookings.filter(b => b.stylist === 'Bank').length;
+  const sindy = bookings.filter(b => b.stylist === 'Sindy').length;
+  const assist = bookings.filter(b => b.stylist === 'Assist').length;
+
+  document.getElementById('countBank').textContent = bank;
+  document.getElementById('countSindy').textContent = sindy;
+  document.getElementById('countAssist').textContent = assist;
+  document.getElementById('countTotal').textContent =
+    bank + sindy + assist;
+}
