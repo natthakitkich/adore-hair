@@ -2,7 +2,7 @@ const API = '';
 const OWNER_PIN = '1234';
 
 /* =========================
-   LOGIN CONTROL (FIX)
+   ELEMENTS
 ========================= */
 const loginOverlay = document.getElementById('loginOverlay');
 const loginBtn = document.getElementById('loginBtn');
@@ -10,6 +10,29 @@ const pinInput = document.getElementById('pin');
 const loginMsg = document.getElementById('loginMsg');
 const logoutBtn = document.getElementById('logoutBtn');
 
+const topbar = document.getElementById('topbar');
+const calendarView = document.getElementById('calendarView');
+const bookingView = document.getElementById('bookingView');
+
+const calendarTitle = document.getElementById('calendarTitle');
+const calendarDaysEl = document.getElementById('calendarDays');
+const prevMonthBtn = document.getElementById('prevMonth');
+const nextMonthBtn = document.getElementById('nextMonth');
+
+/* =========================
+   GLOBAL STATE
+========================= */
+let bookings = [];
+let calendarDensity = {};
+let currentDate = '';
+let currentStylist = 'Bank';
+
+let viewMonth = new Date().getMonth();
+let viewYear = new Date().getFullYear();
+
+/* =========================
+   LOGIN
+========================= */
 loginBtn.onclick = () => {
   const pin = pinInput.value.trim();
   loginMsg.textContent = '';
@@ -19,14 +42,14 @@ loginBtn.onclick = () => {
     return;
   }
 
-  if (pin === OWNER_PIN) {
-    localStorage.setItem('adore_logged_in', '1');
-    loginOverlay.classList.add('hidden');
-    pinInput.value = '';
-    init();
-  } else {
-    loginMsg.textContent = 'PIN ไม่ถูกต้อง';
+  if (pin !== OWNER_PIN) {
+    loginMsg.textContent = 'รหัสผ่านไม่ถูกต้อง';
+    return;
   }
+
+  localStorage.setItem('adore_logged_in', '1');
+  pinInput.value = '';
+  showCalendar();
 };
 
 logoutBtn.onclick = () => {
@@ -37,29 +60,106 @@ logoutBtn.onclick = () => {
 document.addEventListener('DOMContentLoaded', () => {
   const logged = localStorage.getItem('adore_logged_in') === '1';
   if (logged) {
-    loginOverlay.classList.add('hidden');
-    init();
+    showCalendar();
   } else {
-    loginOverlay.classList.remove('hidden');
+    showLogin();
   }
 });
 
 /* =========================
-   GLOBAL STATE (เดิม)
+   VIEW CONTROL
 ========================= */
-let bookings = [];
-let currentDate = '';
-let currentStylist = 'Bank';
+function showLogin() {
+  loginOverlay.classList.remove('hidden');
+  topbar.classList.add('hidden');
+  calendarView.classList.add('hidden');
+  bookingView.classList.add('hidden');
+}
+
+function showCalendar() {
+  loginOverlay.classList.add('hidden');
+  topbar.classList.remove('hidden');
+  calendarView.classList.remove('hidden');
+  bookingView.classList.add('hidden');
+
+  loadCalendar();
+}
+
+function showBooking(date) {
+  calendarView.classList.add('hidden');
+  bookingView.classList.remove('hidden');
+
+  currentDate = date;
+  initBooking();
+}
 
 /* =========================
-   INIT (เดิม)
+   CALENDAR
 ========================= */
-function init() {
-  const dateInput = document.getElementById('date');
-  const today = new Date().toISOString().slice(0, 10);
+async function loadCalendar() {
+  const res = await fetch(`${API}/calendar-days`);
+  calendarDensity = await res.json();
+  renderCalendar();
+}
 
-  currentDate = today;
-  dateInput.value = today;
+function renderCalendar() {
+  calendarDaysEl.innerHTML = '';
+
+  const firstDay = new Date(viewYear, viewMonth, 1);
+  const startDay = firstDay.getDay();
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+
+  calendarTitle.textContent =
+    firstDay.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' });
+
+  for (let i = 0; i < startDay; i++) {
+    const empty = document.createElement('div');
+    empty.className = 'day off';
+    calendarDaysEl.appendChild(empty);
+  }
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const count = calendarDensity[date] || 0;
+
+    const dayEl = document.createElement('div');
+    dayEl.className = 'day';
+
+    if (count > 0 && count <= 5) dayEl.classList.add('low');
+    if (count > 5 && count <= 10) dayEl.classList.add('mid');
+    if (count > 10) dayEl.classList.add('high');
+
+    dayEl.textContent = d;
+    dayEl.onclick = () => showBooking(date);
+
+    calendarDaysEl.appendChild(dayEl);
+  }
+}
+
+prevMonthBtn.onclick = () => {
+  viewMonth--;
+  if (viewMonth < 0) {
+    viewMonth = 11;
+    viewYear--;
+  }
+  renderCalendar();
+};
+
+nextMonthBtn.onclick = () => {
+  viewMonth++;
+  if (viewMonth > 11) {
+    viewMonth = 0;
+    viewYear++;
+  }
+  renderCalendar();
+};
+
+/* =========================
+   BOOKING (เดิม + adapt)
+========================= */
+function initBooking() {
+  const dateInput = document.getElementById('date');
+  dateInput.value = currentDate;
 
   dateInput.onchange = () => {
     currentDate = dateInput.value;
@@ -80,9 +180,6 @@ function init() {
   loadBookings();
 }
 
-/* =========================
-   LOAD BOOKINGS (เดิม)
-========================= */
 async function loadBookings() {
   const res = await fetch(`${API}/bookings?date=${currentDate}`);
   bookings = await res.json();
@@ -92,16 +189,12 @@ async function loadBookings() {
   updateSummary();
 }
 
-/* =========================
-   TIME OPTIONS (เดิม)
-========================= */
 function renderTimeOptions() {
   const timeSelect = document.getElementById('time');
   timeSelect.innerHTML = '';
 
   for (let h = 13; h <= 22; h++) {
     const time = `${String(h).padStart(2, '0')}:00:00`;
-
     const booked = bookings.find(
       b => b.time === time && b.stylist === currentStylist
     );
@@ -116,16 +209,13 @@ function renderTimeOptions() {
 }
 
 /* =========================
-   FORM SUBMIT (เดิม)
+   FORM SUBMIT
 ========================= */
 document.getElementById('bookingForm').onsubmit = async e => {
   e.preventDefault();
 
   const gender = document.querySelector('[name=gender]:checked')?.value;
-  if (!gender) {
-    alert('กรุณาเลือกเพศ');
-    return;
-  }
+  if (!gender) return alert('กรุณาเลือกเพศ');
 
   await fetch(`${API}/bookings`, {
     method: 'POST',
@@ -143,11 +233,11 @@ document.getElementById('bookingForm').onsubmit = async e => {
 
   e.target.reset();
   loadBookings();
+  loadCalendar();
 };
 
 /* =========================
    TABLE / SUMMARY / EDIT
-   (เดิมทั้งหมด)
 ========================= */
 function renderTable() {
   const list = document.getElementById('list');
@@ -223,9 +313,9 @@ document.getElementById('saveEdit').onclick = async () => {
     })
   });
 
-  alert('ข้อมูลถูกแก้ไขแล้ว');
   closeEditModal();
   loadBookings();
+  loadCalendar();
 };
 
 document.getElementById('deleteEdit').onclick = async () => {
@@ -235,6 +325,7 @@ document.getElementById('deleteEdit').onclick = async () => {
 
   closeEditModal();
   loadBookings();
+  loadCalendar();
 };
 
 document.getElementById('closeEdit').onclick = closeEditModal;
