@@ -70,35 +70,36 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* =========================
-   INIT
+   INIT (เรียงลำดับชัด)
 ========================= */
-function init() {
+async function init() {
   bindStylistTabs();
-  loadClosedDays();
-  loadCalendar();
-  loadBookings();
+  await loadClosedDays();
+  await loadCalendar();
+  await loadBookings();
+  renderStoreStatus();
 }
 
 /* =========================
-   STORE OPEN / CLOSE (1–4)
+   STORE OPEN / CLOSE
 ========================= */
 async function loadClosedDays() {
   const res = await fetch(`${API}/closed-days`);
   closedDays = await res.json();
-  renderStoreStatus();
+}
+
+function isStoreClosed() {
+  return closedDays.includes(selectedDate);
 }
 
 function renderStoreStatus() {
-  const isClosed = closedDays.includes(selectedDate);
-
   toggleStoreBtn.classList.remove('open', 'closed');
 
-  if (isClosed) {
+  if (isStoreClosed()) {
     storeStatusText.textContent = '🔴 ร้านปิดให้บริการ';
     toggleStoreBtn.textContent = 'Open Store';
     toggleStoreBtn.classList.add('closed');
 
-    bookingForm.classList.add('disabled');
     submitBookingBtn.disabled = true;
     timeSelect.disabled = true;
   } else {
@@ -106,17 +107,16 @@ function renderStoreStatus() {
     toggleStoreBtn.textContent = 'Close Store';
     toggleStoreBtn.classList.add('open');
 
-    bookingForm.classList.remove('disabled');
     submitBookingBtn.disabled = false;
     timeSelect.disabled = false;
   }
 }
 
 toggleStoreBtn.onclick = async () => {
-  const isClosed = closedDays.includes(selectedDate);
-
-  if (isClosed) {
-    await fetch(`${API}/closed-days/${selectedDate}`, { method: 'DELETE' });
+  if (isStoreClosed()) {
+    await fetch(`${API}/closed-days/${selectedDate}`, {
+      method: 'DELETE'
+    });
   } else {
     await fetch(`${API}/closed-days`, {
       method: 'POST',
@@ -126,7 +126,8 @@ toggleStoreBtn.onclick = async () => {
   }
 
   await loadClosedDays();
-  loadCalendar();
+  renderStoreStatus();
+  renderCalendar();
 };
 
 /* =========================
@@ -157,20 +158,26 @@ function renderCalendar() {
       `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 
     const count = calendarDensity[date] || 0;
-
     const el = document.createElement('div');
+
     el.className = 'day';
     el.textContent = d;
 
     if (date === selectedDate) el.classList.add('today');
-    if (closedDays.includes(date)) el.classList.add('closed');
-    else if (count > 0 && count <= 5) el.classList.add('low');
-    else if (count > 5 && count <= 10) el.classList.add('mid');
-    else if (count > 10) el.classList.add('high');
 
-    el.onclick = () => {
+    if (closedDays.includes(date)) {
+      el.classList.add('closed');
+    } else if (count > 0 && count <= 5) {
+      el.classList.add('low');
+    } else if (count > 5 && count <= 10) {
+      el.classList.add('mid');
+    } else if (count > 10) {
+      el.classList.add('high');
+    }
+
+    el.onclick = async () => {
       selectedDate = date;
-      loadBookings();
+      await loadBookings();
       renderStoreStatus();
       renderCalendar();
     };
@@ -198,7 +205,7 @@ nextMonthBtn.onclick = () => {
 };
 
 /* =========================
-   BOOKINGS (เดิม)
+   BOOKINGS
 ========================= */
 async function loadBookings() {
   const res = await fetch(`${API}/bookings?date=${selectedDate}`);
@@ -222,7 +229,14 @@ function bindStylistTabs() {
 
 function renderTimeOptions() {
   timeSelect.innerHTML = '';
-  if (closedDays.includes(selectedDate)) return;
+
+  if (isStoreClosed()) {
+    const opt = document.createElement('option');
+    opt.textContent = 'ร้านปิด';
+    opt.disabled = true;
+    timeSelect.appendChild(opt);
+    return;
+  }
 
   for (let h = 13; h <= 22; h++) {
     const time = `${String(h).padStart(2, '0')}:00:00`;
@@ -238,6 +252,134 @@ function renderTimeOptions() {
     timeSelect.appendChild(opt);
   }
 }
+
+/* =========================
+   FORM SUBMIT
+========================= */
+bookingForm.onsubmit = async e => {
+  e.preventDefault();
+  if (isStoreClosed()) return;
+
+  const gender = document.querySelector('[name=gender]:checked')?.value;
+  if (!gender) {
+    alert('กรุณาเลือกเพศ');
+    return;
+  }
+
+  await fetch(`${API}/bookings`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      date: selectedDate,
+      time: timeSelect.value,
+      stylist: selectedStylist,
+      name: document.getElementById('name').value,
+      phone: document.getElementById('phone').value,
+      gender,
+      service: document.getElementById('service').value
+    })
+  });
+
+  bookingForm.reset();
+  alert('บันทึกคิวเรียบร้อยแล้ว');
+
+  await loadBookings();
+  await loadCalendar();
+};
+
+/* =========================
+   SUMMARY
+========================= */
+function renderSummary() {
+  const bank = bookings.filter(b => b.stylist === 'Bank').length;
+  const sindy = bookings.filter(b => b.stylist === 'Sindy').length;
+  const assist = bookings.filter(b => b.stylist === 'Assist').length;
+
+  document.getElementById('countBank').textContent = bank;
+  document.getElementById('countSindy').textContent = sindy;
+  document.getElementById('countAssist').textContent = assist;
+  document.getElementById('countTotal').textContent = bank + sindy + assist;
+}
+
+/* =========================
+   TABLE
+========================= */
+function renderTable() {
+  listEl.innerHTML = '';
+
+  bookings.forEach(b => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${b.time.slice(0, 5)}</td>
+      <td><span class="badge ${b.stylist}">${b.stylist}</span></td>
+      <td>${b.gender === 'male' ? '👨' : '👩'}</td>
+      <td>${b.name}</td>
+      <td>${b.service || ''}</td>
+      <td>${b.phone || ''}</td>
+      <td><button class="ghost">จัดการ</button></td>
+    `;
+    tr.querySelector('button').onclick = () => openEditModal(b);
+    listEl.appendChild(tr);
+  });
+}
+
+/* =========================
+   EDIT MODAL
+========================= */
+const editOverlay = document.getElementById('editOverlay');
+const editTime = document.getElementById('editTime');
+const editStylist = document.getElementById('editStylist');
+const editName = document.getElementById('editName');
+const editPhone = document.getElementById('editPhone');
+const editService = document.getElementById('editService');
+let editingId = null;
+
+function openEditModal(b) {
+  editingId = b.id;
+  editTime.value = b.time.slice(0, 5);
+  editStylist.value = b.stylist;
+  editName.value = b.name;
+  editPhone.value = b.phone || '';
+  editService.value = b.service || '';
+
+  document.querySelectorAll('[name=editGender]').forEach(r => {
+    r.checked = r.value === b.gender;
+  });
+
+  editOverlay.classList.remove('hidden');
+}
+
+document.getElementById('saveEdit').onclick = async () => {
+  const gender = document.querySelector('[name=editGender]:checked')?.value;
+
+  await fetch(`${API}/bookings/${editingId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: editName.value,
+      phone: editPhone.value,
+      gender,
+      service: editService.value
+    })
+  });
+
+  editOverlay.classList.add('hidden');
+  await loadBookings();
+  await loadCalendar();
+};
+
+document.getElementById('deleteEdit').onclick = async () => {
+  if (!confirm('ยืนยันการลบคิวนี้?')) return;
+
+  await fetch(`${API}/bookings/${editingId}`, { method: 'DELETE' });
+
+  editOverlay.classList.add('hidden');
+  await loadBookings();
+  await loadCalendar();
+};
+
+document.getElementById('closeEdit').onclick = () =>
+  editOverlay.classList.add('hidden');
 
 /* =========================
    UTIL
