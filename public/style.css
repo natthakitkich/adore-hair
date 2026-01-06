@@ -12,17 +12,16 @@
   --danger:#ff5c7a;
   --ok:#2cff9c;
 
-  --stroke:rgba(255,255,255,.08);
+  --bank:#6ee7ff;
+  --sindy:#ff7ab6;
+  --assist:#2cff9c;
+
+  --stroke:rgba(255,255,255,.12);
   --shadow:0 14px 40px rgba(0,0,0,.45);
 
   --low:#2cff9c;
   --mid:#ffd166;
   --high:#ff5c7a;
-
-  /* stylist colors */
-  --bank:#6ee7ff;
-  --sindy:#ff8fbf;
-  --assist:#5dffb0;
 }
 
 /* =========================
@@ -44,10 +43,6 @@ body{
 }
 
 .hidden{display:none!important}
-.row{display:flex;gap:16px;align-items:center}
-.muted{color:var(--muted)}
-.msg{font-size:13px}
-.msg.err{color:var(--danger)}
 
 /* =========================
    INPUT / BUTTON
@@ -58,15 +53,14 @@ input,select{
   font-size:16px;
   border-radius:16px;
   border:1px solid var(--stroke);
-  background:rgba(0,0,0,.28);
+  background:rgba(0,0,0,.35);
   color:var(--text);
-  outline:none;
 }
 
 .primary{
   width:100%;
-  padding:14px;
-  border-radius:16px;
+  padding:16px;
+  border-radius:18px;
   font-weight:900;
   border:none;
   cursor:pointer;
@@ -74,131 +68,32 @@ input,select{
   color:#061022;
 }
 
-.ghost{
-  background:rgba(255,255,255,.06);
-  border:1px solid var(--stroke);
-  color:var(--text);
-  padding:10px 18px;
-  border-radius:14px;
-  cursor:pointer;
-}
-
 /* =========================
-   OVERLAY / MODAL (FIX SIZE)
-========================= */
-.overlay{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.75);
-  display:grid;
-  place-items:center;
-  z-index:999;
-}
-
-.modal{
-  width:min(420px,92vw);
-  max-height:90vh;
-  overflow:auto;
-  background:linear-gradient(180deg,rgba(20,25,45,.96),rgba(10,12,22,.96));
-  border-radius:26px;
-  border:1px solid rgba(255,255,255,.15);
-  box-shadow:0 22px 90px rgba(0,0,0,.65);
-}
-
-.modalBody{
-  padding:28px;
-  display:flex;
-  flex-direction:column;
-  gap:16px;
-  align-items:stretch;
-  text-align:left;
-}
-
-#pin{
-  max-width:280px;
-  text-align:center;
-  letter-spacing:6px;
-  font-size:22px;
-}
-
-/* =========================
-   TOP BAR
-========================= */
-.topbar{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:18px 22px;
-}
-
-.brand{
-  display:flex;
-  gap:14px;
-  align-items:center;
-}
-
-.title{
-  font-weight:900;
-}
-
-.subtitle{
-  font-size:13px;
-  color:var(--muted);
-}
-
-/* =========================
-   LOGO AVATAR
-========================= */
-.avatar{
-  width:42px;
-  height:42px;
-  border-radius:50%;
-  background:linear-gradient(
-    145deg,
-    rgba(110,231,255,.25),
-    rgba(167,139,250,.25)
-  );
-  display:grid;
-  place-items:center;
-  overflow:hidden;
-  box-shadow:
-    0 8px 24px rgba(0,0,0,.45),
-    inset 0 0 0 1px rgba(255,255,255,.15);
-}
-
-.avatar img{
-  width:100%;
-  height:100%;
-  object-fit:contain;
-  border-radius:50%;
-}
-
-/* =========================
-   MAIN WRAP
+   PANELS
 ========================= */
 .wrap{
   max-width:980px;
-  margin:0 auto 80px;
-  padding:0 18px;
+  margin:0 auto 100px;
+  padding:0 16px;
 }
 
 .panel{
   margin-bottom:22px;
   padding:22px;
-  background:linear-gradient(180deg,rgba(20,25,45,.85),rgba(10,12,22,.85));
-  border-radius:22px;
+  background:linear-gradient(180deg,rgba(20,25,45,.9),rgba(10,12,22,.9));
+  border-radius:26px;
   border:1px solid var(--stroke);
   box-shadow:var(--shadow);
 }
 
 /* =========================
-   CALENDAR (NO LOGIC TOUCH)
+   CALENDAR
 ========================= */
 .calendarHeader{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  margin-bottom:14px;
+  margin-bottom:12px;
 }
 
 .calendarTitle{
@@ -209,7 +104,7 @@ input,select{
 .calendarGrid{
   display:grid;
   grid-template-columns:repeat(7,1fr);
-  gap:12px;
+  gap:10px;
   text-align:center;
 }
 
@@ -218,28 +113,52 @@ input,select{
   color:var(--muted);
 }
 
-.calendarDays{display:contents}
-
 .day{
   aspect-ratio:1/1;
   border-radius:50%;
   display:grid;
   place-items:center;
-  font-weight:900;
+  font-weight:800;
   cursor:pointer;
   border:1px solid var(--stroke);
-  background:rgba(255,255,255,.04);
-  position:relative;
+  background:rgba(255,255,255,.06);
+  transition:.2s;
 }
 
-.day.today{outline:2px solid var(--accent)}
-.day.low{background:rgba(44,255,156,.15)}
-.day.mid{background:rgba(255,209,102,.15)}
-.day.high{background:rgba(255,92,122,.15)}
+.day:hover{
+  transform:scale(1.05);
+}
+
+.day.today{
+  outline:2px solid var(--accent);
+}
+
+.day.low{
+  background:rgba(44,255,156,.25);
+  color:var(--low);
+}
+
+.day.mid{
+  background:rgba(255,209,102,.28);
+  color:var(--mid);
+}
+
+.day.high{
+  background:rgba(255,92,122,.28);
+  color:var(--high);
+}
 
 .day.closed{
-  background:rgba(255,92,122,.18);
+  background:rgba(255,92,122,.25);
+  color:var(--danger);
   border-color:var(--danger);
+}
+
+.day.closed::after{
+  content:'⛔️';
+  position:absolute;
+  bottom:6px;
+  right:6px;
 }
 
 /* =========================
@@ -254,14 +173,15 @@ input,select{
 .summary .box{
   padding:26px;
   border-radius:22px;
-  background:rgba(0,0,0,.35);
+  background:rgba(0,0,0,.45);
   text-align:center;
 }
 
 .summary strong{
   display:block;
-  font-size:36px;
+  font-size:38px;
   margin-top:6px;
+  color:#fff;
 }
 
 /* =========================
@@ -275,22 +195,32 @@ input,select{
 
 .tab{
   flex:1;
-  padding:12px;
+  padding:14px;
   text-align:center;
-  border-radius:14px;
+  border-radius:16px;
   border:1px solid var(--stroke);
+  background:rgba(255,255,255,.05);
   cursor:pointer;
-  background:rgba(255,255,255,.04);
+  font-weight:700;
 }
 
-.tab.active{
-  background:linear-gradient(135deg,var(--accent),var(--accent2));
-  color:#061022;
-  font-weight:900;
+.tab[data-tab="Bank"].active{
+  background:rgba(110,231,255,.25);
+  color:var(--bank);
+}
+
+.tab[data-tab="Sindy"].active{
+  background:rgba(255,122,182,.25);
+  color:var(--sindy);
+}
+
+.tab[data-tab="Assist"].active{
+  background:rgba(44,255,156,.25);
+  color:var(--assist);
 }
 
 /* =========================
-   TABLE + STYLIST BADGE
+   TABLE
 ========================= */
 table{
   width:100%;
@@ -303,32 +233,56 @@ th,td{
   font-size:14px;
 }
 
-th{color:var(--muted)}
+th{
+  color:var(--muted);
+}
 
+/* stylist badge */
 .badge{
-  display:inline-block;
   padding:6px 14px;
   border-radius:999px;
-  font-weight:900;
+  font-weight:800;
   font-size:13px;
+  border:1px solid;
 }
 
 .badge.bank{
   color:var(--bank);
-  border:1px solid rgba(110,231,255,.6);
+  border-color:var(--bank);
   background:rgba(110,231,255,.18);
 }
 
 .badge.sindy{
   color:var(--sindy);
-  border:1px solid rgba(255,143,191,.6);
-  background:rgba(255,143,191,.18);
+  border-color:var(--sindy);
+  background:rgba(255,122,182,.18);
 }
 
 .badge.assist{
   color:var(--assist);
-  border:1px solid rgba(93,255,176,.6);
-  background:rgba(93,255,176,.18);
+  border-color:var(--assist);
+  background:rgba(44,255,156,.18);
+}
+
+/* =========================
+   MODAL (แก้ไขคิว)
+========================= */
+.overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.85);
+  display:grid;
+  place-items:center;
+  z-index:999;
+}
+
+.modal{
+  width:min(420px,92vw);
+  max-height:88vh;
+  overflow:auto;
+  border-radius:28px;
+  background:linear-gradient(180deg,rgba(20,25,45,.96),rgba(10,12,22,.96));
+  border:1px solid rgba(255,255,255,.15);
 }
 
 /* =========================
@@ -338,4 +292,5 @@ th{color:var(--muted)}
   position:sticky;
   bottom:0;
   background:linear-gradient(180deg,rgba(10,12,22,.95),rgba(5,6,12,.95));
+  padding:16px;
 }
