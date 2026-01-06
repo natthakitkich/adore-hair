@@ -23,10 +23,14 @@
 /* =========================
    BASE
 ========================= */
-*{box-sizing:border-box}
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+}
+
 body{
   margin:0;
-  font-family:system-ui,-apple-system,Segoe UI,Roboto;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
   background:
     radial-gradient(1200px 700px at 15% 10%, #1a2b5a 0%, transparent 60%),
     radial-gradient(900px 600px at 90% 20%, #3b1b5a 0%, transparent 55%),
@@ -46,27 +50,23 @@ body{
 input,select{
   width:100%;
   padding:14px;
+  font-size:16px;
   border-radius:16px;
   border:1px solid var(--stroke);
   background:rgba(0,0,0,.28);
   color:var(--text);
-  font-size:16px;
+  outline:none;
 }
 
 .primary{
   width:100%;
   padding:14px;
   border-radius:16px;
-  border:none;
   font-weight:900;
+  border:none;
   cursor:pointer;
   background:linear-gradient(135deg,var(--accent),var(--accent2));
   color:#061022;
-}
-
-.primary:disabled{
-  opacity:.4;
-  cursor:not-allowed;
 }
 
 .ghost{
@@ -108,7 +108,7 @@ input,select{
 }
 
 #pin{
-  max-width:260px;
+  max-width:280px;
   text-align:center;
   letter-spacing:6px;
   font-size:22px;
@@ -130,8 +130,17 @@ input,select{
   align-items:center;
 }
 
+.title{
+  font-weight:900;
+}
+
+.subtitle{
+  font-size:13px;
+  color:var(--muted);
+}
+
 /* =========================
-   LOGO AVATAR (POLISHED)
+   LOGO AVATAR
 ========================= */
 .avatar{
   width:42px;
@@ -153,7 +162,13 @@ input,select{
 .avatar.big{
   width:98px;
   height:98px;
-  margin-bottom:8px;
+}
+
+.avatar img{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  border-radius:50%;
 }
 
 /* =========================
@@ -223,7 +238,6 @@ input,select{
 .day.mid{color:var(--mid);background:rgba(255,209,102,.15)}
 .day.high{color:var(--high);background:rgba(255,92,122,.15)}
 
-/* --- CLOSED DAY --- */
 .day.closed{
   background:rgba(255,92,122,.15);
   color:var(--danger);
@@ -333,17 +347,6 @@ th,td{
 
 th{color:var(--muted)}
 
-.badge{
-  padding:6px 14px;
-  border-radius:999px;
-  font-weight:900;
-  font-size:13px;
-}
-
-.badge.Bank{background:rgba(110,231,255,.2);color:#6ee7ff}
-.badge.Sindy{background:rgba(255,143,177,.2);color:#ff8fb1}
-.badge.Assist{background:rgba(44,255,156,.2);color:#2cff9c}
-
 /* =========================
    STORE STATUS BAR
 ========================= */
@@ -351,130 +354,4 @@ th{color:var(--muted)}
   position:sticky;
   bottom:0;
   background:linear-gradient(180deg,rgba(10,12,22,.95),rgba(5,6,12,.95));
-}
-
-#storeStatusText{
-  font-weight:900;
-}
-
-#toggleStoreBtn.open{
-  background:rgba(44,255,156,.2);
-  color:var(--ok);
-  border-color:rgba(44,255,156,.6);
-}
-
-#toggleStoreBtn.closed{
-  background:rgba(255,92,122,.2);
-  color:var(--danger);
-  border-color:rgba(255,92,122,.6);
-}
-/* =========================
-   LOGO AVATAR
-========================= */
-.avatar img{
-  width:100%;
-  height:100%;
-  object-fit:contain;
-  border-radius:50%;
-  filter:
-    drop-shadow(0 6px 12px rgba(0,0,0,.35));
-  transition:transform .35s ease, filter .35s ease;
-}
-/* =========================
-   TOPBAR LOGO OVERRIDE
-========================= */
-.topbar .avatar img{
-  width:92%;
-  height:92%;
-  object-fit:contain;
-  transform:none;
-  filter:drop-shadow(0 4px 8px rgba(0,0,0,.35));
-}
-/* =========================
-   SUMMARY – COMPACT (MOBILE)
-========================= */
-@media (max-width: 768px){
-  .summary{
-    gap:10px;
-  }
-
-  .summary .box{
-    padding:14px 12px;   /* ↓ จาก 26px */
-    border-radius:16px; /* ↓ จาก 22px */
-  }
-
-  .summary .box strong,
-  .summary .box span{
-    font-size:22px;     /* ↓ จาก ~36px */
-    line-height:1.1;
-  }
-
-  .summary .box{
-    font-size:13px;
-  }
-}
-/* =========================
-   FIX AVATAR ROUND (iOS)
-========================= */
-.avatar{
-  aspect-ratio:1 / 1;          /* 🔑 บังคับเป็นสี่เหลี่ยม */
-  min-width:42px;
-  min-height:42px;
-  max-width:42px;
-  max-height:42px;
-  flex-shrink:0;               /* 🔑 กัน flex บีบ */
-}
-/* =========================
-   TOPBAR TEXT – MOBILE
-========================= */
-@media (max-width: 768px){
-  .topbar .title{
-    font-size:16px;     /* ↓ จาก ~18–20 */
-    line-height:1.2;
-  }
-
-  .topbar .subtitle{
-    font-size:12px;     /* ↓ จาก ~14 */
-    opacity:.85;
-  }
-
-  .brand{
-    gap:10px;           /* ลดช่องว่างโลโก้กับข้อความ */
-  }
-}
-/* =========================
-   FIX: TABLE CLICK ISSUE (iOS / MOBILE)
-========================= */
-
-/* ป้องกัน layer ทับปุ่ม */
-.panel::before,
-.panel::after {
-  pointer-events: none !important;
-}
-
-/* ให้ตารางคลิกได้จริง */
-table,
-tbody,
-tr,
-td,
-button {
-  position: relative;
-  z-index: 2;
-}
-
-/* ปุ่มจัดการ */
-table button {
-  pointer-events: auto !important;
-}
-
-/* กันปัญหา overflow บนมือถือ */
-.panel {
-  overflow: visible !important;
-}
-
-/* ตารางเลื่อนแนวนอนได้ ไม่โดนตัด */
-.panel table {
-  width: 100%;
-  overflow-x: auto;
-  display: block;
 }
