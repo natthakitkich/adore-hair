@@ -1,7 +1,7 @@
 /* =========================
    CONFIG
 ========================= */
-const API = '';
+const API = ''; // ใช้ endpoint เดิม
 const OWNER_PIN = '1234';
 const TZ = 'Asia/Bangkok';
 
@@ -30,15 +30,17 @@ const toggleStoreBtn = document.getElementById('toggleStoreBtn');
    STATE
 ========================= */
 let bookings = [];
-let densityMap = {};
+let calendarDensity = {};
 let closedDays = new Set();
 
 let selectedStylist = 'Bank';
 let selectedDate = getTodayTH();
 
-let view = new Date(`${selectedDate}T00:00:00+07:00`);
-let viewMonth = view.getMonth();
-let viewYear = view.getFullYear();
+let viewDate = new Date(`${selectedDate}T00:00:00+07:00`);
+let viewMonth = viewDate.getMonth();
+let viewYear = viewDate.getFullYear();
+
+let storeOpen = true;
 
 /* =========================
    LOGIN
@@ -48,20 +50,22 @@ loginBtn.onclick = () => {
     loginMsg.textContent = 'PIN ไม่ถูกต้อง';
     return;
   }
-  localStorage.setItem('logged', '1');
+  localStorage.setItem('adore_logged', '1');
   loginOverlay.classList.add('hidden');
   init();
 };
-
-if (localStorage.getItem('logged')) {
-  loginOverlay.classList.add('hidden');
-  init();
-}
 
 logoutBtn.onclick = () => {
-  localStorage.removeItem('logged');
+  localStorage.removeItem('adore_logged');
   location.reload();
 };
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (localStorage.getItem('adore_logged') === '1') {
+    loginOverlay.classList.add('hidden');
+    init();
+  }
+});
 
 /* =========================
    INIT
@@ -71,6 +75,7 @@ function init() {
   bindMonthNav();
   loadCalendar();
   loadBookings();
+  loadStoreStatus();
 }
 
 /* =========================
@@ -89,13 +94,12 @@ function getTodayTH() {
    CALENDAR
 ========================= */
 async function loadCalendar() {
-  const [densityRes, closedRes] = await Promise.all([
-    fetch(`${API}/calendar-days`),
-    fetch(`${API}/closed-days`)
-  ]);
+  const resDensity = await fetch(`${API}/calendar-days`);
+  calendarDensity = await resDensity.json();
 
-  densityMap = await densityRes.json();
-  closedDays = new Set(await closedRes.json());
+  const resClosed = await fetch(`${API}/closed-days`);
+  const closed = await resClosed.json();
+  closedDays = new Set(closed);
 
   renderCalendar();
 }
@@ -103,51 +107,54 @@ async function loadCalendar() {
 function renderCalendar() {
   calendarDaysEl.innerHTML = '';
 
-  const first = new Date(viewYear, viewMonth, 1);
-  const startDay = first.getDay();
+  const firstDay = new Date(viewYear, viewMonth, 1);
+  const startDay = firstDay.getDay(); // 0 = Sun
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
 
-  calendarTitle.textContent =
-    `${first.toLocaleDateString('en-US', { month: 'long' })} ${viewYear}`;
+  calendarTitle.textContent = firstDay.toLocaleDateString('th-TH', {
+    month: 'long',
+    year: 'numeric'
+  });
 
   const totalCells = 42;
-  let day = 1 - startDay;
+  let dayNum = 1 - startDay;
 
-  for (let i = 0; i < totalCells; i++, day++) {
-    const el = document.createElement('div');
-    el.className = 'day';
+  for (let i = 0; i < totalCells; i++, dayNum++) {
+    const cell = document.createElement('div');
+    cell.className = 'day';
 
-    if (day < 1 || day > daysInMonth) {
-      el.style.visibility = 'hidden';
-      calendarDaysEl.appendChild(el);
+    if (dayNum < 1 || dayNum > daysInMonth) {
+      cell.classList.add('disabled');
+      calendarDaysEl.appendChild(cell);
       continue;
     }
 
-    const date =
-      `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const dateStr =
+      `${viewYear}-${String(viewMonth + 1).padStart(2,'0')}-${String(dayNum).padStart(2,'0')}`;
 
-    el.textContent = day;
+    cell.textContent = dayNum;
 
-    if (date === getTodayTH()) el.classList.add('today');
-    if (closedDays.has(date)) el.classList.add('closed');
+    if (dateStr === selectedDate) cell.classList.add('active');
+    if (dateStr === getTodayTH()) cell.classList.add('today');
 
-    const count = densityMap[date] || 0;
-    if (!closedDays.has(date)) {
-      if (count > 0 && count <= 5) el.classList.add('low');
-      else if (count <= 10) el.classList.add('mid');
-      else if (count > 10) el.classList.add('high');
+    if (closedDays.has(dateStr)) {
+      cell.classList.add('closed');
+    } else {
+      const count = calendarDensity[dateStr] || 0;
+      if (count >= 1 && count <= 4) cell.classList.add('low');
+      if (count >= 5 && count <= 7) cell.classList.add('mid');
+      if (count >= 8) cell.classList.add('high');
     }
 
-    el.onclick = () => {
-      selectedDate = date;
+    cell.onclick = () => {
+      selectedDate = dateStr;
       loadBookings();
+      loadStoreStatus();
       renderCalendar();
     };
 
-    calendarDaysEl.appendChild(el);
+    calendarDaysEl.appendChild(cell);
   }
-
-  renderStoreStatus();
 }
 
 function bindMonthNav() {
@@ -173,10 +180,20 @@ function bindMonthNav() {
 /* =========================
    STORE STATUS
 ========================= */
+async function loadStoreStatus() {
+  if (closedDays.has(selectedDate)) {
+    storeOpen = false;
+  } else {
+    storeOpen = true;
+  }
+  renderStoreStatus();
+}
+
 function renderStoreStatus() {
-  const closed = closedDays.has(selectedDate);
-  storeStatusText.textContent = closed ? 'สถานะร้าน: ปิด' : 'สถานะร้าน: เปิด';
-  toggleStoreBtn.textContent = closed ? 'เปิดร้าน' : 'ปิดร้าน';
+  storeStatusText.textContent =
+    storeOpen ? 'สถานะร้าน: เปิด' : 'สถานะร้าน: ปิด';
+  toggleStoreBtn.textContent =
+    storeOpen ? 'ปิดร้าน' : 'เปิดร้าน';
 }
 
 toggleStoreBtn.onclick = async () => {
@@ -185,8 +202,8 @@ toggleStoreBtn.onclick = async () => {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ date: selectedDate })
   });
-
   loadCalendar();
+  loadStoreStatus();
   loadBookings();
 };
 
@@ -194,32 +211,36 @@ toggleStoreBtn.onclick = async () => {
    BOOKINGS
 ========================= */
 async function loadBookings() {
-  if (closedDays.has(selectedDate)) {
-    bookings = [];
-    renderTimeOptions();
-    renderTable();
-    return;
-  }
-
   const res = await fetch(`${API}/bookings?date=${selectedDate}`);
   bookings = await res.json();
 
+  renderSummary();
   renderTimeOptions();
   renderTable();
 }
 
 function renderTimeOptions() {
   timeSelect.innerHTML = '';
-  for (let h = 13; h <= 22; h++) {
-    const time = `${String(h).padStart(2, '0')}:00:00`;
-    const booked = bookings.find(
-      b => b.time === time && b.stylist === selectedStylist
-    );
 
+  const stylistBookings = bookings.filter(
+    b => b.stylist === selectedStylist
+  );
+
+  const countToday = stylistBookings.length;
+
+  for (let h = 13; h <= 22; h++) {
+    const time = `${String(h).padStart(2,'0')}:00:00`;
     const opt = document.createElement('option');
     opt.value = time;
-    opt.textContent = time.slice(0, 5);
-    if (booked) opt.disabled = true;
+    opt.textContent = time.slice(0,5);
+
+    const taken = stylistBookings.find(b => b.time === time);
+
+    if (!storeOpen || taken || countToday >= 10) {
+      opt.disabled = true;
+      opt.style.color = '#777';
+    }
+
     timeSelect.appendChild(opt);
   }
 }
@@ -227,33 +248,51 @@ function renderTimeOptions() {
 bookingForm.onsubmit = async e => {
   e.preventDefault();
 
-  if (closedDays.has(selectedDate)) {
-    alert('วันนี้ร้านปิด');
+  if (!storeOpen) return alert('วันนี้ร้านปิด');
+  const gender = document.querySelector('[name=gender]:checked')?.value;
+  if (!gender) return alert('กรุณาเลือกเพศ');
+
+  const payload = {
+    date: selectedDate,
+    time: timeSelect.value,
+    stylist: selectedStylist,
+    name: document.getElementById('name').value,
+    phone: document.getElementById('phone').value,
+    gender,
+    service: document.getElementById('service').value
+  };
+
+  const res = await fetch(`${API}/bookings`, {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json' },
+    body: JSON.stringify(payload)
+  });
+
+  if (!res.ok) {
+    alert('บันทึกคิวไม่สำเร็จ');
     return;
   }
 
-  const gender = document.querySelector('[name=gender]:checked')?.value;
-  if (!gender) return alert('เลือกเพศ');
-
-  await fetch(`${API}/bookings`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      date: selectedDate,
-      time: timeSelect.value,
-      stylist: selectedStylist,
-      name: bookingForm.name.value,
-      phone: bookingForm.phone.value,
-      gender,
-      service: bookingForm.service.value
-    })
-  });
-
-  bookingForm.reset();
   alert('บันทึกคิวเรียบร้อยแล้ว');
+  bookingForm.reset();
   loadBookings();
   loadCalendar();
 };
+
+/* =========================
+   SUMMARY
+========================= */
+function renderSummary() {
+  const bank = bookings.filter(b => b.stylist === 'Bank').length;
+  const sindy = bookings.filter(b => b.stylist === 'Sindy').length;
+  const assist = bookings.filter(b => b.stylist === 'Assist').length;
+
+  document.getElementById('countBank').textContent = bank;
+  document.getElementById('countSindy').textContent = sindy;
+  document.getElementById('countAssist').textContent = assist;
+  document.getElementById('countTotal').textContent =
+    bank + sindy + assist;
+}
 
 /* =========================
    TABLE
@@ -280,20 +319,20 @@ function renderTable() {
    TABS
 ========================= */
 function bindTabs() {
-  document.querySelectorAll('.tab').forEach(t => {
-    t.onclick = () => {
-      document.querySelector('.tab.active')?.classList.remove('active');
-      t.classList.add('active');
-      selectedStylist = t.dataset.tab;
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.onclick = () => {
+      document.querySelector('.tab.active').classList.remove('active');
+      tab.classList.add('active');
+      selectedStylist = tab.dataset.tab;
       renderTimeOptions();
     };
   });
 }
 
 /* =========================
-   EDIT MODAL
+   EDIT MODAL (HOOK)
 ========================= */
 function openEditModal(b) {
-  console.log('EDIT', b);
   // ใช้ modal เดิมของคุณได้ทันที
+  console.log('EDIT', b);
 }
