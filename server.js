@@ -28,26 +28,60 @@ const supabase = createClient(
 /* =========================
    ROUTES
 ========================= */
+
+// serve frontend
 app.get('/', (_, res) => {
   res.sendFile(path.join(__dirname, 'public/index.html'));
 });
 
-/* =========================
-   BOOKINGS
-========================= */
+/* ---------- BASIC ----------
+   Get bookings by date
+---------------------------- */
 app.get('/bookings', async (req, res) => {
   const { date } = req.query;
 
-  const { data, error } = await supabase
+  let query = supabase
     .from('bookings')
     .select('*')
-    .eq('date', date)
     .order('time', { ascending: true });
 
-  if (error) return res.status(500).json(error);
+  if (date) {
+    query = query.eq('date', date);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    return res.status(500).json(error);
+  }
+
   res.json(data || []);
 });
 
+/* ---------- DEVELOP ----------
+   Get calendar density (NEW)
+---------------------------- */
+app.get('/calendar-days', async (_, res) => {
+  const { data, error } = await supabase
+    .from('bookings')
+    .select('date');
+
+  if (error) {
+    return res.status(500).json(error);
+  }
+
+  const map = {};
+
+  data.forEach(b => {
+    map[b.date] = (map[b.date] || 0) + 1;
+  });
+
+  res.json(map);
+});
+
+/* ---------- BASIC ----------
+   Create booking
+---------------------------- */
 app.post('/bookings', async (req, res) => {
   const { date, time, stylist, name, gender, phone, service } = req.body;
 
@@ -66,14 +100,22 @@ app.post('/bookings', async (req, res) => {
     return res.status(409).json({ error: 'Slot already booked' });
   }
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('bookings')
-    .insert([{ date, time, stylist, name, gender, phone, service }]);
+    .insert([{ date, time, stylist, name, gender, phone, service }])
+    .select()
+    .single();
 
-  if (error) return res.status(500).json(error);
-  res.json({ success: true });
+  if (error) {
+    return res.status(500).json(error);
+  }
+
+  res.json(data);
 });
 
+/* ---------- DEVELOP ----------
+   Update booking
+---------------------------- */
 app.put('/bookings/:id', async (req, res) => {
   const { id } = req.params;
   const { name, phone, gender, service } = req.body;
@@ -83,10 +125,16 @@ app.put('/bookings/:id', async (req, res) => {
     .update({ name, phone, gender, service })
     .eq('id', id);
 
-  if (error) return res.status(500).json(error);
+  if (error) {
+    return res.status(500).json(error);
+  }
+
   res.json({ success: true });
 });
 
+/* ---------- BASIC ----------
+   Delete booking
+---------------------------- */
 app.delete('/bookings/:id', async (req, res) => {
   const { id } = req.params;
 
@@ -95,55 +143,11 @@ app.delete('/bookings/:id', async (req, res) => {
     .delete()
     .eq('id', id);
 
-  if (error) return res.status(500).json(error);
-  res.json({ success: true });
-});
-
-/* =========================
-   CALENDAR DENSITY
-========================= */
-app.get('/calendar-days', async (_, res) => {
-  const { data, error } = await supabase
-    .from('bookings')
-    .select('date');
-
-  if (error) return res.status(500).json(error);
-
-  const map = {};
-  data.forEach(b => {
-    map[b.date] = (map[b.date] || 0) + 1;
-  });
-
-  res.json(map);
-});
-
-/* =========================
-   CLOSED DAYS
-========================= */
-app.get('/closed-days', async (_, res) => {
-  const { data, error } = await supabase
-    .from('closed_days')
-    .select('date');
-
-  if (error) return res.status(500).json(error);
-  res.json(data.map(d => d.date));
-});
-
-app.post('/closed-days', async (req, res) => {
-  const { date } = req.body;
-
-  const { data: exist } = await supabase
-    .from('closed_days')
-    .select('id')
-    .eq('date', date);
-
-  if (exist && exist.length > 0) {
-    await supabase.from('closed_days').delete().eq('date', date);
-    res.json({ status: 'open' });
-  } else {
-    await supabase.from('closed_days').insert([{ date }]);
-    res.json({ status: 'closed' });
+  if (error) {
+    return res.status(500).json(error);
   }
+
+  res.json({ success: true });
 });
 
 /* =========================
