@@ -442,3 +442,39 @@ th{color:var(--muted)}
     gap:10px;           /* ลดช่องว่างโลโก้กับข้อความ */
   }
 }
+/* =========================
+   FIX: TABLE CLICK ISSUE (iOS / MOBILE)
+========================= */
+
+/* ป้องกัน layer ทับปุ่ม */
+.panel::before,
+.panel::after {
+  pointer-events: none !important;
+}
+
+/* ให้ตารางคลิกได้จริง */
+table,
+tbody,
+tr,
+td,
+button {
+  position: relative;
+  z-index: 2;
+}
+
+/* ปุ่มจัดการ */
+table button {
+  pointer-events: auto !important;
+}
+
+/* กันปัญหา overflow บนมือถือ */
+.panel {
+  overflow: visible !important;
+}
+
+/* ตารางเลื่อนแนวนอนได้ ไม่โดนตัด */
+.panel table {
+  width: 100%;
+  overflow-x: auto;
+  display: block;
+}
