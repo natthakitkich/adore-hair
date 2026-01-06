@@ -26,17 +26,32 @@ const supabase = createClient(
 );
 
 /* =========================
-   ROUTES
+   CONSTANT (CUSTOMER)
+========================= */
+const OPEN_HOUR = 13;
+const CLOSE_HOUR = 22;
+const MAX_BOOK_DAYS = 30;
+const CUSTOMER_STYLISTS = ['Bank', 'Sindy'];
+
+/* =========================
+   FRONTEND ROUTES
 ========================= */
 
-// serve frontend
+// ลูกค้า
 app.get('/', (_, res) => {
-  res.sendFile(path.join(__dirname, 'public/index.html'));
+  res.sendFile(path.join(__dirname, 'public/customer.html'));
 });
 
-/* ---------- BOOKINGS ----------
-   Get bookings by date
----------------------------- */
+// เจ้าของร้าน
+app.get('/owner', (_, res) => {
+  res.sendFile(path.join(__dirname, 'public/owner.html'));
+});
+
+/* =========================
+   OWNER API (เดิมทั้งหมด)
+========================= */
+
+// Get bookings by date
 app.get('/bookings', async (req, res) => {
   const { date } = req.query;
 
@@ -58,45 +73,12 @@ app.get('/bookings', async (req, res) => {
   res.json(data || []);
 });
 
-/* ---------- CALENDAR ----------
-   Get calendar density
----------------------------- */
-app.get('/calendar-days', async (_, res) => {
-  const { data, error } = await supabase
-    .from('bookings')
-    .select('date');
-
-  if (error) {
-    return res.status(500).json(error);
-  }
-
-  const map = {};
-  data.forEach(b => {
-    map[b.date] = (map[b.date] || 0) + 1;
-  });
-
-  res.json(map);
-});
-
-/* ---------- BOOKINGS ----------
-   Create booking
----------------------------- */
+// Create booking (owner)
 app.post('/bookings', async (req, res) => {
   const { date, time, stylist, name, gender, phone, service } = req.body;
 
   if (!date || !time || !stylist || !name || !gender) {
     return res.status(400).json({ error: 'Missing required fields' });
-  }
-
-  // ❗️เช็กวันปิดร้านก่อน
-  const { data: closed } = await supabase
-    .from('closed_days')
-    .select('id')
-    .eq('date', date)
-    .limit(1);
-
-  if (closed && closed.length > 0) {
-    return res.status(403).json({ error: 'Store is closed on this date' });
   }
 
   const { data: exist } = await supabase
@@ -123,9 +105,7 @@ app.post('/bookings', async (req, res) => {
   res.json(data);
 });
 
-/* ---------- BOOKINGS ----------
-   Update booking
----------------------------- */
+// Update booking
 app.put('/bookings/:id', async (req, res) => {
   const { id } = req.params;
   const { name, phone, gender, service } = req.body;
@@ -142,9 +122,7 @@ app.put('/bookings/:id', async (req, res) => {
   res.json({ success: true });
 });
 
-/* ---------- BOOKINGS ----------
-   Delete booking
----------------------------- */
+// Delete booking
 app.delete('/bookings/:id', async (req, res) => {
   const { id } = req.params;
 
@@ -160,52 +138,102 @@ app.delete('/bookings/:id', async (req, res) => {
   res.json({ success: true });
 });
 
-/* ---------- CLOSED DAYS ----------
-   Get all closed days
----------------------------- */
-app.get('/closed-days', async (_, res) => {
-  const { data, error } = await supabase
-    .from('closed_days')
-    .select('date');
+/* =========================
+   CUSTOMER PUBLIC API
+========================= */
 
-  if (error) {
-    return res.status(500).json(error);
-  }
-
-  res.json(data.map(d => d.date));
-});
-
-/* ---------- CLOSED DAYS ----------
-   Close store on date
----------------------------- */
-app.post('/closed-days', async (req, res) => {
-  const { date } = req.body;
+// 1️⃣ ดูเวลาว่าง (ลูกค้า)
+app.get('/public/availability', async (req, res) => {
+  const { date } = req.query;
 
   if (!date) {
-    return res.status(400).json({ error: 'Date required' });
+    return res.status(400).json({ error: 'Missing date' });
   }
 
-  const { error } = await supabase
-    .from('closed_days')
-    .insert([{ date }]);
+  // จำกัดวันล่วงหน้า 30 วัน
+  const today = new Date();
+  const target = new Date(date);
+  today.setHours(0, 0, 0, 0);
+
+  const diffDays = Math.floor(
+    (target - today) / (1000 * 60 * 60 * 24)
+  );
+
+  if (diffDays < 0 || diffDays > MAX_BOOK_DAYS) {
+    return res.status(400).json({ error: 'Date out of range' });
+  }
+
+  // ดึง booking ของวันนั้น
+  const { data: bookings, error } = await supabase
+    .from('bookings')
+    .select('time, stylist')
+    .eq('date', date)
+    .in('stylist', CUSTOMER_STYLISTS);
 
   if (error) {
     return res.status(500).json(error);
   }
 
-  res.json({ success: true });
+  // สร้าง slot ว่าง
+  const result = {};
+
+  CUSTOMER_STYLISTS.forEach(stylist => {
+    const bookedTimes = bookings
+      .filter(b => b.stylist === stylist)
+      .map(b => b.time);
+
+    const available = [];
+
+    for (let h = OPEN_HOUR; h <= CLOSE_HOUR; h++) {
+      const time = `${String(h).padStart(2, '0')}:00:00`;
+      if (!bookedTimes.includes(time)) {
+        available.push(time);
+      }
+    }
+
+    result[stylist] = available;
+  });
+
+  res.json(result);
 });
 
-/* ---------- CLOSED DAYS ----------
-   Open store (remove closed day)
----------------------------- */
-app.delete('/closed-days/:date', async (req, res) => {
-  const { date } = req.params;
+// 2️⃣ ลูกค้าจองคิว
+app.post('/public/bookings', async (req, res) => {
+  const { date, time, stylist, name, phone } = req.body;
+
+  if (!date || !time || !stylist || !name || !phone) {
+    return res.status(400).json({ error: 'Missing fields' });
+  }
+
+  if (!CUSTOMER_STYLISTS.includes(stylist)) {
+    return res.status(403).json({ error: 'Invalid stylist' });
+  }
+
+  // กันจองซ้ำ
+  const { data: exist } = await supabase
+    .from('bookings')
+    .select('id')
+    .eq('date', date)
+    .eq('time', time)
+    .eq('stylist', stylist);
+
+  if (exist && exist.length > 0) {
+    return res.status(409).json({ error: 'Slot already booked' });
+  }
 
   const { error } = await supabase
-    .from('closed_days')
-    .delete()
-    .eq('date', date);
+    .from('bookings')
+    .insert([
+      {
+        date,
+        time,
+        stylist,
+        name,
+        phone,
+        gender: 'unknown',
+        service: 'customer booking'
+      }
+    ]);
 
   if (error) {
     return res.status(500).json(error);
