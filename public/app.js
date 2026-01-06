@@ -200,29 +200,48 @@ function renderTimeOptions() {
 }
 
 /* =========================
-   FORM SUBMIT
+   FORM SUBMIT (FIXED)
 ========================= */
 bookingForm.onsubmit = async e => {
   e.preventDefault();
-  const gender = document.querySelector('[name=gender]:checked').value;
 
-  await fetch(`${API}/bookings`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      date: selectedDate,
-      time: timeSelect.value,
-      stylist: selectedStylist,
-      name: name.value,
-      phone: phone.value,
-      gender,
-      service: service.value
-    })
-  });
+  const store = localStorage.getItem('store') || 'open';
+  if (store === 'closed') {
+    alert('ร้านปิดอยู่ ไม่สามารถเพิ่มคิวได้');
+    return;
+  }
 
-  bookingForm.reset();
-  loadBookings();
-  loadCalendar();
+  const genderEl = document.querySelector('[name=gender]:checked');
+  if (!genderEl) {
+    alert('กรุณาเลือกเพศ');
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API}/bookings`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        date: selectedDate,
+        time: timeSelect.value,
+        stylist: selectedStylist,
+        name: name.value,
+        phone: phone.value,
+        gender: genderEl.value,
+        service: service.value
+      })
+    });
+
+    if (!res.ok) throw new Error('POST failed');
+
+    bookingForm.reset();
+    alert('เพิ่มคิวเรียบร้อยแล้ว');
+    loadBookings();
+    loadCalendar();
+  } catch (err) {
+    alert('เกิดข้อผิดพลาดในการบันทึกคิว');
+    console.error(err);
+  }
 };
 
 /* =========================
