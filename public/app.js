@@ -17,9 +17,9 @@ const nextMonthBtn = document.getElementById('nextMonth');
 
 const bookingForm = document.getElementById('bookingForm');
 const timeSelect = document.getElementById('time');
+const submitBookingBtn = document.getElementById('submitBooking');
 const listEl = document.getElementById('list');
 
-/* --- STORE STATUS --- */
 const storeStatusText = document.getElementById('storeStatusText');
 const toggleStoreBtn = document.getElementById('toggleStoreBtn');
 
@@ -47,7 +47,6 @@ loginBtn.onclick = () => {
     loginMsg.textContent = 'กรุณาใส่ PIN 4 หลัก';
     return;
   }
-
   if (pin !== OWNER_PIN) {
     loginMsg.textContent = 'รหัสผ่านไม่ถูกต้อง';
     return;
@@ -81,7 +80,7 @@ function init() {
 }
 
 /* =========================
-   STORE STATUS
+   STORE OPEN / CLOSE (1–4)
 ========================= */
 async function loadClosedDays() {
   const res = await fetch(`${API}/closed-days`);
@@ -95,13 +94,21 @@ function renderStoreStatus() {
   toggleStoreBtn.classList.remove('open', 'closed');
 
   if (isClosed) {
-    storeStatusText.textContent = 'ร้านปิดให้บริการ';
+    storeStatusText.textContent = '🔴 ร้านปิดให้บริการ';
     toggleStoreBtn.textContent = 'Open Store';
     toggleStoreBtn.classList.add('closed');
+
+    bookingForm.classList.add('disabled');
+    submitBookingBtn.disabled = true;
+    timeSelect.disabled = true;
   } else {
-    storeStatusText.textContent = 'ร้านเปิดให้บริการ';
+    storeStatusText.textContent = '🟢 ร้านเปิดให้บริการ';
     toggleStoreBtn.textContent = 'Close Store';
     toggleStoreBtn.classList.add('open');
+
+    bookingForm.classList.remove('disabled');
+    submitBookingBtn.disabled = false;
+    timeSelect.disabled = false;
   }
 }
 
@@ -146,7 +153,9 @@ function renderCalendar() {
   }
 
   for (let d = 1; d <= daysInMonth; d++) {
-    const date = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const date =
+      `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+
     const count = calendarDensity[date] || 0;
 
     const el = document.createElement('div');
@@ -189,7 +198,7 @@ nextMonthBtn.onclick = () => {
 };
 
 /* =========================
-   BOOKINGS
+   BOOKINGS (เดิม)
 ========================= */
 async function loadBookings() {
   const res = await fetch(`${API}/bookings?date=${selectedDate}`);
@@ -213,7 +222,6 @@ function bindStylistTabs() {
 
 function renderTimeOptions() {
   timeSelect.innerHTML = '';
-
   if (closedDays.includes(selectedDate)) return;
 
   for (let h = 13; h <= 22; h++) {
@@ -230,11 +238,6 @@ function renderTimeOptions() {
     timeSelect.appendChild(opt);
   }
 }
-
-/* =========================
-   SUMMARY / TABLE / EDIT
-========================= */
-/* (ส่วนนี้ใช้ของเดิมคุณได้ทั้งหมด ไม่แตะ) */
 
 /* =========================
    UTIL
