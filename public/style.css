@@ -12,29 +12,25 @@
   --danger:#ff5c7a;
   --ok:#2cff9c;
 
-  --bank:#6ee7ff;
-  --sindy:#ff7ab6;
-  --assist:#2cff9c;
-
-  --stroke:rgba(255,255,255,.12);
+  --stroke:rgba(255,255,255,.08);
   --shadow:0 14px 40px rgba(0,0,0,.45);
 
   --low:#2cff9c;
   --mid:#ffd166;
   --high:#ff5c7a;
+
+  --bank:#6ee7ff;
+  --sindy:#ff8fb3;
+  --assist:#2cff9c;
 }
 
 /* =========================
    BASE
 ========================= */
-*{
-  box-sizing:border-box;
-  -webkit-tap-highlight-color:transparent;
-}
-
+*{ box-sizing:border-box }
 body{
   margin:0;
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+  font-family: ui-sans-serif, system-ui, -apple-system;
   background:
     radial-gradient(1200px 700px at 15% 10%, #1a2b5a 0%, transparent 60%),
     radial-gradient(900px 600px at 90% 20%, #3b1b5a 0%, transparent 55%),
@@ -50,7 +46,6 @@ body{
 input,select{
   width:100%;
   padding:14px;
-  font-size:16px;
   border-radius:16px;
   border:1px solid var(--stroke);
   background:rgba(0,0,0,.35);
@@ -58,22 +53,55 @@ input,select{
 }
 
 .primary{
-  width:100%;
-  padding:16px;
-  border-radius:18px;
+  padding:14px;
+  border-radius:16px;
   font-weight:900;
   border:none;
-  cursor:pointer;
   background:linear-gradient(135deg,var(--accent),var(--accent2));
-  color:#061022;
+}
+
+.ghost{
+  background:rgba(255,255,255,.06);
+  border:1px solid var(--stroke);
+  color:var(--text);
+  padding:8px 14px;
+  border-radius:12px;
 }
 
 /* =========================
-   PANELS
+   OVERLAY / MODAL
+========================= */
+.overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.7);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  z-index:999;
+}
+
+.modal{
+  width:min(420px,92vw);
+  max-height:80vh;
+  overflow:auto;
+  background:linear-gradient(180deg,#14192d,#0a0c16);
+  border-radius:22px;
+  border:1px solid rgba(255,255,255,.15);
+}
+
+.modal img{
+  max-width:100%;
+  height:auto;
+  object-fit:contain;
+}
+
+/* =========================
+   MAIN WRAP
 ========================= */
 .wrap{
   max-width:980px;
-  margin:0 auto 100px;
+  margin:0 auto 120px;
   padding:0 16px;
 }
 
@@ -81,84 +109,63 @@ input,select{
   margin-bottom:22px;
   padding:22px;
   background:linear-gradient(180deg,rgba(20,25,45,.9),rgba(10,12,22,.9));
-  border-radius:26px;
+  border-radius:22px;
   border:1px solid var(--stroke);
-  box-shadow:var(--shadow);
 }
 
 /* =========================
    CALENDAR
 ========================= */
-.calendarHeader{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:12px;
-}
-
-.calendarTitle{
-  font-size:22px;
-  font-weight:900;
-}
-
 .calendarGrid{
   display:grid;
   grid-template-columns:repeat(7,1fr);
   gap:10px;
-  text-align:center;
 }
 
 .dayLabel{
-  font-size:13px;
+  font-size:12px;
   color:var(--muted);
+  text-align:center;
+}
+
+.calendarDays{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:10px;
 }
 
 .day{
   aspect-ratio:1/1;
   border-radius:50%;
-  display:grid;
-  place-items:center;
-  font-weight:800;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:900;
   cursor:pointer;
   border:1px solid var(--stroke);
-  background:rgba(255,255,255,.06);
-  transition:.2s;
+  background:rgba(255,255,255,.05);
+  position:relative;
+  z-index:1;
 }
 
-.day:hover{
-  transform:scale(1.05);
-}
-
-.day.today{
-  outline:2px solid var(--accent);
-}
+.day:hover{ outline:2px solid var(--accent) }
 
 .day.low{
   background:rgba(44,255,156,.25);
-  color:var(--low);
+  box-shadow:0 0 0 2px rgba(44,255,156,.6);
 }
-
 .day.mid{
-  background:rgba(255,209,102,.28);
-  color:var(--mid);
+  background:rgba(255,209,102,.25);
+  box-shadow:0 0 0 2px rgba(255,209,102,.6);
 }
-
 .day.high{
-  background:rgba(255,92,122,.28);
-  color:var(--high);
+  background:rgba(255,92,122,.25);
+  box-shadow:0 0 0 2px rgba(255,92,122,.6);
 }
 
 .day.closed{
   background:rgba(255,92,122,.25);
-  color:var(--danger);
-  border-color:var(--danger);
-}
-
-.day.closed::after{
-  content:'⛔️';
-  position:absolute;
-  bottom:6px;
-  right:6px;
+  box-shadow:0 0 0 2px rgba(255,92,122,.7);
 }
 
 /* =========================
@@ -171,17 +178,17 @@ input,select{
 }
 
 .summary .box{
-  padding:26px;
-  border-radius:22px;
+  padding:22px;
+  border-radius:20px;
   background:rgba(0,0,0,.45);
   text-align:center;
 }
 
 .summary strong{
   display:block;
-  font-size:38px;
-  margin-top:6px;
-  color:#fff;
+  font-size:40px;
+  font-weight:900;
+  color:white;
 }
 
 /* =========================
@@ -190,33 +197,32 @@ input,select{
 .tabs{
   display:flex;
   gap:10px;
-  margin-bottom:18px;
 }
 
 .tab{
   flex:1;
-  padding:14px;
-  text-align:center;
-  border-radius:16px;
+  padding:12px;
+  border-radius:14px;
   border:1px solid var(--stroke);
-  background:rgba(255,255,255,.05);
+  text-align:center;
   cursor:pointer;
-  font-weight:700;
+}
+
+.tab.active{
+  font-weight:900;
 }
 
 .tab[data-tab="Bank"].active{
-  background:rgba(110,231,255,.25);
-  color:var(--bank);
+  background:var(--bank);
+  color:#061022;
 }
-
 .tab[data-tab="Sindy"].active{
-  background:rgba(255,122,182,.25);
-  color:var(--sindy);
+  background:var(--sindy);
+  color:#061022;
 }
-
 .tab[data-tab="Assist"].active{
-  background:rgba(44,255,156,.25);
-  color:var(--assist);
+  background:var(--assist);
+  color:#061022;
 }
 
 /* =========================
@@ -228,61 +234,30 @@ table{
 }
 
 th,td{
-  padding:12px;
+  padding:10px;
   border-bottom:1px solid var(--stroke);
   font-size:14px;
+  vertical-align:middle;
 }
 
-th{
-  color:var(--muted);
-}
-
-/* stylist badge */
 .badge{
-  padding:6px 14px;
+  padding:4px 10px;
   border-radius:999px;
-  font-weight:800;
-  font-size:13px;
-  border:1px solid;
+  font-weight:700;
+  display:inline-block;
 }
 
 .badge.bank{
-  color:var(--bank);
-  border-color:var(--bank);
-  background:rgba(110,231,255,.18);
+  color:#061022;
+  background:var(--bank);
 }
-
 .badge.sindy{
-  color:var(--sindy);
-  border-color:var(--sindy);
-  background:rgba(255,122,182,.18);
+  color:#061022;
+  background:var(--sindy);
 }
-
 .badge.assist{
-  color:var(--assist);
-  border-color:var(--assist);
-  background:rgba(44,255,156,.18);
-}
-
-/* =========================
-   MODAL (แก้ไขคิว)
-========================= */
-.overlay{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.85);
-  display:grid;
-  place-items:center;
-  z-index:999;
-}
-
-.modal{
-  width:min(420px,92vw);
-  max-height:88vh;
-  overflow:auto;
-  border-radius:28px;
-  background:linear-gradient(180deg,rgba(20,25,45,.96),rgba(10,12,22,.96));
-  border:1px solid rgba(255,255,255,.15);
+  color:#061022;
+  background:var(--assist);
 }
 
 /* =========================
@@ -292,5 +267,6 @@ th{
   position:sticky;
   bottom:0;
   background:linear-gradient(180deg,rgba(10,12,22,.95),rgba(5,6,12,.95));
-  padding:16px;
+  padding:14px;
+  z-index:50;
 }
