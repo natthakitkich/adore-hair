@@ -26,29 +26,14 @@ const supabase = createClient(
 );
 
 /* =========================
-   CONSTANT (CUSTOMER)
+   FRONTEND (OWNER ONLY)
 ========================= */
-const OPEN_HOUR = 13;
-const CLOSE_HOUR = 22;
-const MAX_BOOK_DAYS = 30;
-const CUSTOMER_STYLISTS = ['Bank', 'Sindy'];
-
-/* =========================
-   FRONTEND ROUTES
-========================= */
-
-// ลูกค้า
 app.get('/', (_, res) => {
-  res.sendFile(path.join(__dirname, 'public/customer.html'));
-});
-
-// เจ้าของร้าน
-app.get('/owner', (_, res) => {
   res.sendFile(path.join(__dirname, 'public/owner.html'));
 });
 
 /* =========================
-   OWNER API (เดิมทั้งหมด)
+   OWNER API
 ========================= */
 
 // Get bookings by date
@@ -73,7 +58,25 @@ app.get('/bookings', async (req, res) => {
   res.json(data || []);
 });
 
-// Create booking (owner)
+// Calendar density
+app.get('/calendar-days', async (_, res) => {
+  const { data, error } = await supabase
+    .from('bookings')
+    .select('date');
+
+  if (error) {
+    return res.status(500).json(error);
+  }
+
+  const map = {};
+  data.forEach(b => {
+    map[b.date] = (map[b.date] || 0) + 1;
+  });
+
+  res.json(map);
+});
+
+// Create booking
 app.post('/bookings', async (req, res) => {
   const { date, time, stylist, name, gender, phone, service } = req.body;
 
@@ -130,110 +133,6 @@ app.delete('/bookings/:id', async (req, res) => {
     .from('bookings')
     .delete()
     .eq('id', id);
-
-  if (error) {
-    return res.status(500).json(error);
-  }
-
-  res.json({ success: true });
-});
-
-/* =========================
-   CUSTOMER PUBLIC API
-========================= */
-
-// 1️⃣ ดูเวลาว่าง (ลูกค้า)
-app.get('/public/availability', async (req, res) => {
-  const { date } = req.query;
-
-  if (!date) {
-    return res.status(400).json({ error: 'Missing date' });
-  }
-
-  // จำกัดวันล่วงหน้า 30 วัน
-  const today = new Date();
-  const target = new Date(date);
-  today.setHours(0, 0, 0, 0);
-
-  const diffDays = Math.floor(
-    (target - today) / (1000 * 60 * 60 * 24)
-  );
-
-  if (diffDays < 0 || diffDays > MAX_BOOK_DAYS) {
-    return res.status(400).json({ error: 'Date out of range' });
-  }
-
-  // ดึง booking ของวันนั้น
-  const { data: bookings, error } = await supabase
-    .from('bookings')
-    .select('time, stylist')
-    .eq('date', date)
-    .in('stylist', CUSTOMER_STYLISTS);
-
-  if (error) {
-    return res.status(500).json(error);
-  }
-
-  // สร้าง slot ว่าง
-  const result = {};
-
-  CUSTOMER_STYLISTS.forEach(stylist => {
-    const bookedTimes = bookings
-      .filter(b => b.stylist === stylist)
-      .map(b => b.time);
-
-    const available = [];
-
-    for (let h = OPEN_HOUR; h <= CLOSE_HOUR; h++) {
-      const time = `${String(h).padStart(2, '0')}:00:00`;
-      if (!bookedTimes.includes(time)) {
-        available.push(time);
-      }
-    }
-
-    result[stylist] = available;
-  });
-
-  res.json(result);
-});
-
-// 2️⃣ ลูกค้าจองคิว
-app.post('/public/bookings', async (req, res) => {
-  const { date, time, stylist, name, phone } = req.body;
-
-  if (!date || !time || !stylist || !name || !phone) {
-    return res.status(400).json({ error: 'Missing fields' });
-  }
-
-  if (!CUSTOMER_STYLISTS.includes(stylist)) {
-    return res.status(403).json({ error: 'Invalid stylist' });
-  }
-
-  // กันจองซ้ำ
-  const { data: exist } = await supabase
-    .from('bookings')
-    .select('id')
-    .eq('date', date)
-    .eq('time', time)
-    .eq('stylist', stylist);
-
-  if (exist && exist.length > 0) {
-    return res.status(409).json({ error: 'Slot already booked' });
-  }
-
-  const { error } = await supabase
-    .from('bookings')
-    .insert([
-      {
-        date,
-        time,
-        stylist,
-        name,
-        phone,
-        gender: 'unknown',
-        service: 'customer booking'
-      }
-    ]);
 
   if (error) {
     return res.status(500).json(error);
