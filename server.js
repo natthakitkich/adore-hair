@@ -18,7 +18,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 /* =========================
-   SUPABASE CLIENT
+   SUPABASE
 ========================= */
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -28,66 +28,26 @@ const supabase = createClient(
 /* =========================
    ROUTES
 ========================= */
-
-// serve frontend
 app.get('/', (_, res) => {
   res.sendFile(path.join(__dirname, 'public/index.html'));
 });
 
-/* ---------- BASIC ----------
-   Get bookings by date
----------------------------- */
+/* ===== BOOKINGS ===== */
 app.get('/bookings', async (req, res) => {
   const { date } = req.query;
 
-  let query = supabase
+  const { data, error } = await supabase
     .from('bookings')
     .select('*')
+    .eq('date', date)
     .order('time', { ascending: true });
 
-  if (date) {
-    query = query.eq('date', date);
-  }
-
-  const { data, error } = await query;
-
-  if (error) {
-    return res.status(500).json(error);
-  }
-
+  if (error) return res.status(500).json(error);
   res.json(data || []);
 });
 
-/* ---------- DEVELOP ----------
-   Get calendar density (NEW)
----------------------------- */
-app.get('/calendar-days', async (_, res) => {
-  const { data, error } = await supabase
-    .from('bookings')
-    .select('date');
-
-  if (error) {
-    return res.status(500).json(error);
-  }
-
-  const map = {};
-
-  data.forEach(b => {
-    map[b.date] = (map[b.date] || 0) + 1;
-  });
-
-  res.json(map);
-});
-
-/* ---------- BASIC ----------
-   Create booking
----------------------------- */
 app.post('/bookings', async (req, res) => {
   const { date, time, stylist, name, gender, phone, service } = req.body;
-
-  if (!date || !time || !stylist || !name || !gender) {
-    return res.status(400).json({ error: 'Missing required fields' });
-  }
 
   const { data: exist } = await supabase
     .from('bookings')
@@ -96,26 +56,18 @@ app.post('/bookings', async (req, res) => {
     .eq('time', time)
     .eq('stylist', stylist);
 
-  if (exist && exist.length > 0) {
+  if (exist.length > 0) {
     return res.status(409).json({ error: 'Slot already booked' });
   }
 
-  const { data, error } = await supabase
-    .from('bookings')
-    .insert([{ date, time, stylist, name, gender, phone, service }])
-    .select()
-    .single();
+  const { error } = await supabase.from('bookings').insert([
+    { date, time, stylist, name, gender, phone, service }
+  ]);
 
-  if (error) {
-    return res.status(500).json(error);
-  }
-
-  res.json(data);
+  if (error) return res.status(500).json(error);
+  res.json({ success: true });
 });
 
-/* ---------- DEVELOP ----------
-   Update booking
----------------------------- */
 app.put('/bookings/:id', async (req, res) => {
   const { id } = req.params;
   const { name, phone, gender, service } = req.body;
@@ -125,34 +77,61 @@ app.put('/bookings/:id', async (req, res) => {
     .update({ name, phone, gender, service })
     .eq('id', id);
 
-  if (error) {
-    return res.status(500).json(error);
-  }
-
+  if (error) return res.status(500).json(error);
   res.json({ success: true });
 });
 
-/* ---------- BASIC ----------
-   Delete booking
----------------------------- */
 app.delete('/bookings/:id', async (req, res) => {
   const { id } = req.params;
-
-  const { error } = await supabase
-    .from('bookings')
-    .delete()
-    .eq('id', id);
-
-  if (error) {
-    return res.status(500).json(error);
-  }
-
+  const { error } = await supabase.from('bookings').delete().eq('id', id);
+  if (error) return res.status(500).json(error);
   res.json({ success: true });
 });
 
-/* =========================
-   START SERVER
-========================= */
+/* ===== CALENDAR DENSITY ===== */
+app.get('/calendar-days', async (_, res) => {
+  const { data, error } = await supabase
+    .from('bookings')
+    .select('date');
+
+  if (error) return res.status(500).json(error);
+
+  const map = {};
+  data.forEach(b => {
+    map[b.date] = (map[b.date] || 0) + 1;
+  });
+
+  res.json(map);
+});
+
+/* ===== CLOSED DAYS ===== */
+app.get('/closed-days', async (_, res) => {
+  const { data, error } = await supabase
+    .from('closed_days')
+    .select('date');
+
+  if (error) return res.status(500).json(error);
+  res.json(data.map(d => d.date));
+});
+
+app.post('/closed-days', async (req, res) => {
+  const { date } = req.body;
+
+  const { data: exist } = await supabase
+    .from('closed_days')
+    .select('id')
+    .eq('date', date);
+
+  if (exist.length > 0) {
+    await supabase.from('closed_days').delete().eq('date', date);
+    res.json({ status: 'open' });
+  } else {
+    await supabase.from('closed_days').insert([{ date }]);
+    res.json({ status: 'closed' });
+  }
+});
+
+/* ========================= */
 app.listen(PORT, () => {
-  console.log(`Adore Hair server running on port ${PORT}`);
+  console.log(`Server running on ${PORT}`);
 });
