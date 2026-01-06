@@ -1,4 +1,4 @@
-const API = window.location.origin;
+const API = '';
 const OWNER_PIN = '1234';
 
 /* =========================
@@ -17,18 +17,13 @@ const nextMonthBtn = document.getElementById('nextMonth');
 
 const bookingForm = document.getElementById('bookingForm');
 const timeSelect = document.getElementById('time');
-const submitBookingBtn = document.getElementById('submitBooking');
 const listEl = document.getElementById('list');
-
-const storeStatusText = document.getElementById('storeStatusText');
-const toggleStoreBtn = document.getElementById('toggleStoreBtn');
 
 /* =========================
    STATE
 ========================= */
 let bookings = [];
 let calendarDensity = {};
-let closedDays = [];
 
 let selectedStylist = 'Bank';
 let selectedDate = getTodayTH();
@@ -70,65 +65,13 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* =========================
-   INIT (เรียงลำดับชัด)
+   INIT
 ========================= */
-async function init() {
+function init() {
   bindStylistTabs();
-  await loadClosedDays();
-  await loadCalendar();
-  await loadBookings();
-  renderStoreStatus();
+  loadCalendar();
+  loadBookings();
 }
-
-/* =========================
-   STORE OPEN / CLOSE
-========================= */
-async function loadClosedDays() {
-  const res = await fetch(`${API}/closed-days`);
-  closedDays = await res.json();
-}
-
-function isStoreClosed() {
-  return closedDays.includes(selectedDate);
-}
-
-function renderStoreStatus() {
-  toggleStoreBtn.classList.remove('open', 'closed');
-
-  if (isStoreClosed()) {
-    storeStatusText.textContent = '🔴 ร้านปิดให้บริการ';
-    toggleStoreBtn.textContent = 'Open Store';
-    toggleStoreBtn.classList.add('closed');
-
-    submitBookingBtn.disabled = true;
-    timeSelect.disabled = true;
-  } else {
-    storeStatusText.textContent = '🟢 ร้านเปิดให้บริการ';
-    toggleStoreBtn.textContent = 'Close Store';
-    toggleStoreBtn.classList.add('open');
-
-    submitBookingBtn.disabled = false;
-    timeSelect.disabled = false;
-  }
-}
-
-toggleStoreBtn.onclick = async () => {
-  if (isStoreClosed()) {
-    await fetch(`${API}/closed-days/${selectedDate}`, {
-      method: 'DELETE'
-    });
-  } else {
-    await fetch(`${API}/closed-days`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ date: selectedDate })
-    });
-  }
-
-  await loadClosedDays();
-  renderStoreStatus();
-  renderCalendar();
-};
 
 /* =========================
    CALENDAR
@@ -158,27 +101,19 @@ function renderCalendar() {
       `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 
     const count = calendarDensity[date] || 0;
-    const el = document.createElement('div');
 
+    const el = document.createElement('div');
     el.className = 'day';
     el.textContent = d;
 
     if (date === selectedDate) el.classList.add('today');
+    if (count > 0 && count <= 5) el.classList.add('low');
+    if (count > 5 && count <= 10) el.classList.add('mid');
+    if (count > 10) el.classList.add('high');
 
-    if (closedDays.includes(date)) {
-      el.classList.add('closed');
-    } else if (count > 0 && count <= 5) {
-      el.classList.add('low');
-    } else if (count > 5 && count <= 10) {
-      el.classList.add('mid');
-    } else if (count > 10) {
-      el.classList.add('high');
-    }
-
-    el.onclick = async () => {
+    el.onclick = () => {
       selectedDate = date;
-      await loadBookings();
-      renderStoreStatus();
+      loadBookings();
       renderCalendar();
     };
 
@@ -230,14 +165,6 @@ function bindStylistTabs() {
 function renderTimeOptions() {
   timeSelect.innerHTML = '';
 
-  if (isStoreClosed()) {
-    const opt = document.createElement('option');
-    opt.textContent = 'ร้านปิด';
-    opt.disabled = true;
-    timeSelect.appendChild(opt);
-    return;
-  }
-
   for (let h = 13; h <= 22; h++) {
     const time = `${String(h).padStart(2, '0')}:00:00`;
     const booked = bookings.find(
@@ -258,7 +185,6 @@ function renderTimeOptions() {
 ========================= */
 bookingForm.onsubmit = async e => {
   e.preventDefault();
-  if (isStoreClosed()) return;
 
   const gender = document.querySelector('[name=gender]:checked')?.value;
   if (!gender) {
@@ -283,8 +209,8 @@ bookingForm.onsubmit = async e => {
   bookingForm.reset();
   alert('บันทึกคิวเรียบร้อยแล้ว');
 
-  await loadBookings();
-  await loadCalendar();
+  loadBookings();
+  loadCalendar();
 };
 
 /* =========================
@@ -364,8 +290,8 @@ document.getElementById('saveEdit').onclick = async () => {
   });
 
   editOverlay.classList.add('hidden');
-  await loadBookings();
-  await loadCalendar();
+  loadBookings();
+  loadCalendar();
 };
 
 document.getElementById('deleteEdit').onclick = async () => {
@@ -374,8 +300,8 @@ document.getElementById('deleteEdit').onclick = async () => {
   await fetch(`${API}/bookings/${editingId}`, { method: 'DELETE' });
 
   editOverlay.classList.add('hidden');
-  await loadBookings();
-  await loadCalendar();
+  loadBookings();
+  loadCalendar();
 };
 
 document.getElementById('closeEdit').onclick = () =>
