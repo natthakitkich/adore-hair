@@ -1,3 +1,6 @@
+/* =========================
+   THEME VARIABLES
+========================= */
 :root{
   --bg:#0b0f1a;
   --text:#e9eefc;
@@ -6,45 +9,56 @@
   --accent:#6ee7ff;
   --accent2:#a78bfa;
 
-  --low:#2cff9c;
-  --mid:#ffd166;
-  --high:#ff5c7a;
+  --danger:#ff5c7a;
+  --ok:#2cff9c;
 
   --stroke:rgba(255,255,255,.08);
   --shadow:0 14px 40px rgba(0,0,0,.45);
+
+  --low:#2cff9c;
+  --mid:#ffd166;
+  --high:#ff5c7a;
 }
 
-*{
-  box-sizing:border-box;
-}
-
+/* =========================
+   BASE
+========================= */
+*{box-sizing:border-box}
 body{
   margin:0;
   font-family:system-ui,-apple-system,Segoe UI,Roboto;
-  background:var(--bg);
+  background:
+    radial-gradient(1200px 700px at 15% 10%, #1a2b5a 0%, transparent 60%),
+    radial-gradient(900px 600px at 90% 20%, #3b1b5a 0%, transparent 55%),
+    var(--bg);
   color:var(--text);
 }
 
 .hidden{display:none!important}
+.row{display:flex;gap:16px;align-items:center}
+.muted{color:var(--muted)}
+.msg{font-size:13px}
+.msg.err{color:var(--danger)}
 
 /* =========================
    INPUT / BUTTON
 ========================= */
-input{
+input,select{
   width:100%;
   padding:14px;
   border-radius:16px;
   border:1px solid var(--stroke);
-  background:rgba(0,0,0,.35);
+  background:rgba(0,0,0,.28);
   color:var(--text);
+  font-size:16px;
 }
 
 .primary{
   width:100%;
   padding:14px;
-  border-radius:18px;
-  font-weight:900;
+  border-radius:16px;
   border:none;
+  font-weight:900;
   cursor:pointer;
   background:linear-gradient(135deg,var(--accent),var(--accent2));
   color:#061022;
@@ -54,12 +68,13 @@ input{
   background:rgba(255,255,255,.06);
   border:1px solid var(--stroke);
   color:var(--text);
-  padding:10px 16px;
+  padding:10px 18px;
   border-radius:14px;
+  cursor:pointer;
 }
 
 /* =========================
-   OVERLAY
+   OVERLAY / MODAL
 ========================= */
 .overlay{
   position:fixed;
@@ -67,12 +82,15 @@ input{
   background:rgba(0,0,0,.85);
   display:grid;
   place-items:center;
+  z-index:999;
 }
 
 .modal{
   width:min(420px,92vw);
-  background:#0f1424;
-  border-radius:28px;
+  background:linear-gradient(180deg,rgba(20,25,45,.96),rgba(10,12,22,.96));
+  border-radius:26px;
+  border:1px solid rgba(255,255,255,.15);
+  box-shadow:0 22px 90px rgba(0,0,0,.65);
 }
 
 .modalBody{
@@ -84,42 +102,49 @@ input{
   text-align:center;
 }
 
-/* =========================
-   AVATAR
-========================= */
-.avatar{
-  width:42px;
-  height:42px;
-  border-radius:50%;
-  background:#fff;
-  overflow:hidden;
-}
-
-.avatar.big{
-  width:96px;
-  height:96px;
-}
-
-.avatar img{
-  width:100%;
-  height:100%;
-  object-fit:contain;
+#pin{
+  max-width:260px;
+  text-align:center;
+  letter-spacing:6px;
+  font-size:22px;
 }
 
 /* =========================
-   TOPBAR
+   TOP BAR
 ========================= */
 .topbar{
   display:flex;
   justify-content:space-between;
-  padding:18px;
+  align-items:center;
+  padding:18px 22px;
 }
 
 .brand{
   display:flex;
-  gap:12px;
+  gap:14px;
+  align-items:center;
 }
 
+.avatar{
+  width:42px;
+  height:42px;
+  border-radius:14px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:grid;
+  place-items:center;
+  font-weight:900;
+  color:#061022;
+}
+
+.avatar.big{
+  width:72px;
+  height:72px;
+  font-size:28px;
+}
+
+/* =========================
+   MAIN WRAP
+========================= */
 .wrap{
   max-width:980px;
   margin:0 auto 80px;
@@ -129,8 +154,10 @@ input{
 .panel{
   margin-bottom:22px;
   padding:22px;
-  background:#0f1424;
-  border-radius:26px;
+  background:linear-gradient(180deg,rgba(20,25,45,.85),rgba(10,12,22,.85));
+  border-radius:22px;
+  border:1px solid var(--stroke);
+  box-shadow:var(--shadow);
 }
 
 /* =========================
@@ -140,7 +167,7 @@ input{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  margin-bottom:16px;
+  margin-bottom:14px;
 }
 
 .calendarTitle{
@@ -148,7 +175,6 @@ input{
   font-weight:900;
 }
 
-/* 🔴 ตัวนี้สำคัญ */
 .calendarGrid{
   display:grid;
   grid-template-columns:repeat(7,1fr);
@@ -161,11 +187,7 @@ input{
   color:var(--muted);
 }
 
-.calendarDays{
-  display:grid;
-  grid-template-columns:repeat(7,1fr);
-  gap:12px;
-}
+.calendarDays{display:contents}
 
 .day{
   aspect-ratio:1/1;
@@ -173,27 +195,26 @@ input{
   display:grid;
   place-items:center;
   font-weight:900;
+  cursor:pointer;
   border:1px solid var(--stroke);
-  background:rgba(255,255,255,.05);
+  background:rgba(255,255,255,.04);
 }
 
-.day.low{background:rgba(44,255,156,.2)}
-.day.mid{background:rgba(255,209,102,.2)}
-.day.high{background:rgba(255,92,122,.2)}
-
-.day.closed{
-  background:rgba(255,92,122,.25);
+.day.today{
+  outline:2px solid var(--accent);
 }
 
-/* =========================
-   LEGEND
-========================= */
+.day.low{color:var(--low);background:rgba(44,255,156,.15)}
+.day.mid{color:var(--mid);background:rgba(255,209,102,.15)}
+.day.high{color:var(--high);background:rgba(255,92,122,.15)}
+
 .calendarLegend{
   display:flex;
   justify-content:center;
-  gap:18px;
-  margin-top:14px;
-  font-size:14px;
+  gap:16px;
+  margin-top:16px;
+  font-size:13px;
+  color:var(--muted);
 }
 
 .dot{
@@ -203,7 +224,93 @@ input{
   display:inline-block;
   margin-right:6px;
 }
-
 .dot.low{background:var(--low)}
 .dot.mid{background:var(--mid)}
 .dot.high{background:var(--high)}
+
+/* =========================
+   SUMMARY
+========================= */
+.summary{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:16px;
+}
+
+.summary .box{
+  padding:26px;
+  border-radius:22px;
+  background:rgba(0,0,0,.35);
+  text-align:center;
+}
+
+.summary strong{
+  display:block;
+  font-size:36px;
+  margin-top:6px;
+}
+
+/* =========================
+   TABS
+========================= */
+.tabs{
+  display:flex;
+  gap:10px;
+  margin-bottom:18px;
+}
+
+.tab{
+  flex:1;
+  padding:12px;
+  text-align:center;
+  border-radius:14px;
+  border:1px solid var(--stroke);
+  cursor:pointer;
+  background:rgba(255,255,255,.04);
+}
+
+.tab.active{
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#061022;
+  font-weight:900;
+}
+
+/* =========================
+   FORM GRID
+========================= */
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+}
+
+.grid .full{grid-column:1 / -1}
+
+/* =========================
+   TABLE
+========================= */
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+
+th,td{
+  padding:12px;
+  border-bottom:1px solid var(--stroke);
+  font-size:14px;
+}
+
+th{color:var(--muted)}
+
+.badge{
+  padding:6px 14px;
+  border-radius:999px;
+  font-weight:900;
+  font-size:13px;
+}
+
+.badge.Bank{background:rgba(110,231,255,.2);color:#6ee7ff}
+.badge.Sindy{background:rgba(255,143,177,.2);color:#ff8fb1}
+.badge.Assist{background:rgba(44,255,156,.2);color:#2cff9c}
+
+
