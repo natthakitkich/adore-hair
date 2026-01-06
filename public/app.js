@@ -1,4 +1,4 @@
-const API = 'https://adore-hair.onrender.com';
+const API = '';
 const OWNER_PIN = '1234';
 
 /* =========================
@@ -19,6 +19,7 @@ const bookingForm = document.getElementById('bookingForm');
 const timeSelect = document.getElementById('time');
 const listEl = document.getElementById('list');
 
+/* STORE STATUS */
 const storeStatusText = document.getElementById('storeStatusText');
 const toggleStoreBtn = document.getElementById('toggleStoreBtn');
 
@@ -29,6 +30,7 @@ const editStylist = document.getElementById('editStylist');
 const editName = document.getElementById('editName');
 const editPhone = document.getElementById('editPhone');
 const editService = document.getElementById('editService');
+
 let editingId = null;
 
 /* =========================
@@ -39,7 +41,7 @@ let calendarDensity = {};
 let closedDays = [];
 
 let selectedStylist = 'Bank';
-let selectedDate = today();
+let selectedDate = getTodayTH();
 
 let viewMonth = new Date(selectedDate).getMonth();
 let viewYear = new Date(selectedDate).getFullYear();
@@ -48,30 +50,40 @@ let viewYear = new Date(selectedDate).getFullYear();
    LOGIN
 ========================= */
 loginBtn.onclick = () => {
-  if (pinInput.value !== OWNER_PIN) {
+  const pin = pinInput.value.trim();
+  loginMsg.textContent = '';
+
+  if (pin.length !== 4) {
+    loginMsg.textContent = 'กรุณาใส่ PIN 4 หลัก';
+    return;
+  }
+  if (pin !== OWNER_PIN) {
     loginMsg.textContent = 'รหัสผ่านไม่ถูกต้อง';
     return;
   }
-  localStorage.setItem('adore_login', '1');
+
+  localStorage.setItem('adore_logged_in', '1');
   loginOverlay.classList.add('hidden');
   init();
 };
 
 logoutBtn.onclick = () => {
-  localStorage.clear();
+  localStorage.removeItem('adore_logged_in');
   location.reload();
 };
 
-if (localStorage.getItem('adore_login') === '1') {
-  loginOverlay.classList.add('hidden');
-  init();
-}
+document.addEventListener('DOMContentLoaded', () => {
+  if (localStorage.getItem('adore_logged_in') === '1') {
+    loginOverlay.classList.add('hidden');
+    init();
+  }
+});
 
 /* =========================
    INIT
 ========================= */
 function init() {
-  bindTabs();
+  bindStylistTabs();
   initStoreStatus();
   loadCalendar();
   loadBookings();
@@ -81,58 +93,80 @@ function init() {
    STORE STATUS
 ========================= */
 function initStoreStatus() {
-  const s = localStorage.getItem('store') || 'open';
-  renderStore(s);
+  const saved = localStorage.getItem('adore_store_status') || 'open';
+  renderStoreStatus(saved);
 
   toggleStoreBtn.onclick = () => {
-    const next = s === 'open' ? 'closed' : 'open';
-    localStorage.setItem('store', next);
-    renderStore(next);
+    const current =
+      localStorage.getItem('adore_store_status') || 'open';
+    const next = current === 'open' ? 'closed' : 'open';
+    localStorage.setItem('adore_store_status', next);
+    renderStoreStatus(next);
   };
 }
 
-function renderStore(s) {
-  storeStatusText.textContent =
-    s === 'open' ? 'สถานะร้าน: เปิด' : 'สถานะร้าน: ปิด';
-  toggleStoreBtn.textContent = s === 'open' ? 'ปิดร้าน' : 'เปิดร้าน';
+function renderStoreStatus(status) {
+  if (status === 'open') {
+    storeStatusText.textContent = 'สถานะร้าน: เปิด';
+    toggleStoreBtn.textContent = 'ปิดร้าน';
+    toggleStoreBtn.className = 'ghost open';
+  } else {
+    storeStatusText.textContent = 'สถานะร้าน: ปิด';
+    toggleStoreBtn.textContent = 'เปิดร้าน';
+    toggleStoreBtn.className = 'ghost closed';
+  }
 }
 
 /* =========================
    CALENDAR
 ========================= */
 async function loadCalendar() {
-  calendarDensity = await (await fetch(`${API}/calendar-days`)).json();
-  closedDays = await (await fetch(`${API}/closed-days`)).json();
+  const densityRes = await fetch(`${API}/calendar-days`);
+  calendarDensity = await densityRes.json();
+
+  const closedRes = await fetch(`${API}/closed-days`);
+  closedDays = await closedRes.json();
+
   renderCalendar();
 }
 
 function renderCalendar() {
   calendarDaysEl.innerHTML = '';
-  const first = new Date(viewYear, viewMonth, 1);
+
+  const firstDay = new Date(viewYear, viewMonth, 1);
+  const startDay = firstDay.getDay();
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+
   calendarTitle.textContent =
-    first.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' });
+    firstDay.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' });
 
-  const start = first.getDay();
-  const days = new Date(viewYear, viewMonth + 1, 0).getDate();
-
-  for (let i = 0; i < start; i++)
+  for (let i = 0; i < startDay; i++) {
     calendarDaysEl.appendChild(document.createElement('div'));
+  }
 
-  for (let d = 1; d <= days; d++) {
-    const date = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date =
+      `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+
+    const count = calendarDensity[date] || 0;
+    const isClosed = closedDays.includes(date);
+
     const el = document.createElement('div');
     el.className = 'day';
     el.textContent = d;
 
     if (date === selectedDate) el.classList.add('today');
-    if (closedDays.includes(date)) el.classList.add('closed');
+    if (count > 0 && count <= 5) el.classList.add('low');
+    if (count > 5 && count <= 10) el.classList.add('mid');
+    if (count > 10) el.classList.add('high');
+    if (isClosed) el.classList.add('closed');
 
-    const c = calendarDensity[date] || 0;
-    if (c > 0 && c <= 5) el.classList.add('low');
-    if (c > 5 && c <= 10) el.classList.add('mid');
-    if (c > 10) el.classList.add('high');
-
-    el.onclick = () => {
+    el.onclick = async () => {
+      if (isClosed) {
+        await toggleClosedDay(date);
+        loadCalendar();
+        return;
+      }
       selectedDate = date;
       loadBookings();
       renderCalendar();
@@ -160,20 +194,27 @@ nextMonthBtn.onclick = () => {
   loadCalendar();
 };
 
+async function toggleClosedDay(date) {
+  await fetch(`${API}/closed-days`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ date })
+  });
+}
+
 /* =========================
    BOOKINGS
 ========================= */
 async function loadBookings() {
-  bookings = await (
-    await fetch(`${API}/bookings?date=${selectedDate}`)
-  ).json();
+  const res = await fetch(`${API}/bookings?date=${selectedDate}`);
+  bookings = await res.json();
 
   renderSummary();
   renderTimeOptions();
   renderTable();
 }
 
-function bindTabs() {
+function bindStylistTabs() {
   document.querySelectorAll('.tab').forEach(tab => {
     tab.onclick = () => {
       document.querySelector('.tab.active').classList.remove('active');
@@ -186,33 +227,30 @@ function bindTabs() {
 
 function renderTimeOptions() {
   timeSelect.innerHTML = '';
+
   for (let h = 13; h <= 22; h++) {
     const time = `${String(h).padStart(2, '0')}:00:00`;
+    const booked = bookings.find(
+      b => b.time === time && b.stylist === selectedStylist
+    );
+
     const opt = document.createElement('option');
     opt.value = time;
     opt.textContent = time.slice(0, 5);
-
-    if (bookings.find(b => b.time === time && b.stylist === selectedStylist))
-      opt.disabled = true;
+    if (booked) opt.disabled = true;
 
     timeSelect.appendChild(opt);
   }
 }
 
 /* =========================
-   FORM SUBMIT (FIXED)
+   ADD BOOKING (FIXED)
 ========================= */
 bookingForm.onsubmit = async e => {
   e.preventDefault();
 
-  const store = localStorage.getItem('store') || 'open';
-  if (store === 'closed') {
-    alert('ร้านปิดอยู่ ไม่สามารถเพิ่มคิวได้');
-    return;
-  }
-
-  const genderEl = document.querySelector('[name=gender]:checked');
-  if (!genderEl) {
+  const gender = document.querySelector('[name=gender]:checked')?.value;
+  if (!gender) {
     alert('กรุณาเลือกเพศ');
     return;
   }
@@ -223,24 +261,27 @@ bookingForm.onsubmit = async e => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         date: selectedDate,
-        time: timeSelect.value,
+        time: timeSelect.value, // HH:MM:SS
         stylist: selectedStylist,
-        name: name.value,
-        phone: phone.value,
-        gender: genderEl.value,
-        service: service.value
+        name: document.getElementById('name').value.trim(),
+        phone: document.getElementById('phone').value.trim(),
+        gender,
+        service: document.getElementById('service').value.trim()
       })
     });
 
-    if (!res.ok) throw new Error('POST failed');
+    if (!res.ok) {
+      alert('เกิดข้อผิดพลาดในการบันทึกคิว');
+      return;
+    }
 
     bookingForm.reset();
-    alert('เพิ่มคิวเรียบร้อยแล้ว');
+    alert('บันทึกคิวเรียบร้อยแล้ว');
+
     loadBookings();
     loadCalendar();
-  } catch (err) {
+  } catch {
     alert('เกิดข้อผิดพลาดในการบันทึกคิว');
-    console.error(err);
   }
 };
 
@@ -248,15 +289,19 @@ bookingForm.onsubmit = async e => {
    SUMMARY
 ========================= */
 function renderSummary() {
-  const count = s => bookings.filter(b => b.stylist === s).length;
-  countBank.textContent = count('Bank');
-  countSindy.textContent = count('Sindy');
-  countAssist.textContent = count('Assist');
-  countTotal.textContent = bookings.length;
+  const bank = bookings.filter(b => b.stylist === 'Bank').length;
+  const sindy = bookings.filter(b => b.stylist === 'Sindy').length;
+  const assist = bookings.filter(b => b.stylist === 'Assist').length;
+
+  document.getElementById('countBank').textContent = bank;
+  document.getElementById('countSindy').textContent = sindy;
+  document.getElementById('countAssist').textContent = assist;
+  document.getElementById('countTotal').textContent =
+    bank + sindy + assist;
 }
 
 /* =========================
-   TABLE + EDIT
+   TABLE + MANAGE BUTTON
 ========================= */
 function renderTable() {
   listEl.innerHTML = '';
@@ -264,7 +309,7 @@ function renderTable() {
   bookings.forEach(b => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${b.time.slice(0, 5)}</td>
+      <td>${b.time.slice(0,5)}</td>
       <td><span class="badge ${b.stylist}">${b.stylist}</span></td>
       <td>${b.gender === 'male' ? '👨' : '👩'}</td>
       <td>${b.name}</td>
@@ -282,7 +327,7 @@ function renderTable() {
 ========================= */
 function openEditModal(b) {
   editingId = b.id;
-  editTime.value = b.time.slice(0, 5);
+  editTime.value = b.time.slice(0,5);
   editStylist.value = b.stylist;
   editName.value = b.name;
   editPhone.value = b.phone || '';
@@ -296,7 +341,8 @@ function openEditModal(b) {
 }
 
 document.getElementById('saveEdit').onclick = async () => {
-  const gender = document.querySelector('[name=editGender]:checked').value;
+  const gender =
+    document.querySelector('[name=editGender]:checked')?.value;
 
   await fetch(`${API}/bookings/${editingId}`, {
     method: 'PUT',
@@ -316,7 +362,9 @@ document.getElementById('saveEdit').onclick = async () => {
 
 document.getElementById('deleteEdit').onclick = async () => {
   if (!confirm('ยืนยันการลบคิวนี้?')) return;
+
   await fetch(`${API}/bookings/${editingId}`, { method: 'DELETE' });
+
   editOverlay.classList.add('hidden');
   loadBookings();
   loadCalendar();
@@ -328,7 +376,7 @@ document.getElementById('closeEdit').onclick = () =>
 /* =========================
    UTIL
 ========================= */
-function today() {
+function getTodayTH() {
   return new Date().toLocaleDateString('sv-SE', {
     timeZone: 'Asia/Bangkok'
   });
