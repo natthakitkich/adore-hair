@@ -19,6 +19,10 @@ const bookingForm = document.getElementById('bookingForm');
 const timeSelect = document.getElementById('time');
 const listEl = document.getElementById('list');
 
+/* --- STORE STATUS --- */
+const storeStatusText = document.getElementById('storeStatusText');
+const toggleStoreBtn = document.getElementById('toggleStoreBtn');
+
 /* =========================
    STATE
 ========================= */
@@ -71,6 +75,37 @@ function init() {
   bindStylistTabs();
   loadCalendar();
   loadBookings();
+  initStoreStatus(); // ← สำคัญ
+}
+
+/* =========================
+   STORE STATUS (OPEN / CLOSED)
+========================= */
+function initStoreStatus() {
+  const saved = localStorage.getItem('adore_store_status') || 'open';
+  renderStoreStatus(saved);
+
+  toggleStoreBtn.onclick = () => {
+    const current =
+      localStorage.getItem('adore_store_status') || 'open';
+    const next = current === 'open' ? 'closed' : 'open';
+    localStorage.setItem('adore_store_status', next);
+    renderStoreStatus(next);
+  };
+}
+
+function renderStoreStatus(status) {
+  if (status === 'open') {
+    storeStatusText.textContent = 'สถานะร้าน: เปิด';
+    toggleStoreBtn.textContent = 'ปิดร้าน';
+    toggleStoreBtn.classList.remove('closed');
+    toggleStoreBtn.classList.add('open');
+  } else {
+    storeStatusText.textContent = 'สถานะร้าน: ปิด';
+    toggleStoreBtn.textContent = 'เปิดร้าน';
+    toggleStoreBtn.classList.remove('open');
+    toggleStoreBtn.classList.add('closed');
+  }
 }
 
 /* =========================
@@ -179,133 +214,6 @@ function renderTimeOptions() {
     timeSelect.appendChild(opt);
   }
 }
-
-/* =========================
-   FORM SUBMIT
-========================= */
-bookingForm.onsubmit = async e => {
-  e.preventDefault();
-
-  const gender = document.querySelector('[name=gender]:checked')?.value;
-  if (!gender) {
-    alert('กรุณาเลือกเพศ');
-    return;
-  }
-
-  await fetch(`${API}/bookings`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      date: selectedDate,
-      time: timeSelect.value,
-      stylist: selectedStylist,
-      name: document.getElementById('name').value,
-      phone: document.getElementById('phone').value,
-      gender,
-      service: document.getElementById('service').value
-    })
-  });
-
-  bookingForm.reset();
-  alert('บันทึกคิวเรียบร้อยแล้ว');
-
-  loadBookings();
-  loadCalendar();
-};
-
-/* =========================
-   SUMMARY
-========================= */
-function renderSummary() {
-  const bank = bookings.filter(b => b.stylist === 'Bank').length;
-  const sindy = bookings.filter(b => b.stylist === 'Sindy').length;
-  const assist = bookings.filter(b => b.stylist === 'Assist').length;
-
-  document.getElementById('countBank').textContent = bank;
-  document.getElementById('countSindy').textContent = sindy;
-  document.getElementById('countAssist').textContent = assist;
-  document.getElementById('countTotal').textContent = bank + sindy + assist;
-}
-
-/* =========================
-   TABLE
-========================= */
-function renderTable() {
-  listEl.innerHTML = '';
-
-  bookings.forEach(b => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${b.time.slice(0, 5)}</td>
-      <td><span class="badge ${b.stylist}">${b.stylist}</span></td>
-      <td>${b.gender === 'male' ? '👨' : '👩'}</td>
-      <td>${b.name}</td>
-      <td>${b.service || ''}</td>
-      <td>${b.phone || ''}</td>
-      <td><button class="ghost">จัดการ</button></td>
-    `;
-    tr.querySelector('button').onclick = () => openEditModal(b);
-    listEl.appendChild(tr);
-  });
-}
-
-/* =========================
-   EDIT MODAL
-========================= */
-const editOverlay = document.getElementById('editOverlay');
-const editTime = document.getElementById('editTime');
-const editStylist = document.getElementById('editStylist');
-const editName = document.getElementById('editName');
-const editPhone = document.getElementById('editPhone');
-const editService = document.getElementById('editService');
-let editingId = null;
-
-function openEditModal(b) {
-  editingId = b.id;
-  editTime.value = b.time.slice(0, 5);
-  editStylist.value = b.stylist;
-  editName.value = b.name;
-  editPhone.value = b.phone || '';
-  editService.value = b.service || '';
-
-  document.querySelectorAll('[name=editGender]').forEach(r => {
-    r.checked = r.value === b.gender;
-  });
-
-  editOverlay.classList.remove('hidden');
-}
-
-document.getElementById('saveEdit').onclick = async () => {
-  const gender = document.querySelector('[name=editGender]:checked')?.value;
-
-  await fetch(`${API}/bookings/${editingId}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      name: editName.value,
-      phone: editPhone.value,
-      gender,
-      service: editService.value
-    })
-  });
-
-  editOverlay.classList.add('hidden');
-  loadBookings();
-  loadCalendar();
-};
-
-document.getElementById('deleteEdit').onclick = async () => {
-  if (!confirm('ยืนยันการลบคิวนี้?')) return;
-
-  await fetch(`${API}/bookings/${editingId}`, { method: 'DELETE' });
-
-  editOverlay.classList.add('hidden');
-  loadBookings();
-  loadCalendar();
-};
-
-document.getElementById('closeEdit').onclick = () =>
-  editOverlay.classList.add('hidden');
 
 /* =========================
    UTIL
