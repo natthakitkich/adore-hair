@@ -26,17 +26,17 @@ const supabase = createClient(
 );
 
 /* =========================
-   FRONTEND (OWNER ONLY)
+   ROUTES
 ========================= */
+
+// serve frontend
 app.get('/', (_, res) => {
-  res.sendFile(path.join(__dirname, 'public/owner.html'));
+  res.sendFile(path.join(__dirname, 'public/index.html'));
 });
 
-/* =========================
-   OWNER API
-========================= */
-
-// Get bookings by date
+/* ---------- BASIC ----------
+   Get bookings by date
+---------------------------- */
 app.get('/bookings', async (req, res) => {
   const { date } = req.query;
 
@@ -58,7 +58,9 @@ app.get('/bookings', async (req, res) => {
   res.json(data || []);
 });
 
-// Calendar density
+/* ---------- DEVELOP ----------
+   Get calendar density (NEW)
+---------------------------- */
 app.get('/calendar-days', async (_, res) => {
   const { data, error } = await supabase
     .from('bookings')
@@ -69,6 +71,7 @@ app.get('/calendar-days', async (_, res) => {
   }
 
   const map = {};
+
   data.forEach(b => {
     map[b.date] = (map[b.date] || 0) + 1;
   });
@@ -76,7 +79,9 @@ app.get('/calendar-days', async (_, res) => {
   res.json(map);
 });
 
-// Create booking
+/* ---------- BASIC ----------
+   Create booking
+---------------------------- */
 app.post('/bookings', async (req, res) => {
   const { date, time, stylist, name, gender, phone, service } = req.body;
 
@@ -108,7 +113,9 @@ app.post('/bookings', async (req, res) => {
   res.json(data);
 });
 
-// Update booking
+/* ---------- DEVELOP ----------
+   Update booking
+---------------------------- */
 app.put('/bookings/:id', async (req, res) => {
   const { id } = req.params;
   const { name, phone, gender, service } = req.body;
@@ -125,7 +132,9 @@ app.put('/bookings/:id', async (req, res) => {
   res.json({ success: true });
 });
 
-// Delete booking
+/* ---------- BASIC ----------
+   Delete booking
+---------------------------- */
 app.delete('/bookings/:id', async (req, res) => {
   const { id } = req.params;
 
