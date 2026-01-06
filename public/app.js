@@ -73,9 +73,9 @@ document.addEventListener('DOMContentLoaded', () => {
 ========================= */
 function init() {
   bindStylistTabs();
+  initStoreStatus();
   loadCalendar();
   loadBookings();
-  initStoreStatus(); // ← สำคัญ
 }
 
 /* =========================
@@ -86,8 +86,7 @@ function initStoreStatus() {
   renderStoreStatus(saved);
 
   toggleStoreBtn.onclick = () => {
-    const current =
-      localStorage.getItem('adore_store_status') || 'open';
+    const current = localStorage.getItem('adore_store_status') || 'open';
     const next = current === 'open' ? 'closed' : 'open';
     localStorage.setItem('adore_store_status', next);
     renderStoreStatus(next);
@@ -98,13 +97,11 @@ function renderStoreStatus(status) {
   if (status === 'open') {
     storeStatusText.textContent = 'สถานะร้าน: เปิด';
     toggleStoreBtn.textContent = 'ปิดร้าน';
-    toggleStoreBtn.classList.remove('closed');
-    toggleStoreBtn.classList.add('open');
+    toggleStoreBtn.className = 'ghost open';
   } else {
     storeStatusText.textContent = 'สถานะร้าน: ปิด';
     toggleStoreBtn.textContent = 'เปิดร้าน';
-    toggleStoreBtn.classList.remove('open');
-    toggleStoreBtn.classList.add('closed');
+    toggleStoreBtn.className = 'ghost closed';
   }
 }
 
@@ -125,7 +122,10 @@ function renderCalendar() {
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
 
   calendarTitle.textContent =
-    firstDay.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' });
+    firstDay.toLocaleDateString('th-TH', {
+      month: 'long',
+      year: 'numeric'
+    });
 
   for (let i = 0; i < startDay; i++) {
     calendarDaysEl.appendChild(document.createElement('div'));
@@ -146,10 +146,11 @@ function renderCalendar() {
     if (count > 5 && count <= 10) el.classList.add('mid');
     if (count > 10) el.classList.add('high');
 
-    el.onclick = () => {
+    el.onclick = async () => {
       selectedDate = date;
-      loadBookings();
+      await loadBookings();
       renderCalendar();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     calendarDaysEl.appendChild(el);
@@ -189,7 +190,7 @@ async function loadBookings() {
 function bindStylistTabs() {
   document.querySelectorAll('.tab').forEach(tab => {
     tab.onclick = () => {
-      document.querySelector('.tab.active').classList.remove('active');
+      document.querySelector('.tab.active')?.classList.remove('active');
       tab.classList.add('active');
       selectedStylist = tab.dataset.tab;
       renderTimeOptions();
@@ -213,6 +214,50 @@ function renderTimeOptions() {
 
     timeSelect.appendChild(opt);
   }
+}
+
+/* =========================
+   SUMMARY
+========================= */
+function renderSummary() {
+  const bank = bookings.filter(b => b.stylist === 'Bank').length;
+  const sindy = bookings.filter(b => b.stylist === 'Sindy').length;
+  const assist = bookings.filter(b => b.stylist === 'Assist').length;
+
+  document.getElementById('countBank').textContent = bank;
+  document.getElementById('countSindy').textContent = sindy;
+  document.getElementById('countAssist').textContent = assist;
+  document.getElementById('countTotal').textContent =
+    bank + sindy + assist;
+}
+
+/* =========================
+   TABLE
+========================= */
+function renderTable() {
+  listEl.innerHTML = '';
+
+  if (bookings.length === 0) {
+    listEl.innerHTML =
+      `<tr><td colspan="7" style="text-align:center;opacity:.6">
+        ไม่มีคิวในวันนี้
+      </td></tr>`;
+    return;
+  }
+
+  bookings.forEach(b => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${b.time.slice(0, 5)}</td>
+      <td><span class="badge ${b.stylist}">${b.stylist}</span></td>
+      <td>${b.gender === 'male' ? '👨' : '👩'}</td>
+      <td>${b.name}</td>
+      <td>${b.service || ''}</td>
+      <td>${b.phone || ''}</td>
+      <td><button class="ghost">จัดการ</button></td>
+    `;
+    listEl.appendChild(tr);
+  });
 }
 
 /* =========================
