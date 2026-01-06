@@ -28,28 +28,15 @@ logoutBtn.onclick = () => {
   location.reload();
 };
 
-/* ================= GLOBAL ================= */
-const calendarTitle = document.getElementById('calendarTitle');
-const calendarDaysEl = document.getElementById('calendarDays');
-const prevMonthBtn = document.getElementById('prevMonth');
-const nextMonthBtn = document.getElementById('nextMonth');
-
-const bookingForm = document.getElementById('bookingForm');
-const timeSelect = document.getElementById('time');
-const listEl = document.getElementById('list');
-
+/* ================= STATE ================= */
 let bookings = [];
-let selectedStylist = 'Bank';
-let selectedDate = getTodayTH();
-
-let viewDate = new Date(selectedDate);
-let viewMonth = viewDate.getMonth();
-let viewYear = viewDate.getFullYear();
+let selectedDate = getTodayISO(); // ✅ ค.ศ. เสมอ
+let viewMonth = new Date(selectedDate).getMonth();
+let viewYear = new Date(selectedDate).getFullYear();
 
 /* ================= INIT ================= */
 function init() {
   bindTabs();
-  bindMonthNav();
   loadCalendar();
   loadBookings();
 }
@@ -62,23 +49,18 @@ async function loadCalendar() {
 }
 
 function renderCalendar(density) {
+  const calendarDaysEl = document.getElementById('calendarDays');
+  const calendarTitle = document.getElementById('calendarTitle');
   calendarDaysEl.innerHTML = '';
 
   const firstDay = new Date(viewYear, viewMonth, 1);
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
-  const startWeekday = firstDay.getDay(); // 0 = Sunday
 
-  calendarTitle.textContent = firstDay.toLocaleDateString(
-    'th-TH-u-ca-gregory',
-    { month: 'long', year: 'numeric' }
-  );
-
-  /* ช่องว่างก่อนวันแรก (แก้ bug วันเลื่อน) */
-  for (let i = 0; i < startWeekday; i++) {
-    const blank = document.createElement('div');
-    blank.className = 'day empty';
-    calendarDaysEl.appendChild(blank);
-  }
+  // ✅ แสดงผลเป็น พ.ศ. แต่ logic ยังเป็น ค.ศ.
+  calendarTitle.textContent =
+    firstDay.toLocaleDateString('th-TH', { month: 'long' }) +
+    ' ' +
+    (viewYear + 543);
 
   for (let d = 1; d <= daysInMonth; d++) {
     const date = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
@@ -86,8 +68,7 @@ function renderCalendar(density) {
     el.className = 'day';
     el.textContent = d;
 
-    if (density[date]) el.classList.add('low');
-    if (date === selectedDate) el.classList.add('active');
+    if (density?.[date]) el.classList.add(density[date]);
 
     el.onclick = () => {
       selectedDate = date;
@@ -98,35 +79,16 @@ function renderCalendar(density) {
   }
 }
 
-function bindMonthNav() {
-  prevMonthBtn.onclick = () => {
-    viewMonth--;
-    if (viewMonth < 0) {
-      viewMonth = 11;
-      viewYear--;
-    }
-    loadCalendar();
-  };
-
-  nextMonthBtn.onclick = () => {
-    viewMonth++;
-    if (viewMonth > 11) {
-      viewMonth = 0;
-      viewYear++;
-    }
-    loadCalendar();
-  };
-}
-
 /* ================= BOOKINGS ================= */
 async function loadBookings() {
   const res = await fetch(`${API}/bookings?date=${selectedDate}`);
   bookings = await res.json();
   renderTimeOptions();
-  renderTable(); // ❗ ไม่กรองตามแท็บ
+  renderTable();
 }
 
 function renderTimeOptions() {
+  const timeSelect = document.getElementById('time');
   timeSelect.innerHTML = '';
   for (let h = 13; h <= 22; h++) {
     const t = `${String(h).padStart(2, '0')}:00`;
@@ -137,65 +99,22 @@ function renderTimeOptions() {
   }
 }
 
-bookingForm.onsubmit = async e => {
-  e.preventDefault();
-
-  const gender = document.querySelector('[name=gender]:checked')?.value;
-  if (!gender) return alert('เลือกเพศ');
-
-  const res = await fetch(`${API}/bookings`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      date: selectedDate,
-      time: timeSelect.value,
-      stylist: selectedStylist,
-      name: document.getElementById('name').value,
-      phone: document.getElementById('phone').value,
-      gender,
-      service: document.getElementById('service').value
-    })
-  });
-
-  if (!res.ok) {
-    alert('เกิดข้อผิดพลาดในการบันทึกคิว');
-    return;
-  }
-
-  alert('บันทึกคิวเรียบร้อยแล้ว');
-  bookingForm.reset();
-  loadBookings();
-  loadCalendar();
-};
-
 /* ================= TABLE ================= */
-function stylistBadge(stylist) {
-  const map = {
-    Bank: '#4FC3F7',
-    Sindy: '#F48FB1',
-    Assist: '#81C784'
-  };
-  const color = map[stylist] || '#999';
-
-  return `
-    <span style="
-      padding:4px 10px;
-      border-radius:999px;
-      border:1px solid ${color};
-      color:${color};
-      font-weight:600;
-    ">${stylist}</span>
-  `;
-}
-
 function renderTable() {
+  const listEl = document.getElementById('list');
   listEl.innerHTML = '';
 
   bookings.forEach(b => {
     const tr = document.createElement('tr');
+
+    const stylistClass =
+      b.stylist === 'Bank' ? 'badge-bank'
+      : b.stylist === 'Sindy' ? 'badge-sindy'
+      : 'badge-assist';
+
     tr.innerHTML = `
       <td>${b.time.slice(0,5)}</td>
-      <td>${stylistBadge(b.stylist)}</td>
+      <td><span class="stylist-badge ${stylistClass}">${b.stylist}</span></td>
       <td>${b.gender === 'male' ? '👨' : '👩'}</td>
       <td>${b.name}</td>
       <td>${b.service}</td>
@@ -204,7 +123,7 @@ function renderTable() {
     `;
 
     tr.querySelector('button').onclick = () => {
-      alert('เปิด modal แก้ไข (logic เดิม)');
+      openEditModal(b);
     };
 
     listEl.appendChild(tr);
@@ -217,12 +136,20 @@ function bindTabs() {
     t.onclick = () => {
       document.querySelector('.tab.active')?.classList.remove('active');
       t.classList.add('active');
-      selectedStylist = t.dataset.tab;
+      // ❗ ไม่ filter ตาราง
     };
   });
 }
 
+/* ================= MODAL ================= */
+function openEditModal(b) {
+  const modal = document.getElementById('editModal');
+  modal.classList.add('show');
+  modal.style.maxHeight = '85vh';
+  modal.style.overflowY = 'auto';
+}
+
 /* ================= UTIL ================= */
-function getTodayTH() {
-  return new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
+function getTodayISO() {
+  return new Date().toISOString().split('T')[0];
 }
