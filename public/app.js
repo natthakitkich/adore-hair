@@ -248,14 +248,20 @@ function renderTable() {
     card.className = 'booking-card';
 
     card.innerHTML = `
+
       <div class="card-main">
-        <span>
-          ${b.time.slice(0,5)} · 
-          <span class="badge ${b.stylist}">${b.stylist}</span> · 
-          ${b.gender === 'male' ? '👨' : '👩'}
-        </span>
-        <button class="ghost toggle-detail">ดู</button>
-      </div>
+  <div class="time-pill">
+    ${b.time.slice(0,5)}
+  </div>
+
+  <div class="card-main-info">
+    <span class="badge ${b.stylist}">${b.stylist}</span>
+    ${b.gender === 'male' ? '👨' : '👩'}
+  </div>
+
+  <button class="ghost toggle-detail">ดู</button>
+</div>
+
 
       <div class="card-sub">
         ${b.name} · ${b.service || ''}
