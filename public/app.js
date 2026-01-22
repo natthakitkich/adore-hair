@@ -192,7 +192,63 @@ function renderTimeOptions() {
     timeSelect.appendChild(opt);
   }
 }
+/* =========================
+   BOOKING FORM SUBMIT (FIX)
+========================= */
+bookingForm.onsubmit = async (e) => {
+  e.preventDefault();
 
+  const gender = document.querySelector('[name=gender]:checked')?.value;
+
+  if (!timeSelect.value || !selectedStylist || !gender) {
+    alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+    return;
+  }
+
+  const payload = {
+    date: selectedDate,
+    time: timeSelect.value,
+    stylist: selectedStylist,
+    name: document.getElementById('name').value.trim(),
+    phone: document.getElementById('phone').value.trim(),
+    gender,
+    service: document.getElementById('service').value.trim(),
+    note: document.getElementById('note')?.value.trim() || null
+  };
+
+  try {
+    const res = await fetch(`${API}/bookings`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (res.status === 409) {
+      alert('เวลานี้ถูกจองแล้ว กรุณาเลือกเวลาอื่น');
+      return;
+    }
+
+    if (!res.ok) {
+      alert('เกิดข้อผิดพลาดในการจองคิว');
+      return;
+    }
+
+    alert('จองคิวสำเร็จแล้ว');
+
+    bookingForm.reset();
+
+    // reset gender radio
+    document.querySelectorAll('[name=gender]').forEach(r => r.checked = false);
+
+    // refresh data
+    loadBookings();
+    loadCalendar();
+
+  } catch (err) {
+    console.error(err);
+    alert('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+  }
+};
 /* =========================
    SUMMARY
 ========================= */
