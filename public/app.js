@@ -35,6 +35,9 @@ let selectedDate = getTodayTH();
 let viewMonth = new Date(selectedDate).getMonth();
 let viewYear = new Date(selectedDate).getFullYear();
 
+/* 👉 iOS calendar animation direction */
+let calendarDirection = 'none';
+
 /* =========================
    LOGIN
 ========================= */
@@ -63,7 +66,6 @@ loginBtn.onclick = () => {
 pinInput.addEventListener('input', () => {
   pinInput.value = pinInput.value.replace(/\D/g, '');
 });
-
 
 logoutBtn.onclick = () => {
   localStorage.removeItem('adore_logged_in');
@@ -132,22 +134,53 @@ function renderCalendar() {
   }
 }
 
+/* =========================
+   iOS CALENDAR ANIMATION
+========================= */
+function animateCalendar(updateFn) {
+  const el = calendarDaysEl;
+
+  el.classList.remove('calendar-enter');
+
+  el.classList.add(
+    calendarDirection === 'next'
+      ? 'calendar-exit-left'
+      : 'calendar-exit-right'
+  );
+
+  setTimeout(() => {
+    el.classList.remove('calendar-exit-left', 'calendar-exit-right');
+
+    updateFn();
+
+    requestAnimationFrame(() => {
+      el.classList.add('calendar-enter');
+    });
+  }, 180);
+}
+
 prevMonthBtn.onclick = () => {
-  viewMonth--;
-  if (viewMonth < 0) {
-    viewMonth = 11;
-    viewYear--;
-  }
-  renderCalendar();
+  calendarDirection = 'prev';
+  animateCalendar(() => {
+    viewMonth--;
+    if (viewMonth < 0) {
+      viewMonth = 11;
+      viewYear--;
+    }
+    renderCalendar();
+  });
 };
 
 nextMonthBtn.onclick = () => {
-  viewMonth++;
-  if (viewMonth > 11) {
-    viewMonth = 0;
-    viewYear++;
-  }
-  renderCalendar();
+  calendarDirection = 'next';
+  animateCalendar(() => {
+    viewMonth++;
+    if (viewMonth > 11) {
+      viewMonth = 0;
+      viewYear++;
+    }
+    renderCalendar();
+  });
 };
 
 /* =========================
@@ -237,9 +270,8 @@ function renderSummary() {
 }
 
 /* =========================
-   TABLE (DESKTOP + MOBILE)
+   BOOKING CARD
 ========================= */
-
 function renderTable() {
   listEl.innerHTML = '';
 
@@ -248,20 +280,16 @@ function renderTable() {
     card.className = 'booking-card';
 
     card.innerHTML = `
-
       <div class="card-main">
-  <div class="time-pill">
-    ${b.time.slice(0,5)}
-  </div>
+        <div class="time-pill">${b.time.slice(0,5)}</div>
 
-  <div class="card-main-info">
-    <span class="badge ${b.stylist}">${b.stylist}</span>
-    ${b.gender === 'male' ? '👨' : '👩'}
-  </div>
+        <div class="card-main-info">
+          <span class="badge ${b.stylist}">${b.stylist}</span>
+          ${b.gender === 'male' ? '👨' : '👩'}
+        </div>
 
-  <button class="ghost toggle-detail">ดู</button>
-</div>
-
+        <button class="ghost toggle-detail">ดู</button>
+      </div>
 
       <div class="card-sub">
         ${b.name} · ${b.service || ''}
@@ -277,16 +305,14 @@ function renderTable() {
     `;
 
     card.querySelector('.toggle-detail').onclick = () => {
-  card.classList.toggle('expanded');
-};
-
+      card.classList.toggle('expanded');
+    };
 
     card.querySelector('.manage-btn').onclick = () => openEditModal(b);
 
     listEl.appendChild(card);
   });
 }
-
 
 /* =========================
    EDIT MODAL
