@@ -8,9 +8,7 @@
 </head>
 <body>
 
-<!-- =========================
-     LOGIN OVERLAY
-========================= -->
+<!-- LOGIN OVERLAY -->
 <div id="loginOverlay" class="overlay">
   <div class="modal">
     <div class="modalBody">
@@ -28,9 +26,7 @@
   </div>
 </div>
 
-<!-- =========================
-     EDIT BOOKING MODAL
-========================= -->
+<!-- EDIT MODAL -->
 <div id="editOverlay" class="overlay hidden">
   <div class="modal">
     <div class="modalBody">
@@ -49,7 +45,6 @@
       </div>
 
       <input id="editService" placeholder="ทำอะไร" />
-
       <textarea id="editNote" placeholder="หมายเหตุเพิ่มเติม" rows="3"></textarea>
 
       <button id="saveEdit" class="primary">บันทึกการเปลี่ยนคิว</button>
@@ -59,9 +54,7 @@
   </div>
 </div>
 
-<!-- =========================
-     TOP BAR
-========================= -->
+<!-- TOP BAR -->
 <div class="topbar">
   <div class="brand">
     <div class="avatar">
@@ -78,7 +71,7 @@
 
 <div class="wrap">
 
-  <!-- ===== CALENDAR ===== -->
+  <!-- CALENDAR -->
   <section class="panel">
     <div class="calendarHeader">
       <button id="prevMonth" class="ghost">‹</button>
@@ -94,18 +87,11 @@
       <div class="dayLabel">พฤ</div>
       <div class="dayLabel">ศ</div>
       <div class="dayLabel">ส</div>
-
       <div id="calendarDays" class="calendarDays"></div>
-    </div>
-
-    <div class="calendarLegend">
-      <div class="legend-item"><span class="dot low"></span>คิวน้อย</div>
-      <div class="legend-item"><span class="dot mid"></span>ปานกลาง</div>
-      <div class="legend-item"><span class="dot high"></span>หนาแน่น</div>
     </div>
   </section>
 
-  <!-- ===== SUMMARY ===== -->
+  <!-- SUMMARY -->
   <section class="panel">
     <div class="summary">
       <div class="box">Bank<br><strong id="countBank">0</strong></div>
@@ -115,7 +101,7 @@
     </div>
   </section>
 
-  <!-- ===== BOOKING ===== -->
+  <!-- BOOKING FORM -->
   <section class="panel">
     <div class="tabs">
       <div class="tab active" data-tab="Bank">Bank</div>
@@ -163,22 +149,9 @@
     </form>
   </section>
 
-  <!-- ===== TABLE ===== -->
+  <!-- ✅ BOOKING CARDS -->
   <section class="panel">
-    <table>
-      <thead>
-        <tr>
-          <th>เวลา</th>
-          <th>ช่าง</th>
-          <th>เพศ</th>
-          <th>ชื่อ</th>
-          <th>ทำอะไร</th>
-          <th>โทร</th>
-          <th>จัดการ</th>
-        </tr>
-      </thead>
-      <tbody id="list"></tbody>
-    </table>
+    <div id="list" class="booking-list"></div>
   </section>
 
 </div>
