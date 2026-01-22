@@ -575,3 +575,11 @@ input,select{
   object-fit:cover;
   border-radius:50%;
 }
+ /* =========================
+   HIDE SUMMARY ON MOBILE (SAFE ADD)
+========================= */
+@media (max-width: 768px){
+  .summary{
+    display: none;
+  }
+}
