@@ -410,3 +410,17 @@ function getTodayTH() {
     timeZone: 'Asia/Bangkok'
   });
 }
+
+/* ======================================================
+   DYNAMIC LIGHT FOLLOW SCROLL (SAFE)
+====================================================== */
+window.addEventListener("scroll", () => {
+  const scrollY = window.scrollY;
+  const docH = document.body.scrollHeight - window.innerHeight;
+  const percent = Math.min(80, Math.max(20, (scrollY / docH) * 100));
+
+  document.documentElement.style.setProperty(
+    "--light-y",
+    percent + "%"
+  );
+});
