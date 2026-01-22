@@ -142,7 +142,7 @@ textarea{resize:vertical}
 }
 
 /* =========================
-   CALENDAR (FIXED GRID)
+   CALENDAR — FINAL (iOS SAFE)
 ========================= */
 .calendarHeader{
   display:flex;
@@ -157,15 +157,21 @@ textarea{resize:vertical}
 }
 
 .calendarGrid{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:12px;
+}
+
+.calendarDays{
   display:grid;
   grid-template-columns:repeat(7,48px);
   gap:12px;
   justify-content:center;
-  text-align:center;
-}
 
-.calendarDays{
-  display:contents;
+  transition:
+    transform .28s cubic-bezier(.25,.8,.25,1),
+    opacity .28s ease;
 }
 
 .dayLabel{
@@ -185,6 +191,7 @@ textarea{resize:vertical}
   box-shadow:
     inset 0 0 0 1px rgba(255,255,255,.06),
     0 6px 18px rgba(0,0,0,.45);
+
   transition:
     transform .16s cubic-bezier(.25,.8,.25,1),
     box-shadow .16s ease;
@@ -195,12 +202,16 @@ textarea{resize:vertical}
 .day.high{color:var(--high);background:rgba(255,92,122,.15)}
 
 .day.today{
-  outline:none;
   transform:scale(1.08);
   box-shadow:
     0 0 0 2px var(--accent),
     0 8px 24px rgba(110,231,255,.25);
 }
+
+/* calendar motion */
+.calendar-exit-left{transform:translateX(-24px);opacity:0}
+.calendar-exit-right{transform:translateX(24px);opacity:0}
+.calendar-enter{transform:none;opacity:1}
 
 .calendarLegend{
   display:flex;
@@ -221,13 +232,6 @@ textarea{resize:vertical}
 .dot.low{background:var(--low)}
 .dot.mid{background:var(--mid)}
 .dot.high{background:var(--high)}
-
-/* =========================
-   CALENDAR MOTION
-========================= */
-.calendar-exit-left{transform:translateX(-24px);opacity:0}
-.calendar-exit-right{transform:translateX(24px);opacity:0}
-.calendar-enter{transform:translateX(0);opacity:1}
 
 /* =========================
    SUMMARY
@@ -363,7 +367,7 @@ textarea{resize:vertical}
 }
 
 /* =========================
-   A2 PRESS FEEDBACK
+   PRESS FEEDBACK (A2)
 ========================= */
 button,.tab{
   transition:
