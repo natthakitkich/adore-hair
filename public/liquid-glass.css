@@ -329,3 +329,36 @@ textarea {
 .booking-card .meta {
   font-size: 0.95rem;
 }
+/* ======================================================
+   FORM READABILITY — iOS / PRO SIZE
+====================================================== */
+
+/* label / field title */
+.field-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 1.05rem;     /* ⬅️ ใหญ่ขึ้น ~2 เท่า */
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  color: var(--text-primary);
+  text-shadow: var(--text-shadow-soft);
+}
+
+/* input / select / textarea */
+input,
+select,
+textarea {
+  font-size: 1.05rem;     /* ⬅️ ใหญ่ขึ้น */
+  padding: 14px 16px;     /* ⬅️ นิ้วกดสบาย */
+  line-height: 1.4;
+}
+
+/* textarea สูงขึ้น */
+textarea {
+  min-height: 96px;
+}
+
+/* form section spacing */
+.grid > div {
+  margin-bottom: 18px;
+}
