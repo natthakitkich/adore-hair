@@ -300,3 +300,9 @@ th,td{
   }
   td{display:block;border:none}
 }
+tr td:first-child{
+  background:rgba(255,255,255,.08);
+  display:inline-block;
+  padding:4px 10px;
+  border-radius:999px;
+}
