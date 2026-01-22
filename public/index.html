@@ -219,6 +219,20 @@
 </div>
 
 <script src="app.js"></script>
+  <!-- CONFIRM OVERLAY -->
+<div id="confirmOverlay" class="overlay hidden">
+  <div class="modal confirm-modal">
+    <div class="modalBody">
+      <h3 id="confirmTitle">ยืนยันการทำรายการ</h3>
+      <p id="confirmMessage" class="muted">—</p>
+
+      <div class="confirm-actions">
+        <button id="confirmCancel" class="ghost">ยกเลิก</button>
+        <button id="confirmOk" class="primary">ยืนยัน</button>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
   <script>
 (() => {
