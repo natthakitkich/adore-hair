@@ -389,3 +389,45 @@ textarea{resize:vertical}
   gap:6px;
   flex:1;
 }
+
+
+/* =========================
+   iOS CARD EXPAND MOTION
+========================= */
+.booking-card{
+  transition:
+    transform .25s cubic-bezier(.25,.8,.25,1),
+    box-shadow .25s cubic-bezier(.25,.8,.25,1);
+}
+
+/* ตอนกด */
+.booking-card:active{
+  transform: scale(.98);
+}
+
+/* detail (ซ่อน) */
+.card-detail{
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(-6px);
+  max-height: 0;
+
+  transition:
+    opacity .25s ease,
+    transform .25s ease,
+    max-height .35s cubic-bezier(.25,.8,.25,1);
+}
+
+/* detail (เปิด) */
+.booking-card.expanded .card-detail{
+  opacity: 1;
+  transform: translateY(0);
+  max-height: 200px; /* เผื่อ content */
+}
+
+/* เพิ่ม feel ตอนขยาย */
+.booking-card.expanded{
+  box-shadow:
+    0 20px 50px rgba(0,0,0,.55),
+    inset 0 0 0 1px rgba(255,255,255,.06);
+}
