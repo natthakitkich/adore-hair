@@ -542,3 +542,33 @@ body.modal-open {
 .modal .action-bar button:active {
   transform: scale(0.97);
 }
+/* ======================================================
+   STEP 9 — iOS CONFIRM POPUP
+====================================================== */
+
+.confirm-modal {
+  max-width: 320px;
+  text-align: center;
+}
+
+.confirm-modal h3 {
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+}
+
+.confirm-modal p {
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.confirm-actions button {
+  flex: 1;
+  min-height: 44px;
+  font-weight: 600;
+}
