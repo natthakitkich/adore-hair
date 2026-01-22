@@ -286,7 +286,10 @@ function renderTable() {
       <div class="card-sub">${b.name} · ${b.service || ''}</div>
 
       <div class="card-detail">
-        <div class="card-sub">โทร: ${b.phone || '-'}</div>
+      ${phone
+  ? `<a class="phone phone-link" href="tel:${phone}">โทร: ${phone}</a>`
+  : `<span class="phone muted">โทร: -</span>`
+}
         ${b.note ? `<div class="card-sub">หมายเหตุ: ${b.note}</div>` : ''}
         <div class="card-actions">
           <button class="ghost manage-btn">จัดการ</button>
@@ -319,6 +322,14 @@ function openEditModal(b) {
   editDate.value = b.date;
   editName.value = b.name;
   editPhone.value = b.phone || '';
+const callBtn = document.getElementById('callPhoneBtn');
+
+if (b.phone) {
+  callBtn.href = `tel:${b.phone}`;
+  callBtn.style.display = 'inline-block';
+} else {
+  callBtn.style.display = 'none';
+}
   editService.value = b.service || '';
   editNote.value = b.note || '';
 
