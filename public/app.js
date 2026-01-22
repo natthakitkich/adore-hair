@@ -224,23 +224,40 @@ function renderSummary() {
 }
 
 /* =========================
-   TABLE
+   TABLE (DESKTOP + MOBILE)
 ========================= */
 function renderTable() {
   listEl.innerHTML = '';
 
   bookings.forEach(b => {
     const tr = document.createElement('tr');
+
     tr.innerHTML = `
-      <td>${b.time.slice(0, 5)}</td>
-      <td><span class="badge ${b.stylist}">${b.stylist}</span></td>
-      <td>${b.gender === 'male' ? '👨' : '👩'}</td>
-      <td>${b.name}</td>
-      <td>${b.service || ''}</td>
-      <td>${b.phone || ''}</td>
-      <td><button class="ghost">จัดการ</button></td>
+      <td class="mobile-main">
+        <span>
+          ${b.time.slice(0,5)} · ${b.stylist} · ${b.gender === 'male' ? '👨' : '👩'}
+        </span>
+        <button class="ghost toggle-detail">ดู</button>
+      </td>
+
+      <td class="mobile-sub">
+        ${b.name} · ${b.service || ''}
+      </td>
+
+      <td class="mobile-detail hidden">
+        <div class="mobile-sub">โทร: ${b.phone || '-'}</div>
+        <div class="mobile-actions">
+          <button class="ghost manage-btn">จัดการ</button>
+        </div>
+      </td>
     `;
-    tr.querySelector('button').onclick = () => openEditModal(b);
+
+    tr.querySelector('.toggle-detail').onclick = () => {
+      tr.querySelector('.mobile-detail').classList.toggle('hidden');
+    };
+
+    tr.querySelector('.manage-btn').onclick = () => openEditModal(b);
+
     listEl.appendChild(tr);
   });
 }
