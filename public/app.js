@@ -267,7 +267,7 @@ function renderTable() {
         ${b.name} · ${b.service || ''}
       </div>
 
-      <div class="card-detail hidden">
+      <div class="card-detail">
         <div class="card-sub">โทร: ${b.phone || '-'}</div>
         ${b.note ? `<div class="card-sub">หมายเหตุ: ${b.note}</div>` : ''}
         <div class="card-actions">
@@ -277,8 +277,9 @@ function renderTable() {
     `;
 
     card.querySelector('.toggle-detail').onclick = () => {
-      card.querySelector('.card-detail').classList.toggle('hidden');
-    };
+  card.classList.toggle('expanded');
+};
+
 
     card.querySelector('.manage-btn').onclick = () => openEditModal(b);
 
