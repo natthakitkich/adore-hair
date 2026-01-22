@@ -1,14 +1,5 @@
-/* =========================================================
-   ADORE HAIR — OWNER QUEUE
-   FILE A : FINAL / STABLE / IOS SAFE
-   ========================================================= */
-
-/* =========================
-   CONFIG
-========================= */
 const API = '';
 const OWNER_PIN = '1234';
-const TIMEZONE = 'Asia/Bangkok';
 
 /* =========================
    ELEMENTS
@@ -27,25 +18,12 @@ const nextMonthBtn = document.getElementById('nextMonth');
 const timeSelect = document.getElementById('time');
 const listEl = document.getElementById('list');
 
-/* SUMMARY */
-const countBank = document.getElementById('countBank');
-const countSindy = document.getElementById('countSindy');
-const countAssist = document.getElementById('countAssist');
-const countTotal = document.getElementById('countTotal');
-
-/* EDIT MODAL */
-const editModal = document.getElementById('editModal');
-const editName = document.getElementById('editName');
-const editPhone = document.getElementById('editPhone');
-const editNote = document.getElementById('editNote');
-const editSaveBtn = document.getElementById('editSave');
-const editCloseBtn = document.getElementById('editClose');
-
 /* =========================
    STATE
 ========================= */
 let bookings = [];
 let calendarDensity = {};
+
 let selectedStylist = 'Bank';
 let selectedDate = getTodayTH();
 
@@ -53,16 +31,6 @@ let viewMonth = new Date(selectedDate).getMonth();
 let viewYear = new Date(selectedDate).getFullYear();
 
 let editingBooking = null;
-
-/* =========================
-   AUDIO STATE (IOS SAFE)
-========================= */
-let audioUnlocked = false;
-let announcedQueueIds = new Set();
-let audioCtx = null;
-
-let preferredThaiVoice = null;
-let preferredEnglishVoice = null;
 
 /* =========================
    LOGIN
@@ -75,6 +43,7 @@ loginBtn.onclick = () => {
     loginMsg.textContent = 'กรุณาใส่ PIN 4 หลัก';
     return;
   }
+
   if (pin !== OWNER_PIN) {
     loginMsg.textContent = 'รหัสผ่านไม่ถูกต้อง';
     return;
@@ -85,13 +54,16 @@ loginBtn.onclick = () => {
   init();
 };
 
+pinInput.addEventListener('input', () => {
+  pinInput.value = pinInput.value.replace(/\D/g, '');
+});
+
 logoutBtn.onclick = () => {
   localStorage.removeItem('adore_logged_in');
   location.reload();
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-  audioUnlocked = false;
   if (localStorage.getItem('adore_logged_in') === '1') {
     loginOverlay.classList.add('hidden');
     init();
@@ -105,13 +77,6 @@ function init() {
   bindStylistTabs();
   loadCalendar();
   loadBookings();
-}
-
-/* =========================
-   DATE UTIL (FIX TIMEZONE)
-========================= */
-function getTodayTH() {
-  return new Date().toLocaleDateString('sv-SE', { timeZone: TIMEZONE });
 }
 
 /* =========================
@@ -184,8 +149,39 @@ nextMonthBtn.onclick = () => {
 async function loadBookings() {
   const res = await fetch(`${API}/bookings?date=${selectedDate}`);
   bookings = await res.json();
+
   renderSummary();
+  renderTimeOptions();
   renderTable();
+}
+
+function bindStylistTabs() {
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.onclick = () => {
+      document.querySelector('.tab.active').classList.remove('active');
+      tab.classList.add('active');
+      selectedStylist = tab.dataset.tab;
+      renderTimeOptions();
+    };
+  });
+}
+
+function renderTimeOptions() {
+  timeSelect.innerHTML = '';
+
+  for (let h = 13; h <= 22; h++) {
+    const time = `${String(h).padStart(2, '0')}:00:00`;
+    const booked = bookings.find(
+      b => b.time === time && b.stylist === selectedStylist
+    );
+
+    const opt = document.createElement('option');
+    opt.value = time;
+    opt.textContent = time.slice(0, 5);
+    if (booked) opt.disabled = true;
+
+    timeSelect.appendChild(opt);
+  }
 }
 
 /* =========================
@@ -196,10 +192,10 @@ function renderSummary() {
   const sindy = bookings.filter(b => b.stylist === 'Sindy').length;
   const assist = bookings.filter(b => b.stylist === 'Assist').length;
 
-  countBank.textContent = bank;
-  countSindy.textContent = sindy;
-  countAssist.textContent = assist;
-  countTotal.textContent = bank + sindy + assist;
+  document.getElementById('countBank').textContent = bank;
+  document.getElementById('countSindy').textContent = sindy;
+  document.getElementById('countAssist').textContent = assist;
+  document.getElementById('countTotal').textContent = bank + sindy + assist;
 }
 
 /* =========================
@@ -211,6 +207,10 @@ function renderTable() {
   bookings.forEach(b => {
     const card = document.createElement('div');
     card.className = 'booking-card';
+
+    const phoneHtml = b.phone
+      ? `<a href="tel:${b.phone}" class="phone-link">${b.phone}</a>`
+      : '-';
 
     card.innerHTML = `
       <div class="card-main">
@@ -225,9 +225,11 @@ function renderTable() {
       <div class="card-sub">${b.name} · ${b.service || ''}</div>
 
       <div class="card-detail">
-        <div class="card-sub">โทร: ${b.phone || '-'}</div>
+        <div class="card-sub">โทร: ${phoneHtml}</div>
         ${b.note ? `<div class="card-sub">หมายเหตุ: ${b.note}</div>` : ''}
-        <button class="ghost manage-btn">จัดการ</button>
+        <div class="card-actions">
+          <button class="ghost manage-btn">จัดการ</button>
+        </div>
       </div>
     `;
 
@@ -250,118 +252,46 @@ function renderTable() {
 /* =========================
    EDIT MODAL
 ========================= */
-function openEditModal(b) {
-  editingBooking = b;
-  editName.value = b.name || '';
-  editPhone.value = b.phone || '';
-  editNote.value = b.note || '';
-  editModal.classList.add('show');
+function openEditModal(booking) {
+  editingBooking = booking;
+
+  const modal = document.getElementById('editModal');
+  modal.classList.add('show');
+
+  document.getElementById('editName').value = booking.name || '';
+  document.getElementById('editPhone').value = booking.phone || '';
+  document.getElementById('editNote').value = booking.note || '';
 }
 
-editCloseBtn.onclick = () => {
-  editModal.classList.remove('show');
-};
-
-editSaveBtn.onclick = async () => {
+document.getElementById('editSave').onclick = async () => {
   if (!editingBooking) return;
 
   await fetch(`${API}/bookings/${editingBooking.id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      name: editName.value,
-      phone: editPhone.value,
-      note: editNote.value
+      name: document.getElementById('editName').value,
+      phone: document.getElementById('editPhone').value,
+      note: document.getElementById('editNote').value
     })
   });
 
-  editModal.classList.remove('show');
+  closeEditModal();
   loadBookings();
 };
 
-/* =========================
-   VOICE SYSTEM (SAFE)
-========================= */
-function prepareVoices() {
-  const voices = speechSynthesis.getVoices();
-  preferredThaiVoice = voices.find(v => v.lang === 'th-TH') || null;
-  preferredEnglishVoice = voices.find(v => v.lang.startsWith('en')) || null;
-}
-speechSynthesis.onvoiceschanged = prepareVoices;
+document.getElementById('editClose').onclick = closeEditModal;
 
-function unlockAudioOnce() {
-  if (audioUnlocked) return;
-  audioUnlocked = true;
-
-  prepareVoices();
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-  speakSystem('สวัสดีค่ะ ระบบแจ้งเตือนคิวพร้อมใช้งานแล้ว กรุณาเปิดหน้าเว็บทิ้งไว้');
-}
-
-document.addEventListener('touchstart', unlockAudioOnce, { once: true });
-document.addEventListener('click', unlockAudioOnce, { once: true });
-
-function speakSystem(text) {
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = 'th-TH';
-  u.voice = preferredThaiVoice;
-  u.rate = 1.2;
-  speechSynthesis.speak(u);
-}
-
-function playDing() {
-  if (!audioCtx) return;
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  osc.type = 'triangle';
-  osc.frequency.value = 1200;
-  gain.gain.value = 0.8;
-  osc.connect(gain);
-  gain.connect(audioCtx.destination);
-  osc.start();
-  osc.stop(audioCtx.currentTime + 0.4);
-}
-
-function speakQueue(name, stylist) {
-  playDing();
-
-  const a = new SpeechSynthesisUtterance(
-    `แจ้งเตือนค่ะ อีกประมาณ สิบ นาที จะถึงคิวของคุณ ${name}`
-  );
-  a.lang = 'th-TH';
-  a.voice = preferredThaiVoice;
-  a.rate = 0.95;
-
-  const by = new SpeechSynthesisUtterance('โดยช่าง');
-  by.lang = 'th-TH';
-  by.voice = preferredThaiVoice;
-
-  const b = new SpeechSynthesisUtterance(stylist);
-  b.lang = 'en-US';
-  b.voice = preferredEnglishVoice;
-
-  speechSynthesis.speak(a);
-  setTimeout(() => speechSynthesis.speak(by), 1500);
-  setTimeout(() => speechSynthesis.speak(b), 1900);
+function closeEditModal() {
+  document.getElementById('editModal').classList.remove('show');
+  editingBooking = null;
 }
 
 /* =========================
-   QUEUE CHECK
+   UTIL
 ========================= */
-function checkUpcomingQueues() {
-  if (!audioUnlocked) return;
-  const now = new Date();
-
-  bookings.forEach(b => {
-    const t = new Date(`${b.date}T${b.time}`);
-    const diff = (t - now) / 60000;
-
-    if (diff > 0 && diff <= 10 && !announcedQueueIds.has(b.id)) {
-      speakQueue(b.name, b.stylist);
-      announcedQueueIds.add(b.id);
-    }
+function getTodayTH() {
+  return new Date().toLocaleDateString('sv-SE', {
+    timeZone: 'Asia/Bangkok'
   });
 }
-
-setInterval(checkUpcomingQueues, 60000);
