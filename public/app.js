@@ -27,10 +27,13 @@ const editNote = document.getElementById('editNote');
 ========================= */
 let bookings = [];
 let calendarDensity = {};
+
 let selectedStylist = 'Bank';
 let selectedDate = getTodayTH();
+
 let viewMonth = new Date(selectedDate).getMonth();
 let viewYear = new Date(selectedDate).getFullYear();
+
 let calendarDirection = 'none';
 
 /* =========================
@@ -45,12 +48,19 @@ loginBtn.onclick = () => {
   const pin = pinInput.value.trim();
   loginMsg.textContent = '';
 
-  if (pin.length !== 4) return loginMsg.textContent = 'กรุณาใส่ PIN 4 หลัก';
-  if (pin !== OWNER_PIN) return loginMsg.textContent = 'รหัสผ่านไม่ถูกต้อง';
+  if (pin.length !== 4) {
+    loginMsg.textContent = 'กรุณาใส่ PIN 4 หลัก';
+    return;
+  }
+  if (pin !== OWNER_PIN) {
+    loginMsg.textContent = 'รหัสผ่านไม่ถูกต้อง';
+    return;
+  }
 
   localStorage.setItem('adore_logged_in', '1');
   loginOverlay.classList.add('hidden');
   init();
+
   speak('ระบบแจ้งเตือนคิวพร้อมใช้งาน');
 };
 
@@ -77,7 +87,6 @@ function init() {
   bindStylistTabs();
   loadCalendar();
   loadBookings();
-  setInterval(checkUpcomingQueues, 60000);
 }
 
 /* =========================
@@ -100,9 +109,7 @@ function renderCalendar() {
     firstDay.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' });
 
   for (let i = 0; i < startDay; i++) {
-    const empty = document.createElement('div');
-    empty.className = 'day empty';
-    calendarDaysEl.appendChild(empty);
+    calendarDaysEl.appendChild(document.createElement('div'));
   }
 
   for (let d = 1; d <= daysInMonth; d++) {
@@ -129,29 +136,30 @@ function renderCalendar() {
 }
 
 /* =========================
-   CALENDAR MOTION
+   CALENDAR ANIMATION
 ========================= */
 function animateCalendar(updateFn) {
-  const el = calendarDaysEl;
-
-  el.classList.remove('calendar-enter');
-  el.classList.add(calendarDirection === 'next'
-    ? 'calendar-exit-left'
-    : 'calendar-exit-right'
+  calendarDaysEl.classList.add(
+    calendarDirection === 'next'
+      ? 'calendar-exit-left'
+      : 'calendar-exit-right'
   );
 
   setTimeout(() => {
-    el.classList.remove('calendar-exit-left', 'calendar-exit-right');
+    calendarDaysEl.className = '';
     updateFn();
-    requestAnimationFrame(() => el.classList.add('calendar-enter'));
-  }, 220);
+    calendarDaysEl.classList.add('calendar-enter');
+  }, 200);
 }
 
 prevMonthBtn.onclick = () => {
   calendarDirection = 'prev';
   animateCalendar(() => {
     viewMonth--;
-    if (viewMonth < 0) { viewMonth = 11; viewYear--; }
+    if (viewMonth < 0) {
+      viewMonth = 11;
+      viewYear--;
+    }
     renderCalendar();
   });
 };
@@ -160,7 +168,10 @@ nextMonthBtn.onclick = () => {
   calendarDirection = 'next';
   animateCalendar(() => {
     viewMonth++;
-    if (viewMonth > 11) { viewMonth = 0; viewYear++; }
+    if (viewMonth > 11) {
+      viewMonth = 0;
+      viewYear++;
+    }
     renderCalendar();
   });
 };
@@ -171,6 +182,7 @@ nextMonthBtn.onclick = () => {
 async function loadBookings() {
   const res = await fetch(`${API}/bookings?date=${selectedDate}`);
   bookings = await res.json();
+
   renderSummary();
   renderTimeOptions();
   renderTable();
@@ -191,14 +203,15 @@ function speak(text) {
 function checkUpcomingQueues() {
   const now = new Date();
   bookings.forEach(b => {
-    const queueTime = new Date(`${b.date}T${b.time}`);
-    const diff = (queueTime - now) / 60000;
+    const t = new Date(`${b.date}T${b.time}`);
+    const diff = (t - now) / 60000;
     if (diff > 0 && diff <= 10 && !announcedQueueIds.has(b.id)) {
       speak(`อีกสิบ นาที ถึงคิว ${b.name} ช่าง ${b.stylist}`);
       announcedQueueIds.add(b.id);
     }
   });
 }
+setInterval(checkUpcomingQueues, 60000);
 
 /* =========================
    SUMMARY
@@ -212,6 +225,35 @@ function renderSummary() {
   document.getElementById('countSindy').textContent = sindy;
   document.getElementById('countAssist').textContent = assist;
   document.getElementById('countTotal').textContent = bank + sindy + assist;
+}
+
+/* =========================
+   TIME OPTIONS
+========================= */
+function bindStylistTabs() {
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.onclick = () => {
+      document.querySelector('.tab.active').classList.remove('active');
+      tab.classList.add('active');
+      selectedStylist = tab.dataset.tab;
+      renderTimeOptions();
+    };
+  });
+}
+
+function renderTimeOptions() {
+  timeSelect.innerHTML = '';
+  for (let h = 13; h <= 22; h++) {
+    const time = `${String(h).padStart(2, '0')}:00:00`;
+    const booked = bookings.find(
+      b => b.time === time && b.stylist === selectedStylist
+    );
+    const opt = document.createElement('option');
+    opt.value = time;
+    opt.textContent = time.slice(0, 5);
+    if (booked) opt.disabled = true;
+    timeSelect.appendChild(opt);
+  }
 }
 
 /* =========================
@@ -247,5 +289,7 @@ function renderTable() {
    UTIL
 ========================= */
 function getTodayTH() {
-  return new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
+  return new Date().toLocaleDateString('sv-SE', {
+    timeZone: 'Asia/Bangkok'
+  });
 }
