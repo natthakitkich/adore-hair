@@ -1,47 +1,54 @@
 /* ======================================================
-   LIQUID GLASS DESIGN SYSTEM (iOS 26–LIKE)
-   SAFE MODE — NO LOGIC / NO LAYOUT IMPACT
+   LIQUID GLASS PRO SYSTEM (iOS 26–LIKE)
+   ZERO LOGIC / ZERO LAYOUT IMPACT
 ====================================================== */
 
 /* ======================================================
-   STEP 1 — DESIGN TOKENS (PHYSICAL GLASS)
+   STEP 1 — PHYSICAL GLASS TOKENS
 ====================================================== */
 :root {
-  /* Glass material */
-  --glass-bg: rgba(255, 255, 255, 0.10);
-  --glass-bg-strong: rgba(255, 255, 255, 0.18);
-  --glass-border: rgba(255, 255, 255, 0.28);
+  /* Glass base */
+  --glass-bg: rgba(255, 255, 255, 0.12);
+  --glass-bg-strong: rgba(255, 255, 255, 0.22);
+  --glass-border: rgba(255, 255, 255, 0.35);
 
-  /* Optical */
-  --glass-blur: 32px;
-  --glass-saturate: 180%;
+  /* Optical physics */
+  --glass-blur: 38px;
+  --glass-saturate: 185%;
 
   /* Radius */
-  --glass-radius-lg: 28px;
-  --glass-radius-md: 22px;
-  --glass-radius-sm: 16px;
+  --radius-lg: 30px;
+  --radius-md: 22px;
+  --radius-sm: 16px;
 
-  /* Shadow (depth) */
-  --glass-shadow:
-    0 24px 48px rgba(0, 0, 0, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  /* Depth */
+  --shadow-main:
+    0 30px 60px rgba(0,0,0,0.38),
+    inset 0 1px 0 rgba(255,255,255,0.4);
 
-  --glass-shadow-soft:
-    0 12px 28px rgba(0, 0, 0, 0.25),
-    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  --shadow-soft:
+    0 14px 32px rgba(0,0,0,0.28),
+    inset 0 1px 0 rgba(255,255,255,0.28);
 
-  /* Glow */
-  --glow-active:
-    0 0 0 1px rgba(120, 200, 255, 0.35),
-    0 0 24px rgba(120, 200, 255, 0.55);
+  /* Highlight & glow */
+  --highlight:
+    linear-gradient(
+      120deg,
+      rgba(255,255,255,0.75),
+      rgba(255,255,255,0.18) 40%,
+      rgba(255,255,255,0.02)
+    );
+
+  --glow-focus:
+    0 0 0 1px rgba(140,220,255,0.4),
+    0 0 30px rgba(140,220,255,0.6);
 
   /* Motion */
   --ease-ios: cubic-bezier(0.22, 0.61, 0.36, 1);
-  --glass-transition: all 0.3s var(--ease-ios);
 }
 
 /* ======================================================
-   SAFETY BASE — iOS / Safari
+   SAFETY BASE — iOS / SAFARI
 ====================================================== */
 * {
   -webkit-tap-highlight-color: transparent;
@@ -52,7 +59,7 @@ body {
 }
 
 /* ======================================================
-   STEP 2 — GLASS SURFACE (REAL GLASS)
+   STEP 2 — GLASS SURFACES (REAL LAYERS)
 ====================================================== */
 .booking-card,
 .panel,
@@ -64,32 +71,32 @@ body {
   background:
     linear-gradient(
       180deg,
-      rgba(255,255,255,0.22),
-      rgba(255,255,255,0.06)
+      rgba(255,255,255,0.28),
+      rgba(255,255,255,0.08)
     );
   backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   border: 1px solid var(--glass-border);
-  border-radius: var(--glass-radius-md);
-  box-shadow: var(--glass-shadow);
-  transition: var(--glass-transition);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-main);
   overflow: hidden;
+  transition: transform .25s var(--ease-ios), box-shadow .25s var(--ease-ios);
 }
 
-/* stronger surface (modal / popup) */
+/* Modal stronger depth */
 .modal,
 .popup {
   background:
     linear-gradient(
       180deg,
-      rgba(255,255,255,0.28),
-      rgba(255,255,255,0.10)
+      rgba(255,255,255,0.38),
+      rgba(255,255,255,0.14)
     );
-  border-radius: var(--glass-radius-lg);
+  border-radius: var(--radius-lg);
 }
 
 /* ======================================================
-   STEP 3 — LIGHT REFRACTION (KEY DIFFERENCE)
+   STEP 3 — REFRACTION + SPECULAR LIGHT
 ====================================================== */
 .booking-card::before,
 .panel::before,
@@ -99,15 +106,22 @@ body {
   content: "";
   position: absolute;
   inset: 0;
-  border-radius: inherit;
-  background:
-    linear-gradient(
-      120deg,
-      rgba(255,255,255,0.55),
-      rgba(255,255,255,0.12) 40%,
-      rgba(255,255,255,0.04)
-    );
-  opacity: 0.65;
+  background: var(--highlight);
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* Micro noise (glass texture) */
+.booking-card::after,
+.panel::after,
+.card::after,
+.modal::after,
+.popup::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='.035'/%3E%3C/svg%3E");
+  opacity: 0.25;
   pointer-events: none;
 }
 
@@ -116,8 +130,6 @@ body {
 ====================================================== */
 button,
 .btn,
-.primary,
-.ghost,
 .manage-btn,
 input,
 select,
@@ -125,32 +137,32 @@ textarea {
   background:
     linear-gradient(
       180deg,
-      rgba(255,255,255,0.22),
-      rgba(255,255,255,0.08)
+      rgba(255,255,255,0.32),
+      rgba(255,255,255,0.10)
     );
-  backdrop-filter: blur(24px) saturate(160%);
-  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
   border: 1px solid var(--glass-border);
-  border-radius: var(--glass-radius-sm);
-  box-shadow: var(--glass-shadow-soft);
-  transition: var(--glass-transition);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-soft);
+  transition: transform .18s var(--ease-ios), box-shadow .18s var(--ease-ios);
 }
 
 input:focus,
 select:focus,
 textarea:focus {
   outline: none;
-  box-shadow: var(--glow-active);
+  box-shadow: var(--glow-focus);
 }
 
 /* ======================================================
-   STEP 5 — MICRO INTERACTION (iOS FEEL)
+   STEP 5 — INTERACTION (iOS FEEL)
 ====================================================== */
 .booking-card:active,
 button:active,
 .manage-btn:active {
-  transform: scale(0.97);
-  box-shadow: var(--glass-shadow-soft);
+  transform: scale(0.965);
+  box-shadow: var(--shadow-soft);
 }
 
 .day:active {
@@ -162,13 +174,13 @@ button:active,
 ====================================================== */
 .modal,
 .popup {
-  animation: modalFloat 0.28s var(--ease-ios);
+  animation: glassFloat .32s var(--ease-ios);
 }
 
-@keyframes modalFloat {
+@keyframes glassFloat {
   from {
     opacity: 0;
-    transform: translateY(14px) scale(0.96);
+    transform: translateY(16px) scale(0.94);
   }
   to {
     opacity: 1;
@@ -177,7 +189,7 @@ button:active,
 }
 
 /* ======================================================
-   ACCESSIBILITY — REDUCE MOTION
+   ACCESSIBILITY
 ====================================================== */
 @media (prefers-reduced-motion: reduce) {
   * {
@@ -185,7 +197,3 @@ button:active,
     transition: none !important;
   }
 }
-
-/* ======================================================
-   END — LIQUID GLASS (MAX WEB QUALITY)
-====================================================== */
