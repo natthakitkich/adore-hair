@@ -630,3 +630,23 @@ body.modal-open {
   min-height: 44px;
   font-weight: 600;
 }
+/* ===============================
+   BOOKING CARD COLLAPSE LOGIC
+   (FIX — SAFE, NO JS CHANGE)
+================================ */
+
+/* ซ่อนข้อมูลรองทั้งหมดก่อน */
+.booking-card .card-sub,
+.booking-card .phone-call,
+.booking-card .phone,
+.booking-card .card-actions {
+  display: none;
+}
+
+/* แสดงเมื่อการ์ดถูก expand */
+.booking-card.expanded .card-sub,
+.booking-card.expanded .phone-call,
+.booking-card.expanded .phone,
+.booking-card.expanded .card-actions {
+  display: block;
+}
