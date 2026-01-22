@@ -43,6 +43,9 @@ let announcedQueueIds = new Set();
 /* =========================
    LOGIN
 ========================= */
+/* =========================
+   LOGIN (FIXED + iOS SAFE)
+========================= */
 loginBtn.onclick = () => {
   const pin = pinInput.value.trim();
   loginMsg.textContent = '';
@@ -57,13 +60,16 @@ loginBtn.onclick = () => {
     return;
   }
 
+  // ✅ บันทึกสถานะ
   localStorage.setItem('adore_logged_in', '1');
   loginOverlay.classList.add('hidden');
   init();
 
-
-  );
+  // 🔊 สำคัญมาก: ต้องเรียก "ภายใน click event"
+  // Safari / iOS ถึงจะอนุญาตให้พูด
+  speakLoginReady();
 };
+
 
 pinInput.addEventListener('input', () => {
   pinInput.value = pinInput.value.replace(/\D/g, '');
