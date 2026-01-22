@@ -21,18 +21,8 @@
       <h2>เข้าสู่ระบบ</h2>
       <p class="muted">กรุณาใส่ PIN 4 หลัก</p>
 
-      <input
-        id="pin"
-        type="password"
-        inputmode="numeric"
-        maxlength="4"
-        placeholder="••••"
-      />
-
-      <button id="loginBtn" class="primary" type="button">
-        Login
-      </button>
-
+      <input id="pin" type="password" inputmode="numeric" maxlength="4" placeholder="••••" />
+      <button id="loginBtn" class="primary" type="button">Login</button>
       <div id="loginMsg" class="msg err"></div>
     </div>
   </div>
@@ -54,17 +44,12 @@
       <input id="editPhone" placeholder="เบอร์โทร" />
 
       <div class="row">
-        <label>
-          <input type="radio" name="editGender" value="male" /> 👨 ชาย
-        </label>
-        <label>
-          <input type="radio" name="editGender" value="female" /> 👩 หญิง
-        </label>
+        <label><input type="radio" name="editGender" value="male" /> 👨 ชาย</label>
+        <label><input type="radio" name="editGender" value="female" /> 👩 หญิง</label>
       </div>
 
       <input id="editService" placeholder="ทำอะไร" />
 
-      <!-- ✅ NEW: NOTE -->
       <textarea id="editNote" placeholder="หมายเหตุเพิ่มเติม" rows="3"></textarea>
 
       <button id="saveEdit" class="primary">บันทึกการเปลี่ยนคิว</button>
@@ -85,12 +70,9 @@
     </div>
     <div>
       <div class="title">Adore hair studio</div>
-      <div class="subtitle">
-        Owner Queue · 13:00–22:00 · แยกตามช่าง
-      </div>
+      <div class="subtitle">Owner Queue · 13:00–22:00 · แยกตามช่าง</div>
     </div>
   </div>
-
   <button id="logoutBtn" class="ghost">Logout</button>
 </div>
 
@@ -117,9 +99,9 @@
     </div>
 
     <div class="calendarLegend">
-      <span class="dot low"></span> คิวน้อย
-      <span class="dot mid"></span> ปานกลาง
-      <span class="dot high"></span> หนาแน่น
+      <div class="legend-item"><span class="dot low"></span>คิวน้อย</div>
+      <div class="legend-item"><span class="dot mid"></span>ปานกลาง</div>
+      <div class="legend-item"><span class="dot high"></span>หนาแน่น</div>
     </div>
   </section>
 
@@ -170,7 +152,6 @@
         <input id="service" />
       </div>
 
-      <!-- ✅ NEW: NOTE -->
       <div class="full">
         <label>หมายเหตุ</label>
         <textarea id="note" rows="3"></textarea>
