@@ -36,10 +36,7 @@ let viewMonth = new Date(selectedDate).getMonth();
 let viewYear = new Date(selectedDate).getFullYear();
 
 /* =========================
-   VOICE STATE
-========================= */
-/* =========================
-   AUDIO UNLOCK STATE (Safari / iOS)
+   AUDIO / VOICE STATE
 ========================= */
 let audioUnlocked = false;
 let announcedQueueIds = new Set();
@@ -65,9 +62,7 @@ loginBtn.onclick = () => {
   loginOverlay.classList.add('hidden');
   init();
 
-  // ❗ [VOICE FIX]
-  // ไม่เรียกเสียงตรงนี้ (Safari จะ block)
-  // ให้ไปพูดตอน user แตะจอครั้งแรกแทน
+  // ❌ ไม่เรียกเสียงตรงนี้ (Safari จะ block)
 };
 
 pinInput.addEventListener('input', () => {
@@ -80,7 +75,6 @@ logoutBtn.onclick = () => {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-  // ✅ [VOICE FIX] reset ทุกครั้งที่โหลดหน้า
   audioUnlocked = false;
 
   if (localStorage.getItem('adore_logged_in') === '1') {
@@ -144,24 +138,6 @@ function renderCalendar() {
   }
 }
 
-prevMonthBtn.onclick = () => {
-  viewMonth--;
-  if (viewMonth < 0) {
-    viewMonth = 11;
-    viewYear--;
-  }
-  renderCalendar();
-};
-
-nextMonthBtn.onclick = () => {
-  viewMonth++;
-  if (viewMonth > 11) {
-    viewMonth = 0;
-    viewYear++;
-  }
-  renderCalendar();
-};
-
 /* =========================
    BOOKINGS
 ========================= */
@@ -174,49 +150,6 @@ async function loadBookings() {
   renderTable();
 }
 
-function bindStylistTabs() {
-  document.querySelectorAll('.tab').forEach(tab => {
-    tab.onclick = () => {
-      document.querySelector('.tab.active').classList.remove('active');
-      tab.classList.add('active');
-      selectedStylist = tab.dataset.tab;
-      renderTimeOptions();
-    };
-  });
-}
-
-function renderTimeOptions() {
-  timeSelect.innerHTML = '';
-
-  for (let h = 13; h <= 22; h++) {
-    const time = `${String(h).padStart(2, '0')}:00:00`;
-    const booked = bookings.find(
-      b => b.time === time && b.stylist === selectedStylist
-    );
-
-    const opt = document.createElement('option');
-    opt.value = time;
-    opt.textContent = time.slice(0, 5);
-    if (booked) opt.disabled = true;
-
-    timeSelect.appendChild(opt);
-  }
-}
-
-/* =========================
-   SUMMARY
-========================= */
-function renderSummary() {
-  const bank = bookings.filter(b => b.stylist === 'Bank').length;
-  const sindy = bookings.filter(b => b.stylist === 'Sindy').length;
-  const assist = bookings.filter(b => b.stylist === 'Assist').length;
-
-  document.getElementById('countBank').textContent = bank;
-  document.getElementById('countSindy').textContent = sindy;
-  document.getElementById('countAssist').textContent = assist;
-  document.getElementById('countTotal').textContent = bank + sindy + assist;
-}
-
 /* =========================
    TABLE
 ========================= */
@@ -226,10 +159,6 @@ function renderTable() {
   bookings.forEach(b => {
     const card = document.createElement('div');
     card.className = 'booking-card';
-
-    const phoneHtml = b.phone
-      ? `<a href="tel:${b.phone}" class="phone-link">${b.phone}</a>`
-      : '-';
 
     card.innerHTML = `
       <div class="card-main">
@@ -244,74 +173,116 @@ function renderTable() {
       <div class="card-sub">${b.name} · ${b.service || ''}</div>
 
       <div class="card-detail">
-        <div class="card-sub">โทร: ${phoneHtml}</div>
+        <div class="card-sub">โทร: ${b.phone || '-'}</div>
         ${b.note ? `<div class="card-sub">หมายเหตุ: ${b.note}</div>` : ''}
-        <div class="card-actions">
-          <button class="ghost manage-btn">จัดการ</button>
-        </div>
       </div>
     `;
 
     card.onclick = () => card.classList.toggle('expanded');
-
     card.querySelector('.toggle-detail').onclick = e => {
       e.stopPropagation();
       card.classList.toggle('expanded');
-    };
-
-    card.querySelector('.manage-btn').onclick = e => {
-      e.stopPropagation();
-      openEditModal(b);
     };
 
     listEl.appendChild(card);
   });
 }
 
-/* =========================
-   🔊 VOICE — PREMIUM SAFARI SAFE
-   [VOICE FIX – เพิ่มอย่างเดียว ไม่ลบของเดิม]
-========================= */
+/* =========================================================
+   🔊 VOICE SYSTEM — 100% VERSION
+========================================================= */
 
 let preferredThaiVoice = null;
+let preferredEnglishVoice = null;
 
 function prepareVoices() {
   const voices = speechSynthesis.getVoices();
+
   preferredThaiVoice =
-    voices.find(v => v.lang === 'th-TH' && !v.name.toLowerCase().includes('siri')) ||
-    voices.find(v => v.lang === 'th-TH') ||
-    null;
+    voices.find(v => v.lang === 'th-TH' && !v.name.toLowerCase().includes('siri'))
+    || voices.find(v => v.lang === 'th-TH')
+    || null;
+
+  preferredEnglishVoice =
+    voices.find(v => v.lang.startsWith('en'))
+    || null;
 }
+
 speechSynthesis.onvoiceschanged = prepareVoices;
 
-function speakThai(text, opts = {}) {
-  if (!('speechSynthesis' in window)) return;
+/* =========================
+   SYSTEM VOICE
+========================= */
+function speakSystem(text) {
+  if (!audioUnlocked) return;
 
   const u = new SpeechSynthesisUtterance(text);
   u.lang = 'th-TH';
   u.voice = preferredThaiVoice;
-  u.rate = opts.rate ?? 1.15;
-  u.pitch = opts.pitch ?? 0.95;
-  u.volume = 1;
+  u.rate = 1.2;
+  u.pitch = 1.0;
 
+  speechSynthesis.cancel();
   speechSynthesis.speak(u);
 }
 
 /* =========================
-   🔓 AUDIO UNLOCK (Safari rule)
-   พูดครั้งแรกเมื่อ user แตะจอ
+   QUEUE VOICE
+========================= */
+function speakQueue(name, stylist) {
+  speechSynthesis.cancel();
+
+  const a = new SpeechSynthesisUtterance(
+    `ขอเรียนแจ้งเตือนค่ะ อีกประมาณ สิบ นาที จะถึงคิวของคุณ ${name}`
+  );
+  a.lang = 'th-TH';
+  a.voice = preferredThaiVoice;
+  a.rate = 0.95;
+
+  const b = new SpeechSynthesisUtterance(stylist);
+  b.lang = 'en-US';
+  b.voice = preferredEnglishVoice;
+  b.rate = 0.9;
+
+  speechSynthesis.speak(a);
+  setTimeout(() => speechSynthesis.speak(b), 1600);
+}
+
+/* =========================
+   AUDIO UNLOCK (Safari)
 ========================= */
 function unlockAudioOnce() {
   if (audioUnlocked) return;
   audioUnlocked = true;
 
-  speakThai(
+  speakSystem(
     'สวัสดีค่ะ ระบบแจ้งเตือนคิวพร้อมใช้งานแล้ว กรุณาเปิดหน้าเว็บทิ้งไว้หากต้องการให้มีการเรียกคิวอัตโนมัติ'
   );
 }
 
 document.addEventListener('touchstart', unlockAudioOnce, { once: true });
 document.addEventListener('click', unlockAudioOnce, { once: true });
+
+/* =========================
+   QUEUE CHECK
+========================= */
+function checkUpcomingQueues() {
+  if (!audioUnlocked) return;
+
+  const now = new Date();
+
+  bookings.forEach(b => {
+    const t = new Date(`${b.date}T${b.time}`);
+    const diff = (t - now) / 60000;
+
+    if (diff > 0 && diff <= 10 && !announcedQueueIds.has(b.id)) {
+      speakQueue(b.name, b.stylist);
+      announcedQueueIds.add(b.id);
+    }
+  });
+}
+
+setInterval(checkUpcomingQueues, 60000);
 
 /* =========================
    UTIL
