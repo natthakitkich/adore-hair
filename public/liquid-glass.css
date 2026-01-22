@@ -1,0 +1,221 @@
+/* ======================================================
+   LIQUID GLASS DESIGN SYSTEM (iOS-LIKE)
+   SAFE MODE — NO LOGIC / NO LAYOUT IMPACT
+====================================================== */
+
+/* ======================================================
+   STEP 1 — DESIGN TOKENS (FOUNDATION)
+====================================================== */
+:root {
+  /* Glass surface */
+  --glass-bg: rgba(255, 255, 255, 0.08);
+  --glass-bg-strong: rgba(255, 255, 255, 0.12);
+  --glass-border: rgba(255, 255, 255, 0.18);
+
+  /* Blur */
+  --glass-blur: 20px;
+
+  /* Radius */
+  --glass-radius-lg: 28px;
+  --glass-radius-md: 20px;
+  --glass-radius-sm: 14px;
+
+  /* Shadow */
+  --glass-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+
+  --glass-shadow-soft:
+    0 6px 18px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+
+  /* Glow */
+  --glow-active: 0 0 18px rgba(120, 200, 255, 0.45);
+
+  /* Motion */
+  --ease-ios: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-soft: cubic-bezier(0.25, 0.8, 0.25, 1);
+  --glass-transition: all 0.25s var(--ease-ios);
+}
+
+/* ======================================================
+   SAFETY BASE — iOS / Safari
+====================================================== */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background-attachment: fixed;
+}
+
+/* ======================================================
+   STEP 2 — GLASS SURFACE (CONTAINERS)
+====================================================== */
+
+/* main panels / cards */
+.booking-card,
+.panel,
+.section,
+.card,
+.modal,
+.popup {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius-md);
+  box-shadow: var(--glass-shadow);
+  transition: var(--glass-transition);
+}
+
+/* stronger surface (popup / modal) */
+.modal,
+.popup {
+  background: var(--glass-bg-strong);
+  border-radius: var(--glass-radius-lg);
+}
+
+/* ======================================================
+   STEP 3 — CONTROLS (BUTTON / INPUT)
+====================================================== */
+
+/* buttons */
+button,
+.btn,
+.primary,
+.ghost,
+.manage-btn {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius-sm);
+  box-shadow: var(--glass-shadow-soft);
+  transition:
+    transform 0.15s var(--ease-ios),
+    box-shadow 0.15s var(--ease-ios),
+    background 0.25s ease;
+}
+
+/* hover / focus */
+button:hover,
+.btn:hover {
+  box-shadow: var(--glass-shadow);
+}
+
+/* inputs */
+input,
+select,
+textarea {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius-sm);
+  transition: var(--glass-transition);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  box-shadow: var(--glow-active);
+}
+
+/* ======================================================
+   STEP 4 — MICRO INTERACTION (iOS FEEL)
+====================================================== */
+
+/* card tap */
+.booking-card {
+  transition:
+    transform 0.18s var(--ease-ios),
+    box-shadow 0.18s var(--ease-ios),
+    background 0.25s ease;
+}
+
+.booking-card:active {
+  transform: scale(0.985);
+}
+
+.booking-card.expanded {
+  animation: cardExpand 0.25s var(--ease-ios);
+}
+
+@keyframes cardExpand {
+  from {
+    transform: scale(0.98);
+    opacity: 0.85;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* button press (haptic-like) */
+button:active,
+.btn:active,
+.manage-btn:active {
+  transform: scale(0.94);
+  box-shadow: none;
+}
+
+/* calendar day tap */
+.day {
+  transition:
+    transform 0.15s var(--ease-ios),
+    box-shadow 0.2s ease;
+}
+
+.day:active {
+  transform: scale(0.9);
+}
+
+/* modal appear */
+.modal,
+.popup {
+  animation: modalFloat 0.28s var(--ease-ios);
+}
+
+@keyframes modalFloat {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* list fade */
+.booking-card {
+  animation: listFadeIn 0.25s ease;
+}
+
+@keyframes listFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ======================================================
+   ACCESSIBILITY — REDUCE MOTION
+====================================================== */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ======================================================
+   END — LIQUID GLASS SAFE STYLE
+====================================================== */
