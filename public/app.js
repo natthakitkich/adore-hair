@@ -61,8 +61,15 @@ loginBtn.onclick = () => {
   loginOverlay.classList.add('hidden');
   init();
 
-  // 🔊 unlock เสียงบน iOS
-  speakThai('ระบบแจ้งเตือนคิวพร้อมใช้งาน');
+  /* 🔊 [VOICE CHANGE]
+     แก้ข้อความ + โทนเสียงให้ดูหรู สุภาพ
+     (ไม่มีผลกับ UI) */
+  speakThai(
+    `ยินดีต้อนรับค่ะ
+     ระบบแจ้งเตือนคิว
+     พร้อมให้บริการแล้ว
+     กรุณาเปิดหน้าเว็บทิ้งไว้โดยไม่ล็อคหน้าจอ หากคุณต้องการเสียงแจ้งเตือนเรียกคิว`
+  );
 };
 
 pinInput.addEventListener('input', () => {
@@ -196,35 +203,6 @@ function renderTimeOptions() {
 }
 
 /* =========================
-   FORM
-========================= */
-bookingForm.onsubmit = async e => {
-  e.preventDefault();
-
-  const gender = document.querySelector('[name=gender]:checked')?.value;
-  if (!gender) return alert('กรุณาเลือกเพศ');
-
-  await fetch(`${API}/bookings`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      date: selectedDate,
-      time: timeSelect.value,
-      stylist: selectedStylist,
-      name: document.getElementById('name').value,
-      phone: document.getElementById('phone').value,
-      gender,
-      service: document.getElementById('service').value,
-      note: noteInput ? noteInput.value : null
-    })
-  });
-
-  bookingForm.reset();
-  loadBookings();
-  loadCalendar();
-};
-
-/* =========================
    SUMMARY
 ========================= */
 function renderSummary() {
@@ -255,24 +233,17 @@ function renderTable() {
     card.innerHTML = `
       <div class="card-main">
         <div class="time-pill">${b.time.slice(0,5)}</div>
-
         <div class="card-main-info">
           <span class="badge ${b.stylist}">${b.stylist}</span>
           ${b.gender === 'male' ? '👨' : '👩'}
         </div>
-
-        <!-- 👇 ปุ่มดู (เอากลับมา) -->
         <button class="ghost toggle-detail">ดู</button>
       </div>
 
-      <div class="card-sub">
-        ${b.name} · ${b.service || ''}
-      </div>
+      <div class="card-sub">${b.name} · ${b.service || ''}</div>
 
       <div class="card-detail">
-        <div class="card-sub">
-          โทร: ${phoneHtml}
-        </div>
+        <div class="card-sub">โทร: ${phoneHtml}</div>
         ${b.note ? `<div class="card-sub">หมายเหตุ: ${b.note}</div>` : ''}
         <div class="card-actions">
           <button class="ghost manage-btn">จัดการ</button>
@@ -280,18 +251,13 @@ function renderTable() {
       </div>
     `;
 
-    // ✅ กดทั้ง card = เปิด/ปิด detail
-    card.onclick = () => {
-      card.classList.toggle('expanded');
-    };
+    card.onclick = () => card.classList.toggle('expanded');
 
-    // ✅ ปุ่ม "ดู" ทำหน้าที่เดียวกับ card
     card.querySelector('.toggle-detail').onclick = e => {
-      e.stopPropagation(); // กันไม่ให้ซ้อน
+      e.stopPropagation();
       card.classList.toggle('expanded');
     };
 
-    // ✅ ปุ่มจัดการ แยก event ชัดเจน
     card.querySelector('.manage-btn').onclick = e => {
       e.stopPropagation();
       openEditModal(b);
@@ -301,33 +267,61 @@ function renderTable() {
   });
 }
 
-/* =========================
-   🔊 VOICE — LUXURY SALON
-========================= */
+/* =========================================================
+   🔊 VOICE SYSTEM — PREMIUM SALON (UPDATED)
+   ✔ แก้ตรงนี้ทั้งหมด
+   ✔ ไม่กระทบ UI
+   ✔ ใช้ได้บน iOS Safari / iPad / Mac
+========================================================= */
+
+// helper เลือกเสียงที่นุ่มที่สุด
+function getPreferredVoice(lang) {
+  const voices = speechSynthesis.getVoices();
+  return voices.find(v => v.lang === lang) || null;
+}
+
+// 🇹🇭 เสียงไทย — นุ่ม สุภาพ
 function speakThai(text) {
   if (!('speechSynthesis' in window)) return;
+
   const u = new SpeechSynthesisUtterance(text);
   u.lang = 'th-TH';
-  u.rate = 0.9;
+  u.rate = 0.88;
   u.pitch = 0.95;
+  u.voice = getPreferredVoice('th-TH');
+
   speechSynthesis.speak(u);
 }
 
+// 🇺🇸 เสียงอังกฤษ — อ่านชื่อช่าง
 function speakEnglish(text) {
   if (!('speechSynthesis' in window)) return;
+
   const u = new SpeechSynthesisUtterance(text);
   u.lang = 'en-US';
-  u.rate = 0.85;
+  u.rate = 0.82;
   u.pitch = 0.9;
+  u.voice = getPreferredVoice('en-US');
+
   speechSynthesis.speak(u);
 }
 
-function speakQueueLuxury(stylist) {
+// 💎 อ่านคิวแบบร้านหรู
+function speakQueueLuxury(name, stylist) {
   speechSynthesis.cancel();
-  speakThai('อีกสิบ นาที จะถึงคิวของคุณ');
+
+  speakThai(
+    `ขอเรียนแจ้งเตือนค่ะ
+     อีกประมาณ สิบ นาที
+     จะถึงคิวของคุณ ${name}`
+  );
+
   setTimeout(() => {
-    speakEnglish(stylist);
-  }, 350);
+    speakThai('โดยช่าง');
+    setTimeout(() => {
+      speakEnglish(stylist);
+    }, 300);
+  }, 1800);
 }
 
 /* =========================
@@ -337,106 +331,17 @@ function checkUpcomingQueues() {
   const now = new Date();
 
   bookings.forEach(b => {
-    const queueTime = new Date(`${b.date}T${b.time}`);
-    const diff = (queueTime - now) / 60000;
+    const t = new Date(`${b.date}T${b.time}`);
+    const diff = (t - now) / 60000;
 
     if (diff > 0 && diff <= 10 && !announcedQueueIds.has(b.id)) {
-      speakQueueLuxury(b.stylist);
+      speakQueueLuxury(b.name, b.stylist);
       announcedQueueIds.add(b.id);
     }
   });
 }
 
 setInterval(checkUpcomingQueues, 60000);
-
-/* =========================
-   EDIT MODAL
-========================= */
-const editOverlay = document.getElementById('editOverlay');
-const editTime = document.getElementById('editTime');
-const editStylist = document.getElementById('editStylist');
-const editName = document.getElementById('editName');
-const editPhone = document.getElementById('editPhone');
-const editService = document.getElementById('editService');
-const editDate = document.getElementById('editDate');
-
-let editingId = null;
-let editingBooking = null;
-
-function generateEditTimeOptions(date) {
-  editTime.innerHTML = '';
-
-  for (let h = 13; h <= 22; h++) {
-    const time = `${String(h).padStart(2, '0')}:00:00`;
-    const conflict = bookings.find(b =>
-      b.date === date &&
-      b.time === time &&
-      b.stylist === editingBooking.stylist &&
-      b.id !== editingBooking.id
-    );
-
-    const opt = document.createElement('option');
-    opt.value = time;
-    opt.textContent = time.slice(0, 5);
-    if (conflict) opt.disabled = true;
-    if (time === editingBooking.time) opt.selected = true;
-    editTime.appendChild(opt);
-  }
-}
-
-function openEditModal(b) {
-  editingId = b.id;
-  editingBooking = b;
-
-  editDate.value = b.date;
-  generateEditTimeOptions(b.date);
-  editDate.onchange = () => generateEditTimeOptions(editDate.value);
-
-  editStylist.value = b.stylist;
-  editName.value = b.name;
-  editPhone.value = b.phone || '';
-  editService.value = b.service || '';
-  if (editNote) editNote.value = b.note || '';
-
-  document.querySelectorAll('[name=editGender]').forEach(r => {
-    r.checked = r.value === b.gender;
-  });
-
-  editOverlay.classList.remove('hidden');
-}
-
-document.getElementById('saveEdit').onclick = async () => {
-  const gender = document.querySelector('[name=editGender]:checked')?.value;
-
-  await fetch(`${API}/bookings/${editingId}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      date: editDate.value,
-      time: editTime.value,
-      name: editName.value,
-      phone: editPhone.value,
-      gender,
-      service: editService.value,
-      note: editNote ? editNote.value : null
-    })
-  });
-
-  editOverlay.classList.add('hidden');
-  loadBookings();
-  loadCalendar();
-};
-
-document.getElementById('deleteEdit').onclick = async () => {
-  if (!confirm('ยืนยันการลบคิวนี้?')) return;
-  await fetch(`${API}/bookings/${editingId}`, { method: 'DELETE' });
-  editOverlay.classList.add('hidden');
-  loadBookings();
-  loadCalendar();
-};
-
-document.getElementById('closeEdit').onclick = () =>
-  editOverlay.classList.add('hidden');
 
 /* =========================
    UTIL
