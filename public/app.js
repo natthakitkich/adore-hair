@@ -29,6 +29,16 @@ const editPhone = document.getElementById('editPhone');
 const editService = document.getElementById('editService');
 const editNote = document.getElementById('editNote');
 
+/* CONFIRM */
+const confirmOverlay = document.getElementById('confirmOverlay');
+const confirmTitle = document.getElementById('confirmTitle');
+const confirmMessage = document.getElementById('confirmMessage');
+const confirmOk = document.getElementById('confirmOk');
+const confirmCancel = document.getElementById('confirmCancel');
+
+/* TOAST */
+const toastEl = document.getElementById('toast');
+
 /* =========================
    STATE
 ========================= */
@@ -40,6 +50,19 @@ let editingBooking = null;
 
 let viewMonth = new Date(selectedDate).getMonth();
 let viewYear = new Date(selectedDate).getFullYear();
+
+let toastTimer = null;
+let confirmCallback = null;
+
+/* =========================
+   OVERLAY MANAGER (CRITICAL)
+========================= */
+function closeAllOverlays() {
+  document.querySelectorAll('.overlay').forEach(o => {
+    o.classList.add('hidden');
+  });
+  document.body.classList.remove('modal-open');
+}
 
 /* =========================
    LOGIN
@@ -59,7 +82,7 @@ loginBtn.onclick = () => {
   }
 
   localStorage.setItem('adore_logged_in', '1');
-  loginOverlay.classList.add('hidden');
+  closeAllOverlays();
   init();
 };
 
@@ -70,7 +93,7 @@ logoutBtn.onclick = () => {
 
 document.addEventListener('DOMContentLoaded', () => {
   if (localStorage.getItem('adore_logged_in') === '1') {
-    loginOverlay.classList.add('hidden');
+    closeAllOverlays();
     init();
   }
 });
@@ -300,6 +323,8 @@ function renderTable() {
    EDIT MODAL
 ========================= */
 function openEditModal(b) {
+  closeAllOverlays();
+
   editingBooking = b;
 
   editDate.value = b.date;
@@ -315,6 +340,7 @@ function openEditModal(b) {
 
   generateEditTimeOptions(b.date);
   editOverlay.classList.remove('hidden');
+  document.body.classList.add('modal-open');
 }
 
 function generateEditTimeOptions(date) {
@@ -363,7 +389,7 @@ document.getElementById('saveEdit').onclick = async () => {
   }
 
   showToast('บันทึกเรียบร้อยแล้ว');
-  editOverlay.classList.add('hidden');
+  closeAllOverlays();
   loadBookings();
   loadCalendar();
 };
@@ -375,7 +401,7 @@ document.getElementById('deleteEdit').onclick = () => {
     onConfirm: async () => {
       await fetch(`${API}/bookings/${editingBooking.id}`, { method: 'DELETE' });
       showToast('ลบคิวเรียบร้อยแล้ว');
-      editOverlay.classList.add('hidden');
+      closeAllOverlays();
       loadBookings();
       loadCalendar();
     }
@@ -383,15 +409,12 @@ document.getElementById('deleteEdit').onclick = () => {
 };
 
 document.getElementById('closeEdit').onclick = () => {
-  editOverlay.classList.add('hidden');
+  closeAllOverlays();
 };
 
 /* =========================
    TOAST
 ========================= */
-const toastEl = document.getElementById('toast');
-let toastTimer = null;
-
 function showToast(msg) {
   toastEl.textContent = msg;
   toastEl.classList.add('show');
@@ -406,28 +429,24 @@ function showToast(msg) {
 /* =========================
    CONFIRM
 ========================= */
-const confirmOverlay = document.getElementById('confirmOverlay');
-const confirmTitle = document.getElementById('confirmTitle');
-const confirmMessage = document.getElementById('confirmMessage');
-const confirmOk = document.getElementById('confirmOk');
-const confirmCancel = document.getElementById('confirmCancel');
-
-let confirmCallback = null;
-
 function openConfirm({ title, message, onConfirm }) {
+  closeAllOverlays();
+
   confirmTitle.textContent = title;
   confirmMessage.textContent = message;
   confirmCallback = onConfirm;
+
   confirmOverlay.classList.remove('hidden');
+  document.body.classList.add('modal-open');
 }
 
 confirmCancel.onclick = () => {
-  confirmOverlay.classList.add('hidden');
+  closeAllOverlays();
 };
 
 confirmOk.onclick = () => {
   if (confirmCallback) confirmCallback();
-  confirmOverlay.classList.add('hidden');
+  closeAllOverlays();
 };
 
 /* =========================
