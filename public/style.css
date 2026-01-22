@@ -386,3 +386,35 @@ th{color:var(--muted)}
     display:grid !important;
   }
 }
+/* =========================
+   MOBILE FIX : CALENDAR ISOLATION
+   (IMPORTANT – DO NOT REMOVE)
+========================= */
+@media (max-width: 768px){
+
+  /* 🔒 RESET calendar layout */
+  .calendarGrid{
+    display:grid !important;
+    grid-template-columns:repeat(7,1fr) !important;
+    gap:12px !important;
+  }
+
+  .calendarDays{
+    display:contents !important;
+  }
+
+  .calendarGrid > div,
+  .calendarDays > div{
+    display:grid !important;
+  }
+
+  /* ❌ ป้องกัน table mobile rules ยิงโดน calendar */
+  .calendarGrid table,
+  .calendarGrid thead,
+  .calendarGrid tbody,
+  .calendarGrid tr,
+  .calendarGrid td{
+    display:initial !important;
+    width:auto !important;
+  }
+}
