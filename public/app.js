@@ -19,6 +19,10 @@ const bookingForm = document.getElementById('bookingForm');
 const timeSelect = document.getElementById('time');
 const listEl = document.getElementById('list');
 
+/* OPTIONAL ELEMENTS (ต้องกันพัง) */
+const noteInput = document.getElementById('note');
+const editNote = document.getElementById('editNote');
+
 /* =========================
    STATE
 ========================= */
@@ -181,4 +185,190 @@ function renderTimeOptions() {
 
 /* =========================
    FORM SUBMIT
-========================= *
+========================= */
+bookingForm.onsubmit = async e => {
+  e.preventDefault();
+
+  const gender = document.querySelector('[name=gender]:checked')?.value;
+  if (!gender) return alert('กรุณาเลือกเพศ');
+
+  await fetch(`${API}/bookings`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      date: selectedDate,
+      time: timeSelect.value,
+      stylist: selectedStylist,
+      name: document.getElementById('name').value,
+      phone: document.getElementById('phone').value,
+      gender,
+      service: document.getElementById('service').value,
+      note: noteInput ? noteInput.value : null
+    })
+  });
+
+  bookingForm.reset();
+  alert('บันทึกคิวเรียบร้อยแล้ว');
+
+  loadBookings();
+  loadCalendar();
+};
+
+/* =========================
+   SUMMARY
+========================= */
+function renderSummary() {
+  const bank = bookings.filter(b => b.stylist === 'Bank').length;
+  const sindy = bookings.filter(b => b.stylist === 'Sindy').length;
+  const assist = bookings.filter(b => b.stylist === 'Assist').length;
+
+  document.getElementById('countBank').textContent = bank;
+  document.getElementById('countSindy').textContent = sindy;
+  document.getElementById('countAssist').textContent = assist;
+  document.getElementById('countTotal').textContent = bank + sindy + assist;
+}
+
+/* =========================
+   TABLE (DESKTOP + MOBILE)
+========================= */
+function renderTable() {
+  listEl.innerHTML = '';
+
+  bookings.forEach(b => {
+    const tr = document.createElement('tr');
+
+    tr.innerHTML = `
+      <td class="mobile-main">
+        <span>
+          ${b.time.slice(0,5)} · 
+          <span class="badge ${b.stylist}">${b.stylist}</span> · 
+          ${b.gender === 'male' ? '👨' : '👩'}
+        </span>
+        <button class="ghost toggle-detail">ดู</button>
+      </td>
+
+      <td class="mobile-sub">
+        ${b.name} · ${b.service || ''}
+      </td>
+
+      <td class="mobile-detail hidden">
+        <div class="mobile-sub">โทร: ${b.phone || '-'}</div>
+        ${b.note ? `<div class="mobile-sub">หมายเหตุ: ${b.note}</div>` : ''}
+        <div class="mobile-actions">
+          <button class="ghost manage-btn">จัดการ</button>
+        </div>
+      </td>
+    `;
+
+    tr.querySelector('.toggle-detail').onclick = () => {
+      tr.querySelector('.mobile-detail').classList.toggle('hidden');
+    };
+
+    tr.querySelector('.manage-btn').onclick = () => openEditModal(b);
+
+    listEl.appendChild(tr);
+  });
+}
+
+/* =========================
+   EDIT MODAL
+========================= */
+const editOverlay = document.getElementById('editOverlay');
+const editTime = document.getElementById('editTime');
+const editStylist = document.getElementById('editStylist');
+const editName = document.getElementById('editName');
+const editPhone = document.getElementById('editPhone');
+const editService = document.getElementById('editService');
+const editDate = document.getElementById('editDate');
+
+let editingId = null;
+let editingBooking = null;
+
+function generateEditTimeOptions(date) {
+  editTime.innerHTML = '';
+
+  for (let h = 13; h <= 22; h++) {
+    const time = `${String(h).padStart(2, '0')}:00:00`;
+
+    const conflict = bookings.find(b =>
+      b.date === date &&
+      b.time === time &&
+      b.stylist === editingBooking.stylist &&
+      b.id !== editingBooking.id
+    );
+
+    const opt = document.createElement('option');
+    opt.value = time;
+    opt.textContent = time.slice(0, 5);
+    if (conflict) opt.disabled = true;
+    if (time === editingBooking.time) opt.selected = true;
+
+    editTime.appendChild(opt);
+  }
+}
+
+function openEditModal(b) {
+  editingId = b.id;
+  editingBooking = b;
+
+  editDate.value = b.date;
+  generateEditTimeOptions(b.date);
+  editDate.onchange = () => generateEditTimeOptions(editDate.value);
+
+  editStylist.value = b.stylist;
+  editName.value = b.name;
+  editPhone.value = b.phone || '';
+  editService.value = b.service || '';
+  if (editNote) editNote.value = b.note || '';
+
+  document.querySelectorAll('[name=editGender]').forEach(r => {
+    r.checked = r.value === b.gender;
+  });
+
+  editOverlay.classList.remove('hidden');
+}
+
+document.getElementById('saveEdit').onclick = async () => {
+  const gender = document.querySelector('[name=editGender]:checked')?.value;
+
+  await fetch(`${API}/bookings/${editingId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      date: editDate.value,
+      time: editTime.value,
+      name: editName.value,
+      phone: editPhone.value,
+      gender,
+      service: editService.value,
+      note: editNote ? editNote.value : null
+    })
+  });
+
+  editOverlay.classList.add('hidden');
+  alert('บันทึกการเปลี่ยนคิวเรียบร้อยแล้ว');
+  loadBookings();
+  loadCalendar();
+};
+
+document.getElementById('deleteEdit').onclick = async () => {
+  if (!confirm('ยืนยันการลบคิวนี้?')) return;
+
+  await fetch(`${API}/bookings/${editingId}`, { method: 'DELETE' });
+
+  editOverlay.classList.add('hidden');
+  loadBookings();
+  loadCalendar();
+};
+
+document.getElementById('closeEdit').onclick = () =>
+  editOverlay.classList.add('hidden');
+
+/* =========================
+   UTIL
+========================= */
+function getTodayTH() {
+  return new Date().toLocaleDateString('sv-SE', {
+    timeZone: 'Asia/Bangkok'
+  });
+}
