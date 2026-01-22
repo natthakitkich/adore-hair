@@ -53,7 +53,6 @@ input,select,textarea{
   font-size:16px;
   font-family:inherit;
 }
-
 textarea{resize:vertical}
 
 .primary{
@@ -165,7 +164,7 @@ textarea{resize:vertical}
 }
 
 /* =========================
-   CALENDAR (ISOLATED ZONE)
+   CALENDAR (STABLE VERSION)
 ========================= */
 .calendarHeader{
   display:flex;
@@ -194,9 +193,7 @@ textarea{resize:vertical}
 }
 
 .calendarDays{
-  display:grid;
-  grid-template-columns:repeat(7,1fr);
-  gap:12px;
+  display:contents;
 }
 
 .day{
@@ -234,15 +231,16 @@ textarea{resize:vertical}
 }
 
 .summary .box{
-  padding:22px;
-  border-radius:20px;
+  padding:26px;
+  border-radius:22px;
   background:rgba(0,0,0,.35);
   text-align:center;
 }
 
 .summary strong{
   display:block;
-  font-size:32px;
+  font-size:36px;
+  margin-top:6px;
 }
 
 /* =========================
@@ -275,11 +273,10 @@ textarea{resize:vertical}
   grid-template-columns:1fr 1fr;
   gap:16px;
 }
-
 .grid .full{grid-column:1 / -1}
 
 /* =========================
-   TABLE (DESKTOP ONLY)
+   TABLE (DESKTOP)
 ========================= */
 table{
   width:100%;
@@ -306,10 +303,9 @@ th{color:var(--muted)}
 .badge.Assist{background:rgba(44,255,156,.2);color:#2cff9c}
 
 /* =========================
-   MOBILE (TABLE ONLY)
+   MOBILE – TABLE ONLY
 ========================= */
 @media (max-width:768px){
-
   table, thead, tbody, tr{display:block}
   thead{display:none}
 
