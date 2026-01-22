@@ -457,3 +457,16 @@ textarea{resize:vertical}
   }
 
 }
+
+/* =========================
+   FORM LABEL (iOS STYLE)
+========================= */
+form label{
+  display:block;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  color:rgba(255,255,255,.55);
+  margin-bottom:6px;
+}
