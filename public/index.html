@@ -194,4 +194,13 @@
 
 <script src="app.js"></script>
 </body>
+  <script>
+(() => {
+  const root = document.documentElement;
+  window.addEventListener('scroll', () => {
+    const y = window.scrollY / (document.body.scrollHeight - innerHeight);
+    root.style.setProperty('--light-y', `${20 + y * 60}%`);
+  }, { passive: true });
+})();
+</script>
 </html>
