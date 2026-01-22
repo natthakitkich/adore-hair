@@ -255,10 +255,14 @@ function renderTable() {
     card.innerHTML = `
       <div class="card-main">
         <div class="time-pill">${b.time.slice(0,5)}</div>
+
         <div class="card-main-info">
           <span class="badge ${b.stylist}">${b.stylist}</span>
           ${b.gender === 'male' ? '👨' : '👩'}
         </div>
+
+        <!-- 👇 ปุ่มดู (เอากลับมา) -->
+        <button class="ghost toggle-detail">ดู</button>
       </div>
 
       <div class="card-sub">
@@ -266,7 +270,9 @@ function renderTable() {
       </div>
 
       <div class="card-detail">
-        <div class="card-sub">โทร: ${phoneHtml}</div>
+        <div class="card-sub">
+          โทร: ${phoneHtml}
+        </div>
         ${b.note ? `<div class="card-sub">หมายเหตุ: ${b.note}</div>` : ''}
         <div class="card-actions">
           <button class="ghost manage-btn">จัดการ</button>
@@ -274,10 +280,18 @@ function renderTable() {
       </div>
     `;
 
+    // ✅ กดทั้ง card = เปิด/ปิด detail
     card.onclick = () => {
       card.classList.toggle('expanded');
     };
 
+    // ✅ ปุ่ม "ดู" ทำหน้าที่เดียวกับ card
+    card.querySelector('.toggle-detail').onclick = e => {
+      e.stopPropagation(); // กันไม่ให้ซ้อน
+      card.classList.toggle('expanded');
+    };
+
+    // ✅ ปุ่มจัดการ แยก event ชัดเจน
     card.querySelector('.manage-btn').onclick = e => {
       e.stopPropagation();
       openEditModal(b);
