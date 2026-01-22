@@ -1,9 +1,14 @@
 /* =========================================================
-   ADORE HAIR — OWNER QUEUE (FINAL / iOS SAFE)
-========================================================= */
+   ADORE HAIR — OWNER QUEUE
+   FILE A : FINAL / STABLE / IOS SAFE
+   ========================================================= */
 
+/* =========================
+   CONFIG
+========================= */
 const API = '';
 const OWNER_PIN = '1234';
+const TIMEZONE = 'Asia/Bangkok';
 
 /* =========================
    ELEMENTS
@@ -16,43 +21,78 @@ const logoutBtn = document.getElementById('logoutBtn');
 
 const calendarTitle = document.getElementById('calendarTitle');
 const calendarDaysEl = document.getElementById('calendarDays');
+const prevMonthBtn = document.getElementById('prevMonth');
+const nextMonthBtn = document.getElementById('nextMonth');
 
+const timeSelect = document.getElementById('time');
 const listEl = document.getElementById('list');
+
+/* SUMMARY */
+const countBank = document.getElementById('countBank');
+const countSindy = document.getElementById('countSindy');
+const countAssist = document.getElementById('countAssist');
+const countTotal = document.getElementById('countTotal');
+
+/* EDIT MODAL */
+const editModal = document.getElementById('editModal');
+const editName = document.getElementById('editName');
+const editPhone = document.getElementById('editPhone');
+const editNote = document.getElementById('editNote');
+const editSaveBtn = document.getElementById('editSave');
+const editCloseBtn = document.getElementById('editClose');
 
 /* =========================
    STATE
 ========================= */
 let bookings = [];
 let calendarDensity = {};
+let selectedStylist = 'Bank';
 let selectedDate = getTodayTH();
 
+let viewMonth = new Date(selectedDate).getMonth();
+let viewYear = new Date(selectedDate).getFullYear();
+
+let editingBooking = null;
+
 /* =========================
-   AUDIO STATE (iOS)
+   AUDIO STATE (IOS SAFE)
 ========================= */
 let audioUnlocked = false;
-let audioCtx = null;
 let announcedQueueIds = new Set();
+let audioCtx = null;
+
+let preferredThaiVoice = null;
+let preferredEnglishVoice = null;
 
 /* =========================
    LOGIN
 ========================= */
 loginBtn.onclick = () => {
-  if (pinInput.value !== OWNER_PIN) {
-    loginMsg.textContent = 'รหัสไม่ถูกต้อง';
+  const pin = pinInput.value.trim();
+  loginMsg.textContent = '';
+
+  if (pin.length !== 4) {
+    loginMsg.textContent = 'กรุณาใส่ PIN 4 หลัก';
     return;
   }
+  if (pin !== OWNER_PIN) {
+    loginMsg.textContent = 'รหัสผ่านไม่ถูกต้อง';
+    return;
+  }
+
   localStorage.setItem('adore_logged_in', '1');
   loginOverlay.classList.add('hidden');
   init();
 };
 
 logoutBtn.onclick = () => {
-  localStorage.clear();
+  localStorage.removeItem('adore_logged_in');
   location.reload();
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-  if (localStorage.getItem('adore_logged_in')) {
+  audioUnlocked = false;
+  if (localStorage.getItem('adore_logged_in') === '1') {
     loginOverlay.classList.add('hidden');
     init();
   }
@@ -62,8 +102,16 @@ document.addEventListener('DOMContentLoaded', () => {
    INIT
 ========================= */
 function init() {
+  bindStylistTabs();
   loadCalendar();
   loadBookings();
+}
+
+/* =========================
+   DATE UTIL (FIX TIMEZONE)
+========================= */
+function getTodayTH() {
+  return new Date().toLocaleDateString('sv-SE', { timeZone: TIMEZONE });
 }
 
 /* =========================
@@ -77,23 +125,58 @@ async function loadCalendar() {
 
 function renderCalendar() {
   calendarDaysEl.innerHTML = '';
-  const now = new Date(selectedDate);
-  calendarTitle.textContent =
-    now.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' });
 
-  for (let i = 1; i <= 31; i++) {
-    const d = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+  const firstDay = new Date(viewYear, viewMonth, 1);
+  const startDay = firstDay.getDay();
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+
+  calendarTitle.textContent =
+    firstDay.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' });
+
+  for (let i = 0; i < startDay; i++) {
+    calendarDaysEl.appendChild(document.createElement('div'));
+  }
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const count = calendarDensity[date] || 0;
+
     const el = document.createElement('div');
     el.className = 'day';
-    el.textContent = i;
-    if (calendarDensity[d]) el.classList.add('low');
+    el.textContent = d;
+
+    if (date === selectedDate) el.classList.add('today');
+    if (count > 0 && count <= 5) el.classList.add('low');
+    if (count > 5 && count <= 10) el.classList.add('mid');
+    if (count > 10) el.classList.add('high');
+
     el.onclick = () => {
-      selectedDate = d;
+      selectedDate = date;
       loadBookings();
+      renderCalendar();
     };
+
     calendarDaysEl.appendChild(el);
   }
 }
+
+prevMonthBtn.onclick = () => {
+  viewMonth--;
+  if (viewMonth < 0) {
+    viewMonth = 11;
+    viewYear--;
+  }
+  renderCalendar();
+};
+
+nextMonthBtn.onclick = () => {
+  viewMonth++;
+  if (viewMonth > 11) {
+    viewMonth = 0;
+    viewYear++;
+  }
+  renderCalendar();
+};
 
 /* =========================
    BOOKINGS
@@ -101,33 +184,61 @@ function renderCalendar() {
 async function loadBookings() {
   const res = await fetch(`${API}/bookings?date=${selectedDate}`);
   bookings = await res.json();
+  renderSummary();
   renderTable();
 }
 
+/* =========================
+   SUMMARY
+========================= */
+function renderSummary() {
+  const bank = bookings.filter(b => b.stylist === 'Bank').length;
+  const sindy = bookings.filter(b => b.stylist === 'Sindy').length;
+  const assist = bookings.filter(b => b.stylist === 'Assist').length;
+
+  countBank.textContent = bank;
+  countSindy.textContent = sindy;
+  countAssist.textContent = assist;
+  countTotal.textContent = bank + sindy + assist;
+}
+
+/* =========================
+   TABLE + MANAGE
+========================= */
 function renderTable() {
   listEl.innerHTML = '';
+
   bookings.forEach(b => {
     const card = document.createElement('div');
     card.className = 'booking-card';
+
     card.innerHTML = `
       <div class="card-main">
         <div class="time-pill">${b.time.slice(0,5)}</div>
-        <span class="badge">${b.stylist}</span>
-        <button class="ghost toggle">ดู</button>
+        <div class="card-main-info">
+          <span class="badge ${b.stylist}">${b.stylist}</span>
+          ${b.gender === 'male' ? '👨' : '👩'}
+        </div>
+        <button class="ghost toggle-detail">ดู</button>
       </div>
+
+      <div class="card-sub">${b.name} · ${b.service || ''}</div>
+
       <div class="card-detail">
-        <div>${b.name}</div>
-        <div>โทร: ${b.phone || '-'}</div>
-        <button class="ghost manage">จัดการ</button>
+        <div class="card-sub">โทร: ${b.phone || '-'}</div>
+        ${b.note ? `<div class="card-sub">หมายเหตุ: ${b.note}</div>` : ''}
+        <button class="ghost manage-btn">จัดการ</button>
       </div>
     `;
 
-    card.querySelector('.toggle').onclick = e => {
+    card.onclick = () => card.classList.toggle('expanded');
+
+    card.querySelector('.toggle-detail').onclick = e => {
       e.stopPropagation();
       card.classList.toggle('expanded');
     };
 
-    card.querySelector('.manage').onclick = e => {
+    card.querySelector('.manage-btn').onclick = e => {
       e.stopPropagation();
       openEditModal(b);
     };
@@ -136,82 +247,71 @@ function renderTable() {
   });
 }
 
-/* =========================================================
-   EDIT MODAL — FIXED 100%
-========================================================= */
+/* =========================
+   EDIT MODAL
+========================= */
 function openEditModal(b) {
-  const overlay = document.createElement('div');
-  overlay.className = 'modal-overlay';
-  overlay.innerHTML = `
-    <div class="modal">
-      <h3>แก้ไขคิว</h3>
-      <input id="mName" value="${b.name}">
-      <input id="mPhone" value="${b.phone || ''}">
-      <textarea id="mNote">${b.note || ''}</textarea>
-      <button id="save">บันทึก</button>
-      <button id="close">ปิด</button>
-    </div>
-  `;
-  document.body.appendChild(overlay);
-
-  overlay.querySelector('#close').onclick = () => overlay.remove();
-  overlay.querySelector('#save').onclick = async () => {
-    await fetch(`${API}/bookings/${b.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: mName.value,
-        phone: mPhone.value,
-        note: mNote.value
-      })
-    });
-    overlay.remove();
-    loadBookings();
-  };
+  editingBooking = b;
+  editName.value = b.name || '';
+  editPhone.value = b.phone || '';
+  editNote.value = b.note || '';
+  editModal.classList.add('show');
 }
 
-/* =========================================================
-   VOICE SYSTEM — iOS / Safari SAFE
-========================================================= */
-let thaiVoice = null;
-let enVoice = null;
-
-speechSynthesis.onvoiceschanged = () => {
-  const v = speechSynthesis.getVoices();
-  thaiVoice = v.find(x => x.lang === 'th-TH' && !x.name.includes('Siri')) || v.find(x => x.lang === 'th-TH');
-  enVoice = v.find(x => x.lang.startsWith('en'));
+editCloseBtn.onclick = () => {
+  editModal.classList.remove('show');
 };
+
+editSaveBtn.onclick = async () => {
+  if (!editingBooking) return;
+
+  await fetch(`${API}/bookings/${editingBooking.id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: editName.value,
+      phone: editPhone.value,
+      note: editNote.value
+    })
+  });
+
+  editModal.classList.remove('show');
+  loadBookings();
+};
+
+/* =========================
+   VOICE SYSTEM (SAFE)
+========================= */
+function prepareVoices() {
+  const voices = speechSynthesis.getVoices();
+  preferredThaiVoice = voices.find(v => v.lang === 'th-TH') || null;
+  preferredEnglishVoice = voices.find(v => v.lang.startsWith('en')) || null;
+}
+speechSynthesis.onvoiceschanged = prepareVoices;
 
 function unlockAudioOnce() {
   if (audioUnlocked) return;
   audioUnlocked = true;
 
-  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  audioCtx.resume();
+  prepareVoices();
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-  speakThai('ระบบแจ้งเตือนคิวพร้อมใช้งานแล้ว');
+  speakSystem('สวัสดีค่ะ ระบบแจ้งเตือนคิวพร้อมใช้งานแล้ว กรุณาเปิดหน้าเว็บทิ้งไว้');
 }
 
 document.addEventListener('touchstart', unlockAudioOnce, { once: true });
 document.addEventListener('click', unlockAudioOnce, { once: true });
 
-function speakThai(text) {
+function speakSystem(text) {
   const u = new SpeechSynthesisUtterance(text);
   u.lang = 'th-TH';
-  u.voice = thaiVoice;
-  u.rate = 1.1;
-  speechSynthesis.speak(u);
-}
-
-function speakEnglish(text) {
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = 'en-US';
-  u.voice = enVoice;
-  u.rate = 0.9;
+  u.voice = preferredThaiVoice;
+  u.rate = 1.2;
   speechSynthesis.speak(u);
 }
 
 function playDing() {
+  if (!audioCtx) return;
   const osc = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
   osc.type = 'triangle';
@@ -225,9 +325,25 @@ function playDing() {
 
 function speakQueue(name, stylist) {
   playDing();
-  speakThai(`อีกประมาณ สิบ นาที จะถึงคิวของคุณ ${name}`);
-  setTimeout(() => speakThai('โดยช่าง'), 1400);
-  setTimeout(() => speakEnglish(stylist), 1800);
+
+  const a = new SpeechSynthesisUtterance(
+    `แจ้งเตือนค่ะ อีกประมาณ สิบ นาที จะถึงคิวของคุณ ${name}`
+  );
+  a.lang = 'th-TH';
+  a.voice = preferredThaiVoice;
+  a.rate = 0.95;
+
+  const by = new SpeechSynthesisUtterance('โดยช่าง');
+  by.lang = 'th-TH';
+  by.voice = preferredThaiVoice;
+
+  const b = new SpeechSynthesisUtterance(stylist);
+  b.lang = 'en-US';
+  b.voice = preferredEnglishVoice;
+
+  speechSynthesis.speak(a);
+  setTimeout(() => speechSynthesis.speak(by), 1500);
+  setTimeout(() => speechSynthesis.speak(b), 1900);
 }
 
 /* =========================
@@ -236,9 +352,11 @@ function speakQueue(name, stylist) {
 function checkUpcomingQueues() {
   if (!audioUnlocked) return;
   const now = new Date();
+
   bookings.forEach(b => {
     const t = new Date(`${b.date}T${b.time}`);
     const diff = (t - now) / 60000;
+
     if (diff > 0 && diff <= 10 && !announcedQueueIds.has(b.id)) {
       speakQueue(b.name, b.stylist);
       announcedQueueIds.add(b.id);
@@ -247,12 +365,3 @@ function checkUpcomingQueues() {
 }
 
 setInterval(checkUpcomingQueues, 60000);
-
-/* =========================
-   UTIL
-========================= */
-function getTodayTH() {
-  return new Date().toLocaleDateString('sv-SE', {
-    timeZone: 'Asia/Bangkok'
-  });
-}
