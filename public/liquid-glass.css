@@ -1,43 +1,48 @@
 /* ======================================================
-   FINAL LIQUID GLASS v1.0 — iOS 26 INSPIRED
-   SAFE STYLE OVERRIDE (NO LOGIC / NO LAYOUT BREAK)
+   FINAL GLASS CLEAR v1.0
+   iOS / visionOS inspired
+   SAFE MODE — NO LOGIC / NO LAYOUT IMPACT
 ====================================================== */
 
 /* ======================================================
-   ROOT TOKENS — SINGLE SOURCE OF TRUTH
+   1. ROOT TOKENS — GLASS + READABILITY
 ====================================================== */
 :root {
-  /* ---------- Glass ---------- */
-  --glass-bg: rgba(255, 255, 255, 0.16);
-  --glass-bg-strong: rgba(255, 255, 255, 0.22);
+  /* Glass transparency */
+  --glass-bg: rgba(255, 255, 255, 0.08);
+  --glass-bg-strong: rgba(255, 255, 255, 0.12);
   --glass-border: rgba(255, 255, 255, 0.28);
-  --glass-blur: 26px;
 
-  /* ---------- Radius ---------- */
+  /* Blur & saturation (key of clarity) */
+  --glass-blur: 30px;
+  --glass-saturate: 160%;
+
+  /* Radius */
   --radius-lg: 28px;
   --radius-md: 22px;
   --radius-sm: 14px;
 
-  /* ---------- Text ---------- */
+  /* Text colors (readable on glass) */
   --text-primary: rgba(240, 248, 255, 0.95);
-  --text-secondary: rgba(210, 225, 240, 0.85);
+  --text-secondary: rgba(210, 225, 240, 0.82);
   --text-muted: rgba(180, 200, 220, 0.7);
 
-  --text-accent-blue: rgba(140, 200, 255, 0.95);
-  --text-accent-pink: rgba(255, 170, 200, 0.95);
+  /* Accent */
+  --accent-blue: rgba(140, 200, 255, 0.95);
+  --accent-pink: rgba(255, 170, 200, 0.95);
 
-  --text-shadow-soft: 0 1px 2px rgba(0,0,0,0.35);
+  /* Shadows */
+  --shadow-outer: 0 30px 60px rgba(0, 0, 0, 0.45);
+  --shadow-inner:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.18);
 
-  /* ---------- Light ---------- */
-  --light-y: 30%;
-  --light-strength: 0.22;
-
-  /* ---------- Motion ---------- */
+  /* Motion */
   --ease-ios: cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
 /* ======================================================
-   GLOBAL SAFETY (iOS / Safari)
+   2. GLOBAL SAFETY (iOS / Safari)
 ====================================================== */
 * {
   -webkit-tap-highlight-color: transparent;
@@ -45,10 +50,15 @@
 
 body {
   color: var(--text-primary);
+  background:
+    radial-gradient(circle at 20% 10%, #2e4c7a, transparent 45%),
+    radial-gradient(circle at 80% 30%, #6b4c8a, transparent 55%),
+    #05080f;
+  background-attachment: fixed;
 }
 
 /* ======================================================
-   GLASS SURFACE — CARD / PANEL / MODAL
+   3. GLASS SURFACE (CARDS / PANELS / MODAL)
 ====================================================== */
 .card,
 .panel,
@@ -57,58 +67,58 @@ body {
 .modal,
 .popup {
   position: relative;
-  background:
-    linear-gradient(
-      180deg,
-      rgba(255,255,255,0.20),
-      rgba(255,255,255,0.08)
-    );
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   border-radius: var(--radius-md);
   border: 1px solid var(--glass-border);
-  box-shadow:
-    0 30px 60px rgba(0,0,0,0.45),
-    inset 0 1px 0 rgba(255,255,255,0.35),
-    inset 0 -1px 0 rgba(0,0,0,0.15);
+  box-shadow: var(--shadow-outer), var(--shadow-inner);
   overflow: hidden;
 }
 
-/* top highlight / refraction */
+/* ======================================================
+   4. GLASS EDGE HIGHLIGHT (REFRACTION EDGE)
+====================================================== */
+.card::before,
 .booking-card::before,
 .modal::before,
 .popup::before {
   content: "";
   position: absolute;
   inset: 0;
+  border-radius: inherit;
   background: linear-gradient(
     to bottom,
     rgba(255,255,255,0.45),
     rgba(255,255,255,0.05)
   );
-  opacity: 0.22;
+  opacity: 0.35;
   pointer-events: none;
 }
 
-/* dynamic light */
+/* ======================================================
+   5. REFRACTION LIGHT (GLASS DEPTH)
+====================================================== */
+.card::after,
 .booking-card::after,
-.modal::after {
+.modal::after,
+.popup::after {
   content: "";
   position: absolute;
   inset: 0;
   background:
     radial-gradient(
-      circle at 50% var(--light-y),
-      rgba(255,255,255,var(--light-strength)),
-      rgba(255,255,255,0) 60%
+      circle at 30% 20%,
+      rgba(255,255,255,0.35),
+      transparent 60%
     );
-  opacity: 0.18;
+  opacity: 0.35;
+  mix-blend-mode: screen;
   pointer-events: none;
-  mix-blend-mode: soft-light;
 }
 
 /* ======================================================
-   MODAL / POPUP — iOS SCROLL FIX
+   6. MODAL / POPUP — iOS SCROLL SAFE
 ====================================================== */
 .modal,
 .popup {
@@ -119,43 +129,36 @@ body {
 }
 
 /* ======================================================
-   TEXT READABILITY — BOOKING CARD
+   7. TEXT READABILITY (BOOKING CARD)
 ====================================================== */
 .booking-card {
   color: var(--text-secondary);
 }
 
+/* customer name */
 .booking-card .customer-name {
   color: var(--text-primary);
   font-weight: 600;
   letter-spacing: 0.2px;
-  text-shadow: var(--text-shadow-soft);
 }
 
+/* service / action */
 .booking-card .service {
   color: var(--text-secondary);
   font-size: 0.95rem;
   margin-top: 4px;
-  text-shadow: var(--text-shadow-soft);
 }
 
+/* phone / note */
 .booking-card .phone,
-.booking-card .note,
-.booking-card small {
+.booking-card .note {
   color: var(--text-muted);
   font-size: 0.85rem;
   margin-top: 6px;
-  text-shadow: var(--text-shadow-soft);
-}
-
-/* fallback */
-.booking-card p,
-.booking-card span {
-  text-shadow: var(--text-shadow-soft);
 }
 
 /* ======================================================
-   INPUT / SELECT / TEXTAREA
+   8. INPUTS / SELECTS
 ====================================================== */
 input,
 select,
@@ -172,7 +175,7 @@ textarea::placeholder {
 }
 
 /* ======================================================
-   BUTTONS
+   9. BUTTONS
 ====================================================== */
 button,
 .btn,
@@ -189,7 +192,7 @@ button:active {
 }
 
 /* ======================================================
-   GENDER SELECT — DOT ONLY (iOS)
+   10. GENDER SELECT — DOT ONLY (iOS STYLE)
 ====================================================== */
 .gender-group {
   display: flex;
@@ -217,12 +220,12 @@ button:active {
   content: "";
   position: absolute;
   inset: 3px;
-  background: #7cc8ff;
+  background: var(--accent-blue);
   border-radius: 50%;
 }
 
 /* ======================================================
-   CALENDAR DAY
+   11. CALENDAR DAY
 ====================================================== */
 .day {
   background: rgba(255,255,255,0.18);
@@ -232,11 +235,11 @@ button:active {
 .day.active {
   box-shadow:
     0 0 0 2px rgba(120,200,255,0.6),
-    0 20px 40px rgba(0,0,0,0.45);
+    var(--shadow-outer);
 }
 
 /* ======================================================
-   REDUCE MOTION
+   12. REDUCE MOTION
 ====================================================== */
 @media (prefers-reduced-motion: reduce) {
   * {
@@ -246,5 +249,5 @@ button:active {
 }
 
 /* ======================================================
-   END — FINAL LIQUID GLASS v1.0
+   END — FINAL GLASS CLEAR v1.0
 ====================================================== */
