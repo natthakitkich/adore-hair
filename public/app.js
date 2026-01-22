@@ -438,3 +438,33 @@ window.addEventListener("scroll", () => {
     percent + "%"
   );
 });
+/* ======================================================
+   STEP 9 — CONFIRM LOGIC (SAFE)
+====================================================== */
+
+const confirmOverlay = document.getElementById('confirmOverlay');
+const confirmTitle = document.getElementById('confirmTitle');
+const confirmMessage = document.getElementById('confirmMessage');
+const confirmOk = document.getElementById('confirmOk');
+const confirmCancel = document.getElementById('confirmCancel');
+
+let confirmCallback = null;
+
+function openConfirm({ title, message, onConfirm }) {
+  confirmTitle.textContent = title;
+  confirmMessage.textContent = message;
+  confirmCallback = onConfirm;
+
+  confirmOverlay.classList.remove('hidden');
+}
+
+function closeConfirm() {
+  confirmOverlay.classList.add('hidden');
+  confirmCallback = null;
+}
+
+confirmCancel.onclick = closeConfirm;
+confirmOk.onclick = () => {
+  if (confirmCallback) confirmCallback();
+  closeConfirm();
+};
