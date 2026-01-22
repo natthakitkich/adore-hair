@@ -522,3 +522,12 @@ textarea::placeholder{
   background:linear-gradient(135deg,var(--accent),var(--accent2));
   color:#061022;
 }
+.phone-link{
+  color: var(--accent);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.phone-link:active{
+  opacity: .6;
+}
