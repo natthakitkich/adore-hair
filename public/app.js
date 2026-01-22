@@ -285,11 +285,13 @@ function renderTable() {
 
       <div class="card-sub">${b.name} · ${b.service || ''}</div>
 
-      <div class="card-detail">
-      ${phone
-  ? `<a class="phone phone-link" href="tel:${phone}">โทร: ${phone}</a>`
-  : `<span class="phone muted">โทร: -</span>`
-}
+      ${b.phone ? `
+  <a href="tel:${b.phone}" class="phone-call">
+    โทร: ${b.phone}
+  </a>
+` : `
+  <div class="phone muted">ไม่มีเบอร์โทร</div>
+`}
         ${b.note ? `<div class="card-sub">หมายเหตุ: ${b.note}</div>` : ''}
         <div class="card-actions">
           <button class="ghost manage-btn">จัดการ</button>
