@@ -61,8 +61,6 @@ loginBtn.onclick = () => {
   localStorage.setItem('adore_logged_in', '1');
   loginOverlay.classList.add('hidden');
   init();
-
-  // ❌ ไม่เรียกเสียงตรงนี้ (Safari จะ block)
 };
 
 pinInput.addEventListener('input', () => {
@@ -93,6 +91,44 @@ function init() {
 }
 
 /* =========================
+   STUB FUNCTIONS (KEEP LOGIC SAFE)
+   ❗ ห้ามลบ — กัน JS error
+========================= */
+function bindStylistTabs() {
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.onclick = () => {
+      document.querySelector('.tab.active')?.classList.remove('active');
+      tab.classList.add('active');
+      selectedStylist = tab.dataset.tab;
+      renderTimeOptions();
+    };
+  });
+}
+
+function renderSummary() {
+  const bank = bookings.filter(b => b.stylist === 'Bank').length;
+  const sindy = bookings.filter(b => b.stylist === 'Sindy').length;
+  const assist = bookings.filter(b => b.stylist === 'Assist').length;
+
+  document.getElementById('countBank').textContent = bank;
+  document.getElementById('countSindy').textContent = sindy;
+  document.getElementById('countAssist').textContent = assist;
+  document.getElementById('countTotal').textContent = bank + sindy + assist;
+}
+
+function renderTimeOptions() {
+  timeSelect.innerHTML = '';
+
+  for (let h = 13; h <= 22; h++) {
+    const time = `${String(h).padStart(2, '0')}:00:00`;
+    const opt = document.createElement('option');
+    opt.value = time;
+    opt.textContent = time.slice(0, 5);
+    timeSelect.appendChild(opt);
+  }
+}
+
+/* =========================
    CALENDAR
 ========================= */
 async function loadCalendar() {
@@ -117,16 +153,11 @@ function renderCalendar() {
 
   for (let d = 1; d <= daysInMonth; d++) {
     const date = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-    const count = calendarDensity[date] || 0;
-
     const el = document.createElement('div');
     el.className = 'day';
     el.textContent = d;
 
     if (date === selectedDate) el.classList.add('today');
-    if (count > 0 && count <= 5) el.classList.add('low');
-    if (count > 5 && count <= 10) el.classList.add('mid');
-    if (count > 10) el.classList.add('high');
 
     el.onclick = () => {
       selectedDate = date;
@@ -189,7 +220,7 @@ function renderTable() {
 }
 
 /* =========================================================
-   🔊 VOICE SYSTEM — 100% VERSION
+   🔊 VOICE SYSTEM — FINAL
 ========================================================= */
 
 let preferredThaiVoice = null;
@@ -197,7 +228,6 @@ let preferredEnglishVoice = null;
 
 function prepareVoices() {
   const voices = speechSynthesis.getVoices();
-
   preferredThaiVoice =
     voices.find(v => v.lang === 'th-TH' && !v.name.toLowerCase().includes('siri'))
     || voices.find(v => v.lang === 'th-TH')
@@ -225,12 +255,11 @@ function speakSystem(text) {
   speechSynthesis.cancel();
   speechSynthesis.speak(u);
 }
+
 /* =========================
-   🔔 DING SOUND — LUXURY / LOUD
-   Safari / iOS SAFE
+   🔔 DING
 ========================= */
 let audioCtx = null;
-
 function playDing() {
   if (!audioUnlocked) return;
 
@@ -241,25 +270,22 @@ function playDing() {
   const osc = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
 
-  /* 🎛️ CHARACTER */
-  osc.type = 'triangle';      // ✅ นุ่ม หรู ไม่บาดหู
-  osc.frequency.value = 1200; // ✅ แหลม ชัด ได้ยินแน่นอน
-
-  gain.gain.value = 0.8;      // ✅ ดังขึ้น
+  osc.type = 'triangle';
+  osc.frequency.value = 1200;
+  gain.gain.value = 0.8;
 
   osc.connect(gain);
   gain.connect(audioCtx.destination);
 
   osc.start();
-  osc.stop(audioCtx.currentTime + 0.4); // ✅ ding ยาวขึ้น
+  osc.stop(audioCtx.currentTime + 0.4);
 }
+
 /* =========================
-   QUEUE VOICE (WITH DING)
+   QUEUE VOICE
 ========================= */
 function speakQueue(name, stylist) {
   speechSynthesis.cancel();
-
-  // 🔔 ding ก่อนเรียกคิว
   playDing();
 
   const a = new SpeechSynthesisUtterance(
@@ -268,22 +294,20 @@ function speakQueue(name, stylist) {
   a.lang = 'th-TH';
   a.voice = preferredThaiVoice;
   a.rate = 0.95;
-  a.pitch = 0.95;
 
-  const byStylist = new SpeechSynthesisUtterance('โดยช่าง');
-  byStylist.lang = 'th-TH';
-  byStylist.voice = preferredThaiVoice;
-  byStylist.rate = 1.0;
+  const by = new SpeechSynthesisUtterance('โดยช่าง');
+  by.lang = 'th-TH';
+  by.voice = preferredThaiVoice;
 
   const b = new SpeechSynthesisUtterance(stylist);
   b.lang = 'en-US';
   b.voice = preferredEnglishVoice;
-  b.rate = 0.9;
 
   speechSynthesis.speak(a);
-  setTimeout(() => speechSynthesis.speak(byStylist), 1500);
+  setTimeout(() => speechSynthesis.speak(by), 1500);
   setTimeout(() => speechSynthesis.speak(b), 1900);
 }
+
 /* =========================
    AUDIO UNLOCK (Safari)
 ========================= */
@@ -291,8 +315,7 @@ function unlockAudioOnce() {
   if (audioUnlocked) return;
   audioUnlocked = true;
 
-  prepareVoices(); // 👈 เพิ่มบรรทัดนี้ (สำคัญมากใน Safari)
-
+  prepareVoices();
   speakSystem(
     'สวัสดีค่ะ ระบบแจ้งเตือนคิวพร้อมใช้งานแล้ว กรุณาเปิดหน้าเว็บทิ้งไว้หากต้องการให้มีการเรียกคิวอัตโนมัติ'
   );
@@ -308,7 +331,6 @@ function checkUpcomingQueues() {
   if (!audioUnlocked) return;
 
   const now = new Date();
-
   bookings.forEach(b => {
     const t = new Date(`${b.date}T${b.time}`);
     const diff = (t - now) / 60000;
