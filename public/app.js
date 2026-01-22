@@ -246,7 +246,7 @@ function renderTable() {
 }
 
 /* =========================
-   EDIT MODAL (เดิม)
+   EDIT MODAL (BACKWARD-COMPATIBLE)
 ========================= */
 const editOverlay = document.getElementById('editOverlay');
 const editTime = document.getElementById('editTime');
@@ -254,11 +254,34 @@ const editStylist = document.getElementById('editStylist');
 const editName = document.getElementById('editName');
 const editPhone = document.getElementById('editPhone');
 const editService = document.getElementById('editService');
+const editDate = document.getElementById('editDate'); // อาจไม่มีใน HTML ตอนนี้
 let editingId = null;
+let editingBooking = null;
 
 function openEditModal(b) {
   editingId = b.id;
-  editTime.value = b.time.slice(0, 5);
+  editingBooking = b;
+
+  if (editTime) {
+    if (editTime.tagName === 'SELECT') {
+      editTime.innerHTML = '';
+      for (let h = 13; h <= 22; h++) {
+        const time = `${String(h).padStart(2, '0')}:00:00`;
+        const opt = document.createElement('option');
+        opt.value = time;
+        opt.textContent = time.slice(0, 5);
+        if (time === b.time) opt.selected = true;
+        editTime.appendChild(opt);
+      }
+    } else {
+      editTime.value = b.time.slice(0, 5);
+    }
+  }
+
+  if (editDate) {
+    editDate.value = b.date;
+  }
+
   editStylist.value = b.stylist;
   editName.value = b.name;
   editPhone.value = b.phone || '';
@@ -274,18 +297,24 @@ function openEditModal(b) {
 document.getElementById('saveEdit').onclick = async () => {
   const gender = document.querySelector('[name=editGender]:checked')?.value;
 
+  const payload = {
+    name: editName.value,
+    phone: editPhone.value,
+    gender,
+    service: editService.value
+  };
+
+  if (editDate) payload.date = editDate.value;
+  if (editTime && editTime.tagName === 'SELECT') payload.time = editTime.value;
+
   await fetch(`${API}/bookings/${editingId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      name: editName.value,
-      phone: editPhone.value,
-      gender,
-      service: editService.value
-    })
+    body: JSON.stringify(payload)
   });
 
   editOverlay.classList.add('hidden');
+  alert('บันทึกการเปลี่ยนคิวเรียบร้อยแล้ว');
   loadBookings();
   loadCalendar();
 };
