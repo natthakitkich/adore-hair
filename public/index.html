@@ -150,13 +150,19 @@
         <input id="phone" />
       </div>
 
-      <div>
-        <label>เพศ</label>
-        <div class="row">
-          <label><input type="radio" name="gender" value="male" required /> 👨</label>
-          <label><input type="radio" name="gender" value="female" /> 👩</label>
-        </div>
-      </div>
+     <div>
+  <label>เพศ</label>
+  <div class="gender-group">
+    <div class="gender-option">
+      <input type="radio" name="gender" value="male" id="g-male">
+      <label for="g-male">👨 ชาย</label>
+    </div>
+    <div class="gender-option">
+      <input type="radio" name="gender" value="female" id="g-female">
+      <label for="g-female">👩 หญิง</label>
+    </div>
+  </div>
+</div>
 
       <div class="full">
         <label>ทำอะไร</label>
