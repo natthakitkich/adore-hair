@@ -38,6 +38,11 @@ let viewYear = new Date(selectedDate).getFullYear();
 /* =========================
    VOICE STATE
 ========================= */
+/* =========================
+   AUDIO UNLOCK STATE (NEW)
+   ใช้สำหรับ Safari / iOS
+========================= */
+let audioUnlocked = false;
 let announcedQueueIds = new Set();
 
 /* =========================
@@ -60,14 +65,12 @@ loginBtn.onclick = () => {
     return;
   }
 
-  // ✅ บันทึกสถานะ
   localStorage.setItem('adore_logged_in', '1');
   loginOverlay.classList.add('hidden');
   init();
 
-  // 🔊 สำคัญมาก: ต้องเรียก "ภายใน click event"
-  // Safari / iOS ถึงจะอนุญาตให้พูด
-  speakLoginReady();
+  // ❌ ไม่เรียก speak ตรงนี้
+  // 🔊 เสียงจะไปพูดตอน user แตะจอครั้งแรกแทน
 };
 
 
@@ -386,7 +389,24 @@ function checkUpcomingQueues() {
     }
   });
 }
+/* =========================================================
+   🔓 AUDIO UNLOCK — MODE A (TOUCH ANYWHERE ONCE)
+   ✔ Safari / iOS compliant
+   ✔ ไม่กระทบ UI
+   ✔ พูดครั้งเดียวต่อการเปิดเว็บ
+========================================================= */
 
+function unlockAudioOnce() {
+  if (audioUnlocked) return;
+  audioUnlocked = true;
+
+  // 🔊 ประโยคหลังล็อกอิน (โทนหรู / AI-like)
+  speakLoginReady();
+}
+
+// แตะหน้าจอครั้งแรก
+document.addEventListener('touchstart', unlockAudioOnce, { once: true });
+document.addEventListener('click', unlockAudioOnce, { once: true });
 setInterval(checkUpcomingQueues, 60000);
 
 /* =========================
