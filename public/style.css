@@ -348,3 +348,12 @@ textarea{resize:vertical}
     0 0 0 2px var(--accent),
     0 0 22px rgba(110,231,255,.45);
 }
+/* =========================
+   LOGIN PIN INPUT
+========================= */
+#pin{
+  text-align: center;        /* ตัวเลขอยู่กลาง */
+  letter-spacing: 8px;       /* ระยะห่างเหมือนช่อง PIN */
+  font-size: 20px;
+  font-weight: 900;
+}
