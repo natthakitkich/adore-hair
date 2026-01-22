@@ -1,4 +1,3 @@
-อันนี้คือโค้ดล่าสุดที่ทำงานอยู่ public/app.js 
 const API = '';
 const OWNER_PIN = '1234';
 
@@ -19,6 +18,8 @@ const nextMonthBtn = document.getElementById('nextMonth');
 const bookingForm = document.getElementById('bookingForm');
 const timeSelect = document.getElementById('time');
 const listEl = document.getElementById('list');
+
+const noteInput = document.getElementById('note');
 
 /* =========================
    STATE
@@ -121,24 +122,6 @@ function renderCalendar() {
   }
 }
 
-prevMonthBtn.onclick = () => {
-  viewMonth--;
-  if (viewMonth < 0) {
-    viewMonth = 11;
-    viewYear--;
-  }
-  renderCalendar();
-};
-
-nextMonthBtn.onclick = () => {
-  viewMonth++;
-  if (viewMonth > 11) {
-    viewMonth = 0;
-    viewYear++;
-  }
-  renderCalendar();
-};
-
 /* =========================
    BOOKINGS
 ========================= */
@@ -151,31 +134,16 @@ async function loadBookings() {
   renderTable();
 }
 
-function bindStylistTabs() {
-  document.querySelectorAll('.tab').forEach(tab => {
-    tab.onclick = () => {
-      document.querySelector('.tab.active').classList.remove('active');
-      tab.classList.add('active');
-      selectedStylist = tab.dataset.tab;
-      renderTimeOptions();
-    };
-  });
-}
-
 function renderTimeOptions() {
   timeSelect.innerHTML = '';
-
   for (let h = 13; h <= 22; h++) {
     const time = `${String(h).padStart(2, '0')}:00:00`;
-    const booked = bookings.find(
-      b => b.time === time && b.stylist === selectedStylist
-    );
+    const booked = bookings.find(b => b.time === time && b.stylist === selectedStylist);
 
     const opt = document.createElement('option');
     opt.value = time;
     opt.textContent = time.slice(0, 5);
     if (booked) opt.disabled = true;
-
     timeSelect.appendChild(opt);
   }
 }
@@ -199,66 +167,40 @@ bookingForm.onsubmit = async e => {
       name: document.getElementById('name').value,
       phone: document.getElementById('phone').value,
       gender,
-      service: document.getElementById('service').value
+      service: document.getElementById('service').value,
+      note: noteInput.value || null
     })
   });
 
   bookingForm.reset();
   alert('บันทึกคิวเรียบร้อยแล้ว');
-
   loadBookings();
   loadCalendar();
 };
 
 /* =========================
-   SUMMARY
-========================= */
-function renderSummary() {
-  const bank = bookings.filter(b => b.stylist === 'Bank').length;
-  const sindy = bookings.filter(b => b.stylist === 'Sindy').length;
-  const assist = bookings.filter(b => b.stylist === 'Assist').length;
-
-  document.getElementById('countBank').textContent = bank;
-  document.getElementById('countSindy').textContent = sindy;
-  document.getElementById('countAssist').textContent = assist;
-  document.getElementById('countTotal').textContent = bank + sindy + assist;
-}
-
-/* =========================
-   TABLE (DESKTOP + MOBILE)
+   TABLE
 ========================= */
 function renderTable() {
   listEl.innerHTML = '';
 
   bookings.forEach(b => {
     const tr = document.createElement('tr');
-
     tr.innerHTML = `
-     <td class="mobile-main">
-  <span>
-    ${b.time.slice(0,5)} · 
-    <span class="badge ${b.stylist}">${b.stylist}</span> · 
-    ${b.gender === 'male' ? '👨' : '👩'}
-  </span>
-  <button class="ghost toggle-detail">ดู</button>
-</td>
-
-
-      <td class="mobile-sub">
-        ${b.name} · ${b.service || ''}
+      <td class="mobile-main">
+        <span>${b.time.slice(0,5)} · <span class="badge ${b.stylist}">${b.stylist}</span> · ${b.gender === 'male' ? '👨' : '👩'}</span>
+        <button class="ghost toggle-detail">ดู</button>
       </td>
-
+      <td class="mobile-sub">${b.name} · ${b.service || ''}</td>
       <td class="mobile-detail hidden">
         <div class="mobile-sub">โทร: ${b.phone || '-'}</div>
-        <div class="mobile-actions">
-          <button class="ghost manage-btn">จัดการ</button>
-        </div>
+        ${b.note ? `<div class="mobile-sub">หมายเหตุ: ${b.note}</div>` : ''}
+        <button class="ghost manage-btn">จัดการ</button>
       </td>
     `;
 
-    tr.querySelector('.toggle-detail').onclick = () => {
+    tr.querySelector('.toggle-detail').onclick = () =>
       tr.querySelector('.mobile-detail').classList.toggle('hidden');
-    };
 
     tr.querySelector('.manage-btn').onclick = () => openEditModal(b);
 
@@ -267,7 +209,7 @@ function renderTable() {
 }
 
 /* =========================
-   EDIT MODAL (RESCHEDULE LOGIC)
+   EDIT MODAL
 ========================= */
 const editOverlay = document.getElementById('editOverlay');
 const editTime = document.getElementById('editTime');
@@ -276,52 +218,21 @@ const editName = document.getElementById('editName');
 const editPhone = document.getElementById('editPhone');
 const editService = document.getElementById('editService');
 const editDate = document.getElementById('editDate');
+const editNote = document.getElementById('editNote');
+
 let editingId = null;
 let editingBooking = null;
-
-function generateEditTimeOptions(date) {
-  if (!editTime || editTime.tagName !== 'SELECT') return;
-
-  editTime.innerHTML = '';
-
-  for (let h = 13; h <= 22; h++) {
-    const time = `${String(h).padStart(2, '0')}:00:00`;
-
-    const conflict = bookings.find(b =>
-      b.date === date &&
-      b.time === time &&
-      b.stylist === editingBooking.stylist &&
-      b.id !== editingBooking.id
-    );
-
-    const opt = document.createElement('option');
-    opt.value = time;
-    opt.textContent = time.slice(0, 5);
-    if (conflict) opt.disabled = true;
-    if (time === editingBooking.time) opt.selected = true;
-
-    editTime.appendChild(opt);
-  }
-}
 
 function openEditModal(b) {
   editingId = b.id;
   editingBooking = b;
 
-  if (editDate) {
-    editDate.value = b.date;
-    generateEditTimeOptions(b.date);
-    editDate.onchange = () => generateEditTimeOptions(editDate.value);
-  }
-
+  editDate.value = b.date;
   editStylist.value = b.stylist;
   editName.value = b.name;
   editPhone.value = b.phone || '';
   editService.value = b.service || '';
-
-  document.querySelectorAll('[name=editGender]').forEach(r => {
-    r.checked = r.value === b.gender;
-  });
+  editNote.value = b.note || '';
 
   editOverlay.classList.remove('hidden');
 }
@@ -329,34 +240,22 @@ function openEditModal(b) {
 document.getElementById('saveEdit').onclick = async () => {
   const gender = document.querySelector('[name=editGender]:checked')?.value;
 
-  const payload = {
-    name: editName.value,
-    phone: editPhone.value,
-    gender,
-    service: editService.value
-  };
-
-  if (editDate) payload.date = editDate.value;
-  if (editTime && editTime.tagName === 'SELECT') payload.time = editTime.value;
-
   await fetch(`${API}/bookings/${editingId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
+    body: JSON.stringify({
+      date: editDate.value,
+      time: editTime.value,
+      name: editName.value,
+      phone: editPhone.value,
+      gender,
+      service: editService.value,
+      note: editNote.value || null
+    })
   });
 
   editOverlay.classList.add('hidden');
   alert('บันทึกการเปลี่ยนคิวเรียบร้อยแล้ว');
-  loadBookings();
-  loadCalendar();
-};
-
-document.getElementById('deleteEdit').onclick = async () => {
-  if (!confirm('ยืนยันการลบคิวนี้?')) return;
-
-  await fetch(`${API}/bookings/${editingId}`, { method: 'DELETE' });
-
-  editOverlay.classList.add('hidden');
   loadBookings();
   loadCalendar();
 };
@@ -368,7 +267,5 @@ document.getElementById('closeEdit').onclick = () =>
    UTIL
 ========================= */
 function getTodayTH() {
-  return new Date().toLocaleDateString('sv-SE', {
-    timeZone: 'Asia/Bangkok'
-  });
+  return new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
 }
