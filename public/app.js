@@ -225,19 +225,55 @@ function speakSystem(text) {
   speechSynthesis.cancel();
   speechSynthesis.speak(u);
 }
-
 /* =========================
-   QUEUE VOICE
+   🔔 DING SOUND — LUXURY / LOUD
+   Safari / iOS SAFE
+========================= */
+let audioCtx = null;
+
+function playDing() {
+  if (!audioUnlocked) return;
+
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+
+  /* 🎛️ CHARACTER */
+  osc.type = 'triangle';      // ✅ นุ่ม หรู ไม่บาดหู
+  osc.frequency.value = 1200; // ✅ แหลม ชัด ได้ยินแน่นอน
+
+  gain.gain.value = 0.8;      // ✅ ดังขึ้น
+
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  osc.start();
+  osc.stop(audioCtx.currentTime + 0.4); // ✅ ding ยาวขึ้น
+}
+/* =========================
+   QUEUE VOICE (WITH DING)
 ========================= */
 function speakQueue(name, stylist) {
   speechSynthesis.cancel();
 
+  // 🔔 ding ก่อนเรียกคิว
+  playDing();
+
   const a = new SpeechSynthesisUtterance(
-    `ขอเรียนแจ้งเตือนค่ะ อีกประมาณ สิบ นาที จะถึงคิวของคุณ ${name}`
+    `แจ้งเตือนค่ะ อีกประมาณ สิบ นาที จะถึงคิวของคุณ ${name}`
   );
   a.lang = 'th-TH';
   a.voice = preferredThaiVoice;
   a.rate = 0.95;
+  a.pitch = 0.95;
+
+  const byStylist = new SpeechSynthesisUtterance('โดยช่าง');
+  byStylist.lang = 'th-TH';
+  byStylist.voice = preferredThaiVoice;
+  byStylist.rate = 1.0;
 
   const b = new SpeechSynthesisUtterance(stylist);
   b.lang = 'en-US';
@@ -245,15 +281,17 @@ function speakQueue(name, stylist) {
   b.rate = 0.9;
 
   speechSynthesis.speak(a);
-  setTimeout(() => speechSynthesis.speak(b), 1600);
+  setTimeout(() => speechSynthesis.speak(byStylist), 1500);
+  setTimeout(() => speechSynthesis.speak(b), 1900);
 }
-
 /* =========================
    AUDIO UNLOCK (Safari)
 ========================= */
 function unlockAudioOnce() {
   if (audioUnlocked) return;
   audioUnlocked = true;
+
+  prepareVoices(); // 👈 เพิ่มบรรทัดนี้ (สำคัญมากใน Safari)
 
   speakSystem(
     'สวัสดีค่ะ ระบบแจ้งเตือนคิวพร้อมใช้งานแล้ว กรุณาเปิดหน้าเว็บทิ้งไว้หากต้องการให้มีการเรียกคิวอัตโนมัติ'
