@@ -319,3 +319,32 @@ textarea{resize:vertical}
 .card-actions{
   margin-top:6px;
 }
+/* =========================
+   CALENDAR VISUAL ISLAND
+========================= */
+.calendar-shell{
+  max-width:360px;
+  margin:0 auto;
+  padding:8px;
+}
+
+.calendarGrid{
+  grid-template-columns:repeat(7,48px);
+  justify-content:center;
+}
+
+.day{
+  width:48px;
+  height:48px;
+  aspect-ratio:auto;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.06),
+    0 6px 18px rgba(0,0,0,.45);
+}
+
+.day.today{
+  outline:none;
+  box-shadow:
+    0 0 0 2px var(--accent),
+    0 0 22px rgba(110,231,255,.45);
+}
