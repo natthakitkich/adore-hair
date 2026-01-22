@@ -362,3 +362,116 @@ textarea {
 .grid > div {
   margin-bottom: 18px;
 }
+/* ======================================================
+   STEP 7 — iOS FRIENDLY POPUP (FINAL OVERRIDE)
+   Safe override — paste at END of liquid-glass.css
+====================================================== */
+
+/* Overlay เต็มจอ + กันเด้ง */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+
+  overscroll-behavior: contain;
+}
+
+/* กล่อง popup หลัก */
+.overlay .modal {
+  width: min(92vw, 520px);
+  max-height: 88vh;
+
+  display: flex;
+  flex-direction: column;
+
+  background: var(--glass-bg-strong);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--glass-border);
+
+  box-shadow:
+    0 30px 60px rgba(0,0,0,0.45),
+    inset 0 1px 0 rgba(255,255,255,0.35);
+
+  overflow: hidden; /* สำคัญ */
+}
+
+/* เนื้อหาใน popup — เลื่อนได้ */
+.overlay .modalBody {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+
+  padding: 20px 20px 28px;
+}
+
+/* หัว popup */
+.overlay .modalBody h2 {
+  margin-bottom: 14px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* ปุ่มด้านล่าง — iOS style */
+.overlay .modalBody button {
+  margin-top: 12px;
+  min-height: 48px;
+  font-size: 1rem;
+}
+
+/* ปุ่มหลัก */
+.overlay .modalBody .primary {
+  background: linear-gradient(
+    180deg,
+    rgba(140,200,255,0.95),
+    rgba(90,160,220,0.95)
+  );
+  color: #fff;
+  border: none;
+}
+
+/* ปุ่มรอง */
+.overlay .modalBody .ghost {
+  background: rgba(255,255,255,0.18);
+  color: var(--text-primary);
+}
+
+/* กัน iOS zoom ตอน focus input */
+.overlay input,
+.overlay textarea,
+.overlay select {
+  font-size: 16px; /* iOS safe size */
+}
+
+/* ปิด bounce ทั้งหน้าเมื่อ popup เปิด */
+body.modal-open {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+}
+
+/* Animation เข้าแบบ iOS */
+.overlay .modal {
+  animation: popupFloatIn 0.28s var(--ease-ios);
+}
+
+@keyframes popupFloatIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
