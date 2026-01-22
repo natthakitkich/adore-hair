@@ -59,7 +59,22 @@
   class="input readonly"
 />
       <input id="editName" placeholder="ชื่อลูกค้า" />
-      <input id="editPhone" placeholder="เบอร์โทร" />
+      <label class="field-label">เบอร์โทร</label>
+<input
+  id="editPhone"
+  type="tel"
+  inputmode="tel"
+  placeholder="เบอร์โทร"
+/>
+
+<a
+  id="callPhoneBtn"
+  class="call-btn"
+  href="#"
+  style="display:none"
+>
+  โทรออก
+</a>
 
       <div class="row">
         <label><input type="radio" name="editGender" value="male" /> 👨 ชาย</label>
