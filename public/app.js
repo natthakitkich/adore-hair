@@ -233,12 +233,15 @@ function renderTable() {
     const tr = document.createElement('tr');
 
     tr.innerHTML = `
-      <td class="mobile-main">
-        <span>
-          ${b.time.slice(0,5)} · ${b.stylist} · ${b.gender === 'male' ? '👨' : '👩'}
-        </span>
-        <button class="ghost toggle-detail">ดู</button>
-      </td>
+     <td class="mobile-main">
+  <span>
+    ${b.time.slice(0,5)} · 
+    <span class="badge ${b.stylist}">${b.stylist}</span> · 
+    ${b.gender === 'male' ? '👨' : '👩'}
+  </span>
+  <button class="ghost toggle-detail">ดู</button>
+</td>
+
 
       <td class="mobile-sub">
         ${b.name} · ${b.service || ''}
