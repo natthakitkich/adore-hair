@@ -481,4 +481,76 @@ input,select{
 /* (CSS ส่วนที่เหลือเหมือนเดิมทุกบรรทัด) */
 
 
+/* =========================
+   MOBILE COMPACT QUEUE TABLE
+   (ADD-ON ONLY, DO NOT TOUCH DESKTOP)
+========================= */
+@media (max-width: 768px){
+
+  /* table แตกเป็น card */
+  table,
+  thead,
+  tbody,
+  tr{
+    display:block;
+    width:100%;
+  }
+
+  thead{
+    display:none;
+  }
+
+  tr{
+    margin-bottom:14px;
+    padding:14px 16px;
+    border-radius:18px;
+    background:rgba(0,0,0,.35);
+    box-shadow:var(--shadow);
+  }
+
+  td{
+    display:block;
+    padding:6px 0;
+    border:none;
+    font-size:14px;
+  }
+
+  /* แถวบน: เวลา / ช่าง / เพศ + ปุ่มดู */
+  td.mobile-main{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-weight:900;
+    gap:12px;
+  }
+
+  td.mobile-main span{
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  /* แถวรอง: ชื่อ + ทำอะไร */
+  td.mobile-sub{
+    color:var(--muted);
+    font-size:13px;
+    line-height:1.4;
+  }
+
+  /* ส่วนรายละเอียด (ซ่อน/โชว์) */
+  td.mobile-detail{
+    margin-top:8px;
+    padding-top:8px;
+    border-top:1px dashed var(--stroke);
+    font-size:13px;
+  }
+
+  .mobile-actions{
+    margin-top:10px;
+  }
+
+  .mobile-actions .ghost{
+    width:100%;
+  }
+}
 
