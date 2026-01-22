@@ -19,6 +19,7 @@ const bookingForm = document.getElementById('bookingForm');
 const timeSelect = document.getElementById('time');
 const listEl = document.getElementById('list');
 
+/* OPTIONAL ELEMENTS */
 const noteInput = document.getElementById('note');
 const editNote = document.getElementById('editNote');
 
@@ -34,10 +35,8 @@ let selectedDate = getTodayTH();
 let viewMonth = new Date(selectedDate).getMonth();
 let viewYear = new Date(selectedDate).getFullYear();
 
-let calendarDirection = 'none';
-
 /* =========================
-   VOICE STATE
+   VOICE QUEUE STATE
 ========================= */
 let announcedQueueIds = new Set();
 
@@ -52,6 +51,7 @@ loginBtn.onclick = () => {
     loginMsg.textContent = 'กรุณาใส่ PIN 4 หลัก';
     return;
   }
+
   if (pin !== OWNER_PIN) {
     loginMsg.textContent = 'รหัสผ่านไม่ถูกต้อง';
     return;
@@ -90,7 +90,7 @@ function init() {
 }
 
 /* =========================
-   CALENDAR
+   CALENDAR (NO ANIMATION)
 ========================= */
 async function loadCalendar() {
   const res = await fetch(`${API}/calendar-days`);
@@ -135,45 +135,22 @@ function renderCalendar() {
   }
 }
 
-/* =========================
-   CALENDAR ANIMATION
-========================= */
-function animateCalendar(updateFn) {
-  calendarDaysEl.classList.add(
-    calendarDirection === 'next'
-      ? 'calendar-exit-left'
-      : 'calendar-exit-right'
-  );
-
-  setTimeout(() => {
-    calendarDaysEl.className = '';
-    updateFn();
-    calendarDaysEl.classList.add('calendar-enter');
-  }, 200);
-}
-
 prevMonthBtn.onclick = () => {
-  calendarDirection = 'prev';
-  animateCalendar(() => {
-    viewMonth--;
-    if (viewMonth < 0) {
-      viewMonth = 11;
-      viewYear--;
-    }
-    renderCalendar();
-  });
+  viewMonth--;
+  if (viewMonth < 0) {
+    viewMonth = 11;
+    viewYear--;
+  }
+  renderCalendar();
 };
 
 nextMonthBtn.onclick = () => {
-  calendarDirection = 'next';
-  animateCalendar(() => {
-    viewMonth++;
-    if (viewMonth > 11) {
-      viewMonth = 0;
-      viewYear++;
-    }
-    renderCalendar();
-  });
+  viewMonth++;
+  if (viewMonth > 11) {
+    viewMonth = 0;
+    viewYear++;
+  }
+  renderCalendar();
 };
 
 /* =========================
@@ -203,9 +180,9 @@ function speak(text) {
 function checkUpcomingQueues() {
   const now = new Date();
   bookings.forEach(b => {
-    const t = new Date(`${b.date}T${b.time}`);
-    const diff = (t - now) / 60000;
-    if (diff > 0 && diff <= 10 && !announcedQueueIds.has(b.id)) {
+    const queueTime = new Date(`${b.date}T${b.time}`);
+    const diffMin = (queueTime - now) / 60000;
+    if (diffMin > 0 && diffMin <= 10 && !announcedQueueIds.has(b.id)) {
       speak(`อีกสิบ นาที ถึงคิว ${b.name} ช่าง ${b.stylist}`);
       announcedQueueIds.add(b.id);
     }
@@ -217,43 +194,13 @@ setInterval(checkUpcomingQueues, 60000);
    SUMMARY
 ========================= */
 function renderSummary() {
-  const bank = bookings.filter(b => b.stylist === 'Bank').length;
-  const sindy = bookings.filter(b => b.stylist === 'Sindy').length;
-  const assist = bookings.filter(b => b.stylist === 'Assist').length;
-
-  document.getElementById('countBank').textContent = bank;
-  document.getElementById('countSindy').textContent = sindy;
-  document.getElementById('countAssist').textContent = assist;
-  document.getElementById('countTotal').textContent = bank + sindy + assist;
-}
-
-/* =========================
-   TIME OPTIONS
-========================= */
-function bindStylistTabs() {
-  document.querySelectorAll('.tab').forEach(tab => {
-    tab.onclick = () => {
-      document.querySelector('.tab.active').classList.remove('active');
-      tab.classList.add('active');
-      selectedStylist = tab.dataset.tab;
-      renderTimeOptions();
-    };
-  });
-}
-
-function renderTimeOptions() {
-  timeSelect.innerHTML = '';
-  for (let h = 13; h <= 22; h++) {
-    const time = `${String(h).padStart(2, '0')}:00:00`;
-    const booked = bookings.find(
-      b => b.time === time && b.stylist === selectedStylist
-    );
-    const opt = document.createElement('option');
-    opt.value = time;
-    opt.textContent = time.slice(0, 5);
-    if (booked) opt.disabled = true;
-    timeSelect.appendChild(opt);
-  }
+  document.getElementById('countBank').textContent =
+    bookings.filter(b => b.stylist === 'Bank').length;
+  document.getElementById('countSindy').textContent =
+    bookings.filter(b => b.stylist === 'Sindy').length;
+  document.getElementById('countAssist').textContent =
+    bookings.filter(b => b.stylist === 'Assist').length;
+  document.getElementById('countTotal').textContent = bookings.length;
 }
 
 /* =========================
@@ -279,8 +226,8 @@ function renderTable() {
         ${b.note ? `<div class="card-sub">หมายเหตุ: ${b.note}</div>` : ''}
       </div>
     `;
-    card.querySelector('.toggle-detail').onclick = () =>
-      card.classList.toggle('expanded');
+    card.querySelector('.toggle-detail').onclick =
+      () => card.classList.toggle('expanded');
     listEl.appendChild(card);
   });
 }
