@@ -103,7 +103,7 @@ textarea{resize:vertical}
 
 .avatar{
   width:42px;
-  height:42px;
+  aspect-ratio:1/1;
   border-radius:50%;
   background:linear-gradient(135deg,var(--accent),var(--accent2));
   display:grid;
@@ -114,7 +114,7 @@ textarea{resize:vertical}
   overflow:hidden;
 }
 
-.avatar.big{width:72px;height:72px}
+.avatar.big{width:72px}
 
 .avatar img{
   position:absolute;
@@ -142,7 +142,7 @@ textarea{resize:vertical}
 }
 
 /* =========================
-   CALENDAR (STABLE)
+   CALENDAR
 ========================= */
 .calendarHeader{
   display:flex;
@@ -160,20 +160,15 @@ textarea{resize:vertical}
   display:grid;
   grid-template-columns:repeat(7,1fr);
   gap:12px;
-  justify-content:stretch;
+  text-align:center;
 }
 
-.calendarDays{
-  display: contents;
-}
-.dayLabel{
-  font-size:13px;
-  color:var(--muted);
-}
+.calendarDays{display:contents}
+
+.dayLabel{font-size:13px;color:var(--muted)}
 
 .day{
-  width:100%;
-  aspect-ratio:1 / 1;
+  aspect-ratio:1/1;
   border-radius:50%;
   display:grid;
   place-items:center;
@@ -185,13 +180,7 @@ textarea{resize:vertical}
 .day.low{color:var(--low);background:rgba(44,255,156,.15)}
 .day.mid{color:var(--mid);background:rgba(255,209,102,.15)}
 .day.high{color:var(--high);background:rgba(255,92,122,.15)}
-
-.day.today{
-  outline:none;
-  box-shadow:
-    0 0 0 2px var(--accent),
-    0 8px 24px rgba(110,231,255,.25);
-}
+.day.today{outline:2px solid var(--accent)}
 
 .calendarLegend{
   display:flex;
@@ -256,10 +245,13 @@ textarea{resize:vertical}
   grid-template-columns:1fr 1fr;
   gap:16px;
 }
+
 .grid .full{grid-column:1/-1}
 
+
+
 /* =========================
-   BADGE
+   ✅ BADGE (STYLIST) — คืนดีไซน์เดิม
 ========================= */
 .badge{
   display:inline-block;
@@ -267,15 +259,32 @@ textarea{resize:vertical}
   border-radius:999px;
   font-weight:900;
   font-size:13px;
+  line-height:1;
 }
-.badge.Bank{background:rgba(110,231,255,.2);color:#6ee7ff}
-.badge.Sindy{background:rgba(255,143,177,.2);color:#ff8fb1}
-.badge.Assist{background:rgba(44,255,156,.2);color:#2cff9c}
+
+.badge.Bank{
+  background:rgba(110,231,255,.2);
+  color:#6ee7ff;
+}
+
+.badge.Sindy{
+  background:rgba(255,143,177,.2);
+  color:#ff8fb1;
+}
+
+.badge.Assist{
+  background:rgba(44,255,156,.2);
+  color:#2cff9c;
+}
 
 /* =========================
-   BOOKING CARD
+   BOOKING CARD (ALL DEVICES)
 ========================= */
-.booking-list{display:flex;flex-direction:column;gap:14px}
+.booking-list{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
 
 .booking-card{
   padding:16px;
@@ -288,28 +297,68 @@ textarea{resize:vertical}
 
 .card-main{
   display:flex;
+  justify-content:space-between;
   align-items:center;
-  gap:10px;
   font-weight:900;
 }
 
-.card-main-info{
-  display:flex;
-  align-items:center;
-  gap:6px;
-  flex:1;
+.card-sub{
+  font-size:14px;
+  color:var(--muted);
 }
-
-.card-sub{font-size:14px;color:var(--muted)}
 
 .card-detail{
-  display:none;
+  margin-top:6px;
+  padding-top:10px;
+  border-top:1px solid var(--stroke);
+  display:flex;
+  flex-direction:column;
+  gap:6px;
 }
 
-.booking-card.expanded .card-detail{
-  display:block;
+.card-actions{
+  margin-top:6px;
 }
 
+/* =========================
+   CALENDAR VISUAL ISLAND
+========================= */
+.calendar-shell{
+  max-width:360px;
+  margin:0 auto;
+  padding:8px;
+}
+
+.calendarGrid{
+  grid-template-columns:repeat(7,48px);
+  justify-content:center;
+}
+
+.day{
+  width:48px;
+  height:48px;
+  aspect-ratio:auto;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.06),
+    0 6px 18px rgba(0,0,0,.45);
+}
+
+.day.today{
+  outline:none;
+  box-shadow:
+    0 0 0 2px var(--accent),
+    0 0 22px rgba(110,231,255,.45);
+}
+
+/* =========================
+   LOGIN PIN INPUT
+========================= */
+#pin{
+  text-align: center;        /* ตัวเลขอยู่กลาง */
+  letter-spacing: 8px;       /* ระยะห่างเหมือนช่อง PIN */
+  font-size: 20px;
+  font-weight: 900;
+}
 /* =========================
    TIME PILL
 ========================= */
@@ -320,16 +369,23 @@ textarea{resize:vertical}
   font-weight:900;
   font-size:15px;
   text-align:center;
+
   color:#061022;
   background:linear-gradient(135deg,var(--accent),var(--accent2));
+  box-shadow:
+    0 4px 14px rgba(0,0,0,.45),
+    inset 0 0 0 1px rgba(255,255,255,.35);
 }
 
-/* =========================
-   LOGIN PIN
-========================= */
-#pin{
-  text-align:center;
-  letter-spacing:8px;
-  font-size:20px;
-  font-weight:900;
+.card-main{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.card-main-info{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  flex:1;
 }
