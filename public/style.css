@@ -24,7 +24,6 @@
    BASE
 ========================= */
 *{box-sizing:border-box}
-
 body{
   margin:0;
   font-family:system-ui,-apple-system,Segoe UI,Roboto;
@@ -92,6 +91,8 @@ textarea{
 
 .modal{
   width:min(420px,92vw);
+  max-height:90vh;
+  overflow:auto;
   background:linear-gradient(180deg,rgba(20,25,45,.96),rgba(10,12,22,.96));
   border-radius:26px;
   border:1px solid rgba(255,255,255,.15);
@@ -132,7 +133,7 @@ textarea{
 
 .avatar{
   width:42px;
-  height:42px;
+  aspect-ratio:1/1;
   border-radius:50%;
   background:linear-gradient(135deg,var(--accent),var(--accent2));
   display:grid;
@@ -141,11 +142,13 @@ textarea{
   color:#061022;
   position:relative;
   overflow:hidden;
+  flex-shrink:0;
 }
 
 .avatar.big{
   width:72px;
-  height:72px;
+  aspect-ratio:1/1;
+  border-radius:50%;
 }
 
 .avatar img{
@@ -176,6 +179,76 @@ textarea{
 }
 
 /* =========================
+   CALENDAR (FIXED)
+========================= */
+.calendarHeader{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:14px;
+}
+
+.calendarTitle{
+  font-size:22px;
+  font-weight:900;
+}
+
+.calendarGrid{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:12px;
+  text-align:center;
+}
+
+.calendarDays{
+  display:contents;
+}
+
+.dayLabel{
+  font-size:13px;
+  color:var(--muted);
+}
+
+.day{
+  aspect-ratio:1/1;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  font-weight:900;
+  cursor:pointer;
+  border:1px solid var(--stroke);
+  background:rgba(255,255,255,.04);
+}
+
+.day.today{
+  outline:2px solid var(--accent);
+}
+
+.day.low{color:var(--low);background:rgba(44,255,156,.15)}
+.day.mid{color:var(--mid);background:rgba(255,209,102,.15)}
+.day.high{color:var(--high);background:rgba(255,92,122,.15)}
+
+.calendarLegend{
+  display:flex;
+  justify-content:center;
+  gap:16px;
+  margin-top:16px;
+  font-size:13px;
+  color:var(--muted);
+}
+
+.dot{
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  display:inline-block;
+  margin-right:6px;
+}
+.dot.low{background:var(--low)}
+.dot.mid{background:var(--mid)}
+.dot.high{background:var(--high)}
+
+/* =========================
    SUMMARY
 ========================= */
 .summary{
@@ -185,15 +258,15 @@ textarea{
 }
 
 .summary .box{
-  padding:26px;
-  border-radius:22px;
+  padding:22px;
+  border-radius:20px;
   background:rgba(0,0,0,.35);
   text-align:center;
 }
 
 .summary strong{
   display:block;
-  font-size:36px;
+  font-size:32px;
   margin-top:6px;
 }
 
@@ -223,6 +296,17 @@ textarea{
 }
 
 /* =========================
+   FORM GRID
+========================= */
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+}
+
+.grid .full{grid-column:1 / -1}
+
+/* =========================
    TABLE
 ========================= */
 table{
@@ -250,28 +334,25 @@ th{color:var(--muted)}
 .badge.Assist{background:rgba(44,255,156,.2);color:#2cff9c}
 
 /* =========================
-   MOBILE COMPACT QUEUE TABLE
+   MOBILE FIXES
 ========================= */
 @media (max-width: 768px){
 
-  table, thead, tbody, tr{
-    display:block;
-    width:100%;
-  }
-
+  /* table เป็น card */
+  table, thead, tbody, tr{display:block;width:100%}
   thead{display:none}
 
   tr{
-    margin-bottom:12px;
-    padding:12px;
-    border-radius:16px;
-    background:rgba(0,0,0,.32);
-    box-shadow:0 8px 24px rgba(0,0,0,.35);
+    margin-bottom:14px;
+    padding:14px 16px;
+    border-radius:18px;
+    background:rgba(0,0,0,.35);
+    box-shadow:var(--shadow);
   }
 
   td{
     display:block;
-    padding:4px 0;
+    padding:6px 0;
     border:none;
   }
 
@@ -280,29 +361,28 @@ th{color:var(--muted)}
     justify-content:space-between;
     align-items:center;
     font-weight:900;
-    font-size:15px;
-    gap:10px;
+    gap:12px;
   }
 
   td.mobile-sub{
-    font-size:13px;
-    line-height:1.35;
     color:var(--muted);
+    font-size:13px;
   }
 
   td.mobile-detail{
-    margin-top:6px;
-    padding-top:6px;
+    margin-top:8px;
+    padding-top:8px;
     border-top:1px dashed var(--stroke);
     font-size:13px;
-    line-height:1.4;
-  }
-
-  .mobile-actions{
-    margin-top:8px;
   }
 
   .mobile-actions .ghost{
     width:100%;
+  }
+
+  /* 🔒 ล็อก calendar ไม่ให้โดน table rule */
+  .calendarGrid,
+  .calendarDays{
+    display:grid !important;
   }
 }
