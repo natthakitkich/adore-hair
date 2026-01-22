@@ -21,56 +21,37 @@
       <h2>เข้าสู่ระบบ</h2>
       <p class="muted">กรุณาใส่ PIN 4 หลัก</p>
 
-      <input
-        id="pin"
-        type="password"
-        inputmode="numeric"
-        maxlength="4"
-        placeholder="••••"
-      />
-
-      <button id="loginBtn" class="primary" type="button">
-        Login
-      </button>
-
+      <input id="pin" type="password" inputmode="numeric" maxlength="4" placeholder="••••" />
+      <button id="loginBtn" class="primary" type="button">Login</button>
       <div id="loginMsg" class="msg err"></div>
     </div>
   </div>
 </div>
 
 <!-- =========================
-     EDIT BOOKING MODAL (RESCHEDULE ENABLED)
+     EDIT BOOKING MODAL
 ========================= -->
 <div id="editOverlay" class="overlay hidden">
   <div class="modal">
     <div class="modalBody">
       <h2>แก้ไข / เปลี่ยนคิว</h2>
 
-      <!-- วันที่ (ใหม่) -->
       <input id="editDate" type="date" />
-
-      <!-- เวลา (ใหม่: ใช้ select) -->
       <select id="editTime"></select>
-
-      <!-- เวลาเดิม (ยังอยู่ แต่ไม่ใช้แล้ว) -->
-      <input id="editTimeOld" disabled style="display:none" />
-
-      <!-- ช่าง (lock เหมือนเดิม) -->
       <input id="editStylist" disabled />
 
       <input id="editName" placeholder="ชื่อลูกค้า" />
       <input id="editPhone" placeholder="เบอร์โทร" />
 
       <div class="row">
-        <label>
-          <input type="radio" name="editGender" value="male" /> 👨 ชาย
-        </label>
-        <label>
-          <input type="radio" name="editGender" value="female" /> 👩 หญิง
-        </label>
+        <label><input type="radio" name="editGender" value="male" /> 👨</label>
+        <label><input type="radio" name="editGender" value="female" /> 👩</label>
       </div>
 
       <input id="editService" placeholder="ทำอะไร" />
+
+      <!-- ✅ NEW -->
+      <textarea id="editNote" placeholder="หมายเหตุเพิ่มเติม" rows="3"></textarea>
 
       <button id="saveEdit" class="primary">บันทึกการเปลี่ยนคิว</button>
       <button id="deleteEdit" class="ghost">ลบคิว</button>
@@ -90,60 +71,16 @@
     </div>
     <div>
       <div class="title">Adore hair studio</div>
-      <div class="subtitle">
-        Owner Queue · 13:00–22:00 · แยกตามช่าง
-      </div>
+      <div class="subtitle">Owner Queue · 13:00–22:00 · แยกตามช่าง</div>
     </div>
   </div>
-
   <button id="logoutBtn" class="ghost">Logout</button>
 </div>
 
-<!-- =========================
-     MAIN CONTENT (SINGLE PAGE)
-========================= -->
 <div class="wrap">
 
-  <!-- ===== CALENDAR ===== -->
+  <!-- BOOKING FORM -->
   <section class="panel">
-    <div class="calendarHeader">
-      <button id="prevMonth" class="ghost">‹</button>
-      <div id="calendarTitle" class="calendarTitle">—</div>
-      <button id="nextMonth" class="ghost">›</button>
-    </div>
-
-    <div class="calendarGrid">
-      <div class="dayLabel">อา</div>
-      <div class="dayLabel">จ</div>
-      <div class="dayLabel">อ</div>
-      <div class="dayLabel">พ</div>
-      <div class="dayLabel">พฤ</div>
-      <div class="dayLabel">ศ</div>
-      <div class="dayLabel">ส</div>
-
-      <div id="calendarDays" class="calendarDays"></div>
-    </div>
-
-    <div class="calendarLegend">
-      <span class="dot low"></span> คิวน้อย
-      <span class="dot mid"></span> ปานกลาง
-      <span class="dot high"></span> หนาแน่น
-    </div>
-  </section>
-
-  <!-- ===== SUMMARY ===== -->
-  <section class="panel">
-    <div class="summary">
-      <div class="box">Bank<br><strong id="countBank">0</strong></div>
-      <div class="box">Sindy<br><strong id="countSindy">0</strong></div>
-      <div class="box">Assist<br><strong id="countAssist">0</strong></div>
-      <div class="box">รวม<br><strong id="countTotal">0</strong></div>
-    </div>
-  </section>
-
-  <!-- ===== BOOKING ===== -->
-  <section class="panel">
-
     <div class="tabs">
       <div class="tab active" data-tab="Bank">Bank</div>
       <div class="tab" data-tab="Sindy">Sindy</div>
@@ -151,20 +88,9 @@
     </div>
 
     <form id="bookingForm" class="grid">
-      <div>
-        <label>เวลา</label>
-        <select id="time"></select>
-      </div>
-
-      <div>
-        <label>ชื่อลูกค้า</label>
-        <input id="name" required />
-      </div>
-
-      <div>
-        <label>เบอร์โทร</label>
-        <input id="phone" />
-      </div>
+      <div><label>เวลา</label><select id="time"></select></div>
+      <div><label>ชื่อลูกค้า</label><input id="name" required /></div>
+      <div><label>เบอร์โทร</label><input id="phone" /></div>
 
       <div>
         <label>เพศ</label>
@@ -174,33 +100,18 @@
         </div>
       </div>
 
+      <div class="full"><label>ทำอะไร</label><input id="service" /></div>
+
+      <!-- ✅ NEW -->
       <div class="full">
-        <label>ทำอะไร</label>
-        <input id="service" />
+        <label>หมายเหตุ</label>
+        <textarea id="note" rows="3"></textarea>
       </div>
 
       <div class="full">
         <button type="submit" class="primary">เพิ่มคิว</button>
       </div>
     </form>
-  </section>
-
-  <!-- ===== TABLE ===== -->
-  <section class="panel">
-    <table>
-      <thead>
-        <tr>
-          <th>เวลา</th>
-          <th>ช่าง</th>
-          <th>เพศ</th>
-          <th>ชื่อ</th>
-          <th>ทำอะไร</th>
-          <th>โทร</th>
-          <th>จัดการ</th>
-        </tr>
-      </thead>
-      <tbody id="list"></tbody>
-    </table>
   </section>
 
 </div>
