@@ -80,10 +80,19 @@ app.get('/calendar-days', async (_, res) => {
 });
 
 /* ---------- BASIC ----------
-   Create booking
+   Create booking (NOTE SUPPORT)
 ---------------------------- */
 app.post('/bookings', async (req, res) => {
-  const { date, time, stylist, name, gender, phone, service } = req.body;
+  const {
+    date,
+    time,
+    stylist,
+    name,
+    gender,
+    phone,
+    service,
+    note
+  } = req.body;
 
   if (!date || !time || !stylist || !name || !gender) {
     return res.status(400).json({ error: 'Missing required fields' });
@@ -102,7 +111,18 @@ app.post('/bookings', async (req, res) => {
 
   const { data, error } = await supabase
     .from('bookings')
-    .insert([{ date, time, stylist, name, gender, phone, service }])
+    .insert([
+      {
+        date,
+        time,
+        stylist,
+        name,
+        gender,
+        phone,
+        service,
+        note
+      }
+    ])
     .select()
     .single();
 
@@ -114,11 +134,19 @@ app.post('/bookings', async (req, res) => {
 });
 
 /* ---------- DEVELOP ----------
-   Update booking (RESCHEDULE SUPPORT)
+   Update booking (RESCHEDULE + NOTE SUPPORT)
 ---------------------------- */
 app.put('/bookings/:id', async (req, res) => {
   const { id } = req.params;
-  const { date, time, name, phone, gender, service } = req.body;
+  const {
+    date,
+    time,
+    name,
+    phone,
+    gender,
+    service,
+    note
+  } = req.body;
 
   // ดึง booking เดิมก่อน เพื่อรู้ stylist
   const { data: current, error: fetchError } = await supabase
@@ -156,7 +184,8 @@ app.put('/bookings/:id', async (req, res) => {
       name,
       phone,
       gender,
-      service
+      service,
+      note
     })
     .eq('id', id);
 
