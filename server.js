@@ -59,7 +59,7 @@ app.get('/bookings', async (req, res) => {
 });
 
 /* ---------- DEVELOP ----------
-   Get calendar density (NEW)
+   Get calendar density
 ---------------------------- */
 app.get('/calendar-days', async (_, res) => {
   const { data, error } = await supabase
@@ -114,15 +114,50 @@ app.post('/bookings', async (req, res) => {
 });
 
 /* ---------- DEVELOP ----------
-   Update booking
+   Update booking (RESCHEDULE SUPPORT)
 ---------------------------- */
 app.put('/bookings/:id', async (req, res) => {
   const { id } = req.params;
-  const { name, phone, gender, service } = req.body;
+  const { date, time, name, phone, gender, service } = req.body;
+
+  // ดึง booking เดิมก่อน เพื่อรู้ stylist
+  const { data: current, error: fetchError } = await supabase
+    .from('bookings')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (fetchError || !current) {
+    return res.status(404).json({ error: 'Booking not found' });
+  }
+
+  const newDate = date || current.date;
+  const newTime = time || current.time;
+  const stylist = current.stylist;
+
+  // ตรวจว่ามีคิวอื่นชนหรือไม่ (ยกเว้น id ตัวเอง)
+  const { data: conflict } = await supabase
+    .from('bookings')
+    .select('id')
+    .eq('date', newDate)
+    .eq('time', newTime)
+    .eq('stylist', stylist)
+    .neq('id', id);
+
+  if (conflict && conflict.length > 0) {
+    return res.status(409).json({ error: 'Slot already booked' });
+  }
 
   const { error } = await supabase
     .from('bookings')
-    .update({ name, phone, gender, service })
+    .update({
+      date: newDate,
+      time: newTime,
+      name,
+      phone,
+      gender,
+      service
+    })
     .eq('id', id);
 
   if (error) {
