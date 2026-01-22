@@ -19,26 +19,28 @@ const bookingForm = document.getElementById('bookingForm');
 const timeSelect = document.getElementById('time');
 const listEl = document.getElementById('list');
 
-/* OPTIONAL ELEMENTS */
-const noteInput = document.getElementById('note');
+/* =========================
+   EDIT MODAL ELEMENTS
+========================= */
+const editOverlay = document.getElementById('editOverlay');
+const editTime = document.getElementById('editTime');
+const editStylist = document.getElementById('editStylist');
+const editName = document.getElementById('editName');
+const editPhone = document.getElementById('editPhone');
+const editService = document.getElementById('editService');
 const editNote = document.getElementById('editNote');
+const saveEditBtn = document.getElementById('saveEdit');
+const deleteEditBtn = document.getElementById('deleteEdit');
+const closeEditBtn = document.getElementById('closeEdit');
 
 /* =========================
    STATE
 ========================= */
 let bookings = [];
 let calendarDensity = {};
-
 let selectedStylist = 'Bank';
 let selectedDate = getTodayTH();
-let viewMonth = new Date(selectedDate).getMonth();
-let viewYear = new Date(selectedDate).getFullYear();
-
-/* =========================
-   AUDIO / VOICE STATE
-========================= */
-let audioUnlocked = false;
-let announcedQueueIds = new Set();
+let editingBooking = null;
 
 /* =========================
    LOGIN
@@ -47,10 +49,6 @@ loginBtn.onclick = () => {
   const pin = pinInput.value.trim();
   loginMsg.textContent = '';
 
-  if (pin.length !== 4) {
-    loginMsg.textContent = 'กรุณาใส่ PIN 4 หลัก';
-    return;
-  }
   if (pin !== OWNER_PIN) {
     loginMsg.textContent = 'รหัสผ่านไม่ถูกต้อง';
     return;
@@ -61,17 +59,12 @@ loginBtn.onclick = () => {
   init();
 };
 
-pinInput.addEventListener('input', () => {
-  pinInput.value = pinInput.value.replace(/\D/g, '');
-});
-
 logoutBtn.onclick = () => {
   localStorage.removeItem('adore_logged_in');
   location.reload();
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-  audioUnlocked = false;
   if (localStorage.getItem('adore_logged_in') === '1') {
     loginOverlay.classList.add('hidden');
     init();
@@ -91,42 +84,24 @@ function init() {
    CALENDAR
 ========================= */
 async function loadCalendar() {
-  try {
-    const res = await fetch(`${API}/calendar-days`);
-    calendarDensity = await res.json();
-  } catch {
-    calendarDensity = {};
-  }
+  const res = await fetch(`${API}/calendar-days`);
+  calendarDensity = await res.json();
   renderCalendar();
 }
 
 function renderCalendar() {
   calendarDaysEl.innerHTML = '';
+  const d = new Date(selectedDate);
+  calendarTitle.textContent = d.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' });
 
-  const firstDay = new Date(viewYear, viewMonth, 1);
-  const startDay = firstDay.getDay();
-  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
-
-  calendarTitle.textContent =
-    firstDay.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' });
-
-  for (let i = 0; i < startDay; i++) {
-    calendarDaysEl.appendChild(document.createElement('div'));
-  }
-
-  for (let d = 1; d <= daysInMonth; d++) {
-    const date =
-      `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-    const count = calendarDensity[date] || 0;
-
+  for (let day = 1; day <= 31; day++) {
+    const date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     const el = document.createElement('div');
     el.className = 'day';
-    el.textContent = d;
+    el.textContent = day;
 
+    if (calendarDensity[date] > 0) el.classList.add('low');
     if (date === selectedDate) el.classList.add('today');
-    if (count > 0 && count <= 5) el.classList.add('low');
-    if (count > 5 && count <= 10) el.classList.add('mid');
-    if (count > 10) el.classList.add('high');
 
     el.onclick = () => {
       selectedDate = date;
@@ -138,181 +113,102 @@ function renderCalendar() {
   }
 }
 
-prevMonthBtn.onclick = () => {
-  viewMonth--;
-  if (viewMonth < 0) { viewMonth = 11; viewYear--; }
-  renderCalendar();
-};
-nextMonthBtn.onclick = () => {
-  viewMonth++;
-  if (viewMonth > 11) { viewMonth = 0; viewYear++; }
-  renderCalendar();
-};
-
 /* =========================
    BOOKINGS
 ========================= */
 async function loadBookings() {
-  try {
-    const res = await fetch(`${API}/bookings?date=${selectedDate}`);
-    bookings = await res.json();
-  } catch {
-    bookings = [];
-  }
-
-  renderSummary();
-  renderTimeOptions();
+  const res = await fetch(`${API}/bookings?date=${selectedDate}`);
+  bookings = await res.json();
   renderTable();
 }
 
 /* =========================
-   [STUB] REQUIRED FUNCTIONS
-   (กัน JS พัง – ไม่กระทบระบบ)
-========================= */
-function bindStylistTabs() {}
-function renderSummary() {}
-function renderTimeOptions() {}
-
-/* =========================
-   TABLE
+   TABLE + MANAGE
 ========================= */
 function renderTable() {
   listEl.innerHTML = '';
 
-  bookings.forEach(b => {
-    const card = document.createElement('div');
-    card.className = 'booking-card';
+  bookings
+    .filter(b => b.stylist === selectedStylist)
+    .forEach(b => {
+      const card = document.createElement('div');
+      card.className = 'booking-card';
 
-    card.innerHTML = `
-      <div class="card-main">
-        <div class="time-pill">${b.time.slice(0,5)}</div>
-        <div class="card-main-info">
+      card.innerHTML = `
+        <div class="card-main">
+          <div class="time-pill">${b.time.slice(0,5)}</div>
           <span class="badge ${b.stylist}">${b.stylist}</span>
-          ${b.gender === 'male' ? '👨' : '👩'}
+          <button class="ghost toggle-detail">ดู</button>
         </div>
-        <button class="ghost toggle-detail">ดู</button>
-      </div>
-      <div class="card-sub">${b.name} · ${b.service || ''}</div>
-      <div class="card-detail">
-        <div class="card-sub">โทร: ${b.phone || '-'}</div>
-        ${b.note ? `<div class="card-sub">หมายเหตุ: ${b.note}</div>` : ''}
-      </div>
-    `;
 
-    card.onclick = () => card.classList.toggle('expanded');
-    card.querySelector('.toggle-detail').onclick = e => {
-      e.stopPropagation();
-      card.classList.toggle('expanded');
-    };
+        <div class="card-detail">
+          <div>${b.name} · ${b.service || '-'}</div>
+          <div>โทร: ${b.phone || '-'}</div>
+          <button class="ghost manage-btn">จัดการ</button>
+        </div>
+      `;
 
-    listEl.appendChild(card);
+      card.querySelector('.toggle-detail').onclick = e => {
+        e.stopPropagation();
+        card.classList.toggle('expanded');
+      };
+
+      card.querySelector('.manage-btn').onclick = e => {
+        e.stopPropagation();
+        openEditModal(b);
+      };
+
+      listEl.appendChild(card);
+    });
+}
+
+/* =========================
+   EDIT MODAL LOGIC
+========================= */
+function openEditModal(b) {
+  editingBooking = b;
+
+  editTime.value = b.time;
+  editStylist.value = b.stylist;
+  editName.value = b.name;
+  editPhone.value = b.phone || '';
+  editService.value = b.service || '';
+  editNote.value = b.note || '';
+
+  editOverlay.classList.remove('hidden');
+}
+
+saveEditBtn.onclick = async () => {
+  await fetch(`${API}/bookings/${editingBooking.id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      time: editTime.value,
+      stylist: editStylist.value,
+      name: editName.value,
+      phone: editPhone.value,
+      service: editService.value,
+      note: editNote.value
+    })
   });
-}
 
-/* =========================================================
-   🔊 VOICE SYSTEM — FINAL (Safari / iPad SAFE)
-========================================================= */
-let preferredThaiVoice = null;
-let preferredEnglishVoice = null;
+  editOverlay.classList.add('hidden');
+  loadBookings();
+  loadCalendar();
+};
 
-function prepareVoices() {
-  const voices = speechSynthesis.getVoices();
-  preferredThaiVoice =
-    voices.find(v => v.lang === 'th-TH' && !v.name.toLowerCase().includes('siri'))
-    || voices.find(v => v.lang === 'th-TH')
-    || null;
+deleteEditBtn.onclick = async () => {
+  if (!confirm('ยืนยันการลบคิวนี้?')) return;
 
-  preferredEnglishVoice =
-    voices.find(v => v.lang.startsWith('en'))
-    || null;
-}
-speechSynthesis.onvoiceschanged = prepareVoices;
+  await fetch(`${API}/bookings/${editingBooking.id}`, { method: 'DELETE' });
+  editOverlay.classList.add('hidden');
+  loadBookings();
+  loadCalendar();
+};
 
-/* ===== SYSTEM VOICE ===== */
-function speakSystem(text) {
-  if (!audioUnlocked) return;
-  speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = 'th-TH';
-  u.voice = preferredThaiVoice;
-  u.rate = 1.2;
-  u.pitch = 1.0;
-  speechSynthesis.speak(u);
-}
-
-/* ===== DING ===== */
-let audioCtx = null;
-function playDing() {
-  if (!audioUnlocked) return;
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  osc.type = 'triangle';
-  osc.frequency.value = 1200;
-  gain.gain.value = 0.8;
-
-  osc.connect(gain);
-  gain.connect(audioCtx.destination);
-  osc.start();
-  osc.stop(audioCtx.currentTime + 0.4);
-}
-
-/* ===== QUEUE VOICE ===== */
-function speakQueue(name, stylist) {
-  if (!audioUnlocked) return;
-  speechSynthesis.cancel();
-  playDing();
-
-  const a = new SpeechSynthesisUtterance(
-    `แจ้งเตือนค่ะ อีกประมาณ สิบ นาที จะถึงคิวของคุณ ${name}`
-  );
-  a.lang = 'th-TH';
-  a.voice = preferredThaiVoice;
-  a.rate = 0.95;
-
-  const mid = new SpeechSynthesisUtterance('โดยช่าง');
-  mid.lang = 'th-TH';
-  mid.voice = preferredThaiVoice;
-
-  const b = new SpeechSynthesisUtterance(stylist);
-  b.lang = 'en-US';
-  b.voice = preferredEnglishVoice;
-  b.rate = 0.9;
-
-  speechSynthesis.speak(a);
-  setTimeout(() => speechSynthesis.speak(mid), 1500);
-  setTimeout(() => speechSynthesis.speak(b), 1900);
-}
-
-/* ===== AUDIO UNLOCK ===== */
-function unlockAudioOnce() {
-  if (audioUnlocked) return;
-  audioUnlocked = true;
-  prepareVoices();
-  speakSystem(
-    'สวัสดีค่ะ ระบบแจ้งเตือนคิวพร้อมใช้งานแล้ว กรุณาเปิดหน้าเว็บทิ้งไว้หากต้องการให้มีการเรียกคิวอัตโนมัติ'
-  );
-}
-
-document.addEventListener('touchstart', unlockAudioOnce, { once: true });
-document.addEventListener('click', unlockAudioOnce, { once: true });
-
-/* ===== QUEUE CHECK ===== */
-function checkUpcomingQueues() {
-  if (!audioUnlocked) return;
-
-  const now = new Date();
-  bookings.forEach(b => {
-    const t = new Date(`${b.date}T${b.time}`);
-    const diff = (t - now) / 60000;
-    if (diff > 0 && diff <= 10 && !announcedQueueIds.has(b.id)) {
-      speakQueue(b.name, b.stylist);
-      announcedQueueIds.add(b.id);
-    }
-  });
-}
-setInterval(checkUpcomingQueues, 60000);
+closeEditBtn.onclick = () => {
+  editOverlay.classList.add('hidden');
+};
 
 /* =========================
    UTIL
