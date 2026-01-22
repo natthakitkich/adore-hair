@@ -57,6 +57,14 @@ loginBtn.onclick = () => {
   init();
 };
 
+/* =========================
+   PIN INPUT ONLY NUMBER
+========================= */
+pinInput.addEventListener('input', () => {
+  pinInput.value = pinInput.value.replace(/\D/g, '');
+});
+
+
 logoutBtn.onclick = () => {
   localStorage.removeItem('adore_logged_in');
   location.reload();
