@@ -475,3 +475,70 @@ body.modal-open {
     transform: translateY(0) scale(1);
   }
 }
+/* ======================================================
+   STEP 8 — POPUP ACTION BAR (iOS STYLE)
+   Safe override — no logic impact
+====================================================== */
+
+/* แถบปุ่มด้านล่าง popup */
+.modal .action-bar {
+  position: sticky;
+  bottom: 0;
+
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+
+  background: linear-gradient(
+    to top,
+    rgba(30,40,55,0.65),
+    rgba(30,40,55,0.25)
+  );
+
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+
+  border-top: 1px solid rgba(255,255,255,0.18);
+}
+
+/* ปุ่มทุกปุ่มใน action bar */
+.modal .action-bar button {
+  width: 100%;
+  min-height: 52px;
+
+  font-size: 1.05rem;
+  font-weight: 600;
+  border-radius: 14px;
+}
+
+/* ปุ่มบันทึก (Primary) */
+.modal .action-bar .primary {
+  background: linear-gradient(
+    180deg,
+    rgba(120,200,255,1),
+    rgba(80,150,220,1)
+  );
+  color: #fff;
+  border: none;
+  box-shadow: 0 10px 25px rgba(80,150,220,0.45);
+}
+
+/* ปุ่มลบ (Danger) */
+.modal .action-bar .danger {
+  background: rgba(255,80,90,0.18);
+  color: rgba(255,120,130,0.95);
+  border: 1px solid rgba(255,120,130,0.45);
+}
+
+/* ปุ่มปิด */
+.modal .action-bar .ghost {
+  background: rgba(255,255,255,0.15);
+  color: var(--text-secondary);
+}
+
+/* เอฟเฟกต์กดแบบ iOS */
+.modal .action-bar button:active {
+  transform: scale(0.97);
+}
