@@ -1,3 +1,7 @@
+/* =========================================================
+   ADORE HAIR — OWNER QUEUE (FINAL / iOS SAFE)
+========================================================= */
+
 const API = '';
 const OWNER_PIN = '1234';
 
@@ -12,68 +16,43 @@ const logoutBtn = document.getElementById('logoutBtn');
 
 const calendarTitle = document.getElementById('calendarTitle');
 const calendarDaysEl = document.getElementById('calendarDays');
-const prevMonthBtn = document.getElementById('prevMonth');
-const nextMonthBtn = document.getElementById('nextMonth');
 
-const bookingForm = document.getElementById('bookingForm');
-const timeSelect = document.getElementById('time');
 const listEl = document.getElementById('list');
-
-/* OPTIONAL */
-const noteInput = document.getElementById('note');
-const editNote = document.getElementById('editNote');
 
 /* =========================
    STATE
 ========================= */
 let bookings = [];
 let calendarDensity = {};
-
-let selectedStylist = 'Bank';
 let selectedDate = getTodayTH();
 
-let viewMonth = new Date(selectedDate).getMonth();
-let viewYear = new Date(selectedDate).getFullYear();
-
 /* =========================
-   AUDIO STATE
+   AUDIO STATE (iOS)
 ========================= */
 let audioUnlocked = false;
+let audioCtx = null;
 let announcedQueueIds = new Set();
 
 /* =========================
    LOGIN
 ========================= */
 loginBtn.onclick = () => {
-  const pin = pinInput.value.trim();
-  loginMsg.textContent = '';
-
-  if (pin.length !== 4) {
-    loginMsg.textContent = 'กรุณาใส่ PIN 4 หลัก';
+  if (pinInput.value !== OWNER_PIN) {
+    loginMsg.textContent = 'รหัสไม่ถูกต้อง';
     return;
   }
-  if (pin !== OWNER_PIN) {
-    loginMsg.textContent = 'รหัสผ่านไม่ถูกต้อง';
-    return;
-  }
-
   localStorage.setItem('adore_logged_in', '1');
   loginOverlay.classList.add('hidden');
   init();
 };
 
-pinInput.addEventListener('input', () => {
-  pinInput.value = pinInput.value.replace(/\D/g, '');
-});
-
 logoutBtn.onclick = () => {
-  localStorage.removeItem('adore_logged_in');
+  localStorage.clear();
   location.reload();
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-  audioUnlocked = false;
-  if (localStorage.getItem('adore_logged_in') === '1') {
+  if (localStorage.getItem('adore_logged_in')) {
     loginOverlay.classList.add('hidden');
     init();
   }
@@ -83,7 +62,6 @@ document.addEventListener('DOMContentLoaded', () => {
    INIT
 ========================= */
 function init() {
-  bindStylistTabs();
   loadCalendar();
   loadBookings();
 }
@@ -99,58 +77,23 @@ async function loadCalendar() {
 
 function renderCalendar() {
   calendarDaysEl.innerHTML = '';
-
-  const firstDay = new Date(viewYear, viewMonth, 1);
-  const startDay = firstDay.getDay();
-  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
-
+  const now = new Date(selectedDate);
   calendarTitle.textContent =
-    firstDay.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' });
+    now.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' });
 
-  for (let i = 0; i < startDay; i++) {
-    calendarDaysEl.appendChild(document.createElement('div'));
-  }
-
-  for (let d = 1; d <= daysInMonth; d++) {
-    const date = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-    const count = calendarDensity[date] || 0;
-
+  for (let i = 1; i <= 31; i++) {
+    const d = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
     const el = document.createElement('div');
     el.className = 'day';
-    el.textContent = d;
-
-    if (date === selectedDate) el.classList.add('today');
-    if (count > 0 && count <= 5) el.classList.add('low');
-    if (count > 5 && count <= 10) el.classList.add('mid');
-    if (count > 10) el.classList.add('high');
-
+    el.textContent = i;
+    if (calendarDensity[d]) el.classList.add('low');
     el.onclick = () => {
-      selectedDate = date;
+      selectedDate = d;
       loadBookings();
-      renderCalendar();
     };
-
     calendarDaysEl.appendChild(el);
   }
 }
-
-prevMonthBtn.onclick = () => {
-  viewMonth--;
-  if (viewMonth < 0) {
-    viewMonth = 11;
-    viewYear--;
-  }
-  renderCalendar();
-};
-
-nextMonthBtn.onclick = () => {
-  viewMonth++;
-  if (viewMonth > 11) {
-    viewMonth = 0;
-    viewYear++;
-  }
-  renderCalendar();
-};
 
 /* =========================
    BOOKINGS
@@ -158,100 +101,35 @@ nextMonthBtn.onclick = () => {
 async function loadBookings() {
   const res = await fetch(`${API}/bookings?date=${selectedDate}`);
   bookings = await res.json();
-
-  renderSummary();
-  renderTimeOptions();
   renderTable();
 }
 
-function bindStylistTabs() {
-  document.querySelectorAll('.tab').forEach(tab => {
-    tab.onclick = () => {
-      document.querySelector('.tab.active').classList.remove('active');
-      tab.classList.add('active');
-      selectedStylist = tab.dataset.tab;
-      renderTimeOptions();
-    };
-  });
-}
-
-function renderTimeOptions() {
-  timeSelect.innerHTML = '';
-
-  for (let h = 13; h <= 22; h++) {
-    const time = `${String(h).padStart(2, '0')}:00:00`;
-    const booked = bookings.find(
-      b => b.time === time && b.stylist === selectedStylist
-    );
-
-    const opt = document.createElement('option');
-    opt.value = time;
-    opt.textContent = time.slice(0, 5);
-    if (booked) opt.disabled = true;
-
-    timeSelect.appendChild(opt);
-  }
-}
-
-/* =========================
-   SUMMARY
-========================= */
-function renderSummary() {
-  const bank = bookings.filter(b => b.stylist === 'Bank').length;
-  const sindy = bookings.filter(b => b.stylist === 'Sindy').length;
-  const assist = bookings.filter(b => b.stylist === 'Assist').length;
-
-  document.getElementById('countBank').textContent = bank;
-  document.getElementById('countSindy').textContent = sindy;
-  document.getElementById('countAssist').textContent = assist;
-  document.getElementById('countTotal').textContent = bank + sindy + assist;
-}
-
-/* =========================
-   TABLE (ดู + จัดการ)
-========================= */
 function renderTable() {
   listEl.innerHTML = '';
-
   bookings.forEach(b => {
     const card = document.createElement('div');
     card.className = 'booking-card';
-
-    const phone = b.phone
-      ? `<a href="tel:${b.phone}">${b.phone}</a>`
-      : '-';
-
     card.innerHTML = `
       <div class="card-main">
         <div class="time-pill">${b.time.slice(0,5)}</div>
-        <div class="card-main-info">
-          <span class="badge ${b.stylist}">${b.stylist}</span>
-          ${b.gender === 'male' ? '👨' : '👩'}
-        </div>
-        <button class="ghost toggle-detail">ดู</button>
+        <span class="badge">${b.stylist}</span>
+        <button class="ghost toggle">ดู</button>
       </div>
-
-      <div class="card-sub">${b.name} · ${b.service || ''}</div>
-
       <div class="card-detail">
-        <div class="card-sub">โทร: ${phone}</div>
-        ${b.note ? `<div class="card-sub">หมายเหตุ: ${b.note}</div>` : ''}
-        <div class="card-actions">
-          <button class="ghost manage-btn">จัดการ</button>
-        </div>
+        <div>${b.name}</div>
+        <div>โทร: ${b.phone || '-'}</div>
+        <button class="ghost manage">จัดการ</button>
       </div>
     `;
 
-    card.onclick = () => card.classList.toggle('expanded');
-
-    card.querySelector('.toggle-detail').onclick = e => {
+    card.querySelector('.toggle').onclick = e => {
       e.stopPropagation();
       card.classList.toggle('expanded');
     };
 
-    card.querySelector('.manage-btn').onclick = e => {
+    card.querySelector('.manage').onclick = e => {
       e.stopPropagation();
-      openEditModal(b); // ✅ ใช้ของเดิม
+      openEditModal(b);
     };
 
     listEl.appendChild(card);
@@ -259,103 +137,115 @@ function renderTable() {
 }
 
 /* =========================================================
-   🔊 VOICE (ADDON ONLY — ไม่กระทบระบบหลัก)
+   EDIT MODAL — FIXED 100%
 ========================================================= */
-let preferredThaiVoice = null;
-let preferredEnglishVoice = null;
+function openEditModal(b) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal">
+      <h3>แก้ไขคิว</h3>
+      <input id="mName" value="${b.name}">
+      <input id="mPhone" value="${b.phone || ''}">
+      <textarea id="mNote">${b.note || ''}</textarea>
+      <button id="save">บันทึก</button>
+      <button id="close">ปิด</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
 
-function prepareVoices() {
-  const v = speechSynthesis.getVoices();
-  preferredThaiVoice =
-    v.find(x => x.lang === 'th-TH' && !x.name.toLowerCase().includes('siri'))
-    || v.find(x => x.lang === 'th-TH')
-    || null;
-
-  preferredEnglishVoice =
-    v.find(x => x.lang.startsWith('en'))
-    || null;
+  overlay.querySelector('#close').onclick = () => overlay.remove();
+  overlay.querySelector('#save').onclick = async () => {
+    await fetch(`${API}/bookings/${b.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: mName.value,
+        phone: mPhone.value,
+        note: mNote.value
+      })
+    });
+    overlay.remove();
+    loadBookings();
+  };
 }
-speechSynthesis.onvoiceschanged = prepareVoices;
 
-/* 🔔 ding */
-let audioCtx = null;
+/* =========================================================
+   VOICE SYSTEM — iOS / Safari SAFE
+========================================================= */
+let thaiVoice = null;
+let enVoice = null;
+
+speechSynthesis.onvoiceschanged = () => {
+  const v = speechSynthesis.getVoices();
+  thaiVoice = v.find(x => x.lang === 'th-TH' && !x.name.includes('Siri')) || v.find(x => x.lang === 'th-TH');
+  enVoice = v.find(x => x.lang.startsWith('en'));
+};
+
+function unlockAudioOnce() {
+  if (audioUnlocked) return;
+  audioUnlocked = true;
+
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  audioCtx.resume();
+
+  speakThai('ระบบแจ้งเตือนคิวพร้อมใช้งานแล้ว');
+}
+
+document.addEventListener('touchstart', unlockAudioOnce, { once: true });
+document.addEventListener('click', unlockAudioOnce, { once: true });
+
+function speakThai(text) {
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'th-TH';
+  u.voice = thaiVoice;
+  u.rate = 1.1;
+  speechSynthesis.speak(u);
+}
+
+function speakEnglish(text) {
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'en-US';
+  u.voice = enVoice;
+  u.rate = 0.9;
+  speechSynthesis.speak(u);
+}
+
 function playDing() {
-  if (!audioUnlocked) return;
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
   const osc = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
-
   osc.type = 'triangle';
   osc.frequency.value = 1200;
   gain.gain.value = 0.8;
-
   osc.connect(gain);
   gain.connect(audioCtx.destination);
-
   osc.start();
   osc.stop(audioCtx.currentTime + 0.4);
 }
 
-/* 🔊 queue */
 function speakQueue(name, stylist) {
-  if (!audioUnlocked) return;
-  speechSynthesis.cancel();
   playDing();
-
-  const a = new SpeechSynthesisUtterance(
-    `แจ้งเตือนค่ะ อีกประมาณ สิบ นาที จะถึงคิวของคุณ ${name}`
-  );
-  a.lang = 'th-TH';
-  a.voice = preferredThaiVoice;
-  a.rate = 0.95;
-
-  const by = new SpeechSynthesisUtterance('โดยช่าง');
-  by.lang = 'th-TH';
-  by.voice = preferredThaiVoice;
-
-  const b = new SpeechSynthesisUtterance(stylist);
-  b.lang = 'en-US';
-  b.voice = preferredEnglishVoice;
-  b.rate = 0.9;
-
-  speechSynthesis.speak(a);
-  setTimeout(() => speechSynthesis.speak(by), 1500);
-  setTimeout(() => speechSynthesis.speak(b), 1900);
+  speakThai(`อีกประมาณ สิบ นาที จะถึงคิวของคุณ ${name}`);
+  setTimeout(() => speakThai('โดยช่าง'), 1400);
+  setTimeout(() => speakEnglish(stylist), 1800);
 }
 
-/* unlock */
-function unlockAudioOnce() {
-  if (audioUnlocked) return;
-  audioUnlocked = true;
-  prepareVoices();
-
-  const u = new SpeechSynthesisUtterance(
-    'สวัสดีค่ะ ระบบแจ้งเตือนคิวพร้อมใช้งานแล้ว'
-  );
-  u.lang = 'th-TH';
-  u.voice = preferredThaiVoice;
-  u.rate = 1.2;
-  speechSynthesis.speak(u);
-}
-document.addEventListener('click', unlockAudioOnce, { once: true });
-document.addEventListener('touchstart', unlockAudioOnce, { once: true });
-
-/* check queue */
+/* =========================
+   QUEUE CHECK
+========================= */
 function checkUpcomingQueues() {
   if (!audioUnlocked) return;
   const now = new Date();
-
   bookings.forEach(b => {
     const t = new Date(`${b.date}T${b.time}`);
     const diff = (t - now) / 60000;
-
     if (diff > 0 && diff <= 10 && !announcedQueueIds.has(b.id)) {
       speakQueue(b.name, b.stylist);
       announcedQueueIds.add(b.id);
     }
   });
 }
+
 setInterval(checkUpcomingQueues, 60000);
 
 /* =========================
