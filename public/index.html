@@ -39,14 +39,23 @@
 </div>
 
 <!-- =========================
-     EDIT BOOKING MODAL (เดิม)
+     EDIT BOOKING MODAL (RESCHEDULE ENABLED)
 ========================= -->
 <div id="editOverlay" class="overlay hidden">
   <div class="modal">
     <div class="modalBody">
-      <h2>แก้ไขคิว</h2>
+      <h2>แก้ไข / เปลี่ยนคิว</h2>
 
-      <input id="editTime" disabled />
+      <!-- วันที่ (ใหม่) -->
+      <input id="editDate" type="date" />
+
+      <!-- เวลา (ใหม่: ใช้ select) -->
+      <select id="editTime"></select>
+
+      <!-- เวลาเดิม (ยังอยู่ แต่ไม่ใช้แล้ว) -->
+      <input id="editTimeOld" disabled style="display:none" />
+
+      <!-- ช่าง (lock เหมือนเดิม) -->
       <input id="editStylist" disabled />
 
       <input id="editName" placeholder="ชื่อลูกค้า" />
@@ -63,7 +72,7 @@
 
       <input id="editService" placeholder="ทำอะไร" />
 
-      <button id="saveEdit" class="primary">บันทึกการแก้ไข</button>
+      <button id="saveEdit" class="primary">บันทึกการเปลี่ยนคิว</button>
       <button id="deleteEdit" class="ghost">ลบคิว</button>
       <button id="closeEdit" class="ghost">ปิด</button>
     </div>
@@ -89,7 +98,6 @@
 
   <button id="logoutBtn" class="ghost">Logout</button>
 </div>
-
 
 <!-- =========================
      MAIN CONTENT (SINGLE PAGE)
@@ -200,4 +208,3 @@
 <script src="app.js"></script>
 </body>
 </html>
-
