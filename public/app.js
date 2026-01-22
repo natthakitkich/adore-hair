@@ -36,7 +36,7 @@ let viewMonth = new Date(selectedDate).getMonth();
 let viewYear = new Date(selectedDate).getFullYear();
 
 /* =========================
-   VOICE STATE (NEW)
+   VOICE STATE
 ========================= */
 let announcedQueueIds = new Set();
 
@@ -61,8 +61,8 @@ loginBtn.onclick = () => {
   loginOverlay.classList.add('hidden');
   init();
 
-  // 🔊 iOS unlock audio
-  speak('ระบบแจ้งเตือนคิวพร้อมใช้งาน');
+  // 🔊 unlock เสียงบน iOS
+  speakThai('ระบบแจ้งเตือนคิวพร้อมใช้งาน');
 };
 
 pinInput.addEventListener('input', () => {
@@ -196,7 +196,7 @@ function renderTimeOptions() {
 }
 
 /* =========================
-   FORM SUBMIT
+   FORM
 ========================= */
 bookingForm.onsubmit = async e => {
   e.preventDefault();
@@ -220,8 +220,6 @@ bookingForm.onsubmit = async e => {
   });
 
   bookingForm.reset();
-  alert('บันทึกคิวเรียบร้อยแล้ว');
-
   loadBookings();
   loadCalendar();
 };
@@ -257,7 +255,6 @@ function renderTable() {
     card.innerHTML = `
       <div class="card-main">
         <div class="time-pill">${b.time.slice(0,5)}</div>
-
         <div class="card-main-info">
           <span class="badge ${b.stylist}">${b.stylist}</span>
           ${b.gender === 'male' ? '👨' : '👩'}
@@ -269,9 +266,7 @@ function renderTable() {
       </div>
 
       <div class="card-detail">
-        <div class="card-sub">
-          โทร: ${phoneHtml}
-        </div>
+        <div class="card-sub">โทร: ${phoneHtml}</div>
         ${b.note ? `<div class="card-sub">หมายเหตุ: ${b.note}</div>` : ''}
         <div class="card-actions">
           <button class="ghost manage-btn">จัดการ</button>
@@ -284,7 +279,7 @@ function renderTable() {
     };
 
     card.querySelector('.manage-btn').onclick = e => {
-      e.stopPropagation(); // กันไม่ให้ expand ซ้อน
+      e.stopPropagation();
       openEditModal(b);
     };
 
@@ -293,29 +288,51 @@ function renderTable() {
 }
 
 /* =========================
-   VOICE (iOS)
+   🔊 VOICE — LUXURY SALON
 ========================= */
-function speak(text) {
+function speakThai(text) {
   if (!('speechSynthesis' in window)) return;
-
-  const msg = new SpeechSynthesisUtterance(text);
-  msg.lang = 'th-TH';
-  msg.rate = 0.95;
-
-  speechSynthesis.cancel();
-  speechSynthesis.speak(msg);
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'th-TH';
+  u.rate = 0.9;
+  u.pitch = 0.95;
+  speechSynthesis.speak(u);
 }
 
-function checkUpcomingQueues() {
-  bookings.forEach(b => {
-    // 🔴 FORCE TEST: สมมติว่าเหลือ 5 นาทีเสมอ
-    const diff = 5;
+function speakEnglish(text) {
+  if (!('speechSynthesis' in window)) return;
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'en-US';
+  u.rate = 0.85;
+  u.pitch = 0.9;
+  speechSynthesis.speak(u);
+}
 
-    if (diff > 0 && diff <= 10) {
-      speak(`อีกสิบ นาที ถึงคิว ${b.name} ช่าง ${b.stylist}`);
+function speakQueueLuxury(stylist) {
+  speechSynthesis.cancel();
+  speakThai('อีกสิบ นาที จะถึงคิวของคุณ');
+  setTimeout(() => {
+    speakEnglish(stylist);
+  }, 350);
+}
+
+/* =========================
+   QUEUE CHECK
+========================= */
+function checkUpcomingQueues() {
+  const now = new Date();
+
+  bookings.forEach(b => {
+    const queueTime = new Date(`${b.date}T${b.time}`);
+    const diff = (queueTime - now) / 60000;
+
+    if (diff > 0 && diff <= 10 && !announcedQueueIds.has(b.id)) {
+      speakQueueLuxury(b.stylist);
+      announcedQueueIds.add(b.id);
     }
   });
 }
+
 setInterval(checkUpcomingQueues, 60000);
 
 /* =========================
@@ -337,7 +354,6 @@ function generateEditTimeOptions(date) {
 
   for (let h = 13; h <= 22; h++) {
     const time = `${String(h).padStart(2, '0')}:00:00`;
-
     const conflict = bookings.find(b =>
       b.date === date &&
       b.time === time &&
@@ -350,7 +366,6 @@ function generateEditTimeOptions(date) {
     opt.textContent = time.slice(0, 5);
     if (conflict) opt.disabled = true;
     if (time === editingBooking.time) opt.selected = true;
-
     editTime.appendChild(opt);
   }
 }
@@ -394,16 +409,13 @@ document.getElementById('saveEdit').onclick = async () => {
   });
 
   editOverlay.classList.add('hidden');
-  alert('บันทึกการเปลี่ยนคิวเรียบร้อยแล้ว');
   loadBookings();
   loadCalendar();
 };
 
 document.getElementById('deleteEdit').onclick = async () => {
   if (!confirm('ยืนยันการลบคิวนี้?')) return;
-
   await fetch(`${API}/bookings/${editingId}`, { method: 'DELETE' });
-
   editOverlay.classList.add('hidden');
   loadBookings();
   loadCalendar();
