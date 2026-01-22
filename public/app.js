@@ -1,3 +1,4 @@
+อันนี้คือโค้ดล่าสุดที่ทำงานอยู่ public/app.js 
 const API = '';
 const OWNER_PIN = '1234';
 
