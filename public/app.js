@@ -61,12 +61,7 @@ loginBtn.onclick = () => {
   loginOverlay.classList.add('hidden');
   init();
 
-  /* 🔊 [VOICE CHANGE]
-     แก้ข้อความ + โทนเสียงให้ดูหรู สุภาพ
-     (ไม่มีผลกับ UI) */
-  speakThai(
-    `สวัสดีค่ะ ระบบแจ้งเตือนคิวพร้อมให้บริการแล้ว
-     กรุณาเปิดหน้าเว็บทิ้งไว้โดยไม่ล็อคหน้าจอ หากคุณต้องการเสียงแจ้งเตือนเรียกคิว`
+
   );
 };
 
@@ -265,80 +260,108 @@ function renderTable() {
   });
 }
 
-/* =========================================================
-   🔊 VOICE SYSTEM — PREMIUM SALON (UPDATED)
-   ✔ แก้ตรงนี้ทั้งหมด
-   ✔ ไม่กระทบ UI
-   ✔ ใช้ได้บน iOS Safari / iPad / Mac
-========================================================= */
+/* =========================
+   🔊 VOICE — AI-LIKE PREMIUM (WEB MAX)
+   แก้ไขเฉพาะเสียง ไม่แสดงผลบนหน้าเว็บ
+========================= */
 
-// helper เลือกเสียงที่นุ่มที่สุด
-function getPreferredVoice(lang) {
+let preferredThaiVoice = null;
+let preferredEnglishVoice = null;
+
+/* ✅ เลือก voice ที่ดีที่สุดบนเครื่อง */
+function prepareVoices() {
   const voices = speechSynthesis.getVoices();
-  return voices.find(v => v.lang === lang) || null;
+
+  // 🇹🇭 Thai — หลีกเลี่ยง Siri ให้มากที่สุด
+  preferredThaiVoice =
+    voices.find(v =>
+      v.lang === 'th-TH' &&
+      !v.name.toLowerCase().includes('siri')
+    ) ||
+    voices.find(v => v.lang === 'th-TH') ||
+    null;
+
+  // 🇺🇸 English — เสียงนุ่ม อ่านชื่อสวย
+  preferredEnglishVoice =
+    voices.find(v =>
+      v.lang.startsWith('en') &&
+      v.name.toLowerCase().includes('premium')
+    ) ||
+    voices.find(v => v.lang.startsWith('en')) ||
+    null;
+}
+
+// iOS ต้องรอ voices โหลด
+speechSynthesis.onvoiceschanged = prepareVoices;
+
+/* =========================
+   Thai voice — luxury assistant
+========================= */
+function speakThai(text, opts = {}) {
+  if (!('speechSynthesis' in window)) return;
+
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'th-TH';
+  u.voice = preferredThaiVoice;
+
+  // 🎛️ ปรับโทนให้หรู
+  u.rate = opts.rate ?? 1.05;     // เร็วขึ้นจากเดิม
+  u.pitch = opts.pitch ?? 0.95;   // นุ่ม ไม่แหลม
+  u.volume = 1;
+
+  speechSynthesis.speak(u);
 }
 
 /* =========================
-   🔊 VOICE — THAI (2 MODES)
-   แก้ไข: แยก "เสียงระบบ" กับ "เสียงเรียกคิว"
-   ไม่มีผลกับ UI
+   English voice — name only
 ========================= */
-
-// เสียงระบบ: เร็ว ชัด (ใช้หลังล็อกอิน)
-function speakSystem(text) {
-  if (!('speechSynthesis' in window)) return;
-
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = 'th-TH';
-  u.rate = 1.05;     // ✅ เร็วขึ้นชัดเจน
-  u.pitch = 1.0;
-  u.voice = getPreferredVoice('th-TH');
-
-  speechSynthesis.speak(u);
-}
-
-// เสียงเรียกคิว: นุ่ม หรู
-function speakThai(text) {
-  if (!('speechSynthesis' in window)) return;
-
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = 'th-TH';
-  u.rate = 0.9;      // ✅ ช้าลงเล็กน้อยเพื่อความหรู
-  u.pitch = 0.95;
-  u.voice = getPreferredVoice('th-TH');
-
-  speechSynthesis.speak(u);
-}
-
-// 🇺🇸 เสียงอังกฤษ — อ่านชื่อช่าง
 function speakEnglish(text) {
   if (!('speechSynthesis' in window)) return;
 
   const u = new SpeechSynthesisUtterance(text);
   u.lang = 'en-US';
-  u.rate = 0.82;
+  u.voice = preferredEnglishVoice;
+
+  u.rate = 0.9;
   u.pitch = 0.9;
-  u.voice = getPreferredVoice('en-US');
+  u.volume = 1;
 
   speechSynthesis.speak(u);
 }
 
-// 💎 อ่านคิวแบบร้านหรู
-function speakQueueLuxury(name, stylist) {
+/* =========================
+   ✨ Luxury Queue Announcement
+========================= */
+function speakQueueLuxury({ customerName, stylist }) {
   speechSynthesis.cancel();
 
+  // ประโยคหลัก (ไทย)
   speakThai(
-    `ขอเรียนแจ้งเตือนค่ะ
-     อีกประมาณ สิบ นาที
-     จะถึงคิวของคุณ ${name}`
+    `ขอเรียนแจ้งเตือนค่ะ อีกประมาณ สิบ นาที
+     จะถึงคิวของคุณ ${customerName}`,
+    { rate: 1.0 }
   );
 
+  // เว้นจังหวะเหมือน AI
   setTimeout(() => {
-    speakThai('โดยช่าง');
-    setTimeout(() => {
-      speakEnglish(stylist);
-    }, 300);
-  }, 1800);
+    speakThai('โดยช่าง', { rate: 1.05 });
+  }, 1200);
+
+  // อ่านชื่อช่างเป็นอังกฤษ
+  setTimeout(() => {
+    speakEnglish(stylist);
+  }, 1600);
+}
+
+/* =========================
+   🔔 Login welcome (เร็วขึ้น)
+========================= */
+function speakLoginReady() {
+  speechSynthesis.cancel();
+  speakThai('สวัสดีค่ะ ระบบแจ้งเตือนคิวพร้อมใช้งาน กรุณาเปิดหน้าเว็บทิ้งไว้หากต้องการให้มีการเรียกคิว', {
+    rate: 1.15,   // 🔥 เร็วขึ้น แก้ปัญหาช้า
+    pitch: 0.95
+  });
 }
 
 /* =========================
