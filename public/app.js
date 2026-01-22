@@ -19,34 +19,24 @@ const bookingForm = document.getElementById('bookingForm');
 const timeSelect = document.getElementById('time');
 const listEl = document.getElementById('list');
 
-/* SUMMARY */
-const countBank = document.getElementById('countBank');
-const countSindy = document.getElementById('countSindy');
-const countAssist = document.getElementById('countAssist');
-const countTotal = document.getElementById('countTotal');
-
-/* EDIT MODAL */
-const editOverlay = document.getElementById('editOverlay');
-const editName = document.getElementById('editName');
-const editPhone = document.getElementById('editPhone');
-const editService = document.getElementById('editService');
+/* OPTIONAL */
+const noteInput = document.getElementById('note');
 const editNote = document.getElementById('editNote');
-const saveEditBtn = document.getElementById('saveEdit');
-const closeEditBtn = document.getElementById('closeEdit');
 
 /* =========================
    STATE
 ========================= */
 let bookings = [];
 let calendarDensity = {};
+
 let selectedStylist = 'Bank';
 let selectedDate = getTodayTH();
+
 let viewMonth = new Date(selectedDate).getMonth();
 let viewYear = new Date(selectedDate).getFullYear();
-let editingBooking = null;
 
 /* =========================
-   AUDIO STATE (iOS SAFE)
+   AUDIO STATE
 ========================= */
 let audioUnlocked = false;
 let announcedQueueIds = new Set();
@@ -58,6 +48,10 @@ loginBtn.onclick = () => {
   const pin = pinInput.value.trim();
   loginMsg.textContent = '';
 
+  if (pin.length !== 4) {
+    loginMsg.textContent = 'กรุณาใส่ PIN 4 หลัก';
+    return;
+  }
   if (pin !== OWNER_PIN) {
     loginMsg.textContent = 'รหัสผ่านไม่ถูกต้อง';
     return;
@@ -68,7 +62,17 @@ loginBtn.onclick = () => {
   init();
 };
 
+pinInput.addEventListener('input', () => {
+  pinInput.value = pinInput.value.replace(/\D/g, '');
+});
+
+logoutBtn.onclick = () => {
+  localStorage.removeItem('adore_logged_in');
+  location.reload();
+};
+
 document.addEventListener('DOMContentLoaded', () => {
+  audioUnlocked = false;
   if (localStorage.getItem('adore_logged_in') === '1') {
     loginOverlay.classList.add('hidden');
     init();
@@ -130,6 +134,24 @@ function renderCalendar() {
   }
 }
 
+prevMonthBtn.onclick = () => {
+  viewMonth--;
+  if (viewMonth < 0) {
+    viewMonth = 11;
+    viewYear--;
+  }
+  renderCalendar();
+};
+
+nextMonthBtn.onclick = () => {
+  viewMonth++;
+  if (viewMonth > 11) {
+    viewMonth = 0;
+    viewYear++;
+  }
+  renderCalendar();
+};
+
 /* =========================
    BOOKINGS
 ========================= */
@@ -138,25 +160,55 @@ async function loadBookings() {
   bookings = await res.json();
 
   renderSummary();
+  renderTimeOptions();
   renderTable();
 }
 
+function bindStylistTabs() {
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.onclick = () => {
+      document.querySelector('.tab.active').classList.remove('active');
+      tab.classList.add('active');
+      selectedStylist = tab.dataset.tab;
+      renderTimeOptions();
+    };
+  });
+}
+
+function renderTimeOptions() {
+  timeSelect.innerHTML = '';
+
+  for (let h = 13; h <= 22; h++) {
+    const time = `${String(h).padStart(2, '0')}:00:00`;
+    const booked = bookings.find(
+      b => b.time === time && b.stylist === selectedStylist
+    );
+
+    const opt = document.createElement('option');
+    opt.value = time;
+    opt.textContent = time.slice(0, 5);
+    if (booked) opt.disabled = true;
+
+    timeSelect.appendChild(opt);
+  }
+}
+
 /* =========================
-   SUMMARY (กลับมาแล้ว)
+   SUMMARY
 ========================= */
 function renderSummary() {
   const bank = bookings.filter(b => b.stylist === 'Bank').length;
   const sindy = bookings.filter(b => b.stylist === 'Sindy').length;
   const assist = bookings.filter(b => b.stylist === 'Assist').length;
 
-  countBank.textContent = bank;
-  countSindy.textContent = sindy;
-  countAssist.textContent = assist;
-  countTotal.textContent = bank + sindy + assist;
+  document.getElementById('countBank').textContent = bank;
+  document.getElementById('countSindy').textContent = sindy;
+  document.getElementById('countAssist').textContent = assist;
+  document.getElementById('countTotal').textContent = bank + sindy + assist;
 }
 
 /* =========================
-   TABLE + MANAGE
+   TABLE (ดู + จัดการ)
 ========================= */
 function renderTable() {
   listEl.innerHTML = '';
@@ -164,6 +216,10 @@ function renderTable() {
   bookings.forEach(b => {
     const card = document.createElement('div');
     card.className = 'booking-card';
+
+    const phone = b.phone
+      ? `<a href="tel:${b.phone}">${b.phone}</a>`
+      : '-';
 
     card.innerHTML = `
       <div class="card-main">
@@ -178,9 +234,11 @@ function renderTable() {
       <div class="card-sub">${b.name} · ${b.service || ''}</div>
 
       <div class="card-detail">
-        <div class="card-sub">โทร: ${b.phone || '-'}</div>
+        <div class="card-sub">โทร: ${phone}</div>
         ${b.note ? `<div class="card-sub">หมายเหตุ: ${b.note}</div>` : ''}
-        <button class="ghost manage-btn">จัดการ</button>
+        <div class="card-actions">
+          <button class="ghost manage-btn">จัดการ</button>
+        </div>
       </div>
     `;
 
@@ -193,69 +251,112 @@ function renderTable() {
 
     card.querySelector('.manage-btn').onclick = e => {
       e.stopPropagation();
-      openEditModal(b);
+      openEditModal(b); // ✅ ใช้ของเดิม
     };
 
     listEl.appendChild(card);
   });
 }
 
-/* =========================
-   EDIT MODAL (ทำงานจริง)
-========================= */
-function openEditModal(b) {
-  editingBooking = b;
-  editName.value = b.name || '';
-  editPhone.value = b.phone || '';
-  editService.value = b.service || '';
-  editNote.value = b.note || '';
-  editOverlay.classList.remove('hidden');
+/* =========================================================
+   🔊 VOICE (ADDON ONLY — ไม่กระทบระบบหลัก)
+========================================================= */
+let preferredThaiVoice = null;
+let preferredEnglishVoice = null;
+
+function prepareVoices() {
+  const v = speechSynthesis.getVoices();
+  preferredThaiVoice =
+    v.find(x => x.lang === 'th-TH' && !x.name.toLowerCase().includes('siri'))
+    || v.find(x => x.lang === 'th-TH')
+    || null;
+
+  preferredEnglishVoice =
+    v.find(x => x.lang.startsWith('en'))
+    || null;
+}
+speechSynthesis.onvoiceschanged = prepareVoices;
+
+/* 🔔 ding */
+let audioCtx = null;
+function playDing() {
+  if (!audioUnlocked) return;
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+
+  osc.type = 'triangle';
+  osc.frequency.value = 1200;
+  gain.gain.value = 0.8;
+
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  osc.start();
+  osc.stop(audioCtx.currentTime + 0.4);
 }
 
-saveEditBtn.onclick = async () => {
-  await fetch(`${API}/bookings/${editingBooking.id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      name: editName.value,
-      phone: editPhone.value,
-      service: editService.value,
-      note: editNote.value
-    })
-  });
+/* 🔊 queue */
+function speakQueue(name, stylist) {
+  if (!audioUnlocked) return;
+  speechSynthesis.cancel();
+  playDing();
 
-  editOverlay.classList.add('hidden');
-  loadBookings();
-};
+  const a = new SpeechSynthesisUtterance(
+    `แจ้งเตือนค่ะ อีกประมาณ สิบ นาที จะถึงคิวของคุณ ${name}`
+  );
+  a.lang = 'th-TH';
+  a.voice = preferredThaiVoice;
+  a.rate = 0.95;
 
-closeEditBtn.onclick = () =>
-  editOverlay.classList.add('hidden');
+  const by = new SpeechSynthesisUtterance('โดยช่าง');
+  by.lang = 'th-TH';
+  by.voice = preferredThaiVoice;
 
-/* =========================
-   VOICE (แยก System / Queue)
-========================= */
+  const b = new SpeechSynthesisUtterance(stylist);
+  b.lang = 'en-US';
+  b.voice = preferredEnglishVoice;
+  b.rate = 0.9;
+
+  speechSynthesis.speak(a);
+  setTimeout(() => speechSynthesis.speak(by), 1500);
+  setTimeout(() => speechSynthesis.speak(b), 1900);
+}
+
+/* unlock */
 function unlockAudioOnce() {
   if (audioUnlocked) return;
   audioUnlocked = true;
+  prepareVoices();
 
   const u = new SpeechSynthesisUtterance(
     'สวัสดีค่ะ ระบบแจ้งเตือนคิวพร้อมใช้งานแล้ว'
   );
   u.lang = 'th-TH';
-  u.rate = 1.15;
+  u.voice = preferredThaiVoice;
+  u.rate = 1.2;
   speechSynthesis.speak(u);
 }
-
 document.addEventListener('click', unlockAudioOnce, { once: true });
+document.addEventListener('touchstart', unlockAudioOnce, { once: true });
 
-function speakQueue(name, stylist) {
+/* check queue */
+function checkUpcomingQueues() {
   if (!audioUnlocked) return;
+  const now = new Date();
 
-  speechSynthesis.cancel();
-  speechSynthesis.speak(
-    new SpeechSynthesisUtterance(`อีกประมาณ สิบ นาที จะถึงคิวของคุณ ${name}`)
-  );
+  bookings.forEach(b => {
+    const t = new Date(`${b.date}T${b.time}`);
+    const diff = (t - now) / 60000;
+
+    if (diff > 0 && diff <= 10 && !announcedQueueIds.has(b.id)) {
+      speakQueue(b.name, b.stylist);
+      announcedQueueIds.add(b.id);
+    }
+  });
 }
+setInterval(checkUpcomingQueues, 60000);
 
 /* =========================
    UTIL
