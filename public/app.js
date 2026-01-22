@@ -246,7 +246,7 @@ function renderTable() {
 }
 
 /* =========================
-   EDIT MODAL (BACKWARD-COMPATIBLE)
+   EDIT MODAL (RESCHEDULE LOGIC)
 ========================= */
 const editOverlay = document.getElementById('editOverlay');
 const editTime = document.getElementById('editTime');
@@ -254,32 +254,43 @@ const editStylist = document.getElementById('editStylist');
 const editName = document.getElementById('editName');
 const editPhone = document.getElementById('editPhone');
 const editService = document.getElementById('editService');
-const editDate = document.getElementById('editDate'); // อาจไม่มีใน HTML ตอนนี้
+const editDate = document.getElementById('editDate');
 let editingId = null;
 let editingBooking = null;
+
+function generateEditTimeOptions(date) {
+  if (!editTime || editTime.tagName !== 'SELECT') return;
+
+  editTime.innerHTML = '';
+
+  for (let h = 13; h <= 22; h++) {
+    const time = `${String(h).padStart(2, '0')}:00:00`;
+
+    const conflict = bookings.find(b =>
+      b.date === date &&
+      b.time === time &&
+      b.stylist === editingBooking.stylist &&
+      b.id !== editingBooking.id
+    );
+
+    const opt = document.createElement('option');
+    opt.value = time;
+    opt.textContent = time.slice(0, 5);
+    if (conflict) opt.disabled = true;
+    if (time === editingBooking.time) opt.selected = true;
+
+    editTime.appendChild(opt);
+  }
+}
 
 function openEditModal(b) {
   editingId = b.id;
   editingBooking = b;
 
-  if (editTime) {
-    if (editTime.tagName === 'SELECT') {
-      editTime.innerHTML = '';
-      for (let h = 13; h <= 22; h++) {
-        const time = `${String(h).padStart(2, '0')}:00:00`;
-        const opt = document.createElement('option');
-        opt.value = time;
-        opt.textContent = time.slice(0, 5);
-        if (time === b.time) opt.selected = true;
-        editTime.appendChild(opt);
-      }
-    } else {
-      editTime.value = b.time.slice(0, 5);
-    }
-  }
-
   if (editDate) {
     editDate.value = b.date;
+    generateEditTimeOptions(b.date);
+    editDate.onchange = () => generateEditTimeOptions(editDate.value);
   }
 
   editStylist.value = b.stylist;
