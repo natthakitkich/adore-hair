@@ -35,8 +35,13 @@ let selectedDate = getTodayTH();
 let viewMonth = new Date(selectedDate).getMonth();
 let viewYear = new Date(selectedDate).getFullYear();
 
-/* 👉 iOS calendar animation direction */
+/* iOS calendar animation direction */
 let calendarDirection = 'none';
+
+/* =========================
+   VOICE QUEUE STATE (NEW)
+========================= */
+let announcedQueueIds = new Set();
 
 /* =========================
    LOGIN
@@ -58,6 +63,9 @@ loginBtn.onclick = () => {
   localStorage.setItem('adore_logged_in', '1');
   loginOverlay.classList.add('hidden');
   init();
+
+  /* 🔊 Unlock audio (Safari / iOS requirement) */
+  speak('ระบบแจ้งเตือนคิวพร้อมใช้งาน');
 };
 
 /* =========================
@@ -195,65 +203,41 @@ async function loadBookings() {
   renderTable();
 }
 
-function bindStylistTabs() {
-  document.querySelectorAll('.tab').forEach(tab => {
-    tab.onclick = () => {
-      document.querySelector('.tab.active').classList.remove('active');
-      tab.classList.add('active');
-      selectedStylist = tab.dataset.tab;
-      renderTimeOptions();
-    };
-  });
-}
+/* =========================
+   VOICE — SPEAK (TH)
+========================= */
+function speak(text) {
+  if (!('speechSynthesis' in window)) return;
 
-function renderTimeOptions() {
-  timeSelect.innerHTML = '';
+  const msg = new SpeechSynthesisUtterance(text);
+  msg.lang = 'th-TH';
+  msg.rate = 0.95;
+  msg.pitch = 1;
+  msg.volume = 1;
 
-  for (let h = 13; h <= 22; h++) {
-    const time = `${String(h).padStart(2, '0')}:00:00`;
-    const booked = bookings.find(
-      b => b.time === time && b.stylist === selectedStylist
-    );
-
-    const opt = document.createElement('option');
-    opt.value = time;
-    opt.textContent = time.slice(0, 5);
-    if (booked) opt.disabled = true;
-
-    timeSelect.appendChild(opt);
-  }
+  speechSynthesis.cancel();
+  speechSynthesis.speak(msg);
 }
 
 /* =========================
-   FORM SUBMIT
+   VOICE — CHECK UPCOMING QUEUE (10 MIN)
 ========================= */
-bookingForm.onsubmit = async e => {
-  e.preventDefault();
+function checkUpcomingQueues() {
+  const now = new Date();
 
-  const gender = document.querySelector('[name=gender]:checked')?.value;
-  if (!gender) return alert('กรุณาเลือกเพศ');
+  bookings.forEach(b => {
+    const queueTime = new Date(`${b.date}T${b.time}`);
+    const diffMin = (queueTime - now) / 60000;
 
-  await fetch(`${API}/bookings`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      date: selectedDate,
-      time: timeSelect.value,
-      stylist: selectedStylist,
-      name: document.getElementById('name').value,
-      phone: document.getElementById('phone').value,
-      gender,
-      service: document.getElementById('service').value,
-      note: noteInput ? noteInput.value : null
-    })
+    if (diffMin > 0 && diffMin <= 10 && !announcedQueueIds.has(b.id)) {
+      speak(`อีกสิบ นาที ถึงคิว ${b.name} ช่าง ${b.stylist}`);
+      announcedQueueIds.add(b.id);
+    }
   });
+}
 
-  bookingForm.reset();
-  alert('บันทึกคิวเรียบร้อยแล้ว');
-
-  loadBookings();
-  loadCalendar();
-};
+/* 🔁 Check every 1 minute */
+setInterval(checkUpcomingQueues, 60000);
 
 /* =========================
    SUMMARY
