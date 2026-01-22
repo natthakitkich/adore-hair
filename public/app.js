@@ -39,17 +39,13 @@ let viewYear = new Date(selectedDate).getFullYear();
    VOICE STATE
 ========================= */
 /* =========================
-   AUDIO UNLOCK STATE (NEW)
-   ใช้สำหรับ Safari / iOS
+   AUDIO UNLOCK STATE (Safari / iOS)
 ========================= */
 let audioUnlocked = false;
 let announcedQueueIds = new Set();
 
 /* =========================
    LOGIN
-========================= */
-/* =========================
-   LOGIN (FIXED + iOS SAFE)
 ========================= */
 loginBtn.onclick = () => {
   const pin = pinInput.value.trim();
@@ -69,10 +65,10 @@ loginBtn.onclick = () => {
   loginOverlay.classList.add('hidden');
   init();
 
-  // ❌ ไม่เรียก speak ตรงนี้
-  // 🔊 เสียงจะไปพูดตอน user แตะจอครั้งแรกแทน
+  // ❗ [VOICE FIX]
+  // ไม่เรียกเสียงตรงนี้ (Safari จะ block)
+  // ให้ไปพูดตอน user แตะจอครั้งแรกแทน
 };
-
 
 pinInput.addEventListener('input', () => {
   pinInput.value = pinInput.value.replace(/\D/g, '');
@@ -84,6 +80,9 @@ logoutBtn.onclick = () => {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
+  // ✅ [VOICE FIX] reset ทุกครั้งที่โหลดหน้า
+  audioUnlocked = false;
+
   if (localStorage.getItem('adore_logged_in') === '1') {
     loginOverlay.classList.add('hidden');
     init();
@@ -270,144 +269,49 @@ function renderTable() {
 }
 
 /* =========================
-   🔊 VOICE — AI-LIKE PREMIUM (WEB MAX)
-   แก้ไขเฉพาะเสียง ไม่แสดงผลบนหน้าเว็บ
+   🔊 VOICE — PREMIUM SAFARI SAFE
+   [VOICE FIX – เพิ่มอย่างเดียว ไม่ลบของเดิม]
 ========================= */
 
 let preferredThaiVoice = null;
-let preferredEnglishVoice = null;
 
-/* ✅ เลือก voice ที่ดีที่สุดบนเครื่อง */
 function prepareVoices() {
   const voices = speechSynthesis.getVoices();
-
-  // 🇹🇭 Thai — หลีกเลี่ยง Siri ให้มากที่สุด
   preferredThaiVoice =
-    voices.find(v =>
-      v.lang === 'th-TH' &&
-      !v.name.toLowerCase().includes('siri')
-    ) ||
+    voices.find(v => v.lang === 'th-TH' && !v.name.toLowerCase().includes('siri')) ||
     voices.find(v => v.lang === 'th-TH') ||
     null;
-
-  // 🇺🇸 English — เสียงนุ่ม อ่านชื่อสวย
-  preferredEnglishVoice =
-    voices.find(v =>
-      v.lang.startsWith('en') &&
-      v.name.toLowerCase().includes('premium')
-    ) ||
-    voices.find(v => v.lang.startsWith('en')) ||
-    null;
 }
-
-// iOS ต้องรอ voices โหลด
 speechSynthesis.onvoiceschanged = prepareVoices;
 
-/* =========================
-   Thai voice — luxury assistant
-========================= */
 function speakThai(text, opts = {}) {
   if (!('speechSynthesis' in window)) return;
 
   const u = new SpeechSynthesisUtterance(text);
   u.lang = 'th-TH';
   u.voice = preferredThaiVoice;
-
-  // 🎛️ ปรับโทนให้หรู
-  u.rate = opts.rate ?? 1.05;     // เร็วขึ้นจากเดิม
-  u.pitch = opts.pitch ?? 0.95;   // นุ่ม ไม่แหลม
+  u.rate = opts.rate ?? 1.15;
+  u.pitch = opts.pitch ?? 0.95;
   u.volume = 1;
 
   speechSynthesis.speak(u);
 }
 
 /* =========================
-   English voice — name only
+   🔓 AUDIO UNLOCK (Safari rule)
+   พูดครั้งแรกเมื่อ user แตะจอ
 ========================= */
-function speakEnglish(text) {
-  if (!('speechSynthesis' in window)) return;
-
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = 'en-US';
-  u.voice = preferredEnglishVoice;
-
-  u.rate = 0.9;
-  u.pitch = 0.9;
-  u.volume = 1;
-
-  speechSynthesis.speak(u);
-}
-
-/* =========================
-   ✨ Luxury Queue Announcement
-========================= */
-function speakQueueLuxury({ customerName, stylist }) {
-  speechSynthesis.cancel();
-
-  // ประโยคหลัก (ไทย)
-  speakThai(
-    `ขอเรียนแจ้งเตือนค่ะ อีกประมาณ สิบ นาที
-     จะถึงคิวของคุณ ${customerName}`,
-    { rate: 1.0 }
-  );
-
-  // เว้นจังหวะเหมือน AI
-  setTimeout(() => {
-    speakThai('โดยช่าง', { rate: 1.05 });
-  }, 1200);
-
-  // อ่านชื่อช่างเป็นอังกฤษ
-  setTimeout(() => {
-    speakEnglish(stylist);
-  }, 1600);
-}
-
-/* =========================
-   🔔 Login welcome (เร็วขึ้น)
-========================= */
-function speakLoginReady() {
-  speechSynthesis.cancel();
-  speakThai('สวัสดีค่ะ ระบบแจ้งเตือนคิวพร้อมใช้งาน กรุณาเปิดหน้าเว็บทิ้งไว้หากต้องการให้มีการเรียกคิว', {
-    rate: 1.15,   // 🔥 เร็วขึ้น แก้ปัญหาช้า
-    pitch: 0.95
-  });
-}
-
-/* =========================
-   QUEUE CHECK
-========================= */
-function checkUpcomingQueues() {
-  const now = new Date();
-
-  bookings.forEach(b => {
-    const t = new Date(`${b.date}T${b.time}`);
-    const diff = (t - now) / 60000;
-
-    if (diff > 0 && diff <= 10 && !announcedQueueIds.has(b.id)) {
-      speakQueueLuxury(b.name, b.stylist);
-      announcedQueueIds.add(b.id);
-    }
-  });
-}
-/* =========================================================
-   🔓 AUDIO UNLOCK — MODE A (TOUCH ANYWHERE ONCE)
-   ✔ Safari / iOS compliant
-   ✔ ไม่กระทบ UI
-   ✔ พูดครั้งเดียวต่อการเปิดเว็บ
-========================================================= */
-
 function unlockAudioOnce() {
   if (audioUnlocked) return;
   audioUnlocked = true;
 
-  // 🔊 ประโยคหลังล็อกอิน (โทนหรู / AI-like)
-  speakLoginReady();
+  speakThai(
+    'สวัสดีค่ะ ระบบแจ้งเตือนคิวพร้อมใช้งานแล้ว กรุณาเปิดหน้าเว็บทิ้งไว้หากต้องการให้มีการเรียกคิวอัตโนมัติ'
+  );
 }
 
-// แตะหน้าจอครั้งแรก
 document.addEventListener('touchstart', unlockAudioOnce, { once: true });
 document.addEventListener('click', unlockAudioOnce, { once: true });
-setInterval(checkUpcomingQueues, 60000);
 
 /* =========================
    UTIL
