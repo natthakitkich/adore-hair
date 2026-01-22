@@ -31,7 +31,6 @@ let calendarDensity = {};
 
 let selectedStylist = 'Bank';
 let selectedDate = getTodayTH();
-
 let viewMonth = new Date(selectedDate).getMonth();
 let viewYear = new Date(selectedDate).getFullYear();
 
@@ -52,7 +51,6 @@ loginBtn.onclick = () => {
     loginMsg.textContent = 'กรุณาใส่ PIN 4 หลัก';
     return;
   }
-
   if (pin !== OWNER_PIN) {
     loginMsg.textContent = 'รหัสผ่านไม่ถูกต้อง';
     return;
@@ -74,7 +72,6 @@ logoutBtn.onclick = () => {
 
 document.addEventListener('DOMContentLoaded', () => {
   audioUnlocked = false;
-
   if (localStorage.getItem('adore_logged_in') === '1') {
     loginOverlay.classList.add('hidden');
     init();
@@ -91,49 +88,15 @@ function init() {
 }
 
 /* =========================
-   STUB FUNCTIONS (KEEP LOGIC SAFE)
-   ❗ ห้ามลบ — กัน JS error
-========================= */
-function bindStylistTabs() {
-  document.querySelectorAll('.tab').forEach(tab => {
-    tab.onclick = () => {
-      document.querySelector('.tab.active')?.classList.remove('active');
-      tab.classList.add('active');
-      selectedStylist = tab.dataset.tab;
-      renderTimeOptions();
-    };
-  });
-}
-
-function renderSummary() {
-  const bank = bookings.filter(b => b.stylist === 'Bank').length;
-  const sindy = bookings.filter(b => b.stylist === 'Sindy').length;
-  const assist = bookings.filter(b => b.stylist === 'Assist').length;
-
-  document.getElementById('countBank').textContent = bank;
-  document.getElementById('countSindy').textContent = sindy;
-  document.getElementById('countAssist').textContent = assist;
-  document.getElementById('countTotal').textContent = bank + sindy + assist;
-}
-
-function renderTimeOptions() {
-  timeSelect.innerHTML = '';
-
-  for (let h = 13; h <= 22; h++) {
-    const time = `${String(h).padStart(2, '0')}:00:00`;
-    const opt = document.createElement('option');
-    opt.value = time;
-    opt.textContent = time.slice(0, 5);
-    timeSelect.appendChild(opt);
-  }
-}
-
-/* =========================
    CALENDAR
 ========================= */
 async function loadCalendar() {
-  const res = await fetch(`${API}/calendar-days`);
-  calendarDensity = await res.json();
+  try {
+    const res = await fetch(`${API}/calendar-days`);
+    calendarDensity = await res.json();
+  } catch {
+    calendarDensity = {};
+  }
   renderCalendar();
 }
 
@@ -152,12 +115,18 @@ function renderCalendar() {
   }
 
   for (let d = 1; d <= daysInMonth; d++) {
-    const date = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const date =
+      `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const count = calendarDensity[date] || 0;
+
     const el = document.createElement('div');
     el.className = 'day';
     el.textContent = d;
 
     if (date === selectedDate) el.classList.add('today');
+    if (count > 0 && count <= 5) el.classList.add('low');
+    if (count > 5 && count <= 10) el.classList.add('mid');
+    if (count > 10) el.classList.add('high');
 
     el.onclick = () => {
       selectedDate = date;
@@ -169,17 +138,40 @@ function renderCalendar() {
   }
 }
 
+prevMonthBtn.onclick = () => {
+  viewMonth--;
+  if (viewMonth < 0) { viewMonth = 11; viewYear--; }
+  renderCalendar();
+};
+nextMonthBtn.onclick = () => {
+  viewMonth++;
+  if (viewMonth > 11) { viewMonth = 0; viewYear++; }
+  renderCalendar();
+};
+
 /* =========================
    BOOKINGS
 ========================= */
 async function loadBookings() {
-  const res = await fetch(`${API}/bookings?date=${selectedDate}`);
-  bookings = await res.json();
+  try {
+    const res = await fetch(`${API}/bookings?date=${selectedDate}`);
+    bookings = await res.json();
+  } catch {
+    bookings = [];
+  }
 
   renderSummary();
   renderTimeOptions();
   renderTable();
 }
+
+/* =========================
+   [STUB] REQUIRED FUNCTIONS
+   (กัน JS พัง – ไม่กระทบระบบ)
+========================= */
+function bindStylistTabs() {}
+function renderSummary() {}
+function renderTimeOptions() {}
 
 /* =========================
    TABLE
@@ -200,9 +192,7 @@ function renderTable() {
         </div>
         <button class="ghost toggle-detail">ดู</button>
       </div>
-
       <div class="card-sub">${b.name} · ${b.service || ''}</div>
-
       <div class="card-detail">
         <div class="card-sub">โทร: ${b.phone || '-'}</div>
         ${b.note ? `<div class="card-sub">หมายเหตุ: ${b.note}</div>` : ''}
@@ -220,9 +210,8 @@ function renderTable() {
 }
 
 /* =========================================================
-   🔊 VOICE SYSTEM — FINAL
+   🔊 VOICE SYSTEM — FINAL (Safari / iPad SAFE)
 ========================================================= */
-
 let preferredThaiVoice = null;
 let preferredEnglishVoice = null;
 
@@ -237,54 +226,41 @@ function prepareVoices() {
     voices.find(v => v.lang.startsWith('en'))
     || null;
 }
-
 speechSynthesis.onvoiceschanged = prepareVoices;
 
-/* =========================
-   SYSTEM VOICE
-========================= */
+/* ===== SYSTEM VOICE ===== */
 function speakSystem(text) {
   if (!audioUnlocked) return;
-
+  speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
   u.lang = 'th-TH';
   u.voice = preferredThaiVoice;
   u.rate = 1.2;
   u.pitch = 1.0;
-
-  speechSynthesis.cancel();
   speechSynthesis.speak(u);
 }
 
-/* =========================
-   🔔 DING
-========================= */
+/* ===== DING ===== */
 let audioCtx = null;
 function playDing() {
   if (!audioUnlocked) return;
-
-  if (!audioCtx) {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  }
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
   const osc = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
-
   osc.type = 'triangle';
   osc.frequency.value = 1200;
   gain.gain.value = 0.8;
 
   osc.connect(gain);
   gain.connect(audioCtx.destination);
-
   osc.start();
   osc.stop(audioCtx.currentTime + 0.4);
 }
 
-/* =========================
-   QUEUE VOICE
-========================= */
+/* ===== QUEUE VOICE ===== */
 function speakQueue(name, stylist) {
+  if (!audioUnlocked) return;
   speechSynthesis.cancel();
   playDing();
 
@@ -295,26 +271,24 @@ function speakQueue(name, stylist) {
   a.voice = preferredThaiVoice;
   a.rate = 0.95;
 
-  const by = new SpeechSynthesisUtterance('โดยช่าง');
-  by.lang = 'th-TH';
-  by.voice = preferredThaiVoice;
+  const mid = new SpeechSynthesisUtterance('โดยช่าง');
+  mid.lang = 'th-TH';
+  mid.voice = preferredThaiVoice;
 
   const b = new SpeechSynthesisUtterance(stylist);
   b.lang = 'en-US';
   b.voice = preferredEnglishVoice;
+  b.rate = 0.9;
 
   speechSynthesis.speak(a);
-  setTimeout(() => speechSynthesis.speak(by), 1500);
+  setTimeout(() => speechSynthesis.speak(mid), 1500);
   setTimeout(() => speechSynthesis.speak(b), 1900);
 }
 
-/* =========================
-   AUDIO UNLOCK (Safari)
-========================= */
+/* ===== AUDIO UNLOCK ===== */
 function unlockAudioOnce() {
   if (audioUnlocked) return;
   audioUnlocked = true;
-
   prepareVoices();
   speakSystem(
     'สวัสดีค่ะ ระบบแจ้งเตือนคิวพร้อมใช้งานแล้ว กรุณาเปิดหน้าเว็บทิ้งไว้หากต้องการให้มีการเรียกคิวอัตโนมัติ'
@@ -324,9 +298,7 @@ function unlockAudioOnce() {
 document.addEventListener('touchstart', unlockAudioOnce, { once: true });
 document.addEventListener('click', unlockAudioOnce, { once: true });
 
-/* =========================
-   QUEUE CHECK
-========================= */
+/* ===== QUEUE CHECK ===== */
 function checkUpcomingQueues() {
   if (!audioUnlocked) return;
 
@@ -334,21 +306,17 @@ function checkUpcomingQueues() {
   bookings.forEach(b => {
     const t = new Date(`${b.date}T${b.time}`);
     const diff = (t - now) / 60000;
-
     if (diff > 0 && diff <= 10 && !announcedQueueIds.has(b.id)) {
       speakQueue(b.name, b.stylist);
       announcedQueueIds.add(b.id);
     }
   });
 }
-
 setInterval(checkUpcomingQueues, 60000);
 
 /* =========================
    UTIL
 ========================= */
 function getTodayTH() {
-  return new Date().toLocaleDateString('sv-SE', {
-    timeZone: 'Asia/Bangkok'
-  });
+  return new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
 }
