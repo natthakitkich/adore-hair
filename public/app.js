@@ -244,23 +244,36 @@ function renderTable() {
     card.innerHTML = `
       <div class="card-main">
         <div class="time-pill">${b.time.slice(0,5)}</div>
+
         <div class="card-main-info">
           <span class="badge ${b.stylist}">${b.stylist}</span>
           ${b.gender === 'male' ? '👨' : '👩'}
         </div>
+
         <button class="ghost toggle-detail">ดู</button>
       </div>
 
-      <div class="card-sub">${b.name} · ${b.service || ''}</div>
+      <div class="card-sub">
+        ${b.name} · ${b.service || ''}
+      </div>
 
       <div class="card-detail">
         <div class="card-sub">โทร: ${b.phone || '-'}</div>
         ${b.note ? `<div class="card-sub">หมายเหตุ: ${b.note}</div>` : ''}
+
+        <div class="card-actions">
+          <button class="ghost manage-btn">จัดการ</button>
+        </div>
       </div>
     `;
 
-    card.querySelector('.toggle-detail').onclick = () =>
+    card.querySelector('.toggle-detail').onclick = () => {
       card.classList.toggle('expanded');
+    };
+
+    card.querySelector('.manage-btn').onclick = () => {
+      openEditModal(b);
+    };
 
     listEl.appendChild(card);
   });
