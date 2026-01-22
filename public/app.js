@@ -307,21 +307,15 @@ function speak(text) {
 }
 
 function checkUpcomingQueues() {
-  const now = new Date();
-
   bookings.forEach(b => {
-    if (!b.id) return;
+    // 🔴 FORCE TEST: สมมติว่าเหลือ 5 นาทีเสมอ
+    const diff = 5;
 
-    const t = new Date(`${b.date}T${b.time}`);
-    const diff = (t - now) / 60000;
-
-    if (diff > 0 && diff <= 10 && !announcedQueueIds.has(b.id)) {
+    if (diff > 0 && diff <= 10) {
       speak(`อีกสิบ นาที ถึงคิว ${b.name} ช่าง ${b.stylist}`);
-      announcedQueueIds.add(b.id);
     }
   });
 }
-
 setInterval(checkUpcomingQueues, 60000);
 
 /* =========================
