@@ -158,14 +158,15 @@ textarea{resize:vertical}
 
 .calendarGrid{
   display:grid;
-  grid-template-columns:repeat(7,48px);
+  grid-template-columns:repeat(7,1fr);
   gap:12px;
-  justify-content:center;
-  text-align:center;
+  justify-content:stretch;
 }
 
 .calendarDays{
-  display:contents;
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:12px;
 }
 
 .dayLabel{
