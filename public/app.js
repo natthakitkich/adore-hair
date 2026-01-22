@@ -250,6 +250,10 @@ function renderTable() {
     const card = document.createElement('div');
     card.className = 'booking-card';
 
+    const phoneHtml = b.phone
+      ? `<a href="tel:${b.phone}" class="phone-link">${b.phone}</a>`
+      : '-';
+
     card.innerHTML = `
       <div class="card-main">
         <div class="time-pill">${b.time.slice(0,5)}</div>
@@ -258,8 +262,6 @@ function renderTable() {
           <span class="badge ${b.stylist}">${b.stylist}</span>
           ${b.gender === 'male' ? '👨' : '👩'}
         </div>
-
-        <button class="ghost toggle-detail">ดู</button>
       </div>
 
       <div class="card-sub">
@@ -267,7 +269,9 @@ function renderTable() {
       </div>
 
       <div class="card-detail">
-        <div class="card-sub">โทร: ${b.phone || '-'}</div>
+        <div class="card-sub">
+          โทร: ${phoneHtml}
+        </div>
         ${b.note ? `<div class="card-sub">หมายเหตุ: ${b.note}</div>` : ''}
         <div class="card-actions">
           <button class="ghost manage-btn">จัดการ</button>
@@ -275,11 +279,14 @@ function renderTable() {
       </div>
     `;
 
-    card.querySelector('.toggle-detail').onclick = () =>
+    card.onclick = () => {
       card.classList.toggle('expanded');
+    };
 
-    card.querySelector('.manage-btn').onclick = () =>
+    card.querySelector('.manage-btn').onclick = e => {
+      e.stopPropagation(); // กันไม่ให้ expand ซ้อน
       openEditModal(b);
+    };
 
     listEl.appendChild(card);
   });
