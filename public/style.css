@@ -44,7 +44,9 @@ body{
 /* =========================
    INPUT / BUTTON
 ========================= */
-input,select{
+input,
+select,
+textarea{
   width:100%;
   padding:14px;
   border-radius:16px;
@@ -52,6 +54,8 @@ input,select{
   background:rgba(0,0,0,.28);
   color:var(--text);
   font-size:16px;
+  font-family:inherit;
+  resize:vertical;
 }
 
 .primary{
