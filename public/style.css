@@ -357,3 +357,34 @@ textarea{resize:vertical}
   font-size: 20px;
   font-weight: 900;
 }
+
+/* =========================
+   TIME PILL
+========================= */
+.time-pill{
+  min-width:64px;
+  padding:6px 12px;
+  border-radius:999px;
+  font-weight:900;
+  font-size:15px;
+  text-align:center;
+
+  color:#061022;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  box-shadow:
+    0 4px 14px rgba(0,0,0,.45),
+    inset 0 0 0 1px rgba(255,255,255,.35);
+}
+
+.card-main{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.card-main-info{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  flex:1;
+}
