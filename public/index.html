@@ -79,7 +79,7 @@
 
 <div class="wrap">
 
-  <!-- CALENDAR -->
+<!-- CALENDAR -->
 <section class="panel">
   <div class="calendar-shell">
 
@@ -89,8 +89,9 @@
       <button id="nextMonth" class="ghost">›</button>
     </div>
 
-    <!-- ✅ GRID เดียว ไม่มีซ้อน -->
-    <div class="calendarGrid" id="calendarGrid">
+    <!-- ✅ GRID เดียว 7 คอลัมน์ (ไม่ซ้อน) -->
+    <div class="calendarGrid">
+
       <!-- day labels -->
       <div class="dayLabel">อา</div>
       <div class="dayLabel">จ</div>
@@ -100,8 +101,9 @@
       <div class="dayLabel">ศ</div>
       <div class="dayLabel">ส</div>
 
-      <!-- days will be injected here -->
-      <div id="calendarDays"></div>
+      <!-- days (JS inject div.day ตรงนี้) -->
+      <div id="calendarDays" class="calendarDays"></div>
+
     </div>
 
     <div class="calendarLegend">
@@ -112,6 +114,7 @@
 
   </div>
 </section>
+
 
   <!-- SUMMARY -->
   <section class="panel">
