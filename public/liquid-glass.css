@@ -261,3 +261,71 @@ button:active {
 /* ======================================================
    END — FINAL GLASS CLEAR v1.0
 ====================================================== */
+.phone-call {
+  display: inline-block;
+  margin-top: 8px;
+  color: var(--text-accent-blue);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.phone-call:active {
+  opacity: 0.7;
+}
+/* ======================================================
+   TYPOGRAPHY SCALE — iOS READABLE (PRO)
+====================================================== */
+
+/* ---------- Form labels ---------- */
+label {
+  font-size: 1rem;           /* ~16px */
+  font-weight: 500;
+  margin-bottom: 6px;
+  display: block;
+}
+
+/* ---------- Inputs / Select / Textarea ---------- */
+input,
+select,
+textarea {
+  font-size: 1.05rem;        /* ~17px */
+  padding: 14px 16px;
+}
+
+/* ---------- Section titles (modal / panels) ---------- */
+.modal h2,
+.panel h2 {
+  font-size: 1.35rem;        /* ~22px */
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+/* ---------- Booking card text ---------- */
+.booking-card {
+  font-size: 1rem;
+}
+
+/* ชื่อลูกค้า */
+.booking-card .customer-name,
+.booking-card .name {
+  font-size: 1.15rem;        /* ~18–19px */
+  font-weight: 600;
+}
+
+/* เวลา */
+.booking-card .time {
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+/* บริการ / สิ่งที่ทำ */
+.booking-card .service {
+  font-size: 1rem;
+}
+
+/* เบอร์โทร / หมายเหตุ */
+.booking-card .phone,
+.booking-card .note,
+.booking-card .meta {
+  font-size: 0.95rem;
+}
