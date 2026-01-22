@@ -59,6 +59,9 @@ textarea{resize:vertical}
   border-radius:14px;
 }
 
+/* =========================
+   OVERLAY / MODAL
+========================= */
 .overlay{
   position:fixed;
   inset:0;
@@ -86,6 +89,9 @@ textarea{resize:vertical}
   text-align:center;
 }
 
+/* =========================
+   TOP BAR
+========================= */
 .topbar{
   display:flex;
   justify-content:space-between;
@@ -118,6 +124,9 @@ textarea{resize:vertical}
   object-fit:cover;
 }
 
+/* =========================
+   MAIN
+========================= */
 .wrap{
   max-width:980px;
   margin:0 auto 80px;
@@ -132,7 +141,9 @@ textarea{resize:vertical}
   box-shadow:var(--shadow);
 }
 
-/* ===== CALENDAR ===== */
+/* =========================
+   CALENDAR
+========================= */
 .calendarHeader{
   display:flex;
   justify-content:space-between;
@@ -180,22 +191,20 @@ textarea{resize:vertical}
   color:var(--muted);
 }
 
-.legend-item{
-  display:flex;
-  align-items:center;
-  gap:6px;
-}
+.legend-item{display:flex;align-items:center;gap:6px}
 
 .dot{
   width:10px;
   height:10px;
   border-radius:50%;
 }
-
 .dot.low{background:var(--low)}
 .dot.mid{background:var(--mid)}
 .dot.high{background:var(--high)}
 
+/* =========================
+   SUMMARY
+========================= */
 .summary{
   display:grid;
   grid-template-columns:repeat(2,1fr);
@@ -211,6 +220,9 @@ textarea{resize:vertical}
 
 .summary strong{font-size:32px}
 
+/* =========================
+   TABS / FORM
+========================= */
 .tabs{display:flex;gap:10px;margin-bottom:18px}
 
 .tab{
@@ -236,7 +248,9 @@ textarea{resize:vertical}
 
 .grid .full{grid-column:1/-1}
 
-/* ===== TABLE ===== */
+/* =========================
+   TABLE
+========================= */
 table{width:100%;border-collapse:collapse}
 
 th,td{
@@ -245,6 +259,36 @@ th,td{
   font-size:14px;
 }
 
+/* =========================
+   ✅ BADGE (STYLIST) — คืนดีไซน์เดิม
+========================= */
+.badge{
+  display:inline-block;
+  padding:6px 14px;
+  border-radius:999px;
+  font-weight:900;
+  font-size:13px;
+  line-height:1;
+}
+
+.badge.Bank{
+  background:rgba(110,231,255,.2);
+  color:#6ee7ff;
+}
+
+.badge.Sindy{
+  background:rgba(255,143,177,.2);
+  color:#ff8fb1;
+}
+
+.badge.Assist{
+  background:rgba(44,255,156,.2);
+  color:#2cff9c;
+}
+
+/* =========================
+   MOBILE TABLE
+========================= */
 @media (max-width:768px){
   table,thead,tbody,tr{display:block}
   thead{display:none}
