@@ -431,3 +431,29 @@ textarea{resize:vertical}
     0 20px 50px rgba(0,0,0,.55),
     inset 0 0 0 1px rgba(255,255,255,.06);
 }
+/* =========================
+   📱 MOBILE CALENDAR FIX
+========================= */
+@media (max-width: 420px) {
+
+  .calendar-shell{
+    max-width: 100%;
+    padding: 4px;
+  }
+
+  .calendarGrid{
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+  }
+
+  .day{
+    width: 40px;
+    height: 40px;
+    font-size: 14px;
+  }
+
+  .dayLabel{
+    font-size: 12px;
+  }
+
+}
