@@ -485,5 +485,56 @@ button,
   }
 }
 
+/* =========================
+   CALENDAR iOS MOTION
+========================= */
+
+/* wrapper animation */
+.calendarDays{
+  transition:
+    transform .28s cubic-bezier(.25,.8,.25,1),
+    opacity .28s ease;
+}
+
+/* เดือนกำลังออก */
+.calendar-exit-left{
+  transform: translateX(-24px);
+  opacity: 0;
+}
+
+.calendar-exit-right{
+  transform: translateX(24px);
+  opacity: 0;
+}
+
+/* เดือนใหม่กำลังเข้า */
+.calendar-enter{
+  transform: translateX(0);
+  opacity: 1;
+}
+
+/* =========================
+   DAY FOCUS (iOS STYLE)
+========================= */
+.day{
+  transition:
+    transform .16s cubic-bezier(.25,.8,.25,1),
+    box-shadow .16s ease;
+}
+
+.day.today{
+  transform: scale(1.08);
+  box-shadow:
+    0 0 0 2px rgba(110,231,255,.6),
+    0 8px 24px rgba(110,231,255,.25);
+}
+
+/* ลด motion ถ้าระบบร้องขอ */
+@media (prefers-reduced-motion: reduce) {
+  .calendarDays,
+  .day{
+    transition: none;
+  }
+}
 
 
