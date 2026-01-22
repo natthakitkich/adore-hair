@@ -19,7 +19,7 @@ const bookingForm = document.getElementById('bookingForm');
 const timeSelect = document.getElementById('time');
 const listEl = document.getElementById('list');
 
-/* OPTIONAL ELEMENTS (ต้องกันพัง) */
+/* OPTIONAL ELEMENTS */
 const noteInput = document.getElementById('note');
 const editNote = document.getElementById('editNote');
 
@@ -34,6 +34,11 @@ let selectedDate = getTodayTH();
 
 let viewMonth = new Date(selectedDate).getMonth();
 let viewYear = new Date(selectedDate).getFullYear();
+
+/* =========================
+   VOICE STATE (NEW)
+========================= */
+let announcedQueueIds = new Set();
 
 /* =========================
    LOGIN
@@ -55,15 +60,14 @@ loginBtn.onclick = () => {
   localStorage.setItem('adore_logged_in', '1');
   loginOverlay.classList.add('hidden');
   init();
+
+  // 🔊 iOS unlock audio
+  speak('ระบบแจ้งเตือนคิวพร้อมใช้งาน');
 };
 
-/* =========================
-   PIN INPUT ONLY NUMBER
-========================= */
 pinInput.addEventListener('input', () => {
   pinInput.value = pinInput.value.replace(/\D/g, '');
 });
-
 
 logoutBtn.onclick = () => {
   localStorage.removeItem('adore_logged_in');
@@ -237,9 +241,8 @@ function renderSummary() {
 }
 
 /* =========================
-   TABLE (DESKTOP + MOBILE)
+   TABLE
 ========================= */
-
 function renderTable() {
   listEl.innerHTML = '';
 
@@ -247,42 +250,72 @@ function renderTable() {
     const card = document.createElement('div');
     card.className = 'booking-card';
 
- card.innerHTML = `
-  <div class="card-main">
-    <div class="time-pill">${b.time.slice(0,5)}</div>
+    card.innerHTML = `
+      <div class="card-main">
+        <div class="time-pill">${b.time.slice(0,5)}</div>
 
-    <div class="card-main-info">
-      <span class="badge ${b.stylist}">${b.stylist}</span>
-      ${b.gender === 'male' ? '👨' : '👩'}
-    </div>
+        <div class="card-main-info">
+          <span class="badge ${b.stylist}">${b.stylist}</span>
+          ${b.gender === 'male' ? '👨' : '👩'}
+        </div>
 
-    <button class="ghost toggle-detail">ดู</button>
-  </div>
+        <button class="ghost toggle-detail">ดู</button>
+      </div>
 
-  <div class="card-sub">
-    ${b.name} · ${b.service || ''}
-  </div>
+      <div class="card-sub">
+        ${b.name} · ${b.service || ''}
+      </div>
 
-  <div class="card-detail">
-    <div class="card-sub">โทร: ${b.phone || '-'}</div>
-    ${b.note ? `<div class="card-sub">หมายเหตุ: ${b.note}</div>` : ''}
-    <div class="card-actions">
-      <button class="ghost manage-btn">จัดการ</button>
-    </div>
-  </div>
-`;
+      <div class="card-detail">
+        <div class="card-sub">โทร: ${b.phone || '-'}</div>
+        ${b.note ? `<div class="card-sub">หมายเหตุ: ${b.note}</div>` : ''}
+        <div class="card-actions">
+          <button class="ghost manage-btn">จัดการ</button>
+        </div>
+      </div>
+    `;
 
-    card.querySelector('.toggle-detail').onclick = () => {
-  card.classList.toggle('expanded');
-};
+    card.querySelector('.toggle-detail').onclick = () =>
+      card.classList.toggle('expanded');
 
-
-    card.querySelector('.manage-btn').onclick = () => openEditModal(b);
+    card.querySelector('.manage-btn').onclick = () =>
+      openEditModal(b);
 
     listEl.appendChild(card);
   });
 }
 
+/* =========================
+   VOICE (iOS)
+========================= */
+function speak(text) {
+  if (!('speechSynthesis' in window)) return;
+
+  const msg = new SpeechSynthesisUtterance(text);
+  msg.lang = 'th-TH';
+  msg.rate = 0.95;
+
+  speechSynthesis.cancel();
+  speechSynthesis.speak(msg);
+}
+
+function checkUpcomingQueues() {
+  const now = new Date();
+
+  bookings.forEach(b => {
+    if (!b.id) return;
+
+    const t = new Date(`${b.date}T${b.time}`);
+    const diff = (t - now) / 60000;
+
+    if (diff > 0 && diff <= 10 && !announcedQueueIds.has(b.id)) {
+      speak(`อีกสิบ นาที ถึงคิว ${b.name} ช่าง ${b.stylist}`);
+      announcedQueueIds.add(b.id);
+    }
+  });
+}
+
+setInterval(checkUpcomingQueues, 60000);
 
 /* =========================
    EDIT MODAL
