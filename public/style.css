@@ -531,3 +531,7 @@ textarea::placeholder{
 .phone-link:active{
   opacity: .6;
 }
+input.readonly {
+  opacity: 0.85;
+  cursor: not-allowed;
+}
