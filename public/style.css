@@ -163,7 +163,20 @@ textarea{resize:vertical}
   text-align:center;
 }
 
-.calendarDays{display:contents}
+/* =========================
+   CALENDAR DAYS (FIX FOR MOTION)
+========================= */
+.calendarDays{
+  display:grid;
+  grid-template-columns:repeat(7,48px);
+  justify-content:center;
+  gap:12px;
+
+  transition:
+    transform .28s cubic-bezier(.25,.8,.25,1),
+    opacity .28s ease;
+}
+
 
 .dayLabel{font-size:13px;color:var(--muted)}
 
