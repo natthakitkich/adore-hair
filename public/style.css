@@ -486,14 +486,4 @@ button,
 }
 
 
-/* =========================
-   SAFARI SELECT FIX
-========================= */
-select{
-  -webkit-appearance: none;
-  appearance: none;
 
-  height: 52px;              /* บังคับความสูง */
-  line-height: 52px;
-  padding-right: 40px;       /* เผื่อ space ลูกศร */
-}
