@@ -23,6 +23,7 @@ const listEl = document.getElementById('list');
 const editOverlay = document.getElementById('editOverlay');
 const editDate = document.getElementById('editDate');
 const editTime = document.getElementById('editTime');
+const editStylist = document.getElementById('editStylist');
 const editName = document.getElementById('editName');
 const editPhone = document.getElementById('editPhone');
 const editService = document.getElementById('editService');
@@ -35,11 +36,10 @@ let bookings = [];
 let calendarDensity = {};
 let selectedStylist = 'Bank';
 let selectedDate = getTodayTH();
+let editingBooking = null;
 
 let viewMonth = new Date(selectedDate).getMonth();
 let viewYear = new Date(selectedDate).getFullYear();
-
-let editingBooking = null;
 
 /* =========================
    LOGIN
@@ -62,10 +62,6 @@ loginBtn.onclick = () => {
   loginOverlay.classList.add('hidden');
   init();
 };
-
-pinInput.addEventListener('input', () => {
-  pinInput.value = pinInput.value.replace(/\D/g, '');
-});
 
 logoutBtn.onclick = () => {
   localStorage.removeItem('adore_logged_in');
@@ -192,16 +188,16 @@ function renderTimeOptions() {
     timeSelect.appendChild(opt);
   }
 }
+
 /* =========================
-   BOOKING FORM SUBMIT (FIX)
+   BOOKING SUBMIT
 ========================= */
 bookingForm.onsubmit = async (e) => {
   e.preventDefault();
 
   const gender = document.querySelector('[name=gender]:checked')?.value;
-
-  if (!timeSelect.value || !selectedStylist || !gender) {
-    alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+  if (!timeSelect.value || !gender) {
+    showToast('กรุณากรอกข้อมูลให้ครบถ้วน');
     return;
   }
 
@@ -213,42 +209,32 @@ bookingForm.onsubmit = async (e) => {
     phone: document.getElementById('phone').value.trim(),
     gender,
     service: document.getElementById('service').value.trim(),
-    note: document.getElementById('note')?.value.trim() || null
+    note: document.getElementById('note').value.trim() || null
   };
 
-  try {
-    const res = await fetch(`${API}/bookings`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
+  const res = await fetch(`${API}/bookings`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
 
-    if (res.status === 409) {
-      alert('เวลานี้ถูกจองแล้ว กรุณาเลือกเวลาอื่น');
-      return;
-    }
-
-    if (!res.ok) {
-      alert('เกิดข้อผิดพลาดในการจองคิว');
-      return;
-    }
-
-    alert('จองคิวสำเร็จแล้ว');
-
-    bookingForm.reset();
-
-    // reset gender radio
-    document.querySelectorAll('[name=gender]').forEach(r => r.checked = false);
-
-    // refresh data
-    loadBookings();
-    loadCalendar();
-
-  } catch (err) {
-    console.error(err);
-    alert('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+  if (res.status === 409) {
+    showToast('เวลานี้ถูกจองแล้ว');
+    return;
   }
+
+  if (!res.ok) {
+    showToast('เกิดข้อผิดพลาด');
+    return;
+  }
+
+  showToast('จองคิวสำเร็จแล้ว');
+  bookingForm.reset();
+  document.querySelectorAll('[name=gender]').forEach(r => r.checked = false);
+  loadBookings();
+  loadCalendar();
 };
+
 /* =========================
    SUMMARY
 ========================= */
@@ -285,21 +271,16 @@ function renderTable() {
 
       <div class="card-sub">${b.name} · ${b.service || ''}</div>
 
-      ${b.phone ? `
-  <a href="tel:${b.phone}" class="phone-call">
-    โทร: ${b.phone}
-  </a>
-` : `
-  <div class="phone muted">ไม่มีเบอร์โทร</div>
-`}
-        ${b.note ? `<div class="card-sub">หมายเหตุ: ${b.note}</div>` : ''}
-        <div class="card-actions">
-          <button class="ghost manage-btn">จัดการ</button>
-        </div>
+      ${b.phone
+        ? `<a href="tel:${b.phone}" class="phone-call">โทร: ${b.phone}</a>`
+        : `<div class="muted">ไม่มีเบอร์โทร</div>`}
+
+      ${b.note ? `<div class="card-sub">หมายเหตุ: ${b.note}</div>` : ''}
+
+      <div class="card-actions">
+        <button class="ghost manage-btn">จัดการ</button>
       </div>
     `;
-
-    card.onclick = () => card.classList.toggle('expanded');
 
     card.querySelector('.toggle-detail').onclick = e => {
       e.stopPropagation();
@@ -316,7 +297,7 @@ function renderTable() {
 }
 
 /* =========================
-   EDIT MODAL LOGIC
+   EDIT MODAL
 ========================= */
 function openEditModal(b) {
   editingBooking = b;
@@ -325,14 +306,6 @@ function openEditModal(b) {
   editStylist.value = b.stylist;
   editName.value = b.name;
   editPhone.value = b.phone || '';
-const callBtn = document.getElementById('callPhoneBtn');
-
-if (b.phone) {
-  callBtn.href = `tel:${b.phone}`;
-  callBtn.style.display = 'inline-block';
-} else {
-  callBtn.style.display = 'none';
-}
   editService.value = b.service || '';
   editNote.value = b.note || '';
 
@@ -367,10 +340,6 @@ function generateEditTimeOptions(date) {
   }
 }
 
-editDate.onchange = () => {
-  generateEditTimeOptions(editDate.value);
-};
-
 document.getElementById('saveEdit').onclick = async () => {
   const gender = document.querySelector('[name=editGender]:checked')?.value;
 
@@ -389,27 +358,28 @@ document.getElementById('saveEdit').onclick = async () => {
   });
 
   if (res.status === 409) {
-    alert('เวลานี้ถูกจองแล้ว กรุณาเลือกเวลาอื่น');
+    showToast('เวลานี้ถูกจองแล้ว');
     return;
   }
 
-  alert('บันทึกการแก้ไขคิวเรียบร้อยแล้ว');
+  showToast('บันทึกเรียบร้อยแล้ว');
   editOverlay.classList.add('hidden');
   loadBookings();
   loadCalendar();
 };
 
-document.getElementById('deleteEdit').onclick = async () => {
-  if (!confirm('ยืนยันการลบคิวนี้ใช่หรือไม่')) return;
-
-  await fetch(`${API}/bookings/${editingBooking.id}`, {
-    method: 'DELETE'
+document.getElementById('deleteEdit').onclick = () => {
+  openConfirm({
+    title: 'ลบคิว',
+    message: 'ยืนยันการลบคิวนี้ใช่หรือไม่',
+    onConfirm: async () => {
+      await fetch(`${API}/bookings/${editingBooking.id}`, { method: 'DELETE' });
+      showToast('ลบคิวเรียบร้อยแล้ว');
+      editOverlay.classList.add('hidden');
+      loadBookings();
+      loadCalendar();
+    }
   });
-
-  alert('ลบคิวเรียบร้อยแล้ว');
-  editOverlay.classList.add('hidden');
-  loadBookings();
-  loadCalendar();
 };
 
 document.getElementById('closeEdit').onclick = () => {
@@ -417,31 +387,25 @@ document.getElementById('closeEdit').onclick = () => {
 };
 
 /* =========================
-   UTIL
+   TOAST
 ========================= */
-function getTodayTH() {
-  return new Date().toLocaleDateString('sv-SE', {
-    timeZone: 'Asia/Bangkok'
-  });
+const toastEl = document.getElementById('toast');
+let toastTimer = null;
+
+function showToast(msg) {
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  toastEl.classList.remove('hidden');
+
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    toastEl.classList.remove('show');
+  }, 2200);
 }
 
-/* ======================================================
-   DYNAMIC LIGHT FOLLOW SCROLL (SAFE)
-====================================================== */
-window.addEventListener("scroll", () => {
-  const scrollY = window.scrollY;
-  const docH = document.body.scrollHeight - window.innerHeight;
-  const percent = Math.min(80, Math.max(20, (scrollY / docH) * 100));
-
-  document.documentElement.style.setProperty(
-    "--light-y",
-    percent + "%"
-  );
-});
-/* ======================================================
-   STEP 9 — CONFIRM LOGIC (SAFE)
-====================================================== */
-
+/* =========================
+   CONFIRM
+========================= */
 const confirmOverlay = document.getElementById('confirmOverlay');
 const confirmTitle = document.getElementById('confirmTitle');
 const confirmMessage = document.getElementById('confirmMessage');
@@ -454,17 +418,23 @@ function openConfirm({ title, message, onConfirm }) {
   confirmTitle.textContent = title;
   confirmMessage.textContent = message;
   confirmCallback = onConfirm;
-
   confirmOverlay.classList.remove('hidden');
 }
 
-function closeConfirm() {
+confirmCancel.onclick = () => {
   confirmOverlay.classList.add('hidden');
-  confirmCallback = null;
-}
+};
 
-confirmCancel.onclick = closeConfirm;
 confirmOk.onclick = () => {
   if (confirmCallback) confirmCallback();
-  closeConfirm();
+  confirmOverlay.classList.add('hidden');
 };
+
+/* =========================
+   UTIL
+========================= */
+function getTodayTH() {
+  return new Date().toLocaleDateString('sv-SE', {
+    timeZone: 'Asia/Bangkok'
+  });
+}
