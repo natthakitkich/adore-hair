@@ -322,6 +322,7 @@ function openEditModal(b) {
   editingBooking = b;
 
   editDate.value = b.date;
+  editStylist.value = b.stylist;
   editName.value = b.name;
   editPhone.value = b.phone || '';
 const callBtn = document.getElementById('callPhoneBtn');
