@@ -231,44 +231,47 @@ function renderSummary() {
 /* =========================
    TABLE (DESKTOP + MOBILE)
 ========================= */
+
 function renderTable() {
   listEl.innerHTML = '';
 
   bookings.forEach(b => {
-    const tr = document.createElement('tr');
+    const card = document.createElement('div');
+    card.className = 'booking-card';
 
-    tr.innerHTML = `
-      <td class="mobile-main">
+    card.innerHTML = `
+      <div class="card-main">
         <span>
           ${b.time.slice(0,5)} · 
           <span class="badge ${b.stylist}">${b.stylist}</span> · 
           ${b.gender === 'male' ? '👨' : '👩'}
         </span>
         <button class="ghost toggle-detail">ดู</button>
-      </td>
+      </div>
 
-      <td class="mobile-sub">
+      <div class="card-sub">
         ${b.name} · ${b.service || ''}
-      </td>
+      </div>
 
-      <td class="mobile-detail hidden">
-        <div class="mobile-sub">โทร: ${b.phone || '-'}</div>
-        ${b.note ? `<div class="mobile-sub">หมายเหตุ: ${b.note}</div>` : ''}
-        <div class="mobile-actions">
+      <div class="card-detail hidden">
+        <div class="card-sub">โทร: ${b.phone || '-'}</div>
+        ${b.note ? `<div class="card-sub">หมายเหตุ: ${b.note}</div>` : ''}
+        <div class="card-actions">
           <button class="ghost manage-btn">จัดการ</button>
         </div>
-      </td>
+      </div>
     `;
 
-    tr.querySelector('.toggle-detail').onclick = () => {
-      tr.querySelector('.mobile-detail').classList.toggle('hidden');
+    card.querySelector('.toggle-detail').onclick = () => {
+      card.querySelector('.card-detail').classList.toggle('hidden');
     };
 
-    tr.querySelector('.manage-btn').onclick = () => openEditModal(b);
+    card.querySelector('.manage-btn').onclick = () => openEditModal(b);
 
-    listEl.appendChild(tr);
+    listEl.appendChild(card);
   });
 }
+
 
 /* =========================
    EDIT MODAL
