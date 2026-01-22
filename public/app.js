@@ -15,15 +15,24 @@ const calendarDaysEl = document.getElementById('calendarDays');
 const prevMonthBtn = document.getElementById('prevMonth');
 const nextMonthBtn = document.getElementById('nextMonth');
 
+const bookingForm = document.getElementById('bookingForm');
 const timeSelect = document.getElementById('time');
 const listEl = document.getElementById('list');
+
+/* EDIT MODAL */
+const editOverlay = document.getElementById('editOverlay');
+const editDate = document.getElementById('editDate');
+const editTime = document.getElementById('editTime');
+const editName = document.getElementById('editName');
+const editPhone = document.getElementById('editPhone');
+const editService = document.getElementById('editService');
+const editNote = document.getElementById('editNote');
 
 /* =========================
    STATE
 ========================= */
 let bookings = [];
 let calendarDensity = {};
-
 let selectedStylist = 'Bank';
 let selectedDate = getTodayTH();
 
@@ -199,7 +208,7 @@ function renderSummary() {
 }
 
 /* =========================
-   TABLE + MANAGE
+   TABLE
 ========================= */
 function renderTable() {
   listEl.innerHTML = '';
@@ -207,10 +216,6 @@ function renderTable() {
   bookings.forEach(b => {
     const card = document.createElement('div');
     card.className = 'booking-card';
-
-    const phoneHtml = b.phone
-      ? `<a href="tel:${b.phone}" class="phone-link">${b.phone}</a>`
-      : '-';
 
     card.innerHTML = `
       <div class="card-main">
@@ -225,7 +230,7 @@ function renderTable() {
       <div class="card-sub">${b.name} · ${b.service || ''}</div>
 
       <div class="card-detail">
-        <div class="card-sub">โทร: ${phoneHtml}</div>
+        <div class="card-sub">โทร: ${b.phone || '-'}</div>
         ${b.note ? `<div class="card-sub">หมายเหตุ: ${b.note}</div>` : ''}
         <div class="card-actions">
           <button class="ghost manage-btn">จัดการ</button>
@@ -250,42 +255,96 @@ function renderTable() {
 }
 
 /* =========================
-   EDIT MODAL
+   EDIT MODAL LOGIC
 ========================= */
-function openEditModal(booking) {
-  editingBooking = booking;
+function openEditModal(b) {
+  editingBooking = b;
 
-  const modal = document.getElementById('editModal');
-  modal.classList.add('show');
+  editDate.value = b.date;
+  editName.value = b.name;
+  editPhone.value = b.phone || '';
+  editService.value = b.service || '';
+  editNote.value = b.note || '';
 
-  document.getElementById('editName').value = booking.name || '';
-  document.getElementById('editPhone').value = booking.phone || '';
-  document.getElementById('editNote').value = booking.note || '';
+  document.querySelectorAll('[name=editGender]').forEach(r => {
+    r.checked = r.value === b.gender;
+  });
+
+  generateEditTimeOptions(b.date);
+  editOverlay.classList.remove('hidden');
 }
 
-document.getElementById('editSave').onclick = async () => {
-  if (!editingBooking) return;
+function generateEditTimeOptions(date) {
+  editTime.innerHTML = '';
 
-  await fetch(`${API}/bookings/${editingBooking.id}`, {
+  for (let h = 13; h <= 22; h++) {
+    const time = `${String(h).padStart(2, '0')}:00:00`;
+
+    const conflict = bookings.find(x =>
+      x.date === date &&
+      x.time === time &&
+      x.stylist === editingBooking.stylist &&
+      x.id !== editingBooking.id
+    );
+
+    const opt = document.createElement('option');
+    opt.value = time;
+    opt.textContent = time.slice(0,5);
+    if (conflict) opt.disabled = true;
+    if (time === editingBooking.time) opt.selected = true;
+
+    editTime.appendChild(opt);
+  }
+}
+
+editDate.onchange = () => {
+  generateEditTimeOptions(editDate.value);
+};
+
+document.getElementById('saveEdit').onclick = async () => {
+  const gender = document.querySelector('[name=editGender]:checked')?.value;
+
+  const res = await fetch(`${API}/bookings/${editingBooking.id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      name: document.getElementById('editName').value,
-      phone: document.getElementById('editPhone').value,
-      note: document.getElementById('editNote').value
+      date: editDate.value,
+      time: editTime.value,
+      name: editName.value,
+      phone: editPhone.value,
+      gender,
+      service: editService.value,
+      note: editNote.value
     })
   });
 
-  closeEditModal();
+  if (res.status === 409) {
+    alert('เวลานี้ถูกจองแล้ว กรุณาเลือกเวลาอื่น');
+    return;
+  }
+
+  alert('บันทึกการแก้ไขคิวเรียบร้อยแล้ว');
+  editOverlay.classList.add('hidden');
   loadBookings();
+  loadCalendar();
 };
 
-document.getElementById('editClose').onclick = closeEditModal;
+document.getElementById('deleteEdit').onclick = async () => {
+  if (!confirm('ยืนยันการลบคิวนี้ใช่หรือไม่')) return;
 
-function closeEditModal() {
-  document.getElementById('editModal').classList.remove('show');
-  editingBooking = null;
-}
+  await fetch(`${API}/bookings/${editingBooking.id}`, {
+    method: 'DELETE'
+  });
+
+  alert('ลบคิวเรียบร้อยแล้ว');
+  editOverlay.classList.add('hidden');
+  loadBookings();
+  loadCalendar();
+};
+
+document.getElementById('closeEdit').onclick = () => {
+  editOverlay.classList.add('hidden');
+};
 
 /* =========================
    UTIL
