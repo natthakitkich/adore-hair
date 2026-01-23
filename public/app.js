@@ -58,6 +58,11 @@ loginBtn.onclick = () => {
     return;
   }
 
+  // 🔊 AUDIO UNLOCK (iOS SAFE — DIRECT USER GESTURE)
+  if (typeof window.enableAdoreAudio === 'function') {
+    window.enableAdoreAudio();
+  }
+
   localStorage.setItem('adore_logged_in', '1');
   loginOverlay.classList.add('hidden');
   init();
@@ -250,7 +255,7 @@ function renderSummary() {
 }
 
 /* =========================
-   TABLE (UPDATED)
+   TABLE
 ========================= */
 function renderTable() {
   listEl.innerHTML = '';
@@ -262,12 +267,10 @@ function renderTable() {
     card.innerHTML = `
       <div class="card-main">
         <div class="time-pill">${b.time.slice(0,5)}</div>
-
         <div class="card-main-info">
           <span class="badge ${b.stylist}">${b.stylist}</span>
           ${b.gender === 'male' ? '👨' : '👩'}
         </div>
-
         <button class="ghost toggle-detail">ดู</button>
       </div>
 
