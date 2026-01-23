@@ -150,9 +150,7 @@ textarea{resize:vertical}
 ====================================================== */
 
 /* ลด padding ล่างเฉพาะการ์ดที่ยังไม่ expanded */
-.booking-card:not(.expanded){
-  padding-bottom:12px;
-}
+
 
 /* ลดช่องว่างใต้ชื่อ/บริการ เฉพาะตอนย่อ */
 .booking-card:not(.expanded) .card-sub{
