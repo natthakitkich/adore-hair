@@ -1,4 +1,4 @@
-const API = '';
+const API = window.location.origin;
 const OWNER_PIN = '1234';
 
 /* =========================
