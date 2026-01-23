@@ -447,3 +447,9 @@ function getTodayTH() {
     timeZone: 'Asia/Bangkok'
   });
 }
+/* =========================
+   FORCE IPHONE UI MODE
+========================= */
+if (navigator.maxTouchPoints > 0) {
+  document.body.classList.add('iphone-ui');
+}
