@@ -58,9 +58,12 @@ loginBtn.onclick = () => {
     return;
   }
 
-  // 🔊 AUDIO UNLOCK (iOS SAFE — DIRECT USER GESTURE)
+    /**
+   * ✅ CRITICAL FIX (iOS)
+   * ต้องเรียกเสียง "จริง" ภายใน user gesture
+   */
   if (typeof window.enableAdoreAudio === 'function') {
-    window.enableAdoreAudio();
+    window.enableAdoreAudio(true); // 👈 บังคับ iOS unlock
   }
 
   localStorage.setItem('adore_logged_in', '1');
