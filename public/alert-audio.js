@@ -177,3 +177,11 @@
   }
 
 })();
+/* =========================
+   PUBLIC AUDIO API (FOR app.js)
+   iOS SAFE — MUST BE DIRECT
+========================= */
+window.enableAdoreAudio = function () {
+  // เรียก unlockAudio ตรง ๆ
+  unlockAudio();
+};
