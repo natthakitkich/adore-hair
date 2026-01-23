@@ -420,45 +420,25 @@ textarea {
 .grid > div {
   margin-bottom: 18px;
 }
-/* ===============================
-   OVERLAY — iOS SAFE FIX
-================================ */
+/* ======================================================
+   STEP 7 — iOS FRIENDLY POPUP (FINAL OVERRIDE)
+   Safe override — paste at END of liquid-glass.css
+====================================================== */
 
+/* Overlay เต็มจอ + กันเด้ง */
 .overlay {
   position: fixed;
   inset: 0;
   z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-  background: rgba(0,0,0,0.45);
+  background: rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
 
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-
-  transition: opacity 0.25s ease;
-}
-
-/* เมื่อแสดงจริง */
-.overlay:not(.hidden) {
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
-}
-
-/* modal */
-.overlay .modal {
-  margin: 24px auto;
-  width: min(92vw, 520px);
-  max-height: calc(100vh - 48px);
-}
-
-/* body popup scroll */
-.overlay .modalBody {
-  max-height: calc(100vh - 120px);
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 
 /* กล่อง popup หลัก */
@@ -552,121 +532,4 @@ body.modal-open {
     opacity: 1;
     transform: translateY(0) scale(1);
   }
-}
-/* ======================================================
-   STEP 8 — POPUP ACTION BAR (iOS STYLE)
-   Safe override — no logic impact
-====================================================== */
-
-/* แถบปุ่มด้านล่าง popup */
-.modal .action-bar {
-  position: sticky;
-  bottom: 0;
-
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-
-  padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
-
-  background: linear-gradient(
-    to top,
-    rgba(30,40,55,0.65),
-    rgba(30,40,55,0.25)
-  );
-
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-
-  border-top: 1px solid rgba(255,255,255,0.18);
-}
-
-/* ปุ่มทุกปุ่มใน action bar */
-.modal .action-bar button {
-  width: 100%;
-  min-height: 52px;
-
-  font-size: 1.05rem;
-  font-weight: 600;
-  border-radius: 14px;
-}
-
-/* ปุ่มบันทึก (Primary) */
-.modal .action-bar .primary {
-  background: linear-gradient(
-    180deg,
-    rgba(120,200,255,1),
-    rgba(80,150,220,1)
-  );
-  color: #fff;
-  border: none;
-  box-shadow: 0 10px 25px rgba(80,150,220,0.45);
-}
-
-/* ปุ่มลบ (Danger) */
-.modal .action-bar .danger {
-  background: rgba(255,80,90,0.18);
-  color: rgba(255,120,130,0.95);
-  border: 1px solid rgba(255,120,130,0.45);
-}
-
-/* ปุ่มปิด */
-.modal .action-bar .ghost {
-  background: rgba(255,255,255,0.15);
-  color: var(--text-secondary);
-}
-
-/* เอฟเฟกต์กดแบบ iOS */
-.modal .action-bar button:active {
-  transform: scale(0.97);
-}
-/* ======================================================
-   STEP 9 — iOS CONFIRM POPUP
-====================================================== */
-
-.confirm-modal {
-  max-width: 320px;
-  text-align: center;
-}
-
-.confirm-modal h3 {
-  font-size: 1.1rem;
-  margin-bottom: 8px;
-}
-
-.confirm-modal p {
-  font-size: 0.95rem;
-  line-height: 1.4;
-}
-
-.confirm-actions {
-  display: flex;
-  gap: 12px;
-  margin-top: 20px;
-}
-
-.confirm-actions button {
-  flex: 1;
-  min-height: 44px;
-  font-weight: 600;
-}
-/* ===============================
-   BOOKING CARD COLLAPSE LOGIC
-   (FIX — SAFE, NO JS CHANGE)
-================================ */
-
-/* ซ่อนข้อมูลรองทั้งหมดก่อน */
-.booking-card .card-sub,
-.booking-card .phone-call,
-.booking-card .phone,
-.booking-card .card-actions {
-  display: none;
-}
-
-/* แสดงเมื่อการ์ดถูก expand */
-.booking-card.expanded .card-sub,
-.booking-card.expanded .phone-call,
-.booking-card.expanded .phone,
-.booking-card.expanded .card-actions {
-  display: block;
 }
