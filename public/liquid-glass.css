@@ -155,3 +155,46 @@ button:active { transform: scale(0.97); }
 }
 
 .toast.show { opacity: 1; }
+/* ======================================================
+   POPUP FIX — ISOLATED SCOPE ONLY
+   (NO GLOBAL LAYOUT IMPACT)
+====================================================== */
+
+/* overlay ใช้เฉพาะตอนแสดงจริง */
+.overlay.hidden {
+  display: none !important;
+}
+
+/* popup เท่านั้น */
+.overlay:not(.hidden) {
+  display: block;
+}
+
+/* จำกัดผลกระทบเฉพาะ modal ใน overlay */
+.overlay .modal {
+  margin: 24px auto;
+  width: min(92vw, 520px);
+  max-height: calc(100vh - 48px);
+}
+
+/* modal body เลื่อนได้ */
+.overlay .modalBody {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* action bar อยู่ล่าง ไม่ลอย ไม่ซ้อน */
+.overlay .action-bar {
+  position: relative;
+  margin-top: 24px;
+}
+
+/* ป้องกัน panel / calendar โดน override */
+.panel,
+.section,
+.calendar-shell,
+.calendarGrid,
+.calendarDays {
+  overflow: visible !important;
+  max-height: none !important;
+}
