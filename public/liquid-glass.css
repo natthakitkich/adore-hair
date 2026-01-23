@@ -1,5 +1,6 @@
 /* ======================================================
-   FINAL LIQUID GLASS — CLEAN & iOS SAFE
+   FINAL GLASS CLEAR v1.1 (FIXED)
+   iOS / Safari SAFE — layout only
 ====================================================== */
 
 body {
@@ -11,21 +12,15 @@ body {
     'SF Pro Text',
     'Segoe UI',
     sans-serif;
-  color: rgba(240,248,255,0.95);
-  background:
-    radial-gradient(circle at 20% 10%, #2e4c7a, transparent 45%),
-    radial-gradient(circle at 80% 30%, #6b4c8a, transparent 55%),
-    #05080f;
-  background-attachment: fixed;
 }
 
 /* ======================================================
-   ROOT TOKENS
+   1. ROOT TOKENS — FIXED
 ====================================================== */
 :root {
-  --glass-bg: rgba(255,255,255,0.08);
-  --glass-bg-strong: rgba(255,255,255,0.12);
-  --glass-border: rgba(255,255,255,0.28);
+  --glass-bg: rgba(255, 255, 255, 0.08);
+  --glass-bg-strong: rgba(255, 255, 255, 0.12);
+  --glass-border: rgba(255, 255, 255, 0.28);
 
   --glass-blur: 30px;
   --glass-saturate: 160%;
@@ -34,27 +29,41 @@ body {
   --radius-md: 22px;
   --radius-sm: 14px;
 
-  --text-primary: rgba(240,248,255,0.95);
-  --text-secondary: rgba(210,225,240,0.82);
-  --text-muted: rgba(180,200,220,0.7);
+  --text-primary: rgba(240, 248, 255, 0.95);
+  --text-secondary: rgba(210, 225, 240, 0.82);
+  --text-muted: rgba(180, 200, 220, 0.7);
 
-  --accent-blue: rgba(140,200,255,0.95);
-  --accent-pink: rgba(255,170,200,0.95);
+  --accent-blue: rgba(140, 200, 255, 0.95);
+  --accent-pink: rgba(255, 170, 200, 0.95);
 
-  --ease-ios: cubic-bezier(0.22,0.61,0.36,1);
+  --shadow-outer: 0 30px 60px rgba(0,0,0,0.45);
+  --shadow-inner:
+    inset 0 1px 0 rgba(255,255,255,0.35),
+    inset 0 -1px 0 rgba(0,0,0,0.18);
+
+  --ease-ios: cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
 /* ======================================================
-   GLOBAL SAFETY
+   GLOBAL
 ====================================================== */
-* {
-  -webkit-tap-highlight-color: transparent;
+* { -webkit-tap-highlight-color: transparent; }
+
+body {
+  color: var(--text-primary);
+  background:
+    radial-gradient(circle at 20% 10%, #2e4c7a, transparent 45%),
+    radial-gradient(circle at 80% 30%, #6b4c8a, transparent 55%),
+    #05080f;
+  background-attachment: fixed;
 }
 
 /* ======================================================
    GLASS SURFACE
 ====================================================== */
+.card,
 .panel,
+.section,
 .booking-card,
 .modal {
   background: var(--glass-bg);
@@ -62,113 +71,72 @@ body {
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   border-radius: var(--radius-md);
   border: 1px solid var(--glass-border);
-  box-shadow:
-    0 30px 60px rgba(0,0,0,0.45),
-    inset 0 1px 0 rgba(255,255,255,0.35);
+  box-shadow: var(--shadow-outer), var(--shadow-inner);
 }
 
 /* ======================================================
-   INPUTS / LABELS
-====================================================== */
-.field-label {
-  font-size: 1.05rem;
-  font-weight: 600;
-  margin-bottom: 6px;
-  display: block;
-}
-
-input,
-select,
-textarea {
-  font-size: 16px; /* iOS SAFE */
-  padding: 14px 16px;
-  border-radius: var(--radius-sm);
-  background: rgba(255,255,255,0.22);
-  color: var(--text-primary);
-  border: 1px solid rgba(255,255,255,0.35);
-}
-
-textarea {
-  min-height: 96px;
-}
-
-/* ======================================================
-   OVERLAY / MODAL (FIXED)
+   OVERLAY — FIXED (NO CENTER FLEX)
 ====================================================== */
 .overlay {
   position: fixed;
   inset: 0;
   z-index: 9999;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+
   background: rgba(0,0,0,0.45);
   backdrop-filter: blur(6px);
-}
+  -webkit-backdrop-filter: blur(6px);
 
-.overlay .modal {
-  width: min(92vw, 520px);
-  max-height: 90vh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-/* scroll container เดียว */
-.overlay .modalBody {
-  flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding: 20px 20px 100px; /* เผื่อปุ่มล่าง */
+  padding: 24px 0;
 }
 
 /* ======================================================
-   ACTION BAR — FIXED BOTTOM (NO STICKY)
+   MODAL — FLOW BASED
+====================================================== */
+.overlay .modal {
+  width: min(92vw, 520px);
+  margin: 0 auto;
+  background: var(--glass-bg-strong);
+}
+
+/* ======================================================
+   MODAL BODY
+====================================================== */
+.modalBody {
+  padding: 20px;
+}
+
+/* ======================================================
+   ACTION BAR — FIXED (NO STICKY)
 ====================================================== */
 .modal .action-bar {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-
-  padding: 14px 16px calc(14px + env(safe-area-inset-bottom));
+  margin-top: 24px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-
-  background: linear-gradient(
-    to top,
-    rgba(25,35,50,0.9),
-    rgba(25,35,50,0.6)
-  );
-
-  backdrop-filter: blur(18px);
-  border-top: 1px solid rgba(255,255,255,0.18);
+  gap: 12px;
 }
 
 .modal .action-bar button {
+  width: 100%;
   min-height: 48px;
-  font-size: 1rem;
   border-radius: 14px;
+  font-weight: 600;
 }
 
 /* ======================================================
-   BOOKING CARD COLLAPSE
+   BUTTONS
 ====================================================== */
-.booking-card .card-sub,
-.booking-card .phone-call,
-.booking-card .card-actions {
-  display: none;
+button {
+  background: rgba(255,255,255,0.25);
+  color: var(--text-primary);
+  border: 1px solid rgba(255,255,255,0.35);
 }
 
-.booking-card.expanded .card-sub,
-.booking-card.expanded .phone-call,
-.booking-card.expanded .card-actions {
-  display: block;
-}
+button:active { transform: scale(0.97); }
 
 /* ======================================================
-   TOAST
+   TOAST — unchanged
 ====================================================== */
 .toast {
   position: fixed;
@@ -181,10 +149,9 @@ textarea {
   backdrop-filter: blur(18px);
   color: #fff;
   opacity: 0;
-  transition: opacity .3s ease;
-  z-index: 9999;
+  pointer-events: none;
+  transition: 0.3s;
+  z-index: 99999;
 }
 
-.toast.show {
-  opacity: 1;
-}
+.toast.show { opacity: 1; }
