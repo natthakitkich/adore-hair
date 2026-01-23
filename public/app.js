@@ -289,7 +289,7 @@ function renderTable() {
           <span class="badge ${b.stylist}">${b.stylist}</span>
           ${b.gender === 'male' ? '👨' : '👩'}
         </div>
-        <button class="ghost toggle-detail">ดู</button>
+        <button class="ghost toggle-detail">ดู/ย่อ</button>
       </div>
 
       <div class="card-sub">${b.name} · ${b.service || ''}</div>
