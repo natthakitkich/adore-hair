@@ -604,3 +604,103 @@ input.readonly {
     padding: 9px 11px;
   }
 }
+/* ======================================================
+   FORCE IPHONE UI — APPLY TO ALL TOUCH DEVICES
+   (iPhone / iPad)
+====================================================== */
+
+body.iphone-ui {
+
+  /* spacing รวมทั้งหน้า */
+  --panel-padding: 16px;
+}
+
+/* =========================
+   CALENDAR (เหมือน iPhone)
+========================= */
+body.iphone-ui .calendar-shell {
+  max-width: 100%;
+  padding: 12px;
+  margin: 0 auto;
+}
+
+body.iphone-ui .calendarGrid {
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
+}
+
+body.iphone-ui .day {
+  width: auto;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  font-size: 15px;
+}
+
+/* =========================
+   PANEL / CARD
+========================= */
+body.iphone-ui .panel {
+  padding: var(--panel-padding);
+  border-radius: 22px;
+}
+
+body.iphone-ui .booking-card {
+  padding: 14px;
+  border-radius: 18px;
+}
+
+/* =========================
+   SUMMARY BOX
+========================= */
+body.iphone-ui .summary {
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+body.iphone-ui .summary .box {
+  padding: 18px;
+  font-size: 16px;
+}
+
+/* =========================
+   TOPBAR
+========================= */
+body.iphone-ui .topbar {
+  padding: 14px 16px;
+}
+
+body.iphone-ui .title {
+  font-size: 18px;
+}
+
+body.iphone-ui .subtitle {
+  font-size: 13px;
+}
+
+/* =========================
+   FORM
+========================= */
+body.iphone-ui input,
+body.iphone-ui select,
+body.iphone-ui textarea {
+  font-size: 16px; /* iOS safe — ไม่ซูม */
+}
+
+/* =========================
+   BUTTONS
+========================= */
+body.iphone-ui button {
+  min-height: 44px;
+  font-size: 15px;
+}
+
+/* =========================
+   REMOVE DESKTOP FEEL
+========================= */
+body.iphone-ui * {
+  transition: none;
+}
+
+body.iphone-ui .hover-only {
+  display: none;
+}
