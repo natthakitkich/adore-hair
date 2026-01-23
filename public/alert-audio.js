@@ -347,19 +347,4 @@
     }, 2200);
   }
 
-  /* =========================
-     STORAGE (prevent duplicate)
-  ========================= */
-  function loadNotifiedMap() {
-    try {
-      return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
-    } catch {
-      return {};
-    }
-  }
 
-  function saveNotifiedMap(map) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(map));
-  }
-
-})();
