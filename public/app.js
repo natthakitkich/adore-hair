@@ -250,7 +250,7 @@ function renderSummary() {
 }
 
 /* =========================
-   TABLE
+   TABLE (UPDATED)
 ========================= */
 function renderTable() {
   listEl.innerHTML = '';
@@ -262,29 +262,35 @@ function renderTable() {
     card.innerHTML = `
       <div class="card-main">
         <div class="time-pill">${b.time.slice(0,5)}</div>
+
         <div class="card-main-info">
           <span class="badge ${b.stylist}">${b.stylist}</span>
           ${b.gender === 'male' ? '👨' : '👩'}
         </div>
+
         <button class="ghost toggle-detail">ดู</button>
       </div>
 
-      <div class="card-sub">${b.name} · ${b.service || ''}</div>
+      <div class="card-sub">${b.name}${b.service ? ' · ' + b.service : ''}</div>
 
-      ${b.phone
-        ? `<a href="tel:${b.phone}" class="phone-call">โทร: ${b.phone}</a>`
-        : `<div class="muted">ไม่มีเบอร์โทร</div>`}
+      <div class="card-detail">
+        ${b.phone
+          ? `<a href="tel:${b.phone}" class="phone-call">โทร: ${b.phone}</a>`
+          : `<div class="muted">ไม่มีเบอร์โทร</div>`}
 
-      ${b.note ? `<div class="card-sub">หมายเหตุ: ${b.note}</div>` : ''}
+        ${b.note ? `<div class="card-sub">หมายเหตุ: ${b.note}</div>` : ''}
 
-      <div class="card-actions">
-        <button class="ghost manage-btn">จัดการ</button>
+        <div class="card-actions">
+          <button class="ghost manage-btn">จัดการ</button>
+        </div>
       </div>
     `;
 
-    card.querySelector('.toggle-detail').onclick = e => {
+    const toggleBtn = card.querySelector('.toggle-detail');
+    toggleBtn.onclick = e => {
       e.stopPropagation();
       card.classList.toggle('expanded');
+      toggleBtn.textContent = card.classList.contains('expanded') ? 'ย่อ' : 'ดู';
     };
 
     card.querySelector('.manage-btn').onclick = e => {
