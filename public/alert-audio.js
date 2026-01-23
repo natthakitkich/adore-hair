@@ -82,14 +82,21 @@
      AUDIO UNLOCK (iOS SAFE)
   ========================= */
   function unlockAudio() {
-    if (audioUnlocked) return;
+  if (audioUnlocked) return;
 
-    audioUnlocked = true;
+  audioUnlocked = true;
 
-    // ✅ iOS ต้องรอ voices + ต้องพูดทันทีใน user gesture
-    waitForVoices(() => {
-      speakSystem('ระบบแจ้งเตือนคิว พร้อมใช้งานแล้ว');
-    });
+  // 🔑 สำคัญที่สุด: พูดทันทีใน user gesture
+  speakSystem('ระบบแจ้งเตือนคิว พร้อมใช้งานแล้ว');
+
+  // ส่วนนี้ค่อยตามมา
+  waitForVoices(() => {});
+
+  if (!watcherStarted) {
+    startQueueWatcher();
+    watcherStarted = true;
+  }
+}
 
     if (!watcherStarted) {
       startQueueWatcher();
