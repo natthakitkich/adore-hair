@@ -10,6 +10,10 @@ const pinInput = document.getElementById('pin');
 const loginMsg = document.getElementById('loginMsg');
 const logoutBtn = document.getElementById('logoutBtn');
 
+/* 🔊 SOUND BANNER (NEW) */
+const soundBanner = document.getElementById('soundBanner');
+const enableSoundBtn = document.getElementById('enableSoundBtn');
+
 const calendarTitle = document.getElementById('calendarTitle');
 const calendarDaysEl = document.getElementById('calendarDays');
 const prevMonthBtn = document.getElementById('prevMonth');
@@ -42,6 +46,25 @@ let viewMonth = new Date(selectedDate).getMonth();
 let viewYear = new Date(selectedDate).getFullYear();
 
 /* =========================
+   🔊 SOUND ENABLE (NEW)
+========================= */
+function isIOS() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent);
+}
+
+function showSoundBannerIfNeeded() {
+  if (!isIOS()) return;
+  soundBanner?.classList.remove('hidden');
+}
+
+enableSoundBtn?.addEventListener('click', () => {
+  if (typeof window.enableAdoreAudio === 'function') {
+    window.enableAdoreAudio();
+  }
+  soundBanner.classList.add('hidden');
+});
+
+/* =========================
    LOGIN
 ========================= */
 loginBtn.onclick = () => {
@@ -58,17 +81,11 @@ loginBtn.onclick = () => {
     return;
   }
 
-    /**
-   * ✅ CRITICAL FIX (iOS)
-   * ต้องเรียกเสียง "จริง" ภายใน user gesture
-   */
-  if (typeof window.enableAdoreAudio === 'function') {
-    window.enableAdoreAudio(true); // 👈 บังคับ iOS unlock
-  }
-
   localStorage.setItem('adore_logged_in', '1');
   loginOverlay.classList.add('hidden');
   init();
+
+  showSoundBannerIfNeeded();
 };
 
 logoutBtn.onclick = () => {
@@ -80,6 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (localStorage.getItem('adore_logged_in') === '1') {
     loginOverlay.classList.add('hidden');
     init();
+    showSoundBannerIfNeeded();
   }
 });
 
