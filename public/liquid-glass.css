@@ -1,10 +1,3 @@
-ใช้อันนี้อยู่ก็ยังไม่กลับมา
-
-/* ======================================================
-   FINAL GLASS CLEAR v1.1 (FIXED)
-   iOS / Safari SAFE — layout only
-====================================================== */
-
 body {
   font-family:
     'Inter',
@@ -15,41 +8,113 @@ body {
     'Segoe UI',
     sans-serif;
 }
+/* ======================================================
+   FINAL GLASS CLEAR v1.0
+   iOS / visionOS inspired
+   SAFE MODE — NO LOGIC / NO LAYOUT IMPACT
+====================================================== */
 
 /* ======================================================
-   1. ROOT TOKENS — FIXED
+   1. ROOT TOKENS — GLASS + READABILITY
 ====================================================== */
 :root {
+  /* Glass transparency */
   --glass-bg: rgba(255, 255, 255, 0.08);
   --glass-bg-strong: rgba(255, 255, 255, 0.12);
   --glass-border: rgba(255, 255, 255, 0.28);
 
+  /* Blur & saturation (key of clarity) */
   --glass-blur: 30px;
   --glass-saturate: 160%;
+  /* ======================================================
+   iOS TOAST — LIQUID GLASS
+====================================================== */
 
+.toast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 220px;
+  max-width: 90vw;
+
+  padding: 14px 18px;
+  border-radius: 18px;
+
+  background: rgba(40, 40, 50, 0.65);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+
+  color: #fff;
+  font-size: 0.95rem;
+  text-align: center;
+
+  box-shadow:
+    0 20px 40px rgba(0,0,0,0.45),
+    inset 0 1px 0 rgba(255,255,255,0.25);
+
+  opacity: 0;
+  pointer-events: none;
+
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
+  z-index: 9999;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-6px);
+}
+
+/* ======================================================
+   CONFIRM MODAL (iOS)
+====================================================== */
+.modal.confirm {
+  max-width: 340px;
+  text-align: center;
+}
+
+.modal.confirm h3 {
+  margin-bottom: 6px;
+}
+
+.modal.confirm .row {
+  margin-top: 18px;
+  display: flex;
+  gap: 12px;
+}
+
+  /* Radius */
   --radius-lg: 28px;
   --radius-md: 22px;
   --radius-sm: 14px;
 
+  /* Text colors (readable on glass) */
   --text-primary: rgba(240, 248, 255, 0.95);
   --text-secondary: rgba(210, 225, 240, 0.82);
   --text-muted: rgba(180, 200, 220, 0.7);
 
+  /* Accent */
   --accent-blue: rgba(140, 200, 255, 0.95);
   --accent-pink: rgba(255, 170, 200, 0.95);
 
-  --shadow-outer: 0 30px 60px rgba(0,0,0,0.45);
+  /* Shadows */
+  --shadow-outer: 0 30px 60px rgba(0, 0, 0, 0.45);
   --shadow-inner:
-    inset 0 1px 0 rgba(255,255,255,0.35),
-    inset 0 -1px 0 rgba(0,0,0,0.18);
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.18);
 
+  /* Motion */
   --ease-ios: cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
 /* ======================================================
-   GLOBAL
+   2. GLOBAL SAFETY (iOS / Safari)
 ====================================================== */
-* { -webkit-tap-highlight-color: transparent; }
+* {
+  -webkit-tap-highlight-color: transparent;
+}
 
 body {
   color: var(--text-primary);
@@ -61,143 +126,527 @@ body {
 }
 
 /* ======================================================
-   GLASS SURFACE
+   3. GLASS SURFACE (CARDS / PANELS / MODAL)
 ====================================================== */
 .card,
 .panel,
 .section,
 .booking-card,
-.modal {
+.modal,
+.popup {
+  position: relative;
   background: var(--glass-bg);
   backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   border-radius: var(--radius-md);
   border: 1px solid var(--glass-border);
   box-shadow: var(--shadow-outer), var(--shadow-inner);
+  overflow: hidden;
 }
 
 /* ======================================================
-   OVERLAY — FIXED (NO CENTER FLEX)
+   4. GLASS EDGE HIGHLIGHT (REFRACTION EDGE)
 ====================================================== */
+.card::before,
+.booking-card::before,
+.modal::before,
+.popup::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    to bottom,
+    rgba(255,255,255,0.45),
+    rgba(255,255,255,0.05)
+  );
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+/* ======================================================
+   5. REFRACTION LIGHT (GLASS DEPTH)
+====================================================== */
+.card::after,
+.booking-card::after,
+.modal::after,
+.popup::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      circle at 30% 20%,
+      rgba(255,255,255,0.35),
+      transparent 60%
+    );
+  opacity: 0.35;
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+/* ======================================================
+   6. MODAL / POPUP — iOS SCROLL SAFE
+====================================================== */
+.modal,
+.popup {
+  background: var(--glass-bg-strong);
+  max-height: 88vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* ======================================================
+   7. TEXT READABILITY (BOOKING CARD)
+====================================================== */
+.booking-card {
+  color: var(--text-secondary);
+}
+
+/* customer name */
+.booking-card .customer-name {
+  color: var(--text-primary);
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+/* service / action */
+.booking-card .service {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  margin-top: 4px;
+}
+
+/* phone / note */
+.booking-card .phone,
+.booking-card .note {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin-top: 6px;
+}
+
+/* ======================================================
+   8. INPUTS / SELECTS
+====================================================== */
+input,
+select,
+textarea {
+  background: rgba(255,255,255,0.22);
+  color: var(--text-primary);
+  border: 1px solid rgba(255,255,255,0.35);
+  border-radius: var(--radius-sm);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-muted);
+}
+
+/* ======================================================
+   9. BUTTONS
+====================================================== */
+button,
+.btn,
+.manage-btn {
+  background: rgba(255,255,255,0.25);
+  color: var(--text-primary);
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255,255,255,0.35);
+  transition: transform 0.15s var(--ease-ios);
+}
+
+button:active {
+  transform: scale(0.96);
+}
+
+/* ======================================================
+   10. GENDER SELECT — DOT ONLY (iOS STYLE)
+====================================================== */
+.gender-group {
+  display: flex;
+  gap: 20px;
+}
+
+.gender-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary);
+}
+
+.gender-option input {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.6);
+  background: transparent;
+  position: relative;
+}
+
+.gender-option input:checked::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  background: var(--accent-blue);
+  border-radius: 50%;
+}
+
+/* ======================================================
+   11. CALENDAR DAY
+====================================================== */
+.day {
+  background: rgba(255,255,255,0.18);
+  color: var(--text-primary);
+}
+
+.day.active {
+  box-shadow:
+    0 0 0 2px rgba(120,200,255,0.6),
+    var(--shadow-outer);
+}
+
+/* ======================================================
+   12. REDUCE MOTION
+====================================================== */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* ======================================================
+   END — FINAL GLASS CLEAR v1.0
+====================================================== */
+.phone-call {
+  display: inline-block;
+  margin-top: 8px;
+  color: var(--text-accent-blue);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.phone-call:active {
+  opacity: 0.7;
+}
+/* ======================================================
+   TYPOGRAPHY SCALE — iOS READABLE (PRO)
+====================================================== */
+
+/* ---------- Form labels ---------- */
+label {
+  font-size: 1rem;           /* ~16px */
+  font-weight: 500;
+  margin-bottom: 6px;
+  display: block;
+}
+
+/* ---------- Inputs / Select / Textarea ---------- */
+input,
+select,
+textarea {
+  font-size: 1.05rem;        /* ~17px */
+  padding: 14px 16px;
+}
+
+/* ---------- Section titles (modal / panels) ---------- */
+.modal h2,
+.panel h2 {
+  font-size: 1.35rem;        /* ~22px */
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+/* ---------- Booking card text ---------- */
+.booking-card {
+  font-size: 1rem;
+}
+
+/* ชื่อลูกค้า */
+.booking-card .customer-name,
+.booking-card .name {
+  font-size: 1.15rem;        /* ~18–19px */
+  font-weight: 600;
+}
+
+/* เวลา */
+.booking-card .time {
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+/* บริการ / สิ่งที่ทำ */
+.booking-card .service {
+  font-size: 1rem;
+}
+
+/* เบอร์โทร / หมายเหตุ */
+.booking-card .phone,
+.booking-card .note,
+.booking-card .meta {
+  font-size: 0.95rem;
+}
+/* ======================================================
+   FORM READABILITY — iOS / PRO SIZE
+====================================================== */
+
+/* label / field title */
+.field-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 1.05rem;     /* ⬅️ ใหญ่ขึ้น ~2 เท่า */
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  color: var(--text-primary);
+  text-shadow: var(--text-shadow-soft);
+}
+
+/* input / select / textarea */
+input,
+select,
+textarea {
+  font-size: 1.05rem;     /* ⬅️ ใหญ่ขึ้น */
+  padding: 14px 16px;     /* ⬅️ นิ้วกดสบาย */
+  line-height: 1.4;
+}
+
+/* textarea สูงขึ้น */
+textarea {
+  min-height: 96px;
+}
+
+/* form section spacing */
+.grid > div {
+  margin-bottom: 18px;
+}
+/* ======================================================
+   STEP 7 — iOS FRIENDLY POPUP (FINAL OVERRIDE)
+   Safe override — paste at END of liquid-glass.css
+====================================================== */
+
+/* Overlay เต็มจอ + กันเด้ง */
 .overlay {
   position: fixed;
   inset: 0;
   z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-  background: rgba(0,0,0,0.45);
+  background: rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
 
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  padding: 24px 0;
+  overscroll-behavior: contain;
 }
 
-/* ======================================================
-   MODAL — FLOW BASED
-====================================================== */
+/* กล่อง popup หลัก */
 .overlay .modal {
   width: min(92vw, 520px);
-  margin: 0 auto;
-  background: var(--glass-bg-strong);
-}
+  max-height: 88vh;
 
-/* ======================================================
-   MODAL BODY
-====================================================== */
-.modalBody {
-  padding: 20px;
-}
-
-/* ======================================================
-   ACTION BAR — FIXED (NO STICKY)
-====================================================== */
-.modal .action-bar {
-  margin-top: 24px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+
+  background: var(--glass-bg-strong);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--glass-border);
+
+  box-shadow:
+    0 30px 60px rgba(0,0,0,0.45),
+    inset 0 1px 0 rgba(255,255,255,0.35);
+
+  overflow: hidden; /* สำคัญ */
 }
 
-.modal .action-bar button {
-  width: 100%;
-  min-height: 48px;
-  border-radius: 14px;
-  font-weight: 600;
-}
-
-/* ======================================================
-   BUTTONS
-====================================================== */
-button {
-  background: rgba(255,255,255,0.25);
-  color: var(--text-primary);
-  border: 1px solid rgba(255,255,255,0.35);
-}
-
-button:active { transform: scale(0.97); }
-
-/* ======================================================
-   TOAST — unchanged
-====================================================== */
-.toast {
-  position: fixed;
-  bottom: 28px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 14px 18px;
-  border-radius: 18px;
-  background: rgba(40,40,50,0.65);
-  backdrop-filter: blur(18px);
-  color: #fff;
-  opacity: 0;
-  pointer-events: none;
-  transition: 0.3s;
-  z-index: 99999;
-}
-
-.toast.show { opacity: 1; }
-/* ======================================================
-   POPUP FIX — ISOLATED SCOPE ONLY
-   (NO GLOBAL LAYOUT IMPACT)
-====================================================== */
-
-/* overlay ใช้เฉพาะตอนแสดงจริง */
-.overlay.hidden {
-  display: none !important;
-}
-
-/* popup เท่านั้น */
-.overlay:not(.hidden) {
-  display: block;
-}
-
-/* จำกัดผลกระทบเฉพาะ modal ใน overlay */
-.overlay .modal {
-  margin: 24px auto;
-  width: min(92vw, 520px);
-  max-height: calc(100vh - 48px);
-}
-
-/* modal body เลื่อนได้ */
+/* เนื้อหาใน popup — เลื่อนได้ */
 .overlay .modalBody {
+  flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+
+  padding: 20px 20px 28px;
 }
 
-/* action bar อยู่ล่าง ไม่ลอย ไม่ซ้อน */
-.overlay .action-bar {
-  position: relative;
-  margin-top: 24px;
+/* หัว popup */
+.overlay .modalBody h2 {
+  margin-bottom: 14px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
-/* ป้องกัน panel / calendar โดน override */
-.panel,
-.section,
-.calendar-shell,
-.calendarGrid,
-.calendarDays {
-  overflow: visible !important;
-  max-height: none !important;
-} 
-ปฏิทินไม่กลับมาไม่แสดงผลอะไรเลยทั้งทั้งที่โค้ชก่อนหน้านี้ก่อนที่จะมีการแก้ไขอัปที่ซ้อนกันแสดงปฏิทินและข้อมูลทุกอย่างครบถ้วนถูกต้อง
+/* ปุ่มด้านล่าง — iOS style */
+.overlay .modalBody button {
+  margin-top: 12px;
+  min-height: 48px;
+  font-size: 1rem;
+}
+
+/* ปุ่มหลัก */
+.overlay .modalBody .primary {
+  background: linear-gradient(
+    180deg,
+    rgba(140,200,255,0.95),
+    rgba(90,160,220,0.95)
+  );
+  color: #fff;
+  border: none;
+}
+
+/* ปุ่มรอง */
+.overlay .modalBody .ghost {
+  background: rgba(255,255,255,0.18);
+  color: var(--text-primary);
+}
+
+/* กัน iOS zoom ตอน focus input */
+.overlay input,
+.overlay textarea,
+.overlay select {
+  font-size: 16px; /* iOS safe size */
+}
+
+/* ปิด bounce ทั้งหน้าเมื่อ popup เปิด */
+body.modal-open {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+}
+
+/* Animation เข้าแบบ iOS */
+.overlay .modal {
+  animation: popupFloatIn 0.28s var(--ease-ios);
+}
+
+@keyframes popupFloatIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+/* ======================================================
+   STEP 8 — POPUP ACTION BAR (iOS STYLE)
+   Safe override — no logic impact
+====================================================== */
+
+/* แถบปุ่มด้านล่าง popup */
+.modal .action-bar {
+  position: sticky;
+  bottom: 0;
+
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+
+  background: linear-gradient(
+    to top,
+    rgba(30,40,55,0.65),
+    rgba(30,40,55,0.25)
+  );
+
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+
+  border-top: 1px solid rgba(255,255,255,0.18);
+}
+
+/* ปุ่มทุกปุ่มใน action bar */
+.modal .action-bar button {
+  width: 100%;
+  min-height: 52px;
+
+  font-size: 1.05rem;
+  font-weight: 600;
+  border-radius: 14px;
+}
+
+/* ปุ่มบันทึก (Primary) */
+.modal .action-bar .primary {
+  background: linear-gradient(
+    180deg,
+    rgba(120,200,255,1),
+    rgba(80,150,220,1)
+  );
+  color: #fff;
+  border: none;
+  box-shadow: 0 10px 25px rgba(80,150,220,0.45);
+}
+
+/* ปุ่มลบ (Danger) */
+.modal .action-bar .danger {
+  background: rgba(255,80,90,0.18);
+  color: rgba(255,120,130,0.95);
+  border: 1px solid rgba(255,120,130,0.45);
+}
+
+/* ปุ่มปิด */
+.modal .action-bar .ghost {
+  background: rgba(255,255,255,0.15);
+  color: var(--text-secondary);
+}
+
+/* เอฟเฟกต์กดแบบ iOS */
+.modal .action-bar button:active {
+  transform: scale(0.97);
+}
+/* ======================================================
+   STEP 9 — iOS CONFIRM POPUP
+====================================================== */
+
+.confirm-modal {
+  max-width: 320px;
+  text-align: center;
+}
+
+.confirm-modal h3 {
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+}
+
+.confirm-modal p {
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.confirm-actions button {
+  flex: 1;
+  min-height: 44px;
+  font-weight: 600;
+}
+/* ===============================
+   BOOKING CARD COLLAPSE LOGIC
+   (FIX — SAFE, NO JS CHANGE)
+================================ */
+
+/* ซ่อนข้อมูลรองทั้งหมดก่อน */
+.booking-card .card-sub,
+.booking-card .phone-call,
+.booking-card .phone,
+.booking-card .card-actions {
+  display: none;
+}
+
+/* แสดงเมื่อการ์ดถูก expand */
+.booking-card.expanded .card-sub,
+.booking-card.expanded .phone-call,
+.booking-card.expanded .phone,
+.booking-card.expanded .card-actions {
+  display: block;
+}
