@@ -29,16 +29,6 @@ const editPhone = document.getElementById('editPhone');
 const editService = document.getElementById('editService');
 const editNote = document.getElementById('editNote');
 
-/* CONFIRM */
-const confirmOverlay = document.getElementById('confirmOverlay');
-const confirmTitle = document.getElementById('confirmTitle');
-const confirmMessage = document.getElementById('confirmMessage');
-const confirmOk = document.getElementById('confirmOk');
-const confirmCancel = document.getElementById('confirmCancel');
-
-/* TOAST */
-const toastEl = document.getElementById('toast');
-
 /* =========================
    STATE
 ========================= */
@@ -50,19 +40,6 @@ let editingBooking = null;
 
 let viewMonth = new Date(selectedDate).getMonth();
 let viewYear = new Date(selectedDate).getFullYear();
-
-let toastTimer = null;
-let confirmCallback = null;
-
-/* =========================
-   OVERLAY MANAGER (CRITICAL)
-========================= */
-function closeAllOverlays() {
-  document.querySelectorAll('.overlay').forEach(o => {
-    o.classList.add('hidden');
-  });
-  document.body.classList.remove('modal-open');
-}
 
 /* =========================
    LOGIN
@@ -82,7 +59,7 @@ loginBtn.onclick = () => {
   }
 
   localStorage.setItem('adore_logged_in', '1');
-  closeAllOverlays();
+  loginOverlay.classList.add('hidden');
   init();
 };
 
@@ -93,7 +70,7 @@ logoutBtn.onclick = () => {
 
 document.addEventListener('DOMContentLoaded', () => {
   if (localStorage.getItem('adore_logged_in') === '1') {
-    closeAllOverlays();
+    loginOverlay.classList.add('hidden');
     init();
   }
 });
@@ -289,7 +266,7 @@ function renderTable() {
           <span class="badge ${b.stylist}">${b.stylist}</span>
           ${b.gender === 'male' ? '👨' : '👩'}
         </div>
-        <button class="ghost toggle-detail">ดู/ย่อ</button>
+        <button class="ghost toggle-detail">ดู</button>
       </div>
 
       <div class="card-sub">${b.name} · ${b.service || ''}</div>
@@ -323,8 +300,6 @@ function renderTable() {
    EDIT MODAL
 ========================= */
 function openEditModal(b) {
-  closeAllOverlays();
-
   editingBooking = b;
 
   editDate.value = b.date;
@@ -340,7 +315,6 @@ function openEditModal(b) {
 
   generateEditTimeOptions(b.date);
   editOverlay.classList.remove('hidden');
-  document.body.classList.add('modal-open');
 }
 
 function generateEditTimeOptions(date) {
@@ -389,7 +363,7 @@ document.getElementById('saveEdit').onclick = async () => {
   }
 
   showToast('บันทึกเรียบร้อยแล้ว');
-  closeAllOverlays();
+  editOverlay.classList.add('hidden');
   loadBookings();
   loadCalendar();
 };
@@ -401,7 +375,7 @@ document.getElementById('deleteEdit').onclick = () => {
     onConfirm: async () => {
       await fetch(`${API}/bookings/${editingBooking.id}`, { method: 'DELETE' });
       showToast('ลบคิวเรียบร้อยแล้ว');
-      closeAllOverlays();
+      editOverlay.classList.add('hidden');
       loadBookings();
       loadCalendar();
     }
@@ -409,12 +383,15 @@ document.getElementById('deleteEdit').onclick = () => {
 };
 
 document.getElementById('closeEdit').onclick = () => {
-  closeAllOverlays();
+  editOverlay.classList.add('hidden');
 };
 
 /* =========================
    TOAST
 ========================= */
+const toastEl = document.getElementById('toast');
+let toastTimer = null;
+
 function showToast(msg) {
   toastEl.textContent = msg;
   toastEl.classList.add('show');
@@ -429,24 +406,28 @@ function showToast(msg) {
 /* =========================
    CONFIRM
 ========================= */
-function openConfirm({ title, message, onConfirm }) {
-  closeAllOverlays();
+const confirmOverlay = document.getElementById('confirmOverlay');
+const confirmTitle = document.getElementById('confirmTitle');
+const confirmMessage = document.getElementById('confirmMessage');
+const confirmOk = document.getElementById('confirmOk');
+const confirmCancel = document.getElementById('confirmCancel');
 
+let confirmCallback = null;
+
+function openConfirm({ title, message, onConfirm }) {
   confirmTitle.textContent = title;
   confirmMessage.textContent = message;
   confirmCallback = onConfirm;
-
   confirmOverlay.classList.remove('hidden');
-  document.body.classList.add('modal-open');
 }
 
 confirmCancel.onclick = () => {
-  closeAllOverlays();
+  confirmOverlay.classList.add('hidden');
 };
 
 confirmOk.onclick = () => {
   if (confirmCallback) confirmCallback();
-  closeAllOverlays();
+  confirmOverlay.classList.add('hidden');
 };
 
 /* =========================
