@@ -1,8 +1,8 @@
 /* =====================================================
-   ADORE HAIR — QUEUE AUDIO NOTIFICATION (FINAL)
+   ADORE HAIR — QUEUE AUDIO NOTIFICATION (FINAL FIXED)
    Platform: Safari iOS / iPadOS / macOS
-   Page: index.html (single page only)
-   Authoring style: Premium / Human / Siri-based
+   Page: index.html (single page)
+   Voice: Siri (Apple system voice)
 ===================================================== */
 
 (() => {
@@ -17,18 +17,30 @@
   let watcherStarted = false;
 
   /* =========================
+     VOICE LOADER (iOS REQUIRED)
+  ========================= */
+  function waitForVoices(callback) {
+    const voices = speechSynthesis.getVoices();
+    if (voices.length) {
+      callback();
+      return;
+    }
+    speechSynthesis.onvoiceschanged = () => {
+      callback();
+    };
+  }
+
+  /* =========================
      VOICE SELECTOR (SIRI)
   ========================= */
   function getSiriVoice(lang) {
-    const voices = window.speechSynthesis.getVoices();
+    const voices = speechSynthesis.getVoices();
 
-    // พยายามเลือก Siri โดยตรง
     return (
       voices.find(v =>
         v.lang === lang &&
         v.name.toLowerCase().includes('siri')
       ) ||
-      // fallback: system voice ภาษาเดียวกัน
       voices.find(v => v.lang === lang) ||
       null
     );
@@ -38,56 +50,56 @@
      SPEAK MODES
   ========================= */
 
-  // 1️⃣ เสียงระบบ — เร็ว ชัด ฉะฉาน
+  // 🔹 เสียงระบบ — เร็ว ชัด ฉะฉาน
   function speakSystem(text) {
     if (!audioUnlocked) return;
 
     const utter = new SpeechSynthesisUtterance(text);
     utter.voice = getSiriVoice('th-TH');
     utter.lang = 'th-TH';
-
-    utter.rate = 1.05;   // เร็ว
-    utter.pitch = 1.0;   // ตรง
+    utter.rate = 1.05;
+    utter.pitch = 1.0;
     utter.volume = 1;
 
     window.speechSynthesis.speak(utter);
   }
 
-  // 2️⃣ เสียงประกาศ — Premium / Human / AI-like
+  // 🔹 เสียงประกาศ — Premium / Human
   function speakPremium(text, lang = 'th-TH') {
     if (!audioUnlocked) return;
 
     const utter = new SpeechSynthesisUtterance(text);
     utter.voice = getSiriVoice(lang);
     utter.lang = lang;
-
-    utter.rate = 0.85;   // ช้าลง
-    utter.pitch = 1.05;  // อบอุ่น
+    utter.rate = 0.85;
+    utter.pitch = 1.05;
     utter.volume = 1;
 
     window.speechSynthesis.speak(utter);
   }
 
   /* =========================
-     AUDIO UNLOCK (Safari rule)
+     AUDIO UNLOCK (iOS SAFE)
   ========================= */
   function unlockAudio() {
     if (audioUnlocked) return;
 
     audioUnlocked = true;
 
-    // เสียงตอนเข้าใช้งานระบบ
-    speakSystem('ระบบแจ้งเตือนคิว พร้อมใช้งานแล้ว');
+    // ✅ iOS ต้องรอ voices + ต้องพูดทันทีใน user gesture
+    waitForVoices(() => {
+      speakSystem('ระบบแจ้งเตือนคิว พร้อมใช้งานแล้ว');
+    });
 
     if (!watcherStarted) {
       startQueueWatcher();
       watcherStarted = true;
     }
 
-    console.log('[AdoreAudio] Audio unlocked');
+    console.log('[AdoreAudio] Audio unlocked (iOS safe)');
   }
 
-  // Safari ต้องการ user interaction
+  // Safari ต้องมี user interaction
   ['click', 'touchstart', 'keydown'].forEach(evt => {
     window.addEventListener(evt, unlockAudio, { once: true });
   });
@@ -133,20 +145,20 @@
   }
 
   /* =========================
-     ANNOUNCEMENT FLOW (PREMIUM)
+     ANNOUNCEMENT FLOW (iOS SAFE)
   ========================= */
   function announceBooking(b) {
-    // จังหวะแบบมนุษย์ / concierge
-
+    // ❗ ประโยคแรกต้องพูดทันที (iOS rule)
     speakPremium('แจ้งเตือนล่วงหน้า');
 
+    // หลังจากนั้น iOS จะยอมให้พูดต่อ
     setTimeout(() => {
       speakPremium(`อีก 30 นาที จะถึงคิวของคุณ ${b.name}`);
-    }, 900);
+    }, 800);
 
     setTimeout(() => {
       speakPremium(`ดูแลโดยช่าง ${b.stylist}`, 'en-US');
-    }, 2300);
+    }, 2200);
   }
 
   /* =========================
