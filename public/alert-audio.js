@@ -141,7 +141,7 @@
     }, 800);
 
     setTimeout(() => {
-      speakPremium(`ดูแลโดยช่าง ${b.stylist}`, 'en-US');
+      speakPremium(`serviced by Khun ${b.stylist}`, 'en-US');
     }, 2200);
   }
 
