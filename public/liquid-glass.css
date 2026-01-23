@@ -420,25 +420,45 @@ textarea {
 .grid > div {
   margin-bottom: 18px;
 }
-/* ======================================================
-   STEP 7 — iOS FRIENDLY POPUP (FINAL OVERRIDE)
-   Safe override — paste at END of liquid-glass.css
-====================================================== */
+/* ===============================
+   OVERLAY — iOS SAFE FIX
+================================ */
 
-/* Overlay เต็มจอ + กันเด้ง */
 .overlay {
   position: fixed;
   inset: 0;
   z-index: 9999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(0,0,0,0.45);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
 
-  overscroll-behavior: contain;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+
+  transition: opacity 0.25s ease;
+}
+
+/* เมื่อแสดงจริง */
+.overlay:not(.hidden) {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* modal */
+.overlay .modal {
+  margin: 24px auto;
+  width: min(92vw, 520px);
+  max-height: calc(100vh - 48px);
+}
+
+/* body popup scroll */
+.overlay .modalBody {
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* กล่อง popup หลัก */
