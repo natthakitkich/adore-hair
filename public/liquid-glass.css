@@ -1,8 +1,8 @@
+ใช้อันนี้อยู่ก็ยังไม่กลับมา
+
 /* ======================================================
-   FINAL GLASS CLEAR v1.2 — SAFE WORKING VERSION
-   ✅ No layout blocking
-   ✅ Overlay only active when visible
-   ✅ Calendar / Booking / Tabs SAFE
+   FINAL GLASS CLEAR v1.1 (FIXED)
+   iOS / Safari SAFE — layout only
 ====================================================== */
 
 body {
@@ -17,7 +17,7 @@ body {
 }
 
 /* ======================================================
-   ROOT TOKENS
+   1. ROOT TOKENS — FIXED
 ====================================================== */
 :root {
   --glass-bg: rgba(255, 255, 255, 0.08);
@@ -36,6 +36,7 @@ body {
   --text-muted: rgba(180, 200, 220, 0.7);
 
   --accent-blue: rgba(140, 200, 255, 0.95);
+  --accent-pink: rgba(255, 170, 200, 0.95);
 
   --shadow-outer: 0 30px 60px rgba(0,0,0,0.45);
   --shadow-inner:
@@ -60,7 +61,7 @@ body {
 }
 
 /* ======================================================
-   GLASS SURFACE (SAFE)
+   GLASS SURFACE
 ====================================================== */
 .card,
 .panel,
@@ -76,8 +77,7 @@ body {
 }
 
 /* ======================================================
-   OVERLAY — CRITICAL FIX
-   ❌ NEVER BLOCK PAGE WHEN HIDDEN
+   OVERLAY — FIXED (NO CENTER FLEX)
 ====================================================== */
 .overlay {
   position: fixed;
@@ -88,38 +88,29 @@ body {
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
 
-  display: none;              /* 🔑 สำคัญที่สุด */
-  align-items: center;
-  justify-content: center;
-}
-
-.overlay:not(.hidden) {
-  display: flex;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 24px 0;
 }
 
 /* ======================================================
-   MODAL
+   MODAL — FLOW BASED
 ====================================================== */
 .overlay .modal {
   width: min(92vw, 520px);
-  max-height: 88vh;
-
-  display: flex;
-  flex-direction: column;
-
+  margin: 0 auto;
   background: var(--glass-bg-strong);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-}
-
-.modalBody {
-  padding: 20px;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
 }
 
 /* ======================================================
-   ACTION BAR — NO FLOAT / NO OVERLAY STACK
+   MODAL BODY
+====================================================== */
+.modalBody {
+  padding: 20px;
+}
+
+/* ======================================================
+   ACTION BAR — FIXED (NO STICKY)
 ====================================================== */
 .modal .action-bar {
   margin-top: 24px;
@@ -131,7 +122,6 @@ body {
 .modal .action-bar button {
   width: 100%;
   min-height: 48px;
-  font-size: 1rem;
   border-radius: 14px;
   font-weight: 600;
 }
@@ -139,21 +129,16 @@ body {
 /* ======================================================
    BUTTONS
 ====================================================== */
-button,
-.manage-btn {
+button {
   background: rgba(255,255,255,0.25);
   color: var(--text-primary);
   border: 1px solid rgba(255,255,255,0.35);
-  border-radius: var(--radius-sm);
-  transition: transform 0.15s var(--ease-ios);
 }
 
-button:active {
-  transform: scale(0.96);
-}
+button:active { transform: scale(0.97); }
 
 /* ======================================================
-   TOAST
+   TOAST — unchanged
 ====================================================== */
 .toast {
   position: fixed;
@@ -168,73 +153,51 @@ button:active {
   opacity: 0;
   pointer-events: none;
   transition: 0.3s;
-  z-index: 10000;
+  z-index: 99999;
 }
 
-.toast.show {
-  opacity: 1;
-}
-
+.toast.show { opacity: 1; }
 /* ======================================================
-   FORM / TYPOGRAPHY
+   POPUP FIX — ISOLATED SCOPE ONLY
+   (NO GLOBAL LAYOUT IMPACT)
 ====================================================== */
-.field-label {
-  font-size: 1.05rem;
-  font-weight: 600;
-  margin-bottom: 6px;
+
+/* overlay ใช้เฉพาะตอนแสดงจริง */
+.overlay.hidden {
+  display: none !important;
+}
+
+/* popup เท่านั้น */
+.overlay:not(.hidden) {
   display: block;
 }
 
-input,
-select,
-textarea {
-  font-size: 1.05rem;
-  padding: 14px 16px;
-  background: rgba(255,255,255,0.22);
-  color: var(--text-primary);
-  border: 1px solid rgba(255,255,255,0.35);
-  border-radius: var(--radius-sm);
+/* จำกัดผลกระทบเฉพาะ modal ใน overlay */
+.overlay .modal {
+  margin: 24px auto;
+  width: min(92vw, 520px);
+  max-height: calc(100vh - 48px);
 }
 
-textarea {
-  min-height: 96px;
+/* modal body เลื่อนได้ */
+.overlay .modalBody {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
-/* ======================================================
-   GENDER
-====================================================== */
-.gender-group {
-  display: flex;
-  gap: 20px;
+/* action bar อยู่ล่าง ไม่ลอย ไม่ซ้อน */
+.overlay .action-bar {
+  position: relative;
+  margin-top: 24px;
 }
 
-.gender-option {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* ======================================================
-   BOOKING CARD COLLAPSE — SAFE
-====================================================== */
-.booking-card .card-sub,
-.booking-card .phone-call,
-.booking-card .card-actions {
-  display: none;
-}
-
-.booking-card.expanded .card-sub,
-.booking-card.expanded .phone-call,
-.booking-card.expanded .card-actions {
-  display: block;
-}
-
-/* ======================================================
-   CALENDAR — FORCE VISIBLE
-====================================================== */
+/* ป้องกัน panel / calendar โดน override */
+.panel,
+.section,
 .calendar-shell,
 .calendarGrid,
-.calendarDays,
-.panel {
-  overflow: visible;
-}
+.calendarDays {
+  overflow: visible !important;
+  max-height: none !important;
+} 
+ปฏิทินไม่กลับมาไม่แสดงผลอะไรเลยทั้งทั้งที่โค้ชก่อนหน้านี้ก่อนที่จะมีการแก้ไขอัปที่ซ้อนกันแสดงปฏิทินและข้อมูลทุกอย่างครบถ้วนถูกต้อง
