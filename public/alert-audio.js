@@ -10,7 +10,7 @@
      CONFIG
   ========================= */
   const CHECK_INTERVAL_MS = 60 * 1000; // ตรวจทุก 60 วินาที
-  const ALERT_BEFORE_MIN = 30;         // แจ้งก่อน 30 นาที
+  const ALERT_BEFORE_MIN = 5;         // แจ้งก่อน 30 นาที
   const STORAGE_KEY = 'adore_audio_notified';
 
   let audioUnlocked = false;
@@ -153,7 +153,7 @@
 
     // หลังจากนั้น iOS จะยอมให้พูดต่อ
     setTimeout(() => {
-      speakPremium(`อีก 30 นาที จะถึงคิวของคุณ ${b.name}`);
+      speakPremium(`อีก 5 นาที จะถึงคิวของคุณ ${b.name}`);
     }, 800);
 
     setTimeout(() => {
