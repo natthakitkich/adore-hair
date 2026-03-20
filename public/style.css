@@ -139,7 +139,6 @@ textarea{resize:vertical}
   background:linear-gradient(180deg,rgba(20,25,45,.85),rgba(10,12,22,.85));
   border-radius:22px;
   box-shadow:var(--shadow);
-  overflow:hidden; /* FIX overflow */
 }
 
 /* =========================
@@ -159,8 +158,8 @@ textarea{resize:vertical}
 
 .calendarGrid{
   display:grid;
-  grid-template-columns:repeat(7,minmax(0,1fr));
-  gap:10px;
+  grid-template-columns:repeat(7, minmax(0,1fr));
+  gap:12px;
   text-align:center;
 }
 
@@ -182,21 +181,7 @@ textarea{resize:vertical}
 .day.low{color:var(--low);background:rgba(44,255,156,.15)}
 .day.mid{color:var(--mid);background:rgba(255,209,102,.15)}
 .day.high{color:var(--high);background:rgba(255,92,122,.15)}
-.day.today{
-  box-shadow:
-    0 0 0 2px var(--accent),
-    0 0 22px rgba(110,231,255,.45);
-}
-
-/* =========================
-   CALENDAR SHELL
-========================= */
-.calendar-shell{
-  width:100%;
-  max-width:100%;
-  margin:0 auto;
-  padding:8px;
-}
+.day.today{outline:2px solid var(--accent)}
 
 .calendarLegend{
   display:flex;
@@ -217,6 +202,13 @@ textarea{resize:vertical}
 .dot.low{background:var(--low)}
 .dot.mid{background:var(--mid)}
 .dot.high{background:var(--high)}
+
+.calendar-shell{
+  width:100%;
+  max-width:420px;
+  margin:0 auto;
+  padding:8px;
+}
 
 /* =========================
    SUMMARY
@@ -318,12 +310,26 @@ textarea{resize:vertical}
   gap:6px;
 }
 
+.card-actions{
+  margin-top:6px;
+}
+
 /* =========================
-   MOBILE
+   🔥 FIX ตรงนี้เท่านั้น
 ========================= */
-@media (max-width: 420px){
-  .calendarGrid{
-    grid-template-columns:repeat(7,1fr);
-    gap:8px;
-  }
+.calendar-shell{
+  max-width:100%;
+  margin:0 auto;
+  padding:8px;
+}
+
+.calendarGrid{
+  grid-template-columns:repeat(7, minmax(0,1fr));
+  justify-content:center;
+}
+
+.day{
+  width:100%;
+  height:auto;
+  aspect-ratio:1/1;
 }
