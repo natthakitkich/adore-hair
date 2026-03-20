@@ -1,4 +1,4 @@
-:root{
+ :root{
   --bg:#0b0f1a;
   --text:#e9eefc;
   --muted:#9aa6c5;
@@ -142,7 +142,7 @@ textarea{resize:vertical}
 }
 
 /* =========================
-   CALENDAR
+   CALENDAR (🔥 FIXED)
 ========================= */
 .calendarHeader{
   display:flex;
@@ -158,7 +158,7 @@ textarea{resize:vertical}
 
 .calendarGrid{
   display:grid;
-  grid-template-columns:repeat(7,1fr);
+  grid-template-columns:repeat(7, minmax(0,1fr)); /* FIX */
   gap:12px;
   text-align:center;
 }
@@ -168,7 +168,8 @@ textarea{resize:vertical}
 .dayLabel{font-size:13px;color:var(--muted)}
 
 .day{
-  aspect-ratio:1/1;
+  width:100%;              /* FIX */
+  aspect-ratio:1/1;        /* FIX */
   border-radius:50%;
   display:grid;
   place-items:center;
@@ -202,6 +203,14 @@ textarea{resize:vertical}
 .dot.mid{background:var(--mid)}
 .dot.high{background:var(--high)}
 
+/* 🔥 FIX จุดสำคัญ */
+.calendar-shell{
+  width:100%;
+  max-width:420px;
+  margin:0 auto;
+  padding:8px;
+}
+
 /* =========================
    SUMMARY
 ========================= */
@@ -219,6 +228,10 @@ textarea{resize:vertical}
 }
 
 .summary strong{font-size:32px}
+
+/* =========================
+   (โค้ดส่วนที่เหลือ "เหมือนเดิมทุกบรรทัด" จากไฟล์คุณ)
+========================= */
 
 /* =========================
    TABS / FORM
