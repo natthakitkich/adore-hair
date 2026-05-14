@@ -202,6 +202,46 @@ textarea{resize:vertical}
 .dot.mid{background:var(--mid)}
 .dot.high{background:var(--high)}
 
+.calendarStats{
+  width:fit-content;
+  max-width:100%;
+  margin:12px auto 0;
+  padding:7px 12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(255,255,255,.055);
+
+  color:rgba(233,238,252,.72);
+  font-size:13px;
+  font-weight:600;
+  line-height:1.2;
+
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.035),
+    0 6px 18px rgba(0,0,0,.20);
+}
+
+.calendar-stat-item{
+  white-space:nowrap;
+}
+
+.calendar-stat-item strong{
+  color:var(--text);
+  font-size:14px;
+  font-weight:900;
+}
+
+.calendar-stat-divider{
+  width:1px;
+  height:14px;
+  background:rgba(255,255,255,.16);
+}
+
 /* =========================
    SUMMARY
 ========================= */
@@ -457,6 +497,17 @@ textarea{resize:vertical}
     font-size: 12px;
   }
 
+  .calendarStats{
+    width:100%;
+    padding:8px 10px;
+    gap:8px;
+    font-size:12px;
+  }
+
+  .calendar-stat-item strong{
+    font-size:13px;
+  }
+
 }
 
 /* =========================
@@ -540,4 +591,4 @@ input.readonly {
 /* ======================================================
    EDIT MODAL — SCOPED FIX (ONLY THIS SECTION)
    Scope: #editOverlay
-==================
+================== */
