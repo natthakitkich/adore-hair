@@ -19,6 +19,9 @@ const calendarDaysEl = document.getElementById('calendarDays');
 const prevMonthBtn = document.getElementById('prevMonth');
 const nextMonthBtn = document.getElementById('nextMonth');
 
+const weekCustomerCountEl = document.getElementById('weekCustomerCount');
+const monthCustomerCountEl = document.getElementById('monthCustomerCount');
+
 const bookingForm = document.getElementById('bookingForm');
 const timeSelect = document.getElementById('time');
 const listEl = document.getElementById('list');
@@ -117,6 +120,7 @@ async function loadCalendar() {
   const res = await fetch(`${API}/calendar-days`);
   calendarDensity = await res.json();
   renderCalendar();
+  renderCalendarStats();
 }
 
 function renderCalendar() {
@@ -154,6 +158,40 @@ function renderCalendar() {
 
     calendarDaysEl.appendChild(el);
   }
+}
+
+function renderCalendarStats() {
+  if (!weekCustomerCountEl || !monthCustomerCountEl) return;
+
+  const today = getTodayTH();
+  const todayDate = new Date(`${today}T00:00:00`);
+
+  const dayOfWeek = todayDate.getDay();
+  const weekStart = new Date(todayDate);
+  weekStart.setDate(todayDate.getDate() - dayOfWeek);
+
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekStart.getDate() + 6);
+
+  const currentMonthStart = `${today.slice(0, 7)}-01`;
+  const currentMonthEndDate = new Date(todayDate.getFullYear(), todayDate.getMonth() + 1, 0);
+  const currentMonthEnd = formatDateTH(currentMonthEndDate);
+
+  let weekTotal = 0;
+  let monthTotal = 0;
+
+  Object.entries(calendarDensity).forEach(([date, count]) => {
+    if (date >= formatDateTH(weekStart) && date <= formatDateTH(weekEnd)) {
+      weekTotal += count;
+    }
+
+    if (date >= currentMonthStart && date <= currentMonthEnd) {
+      monthTotal += count;
+    }
+  });
+
+  weekCustomerCountEl.textContent = weekTotal;
+  monthCustomerCountEl.textContent = monthTotal;
 }
 
 prevMonthBtn.onclick = () => {
@@ -465,6 +503,12 @@ confirmOk.onclick = () => {
 ========================= */
 function getTodayTH() {
   return new Date().toLocaleDateString('sv-SE', {
+    timeZone: 'Asia/Bangkok'
+  });
+}
+
+function formatDateTH(date) {
+  return date.toLocaleDateString('sv-SE', {
     timeZone: 'Asia/Bangkok'
   });
 }
