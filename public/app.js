@@ -154,6 +154,7 @@ function renderCalendar() {
       selectedDate = date;
       loadBookings();
       renderCalendar();
+      renderCalendarStats();
     };
 
     calendarDaysEl.appendChild(el);
@@ -163,29 +164,38 @@ function renderCalendar() {
 function renderCalendarStats() {
   if (!weekCustomerCountEl || !monthCustomerCountEl) return;
 
-  const today = getTodayTH();
-  const todayDate = new Date(`${today}T00:00:00`);
+  const viewMonthStart = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-01`;
+  const viewMonthEndDate = new Date(viewYear, viewMonth + 1, 0);
+  const viewMonthEnd = formatDateTH(viewMonthEndDate);
 
-  const dayOfWeek = todayDate.getDay();
-  const weekStart = new Date(todayDate);
-  weekStart.setDate(todayDate.getDate() - dayOfWeek);
+  const selected = new Date(`${selectedDate}T00:00:00`);
+  const selectedIsInViewMonth =
+    selected.getFullYear() === viewYear &&
+    selected.getMonth() === viewMonth;
+
+  const baseDate = selectedIsInViewMonth
+    ? selected
+    : new Date(viewYear, viewMonth, 1);
+
+  const dayOfWeek = baseDate.getDay();
+  const weekStart = new Date(baseDate);
+  weekStart.setDate(baseDate.getDate() - dayOfWeek);
 
   const weekEnd = new Date(weekStart);
   weekEnd.setDate(weekStart.getDate() + 6);
 
-  const currentMonthStart = `${today.slice(0, 7)}-01`;
-  const currentMonthEndDate = new Date(todayDate.getFullYear(), todayDate.getMonth() + 1, 0);
-  const currentMonthEnd = formatDateTH(currentMonthEndDate);
+  const weekStartText = formatDateTH(weekStart);
+  const weekEndText = formatDateTH(weekEnd);
 
   let weekTotal = 0;
   let monthTotal = 0;
 
   Object.entries(calendarDensity).forEach(([date, count]) => {
-    if (date >= formatDateTH(weekStart) && date <= formatDateTH(weekEnd)) {
+    if (date >= weekStartText && date <= weekEndText) {
       weekTotal += count;
     }
 
-    if (date >= currentMonthStart && date <= currentMonthEnd) {
+    if (date >= viewMonthStart && date <= viewMonthEnd) {
       monthTotal += count;
     }
   });
@@ -201,6 +211,7 @@ prevMonthBtn.onclick = () => {
     viewYear--;
   }
   renderCalendar();
+  renderCalendarStats();
 };
 
 nextMonthBtn.onclick = () => {
@@ -210,6 +221,7 @@ nextMonthBtn.onclick = () => {
     viewYear++;
   }
   renderCalendar();
+  renderCalendarStats();
 };
 
 /* =========================
