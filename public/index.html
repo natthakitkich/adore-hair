@@ -138,6 +138,37 @@
 </div>
 
 <!-- ======================
+     CLOSED DAY MODAL
+====================== -->
+<div id="closureOverlay" class="overlay hidden">
+  <div class="modal closure-modal">
+    <div class="modalBody">
+
+      <h2>จัดการวันปิดร้าน</h2>
+      <p class="muted closure-help">
+        เลือกวันที่ แล้วกดปิดหรือเปิดร้านได้ทันที
+      </p>
+
+      <label class="field-label">วันที่</label>
+      <input id="closureDate" type="date" />
+
+      <div id="closureStatus" class="closure-status open">
+        สถานะ: เปิดร้าน
+      </div>
+
+      <button id="toggleClosureBtn" class="close-shop" type="button">
+        ปิดร้านวันที่นี้
+      </button>
+
+      <button id="closeClosure" class="ghost" type="button">
+        ปิด
+      </button>
+
+    </div>
+  </div>
+</div>
+
+<!-- ======================
      TOP BAR
 ====================== -->
 <div class="topbar">
@@ -207,6 +238,12 @@
       </div>
     </div>
 
+    <div class="calendar-manage-row">
+      <button id="manageClosedDaysBtn" class="ghost calendar-manage-btn" type="button">
+        ⚙ วันปิดร้าน
+      </button>
+    </div>
+
   </div>
 </section>
 
@@ -226,6 +263,16 @@
      BOOKING FORM
 ====================== -->
 <section class="panel">
+
+  <div id="closedDayBanner" class="closed-day-banner hidden">
+    <div class="closed-day-banner-icon">ปิด</div>
+    <div>
+      <strong>ร้านปิดวันนี้</strong>
+      <div id="closedDayBannerText">
+        ไม่สามารถเพิ่มคิวใหม่ได้ กรุณาเลือกวันอื่น
+      </div>
+    </div>
+  </div>
 
   <div class="tabs">
     <div class="tab active" data-tab="Bank">Bank</div>
@@ -275,7 +322,7 @@
     </div>
 
     <div class="full">
-      <button type="submit" class="primary">
+      <button id="bookingSubmitBtn" type="submit" class="primary">
         จองคิว
       </button>
     </div>
