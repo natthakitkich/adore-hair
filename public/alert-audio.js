@@ -105,10 +105,17 @@
         timeZone: 'Asia/Bangkok'
       });
 
-      const res = await fetch(`/bookings?date=${today}`);
-      if (!res.ok) return;
+      const [closedDaysRes, bookingsRes] = await Promise.all([
+        fetch('/closed-days'),
+        fetch(`/bookings?date=${today}`)
+      ]);
 
-      const bookings = await res.json();
+      if (!closedDaysRes.ok || !bookingsRes.ok) return;
+
+      const closedDays = await closedDaysRes.json();
+      if (Array.isArray(closedDays) && closedDays.includes(today)) return;
+
+      const bookings = await bookingsRes.json();
       const notifiedMap = loadNotifiedMap();
       const now = new Date();
 
