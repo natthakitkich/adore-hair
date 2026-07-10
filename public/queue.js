@@ -1,0 +1,204 @@
+const API = '';
+
+const calendarTitle = document.getElementById('calendarTitle');
+const calendarDaysEl = document.getElementById('calendarDays');
+const prevMonthBtn = document.getElementById('prevMonth');
+const nextMonthBtn = document.getElementById('nextMonth');
+const todayBtn = document.getElementById('todayBtn');
+
+const selectedDateLabel = document.getElementById('selectedDateLabel');
+const selectedStatusDot = document.getElementById('selectedStatusDot');
+const selectedStatusTitle = document.getElementById('selectedStatusTitle');
+const selectedStatusText = document.getElementById('selectedStatusText');
+
+let calendarStatus = {};
+let selectedDate = getTodayTH();
+
+const initialDate = parseDate(selectedDate);
+let viewMonth = initialDate.getMonth();
+let viewYear = initialDate.getFullYear();
+
+const statusContent = {
+  available: {
+    title: 'คิววันนี้ยังว่าง',
+    text: 'สามารถโทรสอบถามช่วงเวลาที่สะดวกกับทางร้านได้'
+  },
+  low: {
+    title: 'คิวยังไม่แน่น',
+    text: 'ยังมีโอกาสเลือกช่วงเวลาได้ กรุณาโทรสอบถามกับทางร้าน'
+  },
+  medium: {
+    title: 'คิวปานกลาง',
+    text: 'แนะนำให้โทรสอบถามช่วงเวลาว่างก่อนเข้ารับบริการ'
+  },
+  high: {
+    title: 'คิวค่อนข้างแน่น',
+    text: 'กรุณาโทรตรวจสอบช่วงเวลาว่างกับทางร้านก่อนเดินทาง'
+  },
+  closed: {
+    title: 'ร้านปิด',
+    text: 'กรุณาเลือกวันอื่นเพื่อตรวจสอบความหนาแน่นของคิว'
+  },
+  unavailable: {
+    title: 'ยังไม่มีข้อมูลคิว',
+    text: 'กรุณาโทรสอบถามกับทางร้านเพื่อยืนยันช่วงเวลาว่าง'
+  }
+};
+
+async function init() {
+  await loadCalendarStatus();
+  renderCalendar();
+  renderSelectedStatus();
+}
+
+async function loadCalendarStatus() {
+  try {
+    const res = await fetch(`${API}/public-calendar`);
+
+    if (!res.ok) {
+      throw new Error('Unable to load public calendar');
+    }
+
+    const data = await res.json();
+    calendarStatus = data && typeof data === 'object' ? data : {};
+  } catch (error) {
+    console.error('[PublicQueue] Load error', error);
+    calendarStatus = {};
+  }
+}
+
+function renderCalendar() {
+  calendarDaysEl.innerHTML = '';
+
+  const firstDay = new Date(viewYear, viewMonth, 1);
+  const startDay = firstDay.getDay();
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+
+  calendarTitle.textContent = firstDay.toLocaleDateString('th-TH', {
+    month: 'long',
+    year: 'numeric'
+  });
+
+  for (let i = 0; i < startDay; i++) {
+    const blank = document.createElement('div');
+    blank.className = 'day-blank';
+    calendarDaysEl.appendChild(blank);
+  }
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const date = formatDate(viewYear, viewMonth + 1, day);
+    const status = getStatus(date);
+
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = `day ${status}`;
+    button.setAttribute('aria-label', `${formatDisplayDate(date)} ${statusContent[status].title}`);
+
+    if (date === selectedDate) {
+      button.classList.add('selected');
+    }
+
+    if (status === 'closed') {
+      button.innerHTML = `
+        <span class="day-number">${day}</span>
+        <span class="closed-label">ปิด</span>
+      `;
+    } else {
+      button.innerHTML = `
+        <span class="day-number">${day}</span>
+        <span class="density-mark" aria-hidden="true"></span>
+      `;
+    }
+
+    button.onclick = () => {
+      selectedDate = date;
+      renderCalendar();
+      renderSelectedStatus();
+    };
+
+    calendarDaysEl.appendChild(button);
+  }
+
+  todayBtn.classList.toggle(
+    'hidden',
+    viewMonth === initialDate.getMonth() && viewYear === initialDate.getFullYear()
+  );
+}
+
+function renderSelectedStatus() {
+  const status = getStatus(selectedDate);
+  const content = statusContent[status];
+
+  selectedDateLabel.textContent = formatDisplayDate(selectedDate);
+  selectedStatusTitle.textContent = content.title;
+  selectedStatusText.textContent = content.text;
+
+  selectedStatusDot.className = `status-dot ${status}`;
+}
+
+function getStatus(date) {
+  if (calendarStatus[date]) {
+    return calendarStatus[date];
+  }
+
+  return 'available';
+}
+
+prevMonthBtn.onclick = () => {
+  viewMonth--;
+
+  if (viewMonth < 0) {
+    viewMonth = 11;
+    viewYear--;
+  }
+
+  renderCalendar();
+};
+
+nextMonthBtn.onclick = () => {
+  viewMonth++;
+
+  if (viewMonth > 11) {
+    viewMonth = 0;
+    viewYear++;
+  }
+
+  renderCalendar();
+};
+
+todayBtn.onclick = () => {
+  selectedDate = getTodayTH();
+
+  const today = parseDate(selectedDate);
+  viewMonth = today.getMonth();
+  viewYear = today.getFullYear();
+
+  renderCalendar();
+  renderSelectedStatus();
+};
+
+function getTodayTH() {
+  return new Date().toLocaleDateString('sv-SE', {
+    timeZone: 'Asia/Bangkok'
+  });
+}
+
+function parseDate(dateString) {
+  const [year, month, day] = dateString.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+
+function formatDate(year, month, day) {
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
+function formatDisplayDate(dateString) {
+  return parseDate(dateString).toLocaleDateString('th-TH', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
+}
+
+init();
