@@ -23,8 +23,19 @@ const weekCustomerCountEl = document.getElementById('weekCustomerCount');
 const monthCustomerCountEl = document.getElementById('monthCustomerCount');
 
 const bookingForm = document.getElementById('bookingForm');
+const bookingSubmitBtn = document.getElementById('bookingSubmitBtn');
 const timeSelect = document.getElementById('time');
 const listEl = document.getElementById('list');
+
+/* CLOSED DAY */
+const manageClosedDaysBtn = document.getElementById('manageClosedDaysBtn');
+const closedDayBanner = document.getElementById('closedDayBanner');
+const closedDayBannerText = document.getElementById('closedDayBannerText');
+const closureOverlay = document.getElementById('closureOverlay');
+const closureDate = document.getElementById('closureDate');
+const closureStatus = document.getElementById('closureStatus');
+const toggleClosureBtn = document.getElementById('toggleClosureBtn');
+const closeClosure = document.getElementById('closeClosure');
 
 /* EDIT MODAL */
 const editOverlay = document.getElementById('editOverlay');
@@ -41,6 +52,7 @@ const editNote = document.getElementById('editNote');
 ========================= */
 let bookings = [];
 let calendarDensity = {};
+let closedDays = new Set();
 let selectedStylist = 'Bank';
 let selectedDate = getTodayTH();
 let editingBooking = null;
@@ -107,11 +119,178 @@ document.addEventListener('DOMContentLoaded', () => {
 /* =========================
    INIT
 ========================= */
-function init() {
+async function init() {
   bindStylistTabs();
+  await loadClosedDays();
   loadCalendar();
   loadBookings();
 }
+
+/* =========================
+   CLOSED DAYS
+========================= */
+async function loadClosedDays() {
+  try {
+    const res = await fetch(`${API}/closed-days`);
+
+    if (!res.ok) {
+      throw new Error('Unable to load closed days');
+    }
+
+    const data = await res.json();
+    closedDays = new Set(Array.isArray(data) ? data : []);
+  } catch (error) {
+    console.error('[ClosedDays] Load error', error);
+    closedDays = new Set();
+  }
+}
+
+function isSelectedDateClosed() {
+  return closedDays.has(selectedDate);
+}
+
+function renderBookingAvailability() {
+  const isClosed = isSelectedDateClosed();
+
+  closedDayBanner.classList.toggle('hidden', !isClosed);
+  bookingForm.classList.toggle('shop-closed', isClosed);
+
+  if (isClosed) {
+    closedDayBannerText.textContent =
+      `ร้านปิดวันที่ ${formatDisplayDate(selectedDate)} ไม่สามารถเพิ่มคิวใหม่ได้`;
+  }
+
+  bookingForm
+    .querySelectorAll('input, select, textarea, button')
+    .forEach(element => {
+      element.disabled = isClosed;
+    });
+
+  bookingSubmitBtn.textContent = isClosed ? 'ร้านปิด' : 'จองคิว';
+}
+
+function openClosureModal() {
+  closureDate.value = selectedDate;
+  renderClosureModalState();
+  closureOverlay.classList.remove('hidden');
+}
+
+function renderClosureModalState() {
+  const date = closureDate.value;
+  const isClosed = closedDays.has(date);
+
+  closureStatus.textContent = isClosed
+    ? `สถานะ: ปิดร้าน · ${formatDisplayDate(date)}`
+    : `สถานะ: เปิดร้าน · ${formatDisplayDate(date)}`;
+
+  closureStatus.classList.toggle('closed', isClosed);
+  closureStatus.classList.toggle('open', !isClosed);
+
+  toggleClosureBtn.textContent = isClosed
+    ? 'เปิดร้านวันที่นี้'
+    : 'ปิดร้านวันที่นี้';
+
+  toggleClosureBtn.classList.toggle('open-shop', isClosed);
+  toggleClosureBtn.classList.toggle('close-shop', !isClosed);
+}
+
+async function getBookingCountForDate(date) {
+  if (date === selectedDate) {
+    return bookings.length;
+  }
+
+  try {
+    const res = await fetch(`${API}/bookings?date=${date}`);
+    if (!res.ok) return 0;
+
+    const data = await res.json();
+    return Array.isArray(data) ? data.length : 0;
+  } catch {
+    return 0;
+  }
+}
+
+async function saveClosureState(date, shouldClose) {
+  try {
+    const res = await fetch(
+      shouldClose
+        ? `${API}/closed-days`
+        : `${API}/closed-days/${encodeURIComponent(date)}`,
+      {
+        method: shouldClose ? 'POST' : 'DELETE',
+        headers: shouldClose
+          ? { 'Content-Type': 'application/json' }
+          : undefined,
+        body: shouldClose ? JSON.stringify({ date }) : undefined
+      }
+    );
+
+    if (!res.ok) {
+      showToast('บันทึกสถานะร้านไม่สำเร็จ');
+      return;
+    }
+
+    if (shouldClose) {
+      closedDays.add(date);
+    } else {
+      closedDays.delete(date);
+    }
+
+    renderCalendar();
+    renderCalendarStats();
+    renderBookingAvailability();
+    renderClosureModalState();
+    closureOverlay.classList.add('hidden');
+
+    showToast(shouldClose ? 'ปิดร้านเรียบร้อยแล้ว' : 'เปิดร้านเรียบร้อยแล้ว');
+  } catch (error) {
+    console.error('[ClosedDays] Save error', error);
+    showToast('บันทึกสถานะร้านไม่สำเร็จ');
+  }
+}
+
+manageClosedDaysBtn.onclick = () => {
+  openClosureModal();
+};
+
+closureDate.onchange = () => {
+  renderClosureModalState();
+};
+
+toggleClosureBtn.onclick = async () => {
+  const date = closureDate.value;
+
+  if (!date) {
+    showToast('กรุณาเลือกวันที่');
+    return;
+  }
+
+  const isClosed = closedDays.has(date);
+
+  if (isClosed) {
+    openConfirm({
+      title: 'เปิดร้าน',
+      message: `ยืนยันเปิดร้านวันที่ ${formatDisplayDate(date)} ใช่หรือไม่`,
+      onConfirm: () => saveClosureState(date, false)
+    });
+    return;
+  }
+
+  const bookingCount = await getBookingCountForDate(date);
+  const message = bookingCount > 0
+    ? `วันที่นี้มีคิวอยู่แล้ว ${bookingCount} คิว การปิดร้านจะไม่ลบคิวเดิม ยืนยันปิดร้านใช่หรือไม่`
+    : `ยืนยันปิดร้านวันที่ ${formatDisplayDate(date)} ใช่หรือไม่`;
+
+  openConfirm({
+    title: 'ปิดร้าน',
+    message,
+    onConfirm: () => saveClosureState(date, true)
+  });
+};
+
+closeClosure.onclick = () => {
+  closureOverlay.classList.add('hidden');
+};
 
 /* =========================
    CALENDAR
@@ -140,21 +319,33 @@ function renderCalendar() {
   for (let d = 1; d <= daysInMonth; d++) {
     const date = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
     const count = calendarDensity[date] || 0;
+    const isClosed = closedDays.has(date);
 
     const el = document.createElement('div');
     el.className = 'day';
-    el.textContent = d;
+
+    if (isClosed) {
+      el.innerHTML = `
+        <span class="day-number">${d}</span>
+        <span class="day-closed-label">ปิด</span>
+      `;
+      el.classList.add('closed');
+      el.setAttribute('aria-label', `${formatDisplayDate(date)} ร้านปิด`);
+    } else {
+      el.textContent = d;
+    }
 
     if (date === selectedDate) el.classList.add('today');
-    if (count > 0 && count <= 5) el.classList.add('low');
-    if (count > 5 && count <= 10) el.classList.add('mid');
-    if (count > 10) el.classList.add('high');
+    if (!isClosed && count > 0 && count <= 5) el.classList.add('low');
+    if (!isClosed && count > 5 && count <= 10) el.classList.add('mid');
+    if (!isClosed && count > 10) el.classList.add('high');
 
     el.onclick = () => {
       selectedDate = date;
       loadBookings();
       renderCalendar();
       renderCalendarStats();
+      renderBookingAvailability();
     };
 
     calendarDaysEl.appendChild(el);
@@ -234,6 +425,7 @@ async function loadBookings() {
   renderSummary();
   renderTimeOptions();
   renderTable();
+  renderBookingAvailability();
 }
 
 function bindStylistTabs() {
@@ -243,6 +435,7 @@ function bindStylistTabs() {
       tab.classList.add('active');
       selectedStylist = tab.dataset.tab;
       renderTimeOptions();
+      renderBookingAvailability();
     };
   });
 }
@@ -271,6 +464,11 @@ function renderTimeOptions() {
 bookingForm.onsubmit = async (e) => {
   e.preventDefault();
 
+  if (isSelectedDateClosed()) {
+    showToast('ร้านปิด กรุณาเลือกวันอื่น');
+    return;
+  }
+
   const gender = document.querySelector('[name=gender]:checked')?.value;
   if (!timeSelect.value || !gender) {
     showToast('กรุณากรอกข้อมูลให้ครบถ้วน');
@@ -293,6 +491,14 @@ bookingForm.onsubmit = async (e) => {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
   });
+
+  if (res.status === 403) {
+    closedDays.add(selectedDate);
+    renderCalendar();
+    renderBookingAvailability();
+    showToast('ร้านปิด กรุณาเลือกวันอื่น');
+    return;
+  }
 
   if (res.status === 409) {
     showToast('เวลานี้ถูกจองแล้ว');
@@ -423,6 +629,14 @@ function generateEditTimeOptions(date) {
 document.getElementById('saveEdit').onclick = async () => {
   const gender = document.querySelector('[name=editGender]:checked')?.value;
 
+  if (
+    editDate.value !== editingBooking.date &&
+    closedDays.has(editDate.value)
+  ) {
+    showToast('วันที่เลือกเป็นวันปิดร้าน กรุณาเลือกวันอื่น');
+    return;
+  }
+
   const res = await fetch(`${API}/bookings/${editingBooking.id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
@@ -437,8 +651,20 @@ document.getElementById('saveEdit').onclick = async () => {
     })
   });
 
+  if (res.status === 403) {
+    closedDays.add(editDate.value);
+    renderCalendar();
+    showToast('วันที่เลือกเป็นวันปิดร้าน กรุณาเลือกวันอื่น');
+    return;
+  }
+
   if (res.status === 409) {
     showToast('เวลานี้ถูกจองแล้ว');
+    return;
+  }
+
+  if (!res.ok) {
+    showToast('เกิดข้อผิดพลาด');
     return;
   }
 
@@ -522,5 +748,16 @@ function getTodayTH() {
 function formatDateTH(date) {
   return date.toLocaleDateString('sv-SE', {
     timeZone: 'Asia/Bangkok'
+  });
+}
+
+function formatDisplayDate(dateString) {
+  const [year, month, day] = dateString.split('-').map(Number);
+  const date = new Date(year, month - 1, day);
+
+  return date.toLocaleDateString('th-TH', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
   });
 }
