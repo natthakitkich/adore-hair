@@ -1,7 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
-import fs from 'fs/promises';
 import { fileURLToPath } from 'url';
 import { createClient } from '@supabase/supabase-js';
 
@@ -27,61 +26,46 @@ const supabase = createClient(
 );
 
 /* =========================
-   CLOSED DAYS FILE STORAGE
+   CLOSED DAYS — SUPABASE STORAGE
 ========================= */
-const DATA_DIR = path.join(__dirname, 'data');
-const CLOSED_DAYS_FILE = path.join(DATA_DIR, 'closed-days.json');
-
 function isValidDateString(value) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value || '')) return false;
 
   const date = new Date(`${value}T00:00:00Z`);
-  return !Number.isNaN(date.getTime()) &&
-    date.toISOString().slice(0, 10) === value;
-}
 
-async function ensureClosedDaysFile() {
-  await fs.mkdir(DATA_DIR, { recursive: true });
-
-  try {
-    await fs.access(CLOSED_DAYS_FILE);
-  } catch {
-    await fs.writeFile(CLOSED_DAYS_FILE, '[]\n', 'utf8');
-  }
+  return (
+    !Number.isNaN(date.getTime()) &&
+    date.toISOString().slice(0, 10) === value
+  );
 }
 
 async function readClosedDays() {
-  await ensureClosedDaysFile();
+  const { data, error } = await supabase
+    .from('closed_days')
+    .select('date')
+    .order('date', { ascending: true });
 
-  try {
-    const raw = await fs.readFile(CLOSED_DAYS_FILE, 'utf8');
-    const parsed = JSON.parse(raw);
-
-    if (!Array.isArray(parsed)) return [];
-
-    return [...new Set(parsed.filter(isValidDateString))].sort();
-  } catch (error) {
-    console.error('[ClosedDays] Read error', error);
-    return [];
+  if (error) {
+    throw error;
   }
-}
 
-async function writeClosedDays(days) {
-  await ensureClosedDaysFile();
-
-  const normalized = [...new Set(days.filter(isValidDateString))].sort();
-  await fs.writeFile(
-    CLOSED_DAYS_FILE,
-    `${JSON.stringify(normalized, null, 2)}\n`,
-    'utf8'
-  );
-
-  return normalized;
+  return (data || [])
+    .map(item => item.date)
+    .filter(isValidDateString);
 }
 
 async function isShopClosed(date) {
-  const closedDays = await readClosedDays();
-  return closedDays.includes(date);
+  const { data, error } = await supabase
+    .from('closed_days')
+    .select('date')
+    .eq('date', date)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  return Boolean(data);
 }
 
 /* =========================
@@ -93,57 +77,11 @@ app.get('/', (_, res) => {
   res.sendFile(path.join(__dirname, 'public/index.html'));
 });
 
-// serve public queue overview
+/* ---------- PUBLIC ----------
+   Serve customer queue page
+---------------------------- */
 app.get('/queue', (_, res) => {
   res.sendFile(path.join(__dirname, 'public/queue.html'));
-});
-
-/* ---------- PUBLIC ----------
-   Get public calendar status
-   No customer count or personal data
----------------------------- */
-app.get('/public-calendar', async (_, res) => {
-  const { data, error } = await supabase
-    .from('bookings')
-    .select('date');
-
-  if (error) {
-    return res.status(500).json({ error: 'Unable to load queue status' });
-  }
-
-  try {
-    const density = {};
-
-    (data || []).forEach(booking => {
-      density[booking.date] = (density[booking.date] || 0) + 1;
-    });
-
-    const closedDays = new Set(await readClosedDays());
-    const dates = new Set([
-      ...Object.keys(density),
-      ...closedDays
-    ]);
-    const calendar = {};
-
-    dates.forEach(date => {
-      if (closedDays.has(date)) {
-        calendar[date] = 'closed';
-        return;
-      }
-
-      const count = density[date] || 0;
-
-      if (count === 0) calendar[date] = 'available';
-      else if (count <= 5) calendar[date] = 'low';
-      else if (count <= 10) calendar[date] = 'medium';
-      else calendar[date] = 'high';
-    });
-
-    res.json(calendar);
-  } catch (readError) {
-    console.error('[PublicCalendar] Load error', readError);
-    res.status(500).json({ error: 'Unable to load queue status' });
-  }
 });
 
 /* ---------- DEVELOP ----------
@@ -154,7 +92,10 @@ app.get('/closed-days', async (_, res) => {
     const closedDays = await readClosedDays();
     res.json(closedDays);
   } catch (error) {
-    res.status(500).json({ error: 'Unable to load closed days' });
+    console.error('[ClosedDays] Read error', error);
+    res.status(500).json({
+      error: 'Unable to load closed days'
+    });
   }
 });
 
@@ -165,21 +106,36 @@ app.post('/closed-days', async (req, res) => {
   const { date } = req.body;
 
   if (!isValidDateString(date)) {
-    return res.status(400).json({ error: 'Invalid date' });
+    return res.status(400).json({
+      error: 'Invalid date'
+    });
   }
 
   try {
-    const closedDays = await readClosedDays();
+    const { error } = await supabase
+      .from('closed_days')
+      .upsert(
+        [{ date }],
+        { onConflict: 'date' }
+      );
 
-    if (!closedDays.includes(date)) {
-      closedDays.push(date);
+    if (error) {
+      throw error;
     }
 
-    const updated = await writeClosedDays(closedDays);
-    res.status(201).json({ success: true, date, closedDays: updated });
+    const closedDays = await readClosedDays();
+
+    res.status(201).json({
+      success: true,
+      date,
+      closedDays
+    });
   } catch (error) {
     console.error('[ClosedDays] Write error', error);
-    res.status(500).json({ error: 'Unable to save closed day' });
+
+    res.status(500).json({
+      error: 'Unable to save closed day'
+    });
   }
 });
 
@@ -190,19 +146,89 @@ app.delete('/closed-days/:date', async (req, res) => {
   const { date } = req.params;
 
   if (!isValidDateString(date)) {
-    return res.status(400).json({ error: 'Invalid date' });
+    return res.status(400).json({
+      error: 'Invalid date'
+    });
   }
 
   try {
-    const closedDays = await readClosedDays();
-    const updated = await writeClosedDays(
-      closedDays.filter(closedDate => closedDate !== date)
-    );
+    const { error } = await supabase
+      .from('closed_days')
+      .delete()
+      .eq('date', date);
 
-    res.json({ success: true, date, closedDays: updated });
+    if (error) {
+      throw error;
+    }
+
+    const closedDays = await readClosedDays();
+
+    res.json({
+      success: true,
+      date,
+      closedDays
+    });
   } catch (error) {
     console.error('[ClosedDays] Delete error', error);
-    res.status(500).json({ error: 'Unable to remove closed day' });
+
+    res.status(500).json({
+      error: 'Unable to remove closed day'
+    });
+  }
+});
+
+/* ---------- PUBLIC ----------
+   Get public calendar status
+   No customer count exposed
+---------------------------- */
+app.get('/public-calendar', async (_, res) => {
+  try {
+    const [
+      { data: bookingData, error: bookingError },
+      closedDays
+    ] = await Promise.all([
+      supabase
+        .from('bookings')
+        .select('date'),
+      readClosedDays()
+    ]);
+
+    if (bookingError) {
+      throw bookingError;
+    }
+
+    const countMap = {};
+
+    (bookingData || []).forEach(booking => {
+      countMap[booking.date] =
+        (countMap[booking.date] || 0) + 1;
+    });
+
+    const publicCalendar = {};
+
+    Object.entries(countMap).forEach(([date, count]) => {
+      if (count <= 0) {
+        publicCalendar[date] = 'available';
+      } else if (count <= 5) {
+        publicCalendar[date] = 'low';
+      } else if (count <= 10) {
+        publicCalendar[date] = 'medium';
+      } else {
+        publicCalendar[date] = 'high';
+      }
+    });
+
+    closedDays.forEach(date => {
+      publicCalendar[date] = 'closed';
+    });
+
+    res.json(publicCalendar);
+  } catch (error) {
+    console.error('[PublicCalendar] Load error', error);
+
+    res.status(500).json({
+      error: 'Unable to load public calendar'
+    });
   }
 });
 
@@ -244,15 +270,16 @@ app.get('/calendar-days', async (_, res) => {
 
   const map = {};
 
-  data.forEach(b => {
-    map[b.date] = (map[b.date] || 0) + 1;
+  data.forEach(booking => {
+    map[booking.date] =
+      (map[booking.date] || 0) + 1;
   });
 
   res.json(map);
 });
 
 /* ---------- BASIC ----------
-   Create booking (NOTE SUPPORT)
+   Create booking
 ---------------------------- */
 app.post('/bookings', async (req, res) => {
   const {
@@ -267,22 +294,40 @@ app.post('/bookings', async (req, res) => {
   } = req.body;
 
   if (!date || !time || !stylist || !name || !gender) {
-    return res.status(400).json({ error: 'Missing required fields' });
+    return res.status(400).json({
+      error: 'Missing required fields'
+    });
   }
 
-  if (await isShopClosed(date)) {
-    return res.status(403).json({ error: 'Shop closed' });
+  try {
+    if (await isShopClosed(date)) {
+      return res.status(403).json({
+        error: 'Shop closed'
+      });
+    }
+  } catch (error) {
+    console.error('[ClosedDays] Check error', error);
+
+    return res.status(500).json({
+      error: 'Unable to check shop status'
+    });
   }
 
-  const { data: exist } = await supabase
+  const { data: exist, error: existError } = await supabase
     .from('bookings')
     .select('id')
     .eq('date', date)
     .eq('time', time)
     .eq('stylist', stylist);
 
+  if (existError) {
+    return res.status(500).json(existError);
+  }
+
   if (exist && exist.length > 0) {
-    return res.status(409).json({ error: 'Slot already booked' });
+    return res.status(409).json({
+      error: 'Slot already booked'
+    });
   }
 
   const { data, error } = await supabase
@@ -310,10 +355,11 @@ app.post('/bookings', async (req, res) => {
 });
 
 /* ---------- DEVELOP ----------
-   Update booking (RESCHEDULE + NOTE SUPPORT)
+   Update booking
 ---------------------------- */
 app.put('/bookings/:id', async (req, res) => {
   const { id } = req.params;
+
   const {
     date,
     time,
@@ -324,7 +370,6 @@ app.put('/bookings/:id', async (req, res) => {
     note
   } = req.body;
 
-  // ดึง booking เดิมก่อน เพื่อรู้ stylist
   const { data: current, error: fetchError } = await supabase
     .from('bookings')
     .select('*')
@@ -332,21 +377,33 @@ app.put('/bookings/:id', async (req, res) => {
     .single();
 
   if (fetchError || !current) {
-    return res.status(404).json({ error: 'Booking not found' });
+    return res.status(404).json({
+      error: 'Booking not found'
+    });
   }
 
   const newDate = date || current.date;
   const newTime = time || current.time;
   const stylist = current.stylist;
 
-  // อนุญาตให้จัดการคิวเดิมที่อยู่ในวันปิดได้
-  // แต่ไม่อนุญาตให้ย้ายคิวจากวันอื่นเข้ามาในวันปิด
-  if (newDate !== current.date && await isShopClosed(newDate)) {
-    return res.status(403).json({ error: 'Shop closed' });
+  try {
+    if (
+      newDate !== current.date &&
+      await isShopClosed(newDate)
+    ) {
+      return res.status(403).json({
+        error: 'Shop closed'
+      });
+    }
+  } catch (error) {
+    console.error('[ClosedDays] Check error', error);
+
+    return res.status(500).json({
+      error: 'Unable to check shop status'
+    });
   }
 
-  // ตรวจว่ามีคิวอื่นชนหรือไม่ (ยกเว้น id ตัวเอง)
-  const { data: conflict } = await supabase
+  const { data: conflict, error: conflictError } = await supabase
     .from('bookings')
     .select('id')
     .eq('date', newDate)
@@ -354,8 +411,14 @@ app.put('/bookings/:id', async (req, res) => {
     .eq('stylist', stylist)
     .neq('id', id);
 
+  if (conflictError) {
+    return res.status(500).json(conflictError);
+  }
+
   if (conflict && conflict.length > 0) {
-    return res.status(409).json({ error: 'Slot already booked' });
+    return res.status(409).json({
+      error: 'Slot already booked'
+    });
   }
 
   const { error } = await supabase
@@ -375,7 +438,9 @@ app.put('/bookings/:id', async (req, res) => {
     return res.status(500).json(error);
   }
 
-  res.json({ success: true });
+  res.json({
+    success: true
+  });
 });
 
 /* ---------- BASIC ----------
@@ -393,7 +458,9 @@ app.delete('/bookings/:id', async (req, res) => {
     return res.status(500).json(error);
   }
 
-  res.json({ success: true });
+  res.json({
+    success: true
+  });
 });
 
 /* =========================
