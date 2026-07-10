@@ -592,3 +592,170 @@ input.readonly {
    EDIT MODAL — SCOPED FIX (ONLY THIS SECTION)
    Scope: #editOverlay
 ================== */
+
+/* ======================================================
+   CLOSED DAY FEATURE — SCOPED ADDITION
+====================================================== */
+.day.closed{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:1px;
+  color:#ffd9df;
+  background:
+    linear-gradient(180deg,rgba(255,92,122,.28),rgba(120,30,50,.30));
+  border-color:rgba(255,92,122,.55);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.06),
+    0 6px 18px rgba(0,0,0,.45);
+}
+
+.day.closed.today{
+  box-shadow:
+    0 0 0 2px var(--accent),
+    0 0 22px rgba(110,231,255,.45),
+    inset 0 0 0 1px rgba(255,92,122,.40);
+}
+
+.day-number{
+  line-height:1;
+}
+
+.day-closed-label{
+  margin-top:2px;
+  font-size:9px;
+  font-weight:900;
+  line-height:1;
+  letter-spacing:.04em;
+  color:#fff;
+}
+
+.calendar-manage-row{
+  display:flex;
+  justify-content:center;
+  margin-top:10px;
+}
+
+.calendar-manage-btn{
+  width:auto;
+  padding:7px 12px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:700;
+  color:rgba(233,238,252,.72);
+  background:rgba(255,255,255,.045);
+}
+
+.calendar-manage-btn:active{
+  opacity:.75;
+}
+
+.closed-day-banner{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-bottom:18px;
+  padding:13px 14px;
+  border-radius:17px;
+  border:1px solid rgba(255,92,122,.38);
+  background:rgba(255,92,122,.12);
+  color:rgba(255,235,239,.95);
+  font-size:13px;
+  line-height:1.45;
+}
+
+.closed-day-banner strong{
+  display:block;
+  margin-bottom:2px;
+  font-size:15px;
+  color:#fff;
+}
+
+.closed-day-banner-icon{
+  flex:0 0 auto;
+  min-width:42px;
+  padding:7px 9px;
+  border-radius:12px;
+  background:rgba(255,92,122,.25);
+  color:#fff;
+  font-size:12px;
+  font-weight:900;
+  text-align:center;
+}
+
+#bookingForm.shop-closed{
+  opacity:.42;
+  filter:saturate(.55);
+}
+
+#bookingForm.shop-closed input,
+#bookingForm.shop-closed select,
+#bookingForm.shop-closed textarea,
+#bookingForm.shop-closed button{
+  cursor:not-allowed;
+}
+
+.closure-modal{
+  width:min(390px,92vw);
+}
+
+.closure-help{
+  margin-top:-6px;
+  font-size:13px;
+}
+
+.closure-status{
+  width:100%;
+  padding:12px 14px;
+  border-radius:15px;
+  font-size:14px;
+  font-weight:800;
+  text-align:center;
+}
+
+.closure-status.open{
+  color:#bfffe2;
+  border:1px solid rgba(44,255,156,.28);
+  background:rgba(44,255,156,.10);
+}
+
+.closure-status.closed{
+  color:#ffd9df;
+  border:1px solid rgba(255,92,122,.35);
+  background:rgba(255,92,122,.12);
+}
+
+#toggleClosureBtn{
+  width:100%;
+  min-height:48px;
+  padding:13px 16px;
+  border-radius:16px;
+  border:none;
+  font-size:15px;
+  font-weight:900;
+  cursor:pointer;
+}
+
+#toggleClosureBtn.close-shop{
+  color:#fff;
+  background:linear-gradient(135deg,#ff6f89,#d83e61);
+  box-shadow:0 10px 28px rgba(216,62,97,.28);
+}
+
+#toggleClosureBtn.open-shop{
+  color:#061022;
+  background:linear-gradient(135deg,var(--low),var(--accent));
+  box-shadow:0 10px 28px rgba(44,255,156,.20);
+}
+
+@media (max-width:420px){
+  .day-closed-label{
+    font-size:8px;
+  }
+
+  .calendar-manage-btn{
+    padding:7px 11px;
+    font-size:11px;
+  }
+}
