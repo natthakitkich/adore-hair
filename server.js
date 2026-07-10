@@ -93,6 +93,59 @@ app.get('/', (_, res) => {
   res.sendFile(path.join(__dirname, 'public/index.html'));
 });
 
+// serve public queue overview
+app.get('/queue', (_, res) => {
+  res.sendFile(path.join(__dirname, 'public/queue.html'));
+});
+
+/* ---------- PUBLIC ----------
+   Get public calendar status
+   No customer count or personal data
+---------------------------- */
+app.get('/public-calendar', async (_, res) => {
+  const { data, error } = await supabase
+    .from('bookings')
+    .select('date');
+
+  if (error) {
+    return res.status(500).json({ error: 'Unable to load queue status' });
+  }
+
+  try {
+    const density = {};
+
+    (data || []).forEach(booking => {
+      density[booking.date] = (density[booking.date] || 0) + 1;
+    });
+
+    const closedDays = new Set(await readClosedDays());
+    const dates = new Set([
+      ...Object.keys(density),
+      ...closedDays
+    ]);
+    const calendar = {};
+
+    dates.forEach(date => {
+      if (closedDays.has(date)) {
+        calendar[date] = 'closed';
+        return;
+      }
+
+      const count = density[date] || 0;
+
+      if (count === 0) calendar[date] = 'available';
+      else if (count <= 5) calendar[date] = 'low';
+      else if (count <= 10) calendar[date] = 'medium';
+      else calendar[date] = 'high';
+    });
+
+    res.json(calendar);
+  } catch (readError) {
+    console.error('[PublicCalendar] Load error', readError);
+    res.status(500).json({ error: 'Unable to load queue status' });
+  }
+});
+
 /* ---------- DEVELOP ----------
    Get closed days
 ---------------------------- */
