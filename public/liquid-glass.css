@@ -929,3 +929,28 @@ body.modal-open {
 #closureOverlay .modalBody *{
     box-sizing:border-box;
 }
+/* ===== FIX วันที่เมนูปิดร้าน ไม่ให้ล้น ===== */
+
+#closureOverlay input[type="date"]{
+    width:100%;
+    max-width:100%;
+    box-sizing:border-box;
+
+    display:block;
+
+    margin:0;
+    padding:12px 16px;
+
+    overflow:hidden;
+}
+
+#closureOverlay .modalBody{
+    overflow-x:hidden;
+}
+
+#closureOverlay .modalBody *{
+    box-sizing:border-box;
+}
+#closureOverlay input[type="date"]{
+    transform:scale(.99);
+}
