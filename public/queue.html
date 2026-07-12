@@ -2,34 +2,61 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#0b0f1a" />
 
-  <title>Adore Hair — ตรวจสอบคิว</title>
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <meta
+    name="theme-color"
+    content="#0b0f1a"
+  />
+
+  <title>
+    Adore Hair — ตรวจสอบคิว
+  </title>
+
+  <link
+    rel="preconnect"
+    href="https://fonts.googleapis.com"
+  >
+
+  <link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin
+  >
 
   <link
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap"
     rel="stylesheet"
-  />
+  >
 
-  <link rel="stylesheet" href="queue.css" />
+  <link
+    rel="stylesheet"
+    href="queue.css"
+  />
 </head>
 
 <body>
+
   <main class="queue-page">
 
     <!-- ======================
          HEADER
     ====================== -->
     <header class="queue-header">
+
       <div class="brand-mark">
-        <img src="logo.png" alt="Adore Hair Logo" />
+        <img
+          src="logo.png"
+          alt="Adore Hair Logo"
+        />
       </div>
 
-      <div>
+      <div class="queue-header-content">
+
         <p class="eyebrow">
           ADORE HAIR STUDIO
         </p>
@@ -42,7 +69,9 @@
           ดูภาพรวมความหนาแน่นของคิวในแต่ละวัน
           แล้วโทรสอบถามช่วงเวลาว่างกับทางร้านอีกครั้ง
         </p>
+
       </div>
+
     </header>
 
     <!-- ======================
@@ -52,6 +81,7 @@
       class="status-card"
       aria-live="polite"
     >
+
       <p
         id="selectedDateLabel"
         class="selected-date"
@@ -60,12 +90,14 @@
       </p>
 
       <div class="status-line">
+
         <span
           id="selectedStatusDot"
           class="status-dot available"
         ></span>
 
-        <div>
+        <div class="status-content">
+
           <h2 id="selectedStatusTitle">
             กำลังตรวจสอบคิว
           </h2>
@@ -73,8 +105,11 @@
           <p id="selectedStatusText">
             กรุณารอสักครู่
           </p>
+
         </div>
+
       </div>
+
     </section>
 
     <!-- ======================
@@ -83,6 +118,7 @@
     <section class="calendar-card">
 
       <div class="calendar-header">
+
         <button
           id="prevMonth"
           class="month-button"
@@ -107,9 +143,11 @@
         >
           ›
         </button>
+
       </div>
 
       <div class="calendar-grid">
+
         <div class="day-label">อา</div>
         <div class="day-label">จ</div>
         <div class="day-label">อ</div>
@@ -122,6 +160,7 @@
           id="calendarDays"
           class="calendar-days"
         ></div>
+
       </div>
 
       <!-- ======================
@@ -131,6 +170,7 @@
         class="legend"
         aria-label="คำอธิบายสถานะคิว"
       >
+
         <div class="legend-item">
           <span class="legend-dot available"></span>
           <span>คิวว่าง</span>
@@ -150,6 +190,7 @@
           <span class="legend-dot closed"></span>
           <span>ร้านปิด</span>
         </div>
+
       </div>
 
       <button
@@ -159,84 +200,89 @@
       >
         กลับมาวันนี้
       </button>
+
     </section>
 
-<!-- ======================
-     CONTACT
-====================== -->
-<section class="contact-card">
-  <div class="contact-header">
-    <div>
-      <h2 class="contact-heading">
-        โทรสอบถามและจองคิว
-      </h2>
+    <!-- ======================
+         CONTACT
+    ====================== -->
+    <section class="contact-card">
 
-      <p class="contact-subtitle">
-        เลือกเบอร์ตามบริการที่ต้องการ
+      <div class="contact-header">
+
+        <h2 class="contact-heading">
+          โทรสอบถามและจองคิว
+        </h2>
+
+        <p class="contact-subtitle">
+          เลือกเบอร์ตามบริการที่ต้องการ
+        </p>
+
+      </div>
+
+      <div class="phone-list">
+
+        <!-- ทำสี / ยืด / บริการอื่น -->
+        <a
+          class="phone-card phone-card-primary"
+          href="tel:0896532396"
+        >
+
+          <span class="phone-card-content">
+
+            <span class="phone-service">
+              ทำสี·ยืด·อื่น ๆ
+            </span>
+
+            <span class="phone-number">
+              089-653-2396
+            </span>
+
+          </span>
+
+          <span class="phone-action">
+            โทร
+          </span>
+
+        </a>
+
+        <!-- ตัดผม -->
+        <a
+          class="phone-card phone-card-secondary"
+          href="tel:0887830304"
+        >
+
+          <span class="phone-card-content">
+
+            <span class="phone-service">
+              ตัดผมชาย·หญิง
+            </span>
+
+            <span class="phone-number">
+              088-783-0304
+            </span>
+
+          </span>
+
+          <span class="phone-action">
+            โทร
+          </span>
+
+        </a>
+
+      </div>
+
+      <p class="notice">
+        ตารางนี้เป็นเพียงภาพรวมของความหนาแน่นคิว
+        เวลาว่างอาจเปลี่ยนแปลงได้
+        กรุณาโทรยืนยันกับทางร้านก่อนเข้ารับบริการ
       </p>
-    </div>
-  </div>
 
-  <div class="phone-actions">
-
-    <a
-      class="phone-button primary-phone"
-      href="tel:0896532396"
-      aria-label="โทรจองคิวทำสี ยืด และบริการอื่น ๆ ที่เบอร์ 089 653 2396"
-    >
-      <span class="phone-icon" aria-hidden="true">
-        ☎
-      </span>
-
-      <span class="phone-content">
-        <span class="phone-service">
-          ทำสี · ยืด · บริการอื่น ๆ
-        </span>
-
-        <span class="phone-number">
-          089-653-2396
-        </span>
-      </span>
-
-      <span class="phone-call-label">
-        โทร
-      </span>
-    </a>
-
-    <a
-      class="phone-button secondary-phone"
-      href="tel:0887830304"
-      aria-label="โทรจองคิวตัดผมชายและหญิง ที่เบอร์ 088 783 0304"
-    >
-      <span class="phone-icon" aria-hidden="true">
-        ☎
-      </span>
-
-      <span class="phone-content">
-        <span class="phone-service">
-          ตัดผมชาย · หญิง
-        </span>
-
-        <span class="phone-number">
-          088-783-0304
-        </span>
-      </span>
-
-      <span class="phone-call-label">
-        โทร
-      </span>
-    </a>
-
-  </div>
-
-  <p class="notice">
-    ตารางนี้เป็นเพียงภาพรวมของความหนาแน่นคิว
-    เวลาว่างอาจเปลี่ยนแปลงได้ กรุณาโทรยืนยันกับทางร้านก่อนเข้ารับบริการ
-  </p>
-</section>
+    </section>
 
   </main>
 
   <script src="queue.js"></script>
+
 </body>
 </html>
