@@ -906,51 +906,122 @@ body.modal-open {
     font-size: 12px;
   }
 }
-/* ==========================================
-   FIX DATE INPUT OVERFLOW
-========================================== */
+/* ======================================================
+   CLOSURE DATE INPUT — FINAL SAFARI WIDTH FIX
+   แก้เฉพาะช่องวันที่ในเมนูจัดการสถานะร้าน
+====================================================== */
 
-#closureOverlay #closureDate{
-    width:100%;
-    max-width:100%;
+/*
+ * บังคับพื้นที่ครอบช่องวันที่ให้หดตาม Modal ได้
+ */
+#closureOverlay .modalBody {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 
-    display:block;
+  box-sizing: border-box;
 
-    box-sizing:border-box;
-
-    margin:0;
-
-    padding:12px 16px;
-}
-#closureOverlay .modalBody{
-    box-sizing:border-box;
+  overflow-x: hidden;
 }
 
-#closureOverlay .modalBody *{
-    box-sizing:border-box;
-}
-/* ===== FIX วันที่เมนูปิดร้าน ไม่ให้ล้น ===== */
+#closureOverlay .modalBody > * {
+  max-width: 100%;
+  min-width: 0;
 
-#closureOverlay input[type="date"]{
-    width:100%;
-    max-width:100%;
-    box-sizing:border-box;
-
-    display:block;
-
-    margin:0;
-    padding:12px 16px;
-
-    overflow:hidden;
+  box-sizing: border-box;
 }
 
-#closureOverlay .modalBody{
-    overflow-x:hidden;
+/*
+ * ป้ายหัวข้อวันที่
+ */
+#closureOverlay .field-label {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+
+  margin-left: 0;
+  margin-right: 0;
+
+  box-sizing: border-box;
 }
 
-#closureOverlay .modalBody *{
-    box-sizing:border-box;
+/*
+ * ช่องวันที่
+ * ใช้ทั้ง width และ inline-size เพื่อแก้ Safari iPhone
+ */
+#closureOverlay #closureDate {
+  display: block;
+
+  width: 100%;
+  inline-size: 100%;
+
+  max-width: 100%;
+  max-inline-size: 100%;
+
+  min-width: 0;
+  min-inline-size: 0;
+
+  margin: 0;
+  padding: 12px 14px;
+
+  box-sizing: border-box;
+
+  font-size: 16px;
+  line-height: 1.4;
+
+  overflow: hidden;
+
+  /*
+   * ห้ามใช้ transform: scale()
+   * เพราะจะย่อเฉพาะภาพ แต่ไม่แก้ขนาด Layout จริง
+   */
+  transform: none;
 }
-#closureOverlay input[type="date"]{
-    transform:scale(.99);
+
+/*
+ * ส่วนข้อความวันที่ภายใน Safari
+ */
+#closureOverlay #closureDate::-webkit-date-and-time-value {
+  min-width: 0;
+  max-width: 100%;
+
+  margin: 0;
+
+  text-align: left;
+}
+
+#closureOverlay #closureDate::-webkit-datetime-edit {
+  min-width: 0;
+  max-width: 100%;
+
+  padding: 0;
+}
+
+#closureOverlay #closureDate::-webkit-datetime-edit-fields-wrapper {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/*
+ * ไอคอนปฏิทินด้านขวา
+ */
+#closureOverlay #closureDate::-webkit-calendar-picker-indicator {
+  flex: 0 0 auto;
+
+  margin: 0 0 0 8px;
+  padding: 2px;
+}
+
+/*
+ * มือถือจอแคบ
+ */
+@media (max-width: 600px) {
+  #closureOverlay #closureDate {
+    width: 100%;
+    inline-size: 100%;
+
+    padding: 11px 12px;
+
+    border-radius: 14px;
+  }
 }
