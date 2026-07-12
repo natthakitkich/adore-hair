@@ -3,11 +3,20 @@ const API = '';
 /* =========================
    ELEMENTS
 ========================= */
-const calendarTitle = document.getElementById('calendarTitle');
-const calendarDaysEl = document.getElementById('calendarDays');
-const prevMonthBtn = document.getElementById('prevMonth');
-const nextMonthBtn = document.getElementById('nextMonth');
-const todayBtn = document.getElementById('todayBtn');
+const calendarTitle =
+  document.getElementById('calendarTitle');
+
+const calendarDaysEl =
+  document.getElementById('calendarDays');
+
+const prevMonthBtn =
+  document.getElementById('prevMonth');
+
+const nextMonthBtn =
+  document.getElementById('nextMonth');
+
+const todayBtn =
+  document.getElementById('todayBtn');
 
 const selectedDateLabel =
   document.getElementById('selectedDateLabel');
@@ -37,41 +46,52 @@ let viewYear = initialDate.getFullYear();
 ========================= */
 const statusContent = {
   /*
-   * available = ไม่มีคิว
-   * แสดงให้ลูกค้าเห็นเป็น "คิวว่าง"
+   * ไม่มีคิว
+   * ลูกค้าเห็นเป็นสถานะคิวว่างสีเขียว
    */
   available: {
     title: 'คิวว่าง',
-    text: 'สามารถโทรสอบถามช่วงเวลาที่สะดวกกับทางร้านได้'
+    text: 'วันนี้ยังไม่มีคิว สามารถโทรสอบถามช่วงเวลาที่สะดวกกับทางร้านได้'
   },
 
   /*
-   * low = มีคิวเล็กน้อย
-   * ใช้หัวข้อและสีเดียวกับ available
-   * แต่คงคำอธิบายที่ต่างกัน
+   * มีคิวเล็กน้อย
+   * ใช้สถานะและสีเดียวกับวันที่ไม่มีคิว
    */
   low: {
     title: 'คิวว่าง',
-    text: 'ยังมีโอกาสเลือกช่วงเวลาได้ กรุณาโทรสอบถามกับทางร้าน'
+    text: 'ยังมีช่วงเวลาให้เลือก กรุณาโทรสอบถามช่วงเวลาว่างกับทางร้าน'
   },
 
+  /*
+   * คิวระดับปานกลาง
+   * ใช้สีส้ม
+   */
   medium: {
     title: 'คิวปานกลาง',
-    text: 'แนะนำให้โทรสอบถามช่วงเวลาว่างก่อนเข้ารับบริการ'
+    text: 'ช่วงเวลาว่างเริ่มมีจำกัด แนะนำให้โทรสอบถามก่อนเข้ารับบริการ'
   },
 
+  /*
+   * คิวแน่น
+   * ใช้สีแดง
+   */
   high: {
     title: 'คิวค่อนข้างแน่น',
-    text: 'กรุณาโทรตรวจสอบช่วงเวลาว่างกับทางร้านก่อนเดินทาง'
+    text: 'คิววันนี้ค่อนข้างแน่น กรุณาโทรตรวจสอบก่อนหรือเลือกวันอื่น'
   },
 
+  /*
+   * ร้านปิด
+   * ใช้สีเทา
+   */
   closed: {
     title: 'ร้านปิด',
-    text: 'กรุณาเลือกวันอื่นเพื่อตรวจสอบความหนาแน่นของคิว'
+    text: 'วันนี้ร้านปิด กรุณาเลือกวันอื่นเพื่อตรวจสอบคิว'
   },
 
   unavailable: {
-    title: 'ยังไม่มีข้อมูลคิว',
+    title: 'ยังไม่สามารถตรวจสอบคิวได้',
     text: 'กรุณาโทรสอบถามกับทางร้านเพื่อยืนยันช่วงเวลาว่าง'
   }
 };
@@ -81,6 +101,7 @@ const statusContent = {
 ========================= */
 async function init() {
   await loadCalendarStatus();
+
   renderCalendar();
   renderSelectedStatus();
 }
@@ -90,16 +111,22 @@ async function init() {
 ========================= */
 async function loadCalendarStatus() {
   try {
-    const res = await fetch(`${API}/public-calendar`);
+    const res = await fetch(
+      `${API}/public-calendar`
+    );
 
     if (!res.ok) {
-      throw new Error('Unable to load public calendar');
+      throw new Error(
+        'Unable to load public calendar'
+      );
     }
 
     const data = await res.json();
 
     calendarStatus =
-      data && typeof data === 'object'
+      data &&
+      typeof data === 'object' &&
+      !Array.isArray(data)
         ? data
         : {};
   } catch (error) {
@@ -124,7 +151,8 @@ function renderCalendar() {
     1
   );
 
-  const startDay = firstDay.getDay();
+  const startDay =
+    firstDay.getDay();
 
   const daysInMonth = new Date(
     viewYear,
@@ -133,13 +161,20 @@ function renderCalendar() {
   ).getDate();
 
   calendarTitle.textContent =
-    firstDay.toLocaleDateString('th-TH', {
-      month: 'long',
-      year: 'numeric'
-    });
+    firstDay.toLocaleDateString(
+      'th-TH',
+      {
+        month: 'long',
+        year: 'numeric'
+      }
+    );
 
   /* ช่องว่างก่อนวันที่ 1 */
-  for (let i = 0; i < startDay; i++) {
+  for (
+    let index = 0;
+    index < startDay;
+    index++
+  ) {
     const blank =
       document.createElement('div');
 
@@ -160,13 +195,26 @@ function renderCalendar() {
       day
     );
 
-    const status = getStatus(date);
+    const status =
+      getStatus(date);
+
+    const visualStatus =
+      getVisualStatus(status);
 
     const button =
       document.createElement('button');
 
     button.type = 'button';
-    button.className = `day ${status}`;
+
+    /*
+     * เก็บ class สถานะจริงไว้
+     * แต่ available กับ low จะใช้ visual เป็น available เหมือนกัน
+     */
+    button.className =
+      `day ${visualStatus}`;
+
+    button.dataset.status =
+      status;
 
     button.setAttribute(
       'aria-label',
@@ -211,10 +259,13 @@ function renderCalendar() {
     calendarDaysEl.appendChild(button);
   }
 
+  const isViewingCurrentMonth =
+    viewMonth === initialDate.getMonth() &&
+    viewYear === initialDate.getFullYear();
+
   todayBtn.classList.toggle(
     'hidden',
-    viewMonth === initialDate.getMonth() &&
-    viewYear === initialDate.getFullYear()
+    isViewingCurrentMonth
   );
 }
 
@@ -222,8 +273,15 @@ function renderCalendar() {
    SELECTED STATUS
 ========================= */
 function renderSelectedStatus() {
-  const status = getStatus(selectedDate);
-  const content = statusContent[status];
+  const status =
+    getStatus(selectedDate);
+
+  const visualStatus =
+    getVisualStatus(status);
+
+  const content =
+    statusContent[status] ||
+    statusContent.unavailable;
 
   selectedDateLabel.textContent =
     formatDisplayDate(selectedDate);
@@ -234,16 +292,6 @@ function renderSelectedStatus() {
   selectedStatusText.textContent =
     content.text;
 
-  /*
-   * available และ low ใช้สีเดียวกัน
-   * จึงเปลี่ยน class ของ low เป็น available
-   * เฉพาะส่วนจุดแสดงสถานะด้านบน
-   */
-  const visualStatus =
-    status === 'low'
-      ? 'available'
-      : status;
-
   selectedStatusDot.className =
     `status-dot ${visualStatus}`;
 }
@@ -252,16 +300,47 @@ function renderSelectedStatus() {
    STATUS
 ========================= */
 function getStatus(date) {
-  if (calendarStatus[date]) {
-    return calendarStatus[date];
+  const status =
+    calendarStatus[date];
+
+  if (
+    status === 'available' ||
+    status === 'low' ||
+    status === 'medium' ||
+    status === 'high' ||
+    status === 'closed'
+  ) {
+    return status;
   }
 
   /*
-   * วันที่ที่ไม่มีข้อมูลจาก API
+   * วันที่ไม่มีข้อมูลจาก API
    * หมายถึงไม่มีคิว
-   * หน้าเว็บลูกค้าจะแสดงเป็นคิวว่าง
    */
   return 'available';
+}
+
+/*
+ * available และ low
+ * ใช้สีและรูปแบบเดียวกัน
+ */
+function getVisualStatus(status) {
+  if (
+    status === 'available' ||
+    status === 'low'
+  ) {
+    return 'available';
+  }
+
+  if (
+    status === 'medium' ||
+    status === 'high' ||
+    status === 'closed'
+  ) {
+    return status;
+  }
+
+  return 'unavailable';
 }
 
 /* =========================
@@ -292,10 +371,14 @@ nextMonthBtn.onclick = () => {
 todayBtn.onclick = () => {
   selectedDate = getTodayTH();
 
-  const today = parseDate(selectedDate);
+  const today =
+    parseDate(selectedDate);
 
-  viewMonth = today.getMonth();
-  viewYear = today.getFullYear();
+  viewMonth =
+    today.getMonth();
+
+  viewYear =
+    today.getFullYear();
 
   renderCalendar();
   renderSelectedStatus();
