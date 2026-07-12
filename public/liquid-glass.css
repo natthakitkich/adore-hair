@@ -907,24 +907,20 @@ body.modal-open {
   }
 }
 /* ======================================================
-   CLOSURE DATE INPUT — FINAL SAFARI WIDTH FIX
+   CLOSURE DATE INPUT — CROSS-BROWSER SAFE FIX
    แก้เฉพาะช่องวันที่ในเมนูจัดการสถานะร้าน
+   ไม่กระทบ Input หรือ Modal ส่วนอื่น
 ====================================================== */
 
 /*
- * บังคับพื้นที่ครอบช่องวันที่ให้หดตาม Modal ได้
+ * พื้นที่ของหัวข้อวันที่และช่องวันที่
+ * ใช้ align-self:stretch แทน width:100%
+ * เพื่อลดปัญหา intrinsic width ของ Safari
  */
-#closureOverlay .modalBody {
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
+#closureOverlay .field-label,
+#closureOverlay #closureDate {
+  align-self: stretch;
 
-  box-sizing: border-box;
-
-  overflow-x: hidden;
-}
-
-#closureOverlay .modalBody > * {
   max-width: 100%;
   min-width: 0;
 
@@ -932,84 +928,141 @@ body.modal-open {
 }
 
 /*
- * ป้ายหัวข้อวันที่
- */
-#closureOverlay .field-label {
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-
-  margin-left: 0;
-  margin-right: 0;
-
-  box-sizing: border-box;
-}
-
-/*
- * ช่องวันที่
- * ใช้ทั้ง width และ inline-size เพื่อแก้ Safari iPhone
+ * ช่องวันที่หลัก
+ *
+ * ไม่ใช้ width:100% เพราะ Native Date Input ของ Safari
+ * อาจคำนวณส่วนควบคุมภายในเกินพื้นที่จริง
  */
 #closureOverlay #closureDate {
   display: block;
 
-  width: 100%;
-  inline-size: 100%;
+  width: auto;
+  inline-size: auto;
 
-  max-width: 100%;
-  max-inline-size: 100%;
-
-  min-width: 0;
-  min-inline-size: 0;
+  height: 52px;
+  min-height: 52px;
 
   margin: 0;
-  padding: 12px 14px;
+  padding: 0 14px;
 
-  box-sizing: border-box;
+  color: var(--text-primary);
+
+  background:
+    rgba(255, 255, 255, 0.18);
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.35);
+
+  border-radius: var(--radius-sm);
+
+  font-family:
+    'Inter',
+    'Noto Sans Thai',
+    -apple-system,
+    BlinkMacSystemFont,
+    'SF Pro Text',
+    'Segoe UI',
+    sans-serif;
 
   font-size: 16px;
-  line-height: 1.4;
-
-  overflow: hidden;
+  font-weight: 500;
+  line-height: normal;
 
   /*
-   * ห้ามใช้ transform: scale()
-   * เพราะจะย่อเฉพาะภาพ แต่ไม่แก้ขนาด Layout จริง
+   * ห้ามซ่อน overflow
+   * เพราะทำให้วันที่ถูกตัดบน Safari macOS
    */
+  overflow: visible;
+
   transform: none;
+
+  /*
+   * คง Native Date Picker เดิมไว้
+   * ระบบ JavaScript และการเลือกวันที่ไม่เปลี่ยน
+   */
+  -webkit-appearance: auto;
+  appearance: auto;
 }
 
 /*
- * ส่วนข้อความวันที่ภายใน Safari
+ * ค่าแสดงวันที่ภายใน Safari / WebKit
+ * รีเซ็ตเฉพาะ spacing ไม่บังคับ width ภายใน
  */
 #closureOverlay #closureDate::-webkit-date-and-time-value {
-  min-width: 0;
-  max-width: 100%;
-
   margin: 0;
+  padding: 0;
 
+  min-height: 50px;
+
+  line-height: 50px;
   text-align: left;
 }
 
 #closureOverlay #closureDate::-webkit-datetime-edit {
-  min-width: 0;
-  max-width: 100%;
-
+  margin: 0;
   padding: 0;
+
+  line-height: normal;
 }
 
 #closureOverlay #closureDate::-webkit-datetime-edit-fields-wrapper {
-  min-width: 0;
-  max-width: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 /*
- * ไอคอนปฏิทินด้านขวา
+ * ไอคอนเปิดปฏิทิน
  */
 #closureOverlay #closureDate::-webkit-calendar-picker-indicator {
-  flex: 0 0 auto;
-
   margin: 0 0 0 8px;
   padding: 2px;
+
+  cursor: pointer;
+}
+
+/*
+ * Safari บน iPhone / iPad
+ *
+ * ใช้ appearance:none เฉพาะอุปกรณ์สัมผัสของ WebKit
+ * เพื่อตัด intrinsic width ที่ทำให้ช่องล้น
+ * การแตะช่องยังเปิด Native Date Picker ตามเดิม
+ */
+@supports (-webkit-touch-callout: none) {
+  #closureOverlay #closureDate {
+    width: auto;
+    inline-size: auto;
+
+    max-width: 100%;
+    min-width: 0;
+
+    height: 52px;
+    min-height: 52px;
+
+    padding:
+      0
+      13px;
+
+    -webkit-appearance: none;
+    appearance: none;
+
+    overflow: hidden;
+  }
+
+  #closureOverlay #closureDate::-webkit-date-and-time-value {
+    display: block;
+
+    width: auto;
+    min-width: 0;
+
+    min-height: 50px;
+
+    margin: 0;
+    padding: 0;
+
+    line-height: 50px;
+    text-align: left;
+  }
 }
 
 /*
@@ -1017,11 +1070,18 @@ body.modal-open {
  */
 @media (max-width: 600px) {
   #closureOverlay #closureDate {
-    width: 100%;
-    inline-size: 100%;
+    height: 50px;
+    min-height: 50px;
 
-    padding: 11px 12px;
+    padding:
+      0
+      12px;
 
     border-radius: 14px;
+  }
+
+  #closureOverlay #closureDate::-webkit-date-and-time-value {
+    min-height: 48px;
+    line-height: 48px;
   }
 }
