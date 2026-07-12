@@ -906,3 +906,26 @@ body.modal-open {
     font-size: 12px;
   }
 }
+/* ==========================================
+   FIX DATE INPUT OVERFLOW
+========================================== */
+
+#closureOverlay #closureDate{
+    width:100%;
+    max-width:100%;
+
+    display:block;
+
+    box-sizing:border-box;
+
+    margin:0;
+
+    padding:12px 16px;
+}
+#closureOverlay .modalBody{
+    box-sizing:border-box;
+}
+
+#closureOverlay .modalBody *{
+    box-sizing:border-box;
+}
