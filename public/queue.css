@@ -2,30 +2,47 @@
   --bg: #080c16;
   --text: #edf3ff;
   --muted: #a7b2cd;
-  --stroke: rgba(255, 255, 255, 0.11);
-  --glass: rgba(255, 255, 255, 0.075);
-  --glass-strong: rgba(255, 255, 255, 0.11);
+
+  --stroke:
+    rgba(255, 255, 255, 0.11);
+
+  --glass:
+    rgba(255, 255, 255, 0.075);
+
+  --glass-strong:
+    rgba(255, 255, 255, 0.11);
 
   --accent: #6ee7ff;
   --accent-2: #a78bfa;
 
   /*
+   * คิวว่าง
    * available และ low ใช้สีเดียวกัน
    */
   --available: #2cff9c;
-  --low: #2cff9c;
-
-  --medium: #ffd166;
 
   /*
-   * คิวแน่นใช้สีส้ม
-   * แยกจากร้านปิดที่เป็นสีแดง
+   * คิวปานกลาง
+   * ใช้สีส้มเพื่อแยกจากสีแดง
    */
-  --high: #ff983f;
-  --closed: #ff5c7a;
+  --medium: #ffad42;
+
+  /*
+   * คิวค่อนข้างแน่น
+   * ใช้สีแดง
+   */
+  --high: #ff536f;
+
+  /*
+   * ร้านปิด
+   * ใช้สีเทา
+   */
+  --closed: #858a9a;
+  --closed-dark: #484d5b;
 
   --shadow:
-    0 24px 70px rgba(0, 0, 0, 0.44);
+    0 24px 70px
+    rgba(0, 0, 0, 0.44);
 }
 
 /* =========================
@@ -67,7 +84,8 @@ body {
 
 button,
 a {
-  -webkit-tap-highlight-color: transparent;
+  -webkit-tap-highlight-color:
+    transparent;
 }
 
 button {
@@ -84,7 +102,11 @@ button {
 .queue-page {
   width: min(680px, 100%);
   margin: 0 auto;
-  padding: 28px 18px 48px;
+
+  padding:
+    28px
+    18px
+    48px;
 }
 
 /* =========================
@@ -92,36 +114,50 @@ button {
 ========================= */
 .queue-header {
   display: grid;
-  grid-template-columns: 66px 1fr;
+
+  grid-template-columns:
+    66px
+    1fr;
+
   gap: 16px;
+
   align-items: center;
+
   margin-bottom: 20px;
 }
 
 .brand-mark {
   width: 66px;
   height: 66px;
+
   border-radius: 50%;
   overflow: hidden;
 
   border:
-    1px solid rgba(255, 255, 255, 0.25);
+    1px solid
+    rgba(255, 255, 255, 0.25);
 
   box-shadow:
-    0 12px 30px rgba(0, 0, 0, 0.35);
+    0 12px 30px
+    rgba(0, 0, 0, 0.35);
 }
 
 .brand-mark img {
   width: 100%;
   height: 100%;
+
   object-fit: cover;
 }
 
 .eyebrow {
-  margin: 0 0 5px;
+  margin:
+    0
+    0
+    5px;
 
   font-size: 11px;
   font-weight: 700;
+
   letter-spacing: 0.15em;
 
   color:
@@ -138,15 +174,19 @@ h1 {
 }
 
 .intro {
-  margin: 8px 0 0;
+  margin:
+    8px
+    0
+    0;
 
   color: var(--muted);
+
   font-size: 14px;
   line-height: 1.65;
 }
 
 /* =========================
-   GLASS CARDS
+   CARDS
 ========================= */
 .status-card,
 .calendar-card,
@@ -155,11 +195,13 @@ h1 {
   padding: 20px;
 
   border:
-    1px solid var(--stroke);
+    1px solid
+    var(--stroke);
 
   border-radius: 24px;
 
-  background: var(--glass);
+  background:
+    var(--glass);
 
   backdrop-filter:
     blur(26px)
@@ -179,7 +221,10 @@ h1 {
    SELECTED STATUS
 ========================= */
 .selected-date {
-  margin: 0 0 12px;
+  margin:
+    0
+    0
+    12px;
 
   color: var(--muted);
 
@@ -189,14 +234,17 @@ h1 {
 
 .status-line {
   display: flex;
-  gap: 13px;
   align-items: center;
+
+  gap: 13px;
 }
 
 .status-dot,
 .legend-dot {
   display: inline-block;
+
   flex: 0 0 auto;
+
   border-radius: 50%;
 }
 
@@ -209,30 +257,44 @@ h1 {
     rgba(255, 255, 255, 0.045);
 }
 
-/*
- * available และ low
- * ใช้สีเขียวเดียวกัน
- */
 .status-dot.available,
-.status-dot.low,
-.legend-dot.available,
-.legend-dot.low {
-  background: var(--available);
+.legend-dot.available {
+  background:
+    var(--available);
+
+  box-shadow:
+    0 0 9px
+    rgba(44, 255, 156, 0.45);
 }
 
 .status-dot.medium,
 .legend-dot.medium {
-  background: var(--medium);
+  background:
+    var(--medium);
+
+  box-shadow:
+    0 0 9px
+    rgba(255, 173, 66, 0.48);
 }
 
 .status-dot.high,
 .legend-dot.high {
-  background: var(--high);
+  background:
+    var(--high);
+
+  box-shadow:
+    0 0 9px
+    rgba(255, 83, 111, 0.52);
 }
 
 .status-dot.closed,
 .legend-dot.closed {
-  background: var(--closed);
+  background:
+    var(--closed);
+
+  box-shadow:
+    0 0 7px
+    rgba(133, 138, 154, 0.38);
 }
 
 .status-dot.unavailable,
@@ -242,11 +304,15 @@ h1 {
 
 .status-line h2 {
   margin: 0;
+
   font-size: 20px;
 }
 
 .status-line p {
-  margin: 4px 0 0;
+  margin:
+    4px
+    0
+    0;
 
   color: var(--muted);
 
@@ -259,6 +325,7 @@ h1 {
 ========================= */
 .calendar-header {
   display: flex;
+
   align-items: center;
   justify-content: space-between;
 
@@ -273,10 +340,12 @@ h1 {
 .month-button {
   width: 42px;
   height: 42px;
+
   padding: 0;
 
   border:
-    1px solid var(--stroke);
+    1px solid
+    var(--stroke);
 
   border-radius: 14px;
 
@@ -302,7 +371,10 @@ h1 {
   display: grid;
 
   grid-template-columns:
-    repeat(7, minmax(0, 1fr));
+    repeat(
+      7,
+      minmax(0, 1fr)
+    );
 
   gap: 9px;
 }
@@ -322,6 +394,8 @@ h1 {
 
 .day,
 .day-blank {
+  min-width: 0;
+
   aspect-ratio: 1 / 1;
 }
 
@@ -333,16 +407,20 @@ h1 {
 
   display: flex;
   flex-direction: column;
+
   align-items: center;
   justify-content: center;
 
   gap: 4px;
 
+  width: 100%;
   min-width: 0;
+
   padding: 0;
 
   border:
-    1px solid var(--stroke);
+    1px solid
+    var(--stroke);
 
   border-radius: 50%;
 
@@ -352,6 +430,12 @@ h1 {
     rgba(255, 255, 255, 0.045);
 
   cursor: pointer;
+
+  box-shadow:
+    inset 0 0 0 1px
+    rgba(255, 255, 255, 0.035),
+    0 5px 15px
+    rgba(0, 0, 0, 0.28);
 
   transition:
     transform 0.15s ease,
@@ -364,7 +448,8 @@ h1 {
 
 .day.selected {
   box-shadow:
-    0 0 0 2px var(--accent),
+    0 0 0 2px
+    var(--accent),
     0 0 24px
     rgba(110, 231, 255, 0.28);
 }
@@ -378,106 +463,157 @@ h1 {
 .density-mark {
   width: 6px;
   height: 6px;
+
   border-radius: 50%;
 }
 
 /* =========================
-   AVAILABLE / LOW
-   สีและพื้นหลังเดียวกัน
+   AVAILABLE
+   ไม่มีคิวและคิวน้อย
 ========================= */
-.day.available,
-.day.low {
-  color: var(--available);
-
-  background:
-    rgba(44, 255, 156, 0.12);
-
-  border-color:
-    rgba(44, 255, 156, 0.25);
-}
-
-.day.available .density-mark,
-.day.low .density-mark {
-  background: var(--available);
-}
-
-/* =========================
-   MEDIUM
-========================= */
-.day.medium {
-  color: var(--medium);
-
-  background:
-    rgba(255, 209, 102, 0.13);
-
-  border-color:
-    rgba(255, 209, 102, 0.25);
-}
-
-.day.medium .density-mark {
-  background: var(--medium);
-}
-
-/* =========================
-   HIGH
-   สีส้ม แยกจากร้านปิด
-========================= */
-.day.high {
-  color: var(--high);
-
-  background:
-    rgba(255, 152, 63, 0.15);
-
-  border-color:
-    rgba(255, 152, 63, 0.32);
-}
-
-.day.high .density-mark {
-  background: var(--high);
-}
-
-/* =========================
-   CLOSED
-   วงกลมสีแดง
-========================= */
-.day.closed {
-  gap: 2px;
-
-  color: #ffdbe1;
+.day.available {
+  color:
+    var(--available);
 
   background:
     linear-gradient(
       180deg,
-      rgba(255, 92, 122, 0.34),
-      rgba(125, 28, 52, 0.38)
+      rgba(44, 255, 156, 0.18),
+      rgba(19, 109, 72, 0.15)
     );
 
-  border:
-    1px solid
-    rgba(255, 92, 122, 0.7);
+  border-color:
+    rgba(44, 255, 156, 0.38);
+}
+
+.day.available .density-mark {
+  background:
+    var(--available);
+
+  box-shadow:
+    0 0 8px
+    rgba(44, 255, 156, 0.5);
+}
+
+/* =========================
+   MEDIUM
+   สีส้ม
+========================= */
+.day.medium {
+  color:
+    #ffd39b;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 173, 66, 0.26),
+      rgba(117, 62, 17, 0.24)
+    );
+
+  border-color:
+    rgba(255, 173, 66, 0.62);
 
   box-shadow:
     inset 0 0 0 1px
-    rgba(255, 255, 255, 0.07),
+    rgba(255, 255, 255, 0.055),
     0 6px 18px
-    rgba(0, 0, 0, 0.4);
+    rgba(0, 0, 0, 0.34);
+}
+
+.day.medium .density-mark {
+  background:
+    var(--medium);
+
+  box-shadow:
+    0 0 9px
+    rgba(255, 173, 66, 0.58);
+}
+
+/* =========================
+   HIGH
+   สีแดง
+========================= */
+.day.high {
+  color:
+    #ffd6dd;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 83, 111, 0.34),
+      rgba(117, 24, 45, 0.34)
+    );
+
+  border-color:
+    rgba(255, 83, 111, 0.72);
+
+  box-shadow:
+    inset 0 0 0 1px
+    rgba(255, 255, 255, 0.065),
+    0 6px 18px
+    rgba(0, 0, 0, 0.38);
+}
+
+.day.high .density-mark {
+  width: 7px;
+  height: 7px;
+
+  background:
+    var(--high);
+
+  box-shadow:
+    0 0 10px
+    rgba(255, 83, 111, 0.65);
+}
+
+/* =========================
+   CLOSED
+   สีเทา
+========================= */
+.day.closed {
+  gap: 2px;
+
+  color:
+    #e3e5eb;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(133, 138, 154, 0.32),
+      rgba(72, 77, 91, 0.42)
+    );
+
+  border-color:
+    rgba(165, 170, 185, 0.54);
+
+  box-shadow:
+    inset 0 0 0 1px
+    rgba(255, 255, 255, 0.055),
+    0 6px 18px
+    rgba(0, 0, 0, 0.38);
+
+  filter:
+    saturate(0.35);
 }
 
 .day.closed.selected {
   box-shadow:
-    0 0 0 2px var(--accent),
+    0 0 0 2px
+    var(--accent),
     0 0 24px
-    rgba(110, 231, 255, 0.3),
+    rgba(110, 231, 255, 0.28),
     inset 0 0 0 1px
-    rgba(255, 92, 122, 0.45);
+    rgba(255, 255, 255, 0.08);
 }
 
 .closed-label {
-  color: #ffffff;
+  color:
+    #ffffff;
 
   font-size: 8px;
   font-weight: 900;
   line-height: 1;
+
   letter-spacing: 0.04em;
 }
 
@@ -488,9 +624,14 @@ h1 {
   display: grid;
 
   grid-template-columns:
-    repeat(2, minmax(0, 1fr));
+    repeat(
+      2,
+      minmax(0, 1fr)
+    );
 
-  gap: 9px 14px;
+  gap:
+    10px
+    14px;
 
   margin-top: 18px;
 
@@ -499,15 +640,19 @@ h1 {
   font-size: 12px;
 }
 
-.legend > div {
+.legend-item {
   display: flex;
+
   align-items: center;
+
   gap: 7px;
+
+  min-width: 0;
 }
 
 .legend-dot {
-  width: 9px;
-  height: 9px;
+  width: 10px;
+  height: 10px;
 }
 
 /* =========================
@@ -515,13 +660,21 @@ h1 {
 ========================= */
 .today-button {
   display: block;
+
   width: fit-content;
 
-  margin: 18px auto 0;
-  padding: 8px 13px;
+  margin:
+    18px
+    auto
+    0;
+
+  padding:
+    8px
+    13px;
 
   border:
-    1px solid var(--stroke);
+    1px solid
+    var(--stroke);
 
   border-radius: 999px;
 
@@ -540,7 +693,10 @@ h1 {
    CONTACT
 ========================= */
 .contact-heading {
-  margin: 0 0 13px;
+  margin:
+    0
+    0
+    13px;
 
   font-size: 17px;
   font-weight: 700;
@@ -550,21 +706,27 @@ h1 {
   display: grid;
 
   grid-template-columns:
-    1fr 1fr;
+    1fr
+    1fr;
 
   gap: 11px;
 }
 
 .phone-button {
   display: flex;
+
   align-items: center;
   justify-content: center;
 
   min-height: 48px;
-  padding: 12px 14px;
+
+  padding:
+    12px
+    14px;
 
   border:
-    1px solid var(--stroke);
+    1px solid
+    var(--stroke);
 
   border-radius: 16px;
 
@@ -581,6 +743,7 @@ h1 {
 
 .primary-phone {
   color: #07101d;
+
   border: none;
 
   background:
@@ -592,7 +755,10 @@ h1 {
 }
 
 .notice {
-  margin: 14px 0 0;
+  margin:
+    14px
+    0
+    0;
 
   color: var(--muted);
 
@@ -606,110 +772,10 @@ h1 {
 @media (max-width: 520px) {
   .queue-page {
     padding:
-      20px 14px 38px;
+      20px
+      14px
+      38px;
   }
 
   .queue-header {
     grid-template-columns:
-      56px 1fr;
-
-    gap: 13px;
-  }
-
-  .brand-mark {
-    width: 56px;
-    height: 56px;
-  }
-
-  .status-card,
-  .calendar-card,
-  .contact-card {
-    padding: 17px;
-    border-radius: 21px;
-  }
-
-  .calendar-grid {
-    gap: 7px;
-  }
-
-  .day-number {
-    font-size: 13px;
-  }
-
-  .closed-label {
-    font-size: 7px;
-  }
-
-  .phone-actions {
-    grid-template-columns: 1fr;
-  }
-}
-/* ======================================================
-   CLOSURE DATE INPUT — MOBILE WIDTH FIX
-   ป้องกันช่องวันที่ล้นขอบซ้ายขวา
-====================================================== */
-
-#closureOverlay .modalBody > .field-label {
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  margin-left: 0;
-  margin-right: 0;
-}
-
-#closureOverlay #closureDate {
-  display: block;
-
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-
-  margin: 0;
-  padding: 12px 14px;
-
-  box-sizing: border-box;
-
-  -webkit-appearance: none;
-  appearance: none;
-}
-
-/*
- * Safari มีส่วนแสดงวันที่ภายในที่อาจดันความกว้าง
- */
-#closureOverlay #closureDate::-webkit-date-and-time-value {
-  min-width: 0;
-  text-align: left;
-}
-
-#closureOverlay #closureDate::-webkit-datetime-edit {
-  min-width: 0;
-  padding: 0;
-}
-
-#closureOverlay #closureDate::-webkit-datetime-edit-fields-wrapper {
-  min-width: 0;
-}
-
-#closureOverlay #closureDate::-webkit-calendar-picker-indicator {
-  flex: 0 0 auto;
-  margin-left: auto;
-}
-
-/*
- * ป้องกันทุก element ลูกของ modalBody
- * ขยายกว้างเกินพื้นที่จริง
- */
-#closureOverlay .modalBody > * {
-  max-width: 100%;
-  min-width: 0;
-}
-
-/*
- * มือถือจอแคบ ลด padding ช่องวันที่เล็กน้อย
- */
-@media (max-width: 420px) {
-  #closureOverlay #closureDate {
-    padding: 11px 12px;
-    font-size: 16px;
-  }
-}
