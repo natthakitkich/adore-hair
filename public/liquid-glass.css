@@ -578,3 +578,331 @@ body.modal-open {
     font-size: 13px;
   }
 }
+/* ======================================================
+   CLOSURE MODAL — MOBILE OVERFLOW FIX
+   ป้องกันเมนูจัดการวันปิดร้านล้นจอ
+   เพิ่มส่วนนี้ไว้ท้ายสุดของ liquid-glass.css
+====================================================== */
+
+/*
+ * จำกัดกล่อง Modal ให้อยู่ภายในพื้นที่หน้าจอจริง
+ * ใช้ dvh เพื่อรองรับแถบ Address Bar ของ Safari / Chrome Mobile
+ */
+#closureOverlay {
+  padding:
+    max(12px, env(safe-area-inset-top))
+    12px
+    max(12px, env(safe-area-inset-bottom));
+
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+}
+
+/*
+ * กล่อง Modal ต้องไม่สูงเกินหน้าจอ
+ * และไม่ให้ตัว Modal ทั้งกล่องเลื่อน
+ * เพราะเราจะให้เฉพาะ modalBody เป็นส่วนที่เลื่อน
+ */
+#closureOverlay .modal {
+  width: min(430px, 100%);
+  max-width: 100%;
+
+  height: auto;
+  max-height: calc(
+    100dvh -
+    max(24px, env(safe-area-inset-top)) -
+    max(24px, env(safe-area-inset-bottom))
+  );
+
+  min-height: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+}
+
+/*
+ * จุดสำคัญ:
+ * min-height: 0 ทำให้ลูกของ Flexbox หดลงได้
+ * และ overflow-y: auto ทำให้เลื่อนบนมือถือได้จริง
+ */
+#closureOverlay .modalBody {
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+
+  flex: 1 1 auto;
+
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+
+  align-items: stretch;
+  text-align: left;
+
+  padding:
+    20px
+    20px
+    calc(20px + env(safe-area-inset-bottom));
+}
+
+/*
+ * จัดหัวข้อให้อยู่กึ่งกลาง
+ * แต่เนื้อหาภายใน Section ยังอ่านง่ายแบบชิดซ้าย
+ */
+#closureOverlay .modalBody > h2,
+#closureOverlay .closure-help {
+  text-align: center;
+}
+
+#closureOverlay .modalBody > h2 {
+  flex: 0 0 auto;
+  margin:
+    0
+    0
+    4px;
+}
+
+#closureOverlay .closure-help {
+  flex: 0 0 auto;
+
+  width: 100%;
+
+  margin:
+    0
+    0
+    2px;
+
+  line-height: 1.45;
+}
+
+/*
+ * ป้องกันข้อความยาวดันกล่องออกด้านข้าง
+ */
+#closureOverlay .closure-section,
+#closureOverlay .closure-section-header,
+#closureOverlay .closure-section-title,
+#closureOverlay .closure-section-description,
+#closureOverlay .closure-status {
+  min-width: 0;
+  max-width: 100%;
+
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/*
+ * ลดระยะภายในแต่ละ Section
+ * เพื่อให้ข้อมูลไม่แน่นและไม่กินความสูงเกินไป
+ */
+#closureOverlay .closure-section {
+  flex: 0 0 auto;
+
+  padding: 14px;
+  margin: 0;
+
+  border-radius: 18px;
+}
+
+#closureOverlay .closure-section-header {
+  margin-bottom: 10px;
+}
+
+#closureOverlay .closure-section-title {
+  margin-bottom: 4px;
+
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+#closureOverlay .closure-section-description {
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+#closureOverlay .closure-status {
+  margin-bottom: 10px;
+  padding: 10px 12px;
+
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+/*
+ * ปุ่มควบคุมลดความสูงลงเล็กน้อย
+ * แต่ยังมีพื้นที่กดมากพอบนมือถือ
+ */
+#closureOverlay #toggleClosureBtn,
+#closureOverlay #togglePublicClosureBtn {
+  width: 100%;
+  min-height: 44px;
+
+  padding: 11px 13px;
+
+  font-size: 13px;
+  line-height: 1.35;
+
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/*
+ * ปุ่มปิดจะติดอยู่ด้านล่างของพื้นที่เลื่อน
+ * ทำให้กดออกได้ตลอด แม้เนื้อหาจะยาว
+ */
+#closureOverlay #closeClosure {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+
+  flex: 0 0 auto;
+
+  width: 100%;
+  min-height: 44px;
+
+  margin-top: 2px;
+  padding: 11px 14px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(30, 36, 55, 0.96),
+      rgba(16, 20, 34, 0.98)
+    );
+
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.18);
+
+  box-shadow:
+    0 -12px 24px
+    rgba(5, 8, 15, 0.48),
+    inset 0 1px 0
+    rgba(255, 255, 255, 0.12);
+}
+
+/*
+ * หน้าจอมือถือทั่วไป
+ */
+@media (max-width: 600px) {
+  #closureOverlay {
+    padding:
+      max(8px, env(safe-area-inset-top))
+      10px
+      max(8px, env(safe-area-inset-bottom));
+  }
+
+  #closureOverlay .modal {
+    width: 100%;
+
+    max-height: calc(
+      100dvh -
+      max(16px, env(safe-area-inset-top)) -
+      max(16px, env(safe-area-inset-bottom))
+    );
+
+    border-radius: 22px;
+  }
+
+  #closureOverlay .modalBody {
+    gap: 12px;
+
+    padding:
+      16px
+      15px
+      calc(16px + env(safe-area-inset-bottom));
+  }
+
+  #closureOverlay .closure-section {
+    padding: 13px;
+    border-radius: 16px;
+  }
+
+  #closureOverlay .closure-section-description {
+    font-size: 11px;
+  }
+}
+
+/*
+ * มือถือหน้าจอเตี้ย เช่น เปิดแนวนอน
+ * หรือมี Keyboard / Browser Bar กินพื้นที่มาก
+ */
+@media (max-height: 700px) {
+  #closureOverlay {
+    align-items: flex-start;
+  }
+
+  #closureOverlay .modalBody {
+    gap: 10px;
+
+    padding-top: 13px;
+    padding-bottom:
+      calc(13px + env(safe-area-inset-bottom));
+  }
+
+  #closureOverlay .modalBody > h2 {
+    font-size: 1.05rem;
+  }
+
+  #closureOverlay .closure-help {
+    font-size: 11px;
+    line-height: 1.35;
+  }
+
+  #closureOverlay .closure-section {
+    padding: 11px;
+  }
+
+  #closureOverlay .closure-section-header {
+    margin-bottom: 8px;
+  }
+
+  #closureOverlay .closure-status {
+    padding: 9px 10px;
+    margin-bottom: 8px;
+  }
+
+  #closureOverlay #toggleClosureBtn,
+  #closureOverlay #togglePublicClosureBtn,
+  #closureOverlay #closeClosure {
+    min-height: 40px;
+    padding: 9px 11px;
+  }
+}
+
+/*
+ * มือถือจอแคบมาก
+ */
+@media (max-width: 370px) {
+  #closureOverlay .modalBody {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  #closureOverlay .closure-section {
+    padding: 10px;
+  }
+
+  #closureOverlay .closure-section-title {
+    font-size: 13px;
+  }
+
+  #closureOverlay .closure-section-description {
+    font-size: 10.5px;
+  }
+
+  #closureOverlay .closure-status,
+  #closureOverlay #toggleClosureBtn,
+  #closureOverlay #togglePublicClosureBtn {
+    font-size: 12px;
+  }
+}
