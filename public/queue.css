@@ -644,3 +644,72 @@ h1 {
     grid-template-columns: 1fr;
   }
 }
+/* ======================================================
+   CLOSURE DATE INPUT — MOBILE WIDTH FIX
+   ป้องกันช่องวันที่ล้นขอบซ้ายขวา
+====================================================== */
+
+#closureOverlay .modalBody > .field-label {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+#closureOverlay #closureDate {
+  display: block;
+
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+
+  margin: 0;
+  padding: 12px 14px;
+
+  box-sizing: border-box;
+
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/*
+ * Safari มีส่วนแสดงวันที่ภายในที่อาจดันความกว้าง
+ */
+#closureOverlay #closureDate::-webkit-date-and-time-value {
+  min-width: 0;
+  text-align: left;
+}
+
+#closureOverlay #closureDate::-webkit-datetime-edit {
+  min-width: 0;
+  padding: 0;
+}
+
+#closureOverlay #closureDate::-webkit-datetime-edit-fields-wrapper {
+  min-width: 0;
+}
+
+#closureOverlay #closureDate::-webkit-calendar-picker-indicator {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+/*
+ * ป้องกันทุก element ลูกของ modalBody
+ * ขยายกว้างเกินพื้นที่จริง
+ */
+#closureOverlay .modalBody > * {
+  max-width: 100%;
+  min-width: 0;
+}
+
+/*
+ * มือถือจอแคบ ลด padding ช่องวันที่เล็กน้อย
+ */
+@media (max-width: 420px) {
+  #closureOverlay #closureDate {
+    padding: 11px 12px;
+    font-size: 16px;
+  }
+}
