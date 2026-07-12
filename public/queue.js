@@ -1,29 +1,55 @@
 const API = '';
 
+/* =========================
+   ELEMENTS
+========================= */
 const calendarTitle = document.getElementById('calendarTitle');
 const calendarDaysEl = document.getElementById('calendarDays');
 const prevMonthBtn = document.getElementById('prevMonth');
 const nextMonthBtn = document.getElementById('nextMonth');
 const todayBtn = document.getElementById('todayBtn');
 
-const selectedDateLabel = document.getElementById('selectedDateLabel');
-const selectedStatusDot = document.getElementById('selectedStatusDot');
-const selectedStatusTitle = document.getElementById('selectedStatusTitle');
-const selectedStatusText = document.getElementById('selectedStatusText');
+const selectedDateLabel =
+  document.getElementById('selectedDateLabel');
 
+const selectedStatusDot =
+  document.getElementById('selectedStatusDot');
+
+const selectedStatusTitle =
+  document.getElementById('selectedStatusTitle');
+
+const selectedStatusText =
+  document.getElementById('selectedStatusText');
+
+/* =========================
+   STATE
+========================= */
 let calendarStatus = {};
 let selectedDate = getTodayTH();
 
 const initialDate = parseDate(selectedDate);
+
 let viewMonth = initialDate.getMonth();
 let viewYear = initialDate.getFullYear();
 
+/* =========================
+   STATUS CONTENT
+========================= */
 const statusContent = {
+  /*
+   * available = ไม่มีคิว
+   * แสดงให้ลูกค้าเห็นเป็น "คิวว่าง"
+   */
   available: {
-    title: 'วันนี้ยังไม่มีคิว',
-    text: 'สามารถโทรสอบถามช่วงเวลาที่สะดวกกับทางร้านหรือสามารถ Walk-in ได้'
+    title: 'คิวว่าง',
+    text: 'สามารถโทรสอบถามช่วงเวลาที่สะดวกกับทางร้านได้'
   },
 
+  /*
+   * low = มีคิวเล็กน้อย
+   * ใช้หัวข้อและสีเดียวกับ available
+   * แต่คงคำอธิบายที่ต่างกัน
+   */
   low: {
     title: 'คิวว่าง',
     text: 'ยังมีโอกาสเลือกช่วงเวลาได้ กรุณาโทรสอบถามกับทางร้าน'
@@ -36,7 +62,7 @@ const statusContent = {
 
   high: {
     title: 'คิวค่อนข้างแน่น',
-    text: 'กรุณาโทรตรวจสอบช่วงเวลาว่างกับทางร้านก่อน ไม่แนะนำให้ Walk-in'
+    text: 'กรุณาโทรตรวจสอบช่วงเวลาว่างกับทางร้านก่อนเดินทาง'
   },
 
   closed: {
@@ -50,12 +76,18 @@ const statusContent = {
   }
 };
 
+/* =========================
+   INIT
+========================= */
 async function init() {
   await loadCalendarStatus();
   renderCalendar();
   renderSelectedStatus();
 }
 
+/* =========================
+   LOAD PUBLIC CALENDAR
+========================= */
 async function loadCalendarStatus() {
   try {
     const res = await fetch(`${API}/public-calendar`);
@@ -71,16 +103,29 @@ async function loadCalendarStatus() {
         ? data
         : {};
   } catch (error) {
-    console.error('[PublicQueue] Load error', error);
+    console.error(
+      '[PublicQueue] Load error',
+      error
+    );
+
     calendarStatus = {};
   }
 }
 
+/* =========================
+   CALENDAR
+========================= */
 function renderCalendar() {
   calendarDaysEl.innerHTML = '';
 
-  const firstDay = new Date(viewYear, viewMonth, 1);
+  const firstDay = new Date(
+    viewYear,
+    viewMonth,
+    1
+  );
+
   const startDay = firstDay.getDay();
+
   const daysInMonth = new Date(
     viewYear,
     viewMonth + 1,
@@ -93,13 +138,22 @@ function renderCalendar() {
       year: 'numeric'
     });
 
+  /* ช่องว่างก่อนวันที่ 1 */
   for (let i = 0; i < startDay; i++) {
-    const blank = document.createElement('div');
+    const blank =
+      document.createElement('div');
+
     blank.className = 'day-blank';
+
     calendarDaysEl.appendChild(blank);
   }
 
-  for (let day = 1; day <= daysInMonth; day++) {
+  /* วันที่ในเดือน */
+  for (
+    let day = 1;
+    day <= daysInMonth;
+    day++
+  ) {
     const date = formatDate(
       viewYear,
       viewMonth + 1,
@@ -108,14 +162,16 @@ function renderCalendar() {
 
     const status = getStatus(date);
 
-    const button = document.createElement('button');
+    const button =
+      document.createElement('button');
 
     button.type = 'button';
     button.className = `day ${status}`;
 
     button.setAttribute(
       'aria-label',
-      `${formatDisplayDate(date)} ${statusContent[status].title}`
+      `${formatDisplayDate(date)} ` +
+      `${statusContent[status].title}`
     );
 
     if (date === selectedDate) {
@@ -124,12 +180,24 @@ function renderCalendar() {
 
     if (status === 'closed') {
       button.innerHTML = `
-        <span class="day-number">${day}</span>
-        <span class="closed-label">ปิด</span>
+        <span class="day-number">
+          ${day}
+        </span>
+
+        <span class="closed-label">
+          ปิด
+        </span>
       `;
     } else {
       button.innerHTML = `
-        <span class="day-number">${day}</span>
+        <span class="day-number">
+          ${day}
+        </span>
+
+        <span
+          class="density-mark"
+          aria-hidden="true"
+        ></span>
       `;
     }
 
@@ -150,6 +218,9 @@ function renderCalendar() {
   );
 }
 
+/* =========================
+   SELECTED STATUS
+========================= */
 function renderSelectedStatus() {
   const status = getStatus(selectedDate);
   const content = statusContent[status];
@@ -163,18 +234,39 @@ function renderSelectedStatus() {
   selectedStatusText.textContent =
     content.text;
 
+  /*
+   * available และ low ใช้สีเดียวกัน
+   * จึงเปลี่ยน class ของ low เป็น available
+   * เฉพาะส่วนจุดแสดงสถานะด้านบน
+   */
+  const visualStatus =
+    status === 'low'
+      ? 'available'
+      : status;
+
   selectedStatusDot.className =
-    `status-dot ${status}`;
+    `status-dot ${visualStatus}`;
 }
 
+/* =========================
+   STATUS
+========================= */
 function getStatus(date) {
   if (calendarStatus[date]) {
     return calendarStatus[date];
   }
 
+  /*
+   * วันที่ที่ไม่มีข้อมูลจาก API
+   * หมายถึงไม่มีคิว
+   * หน้าเว็บลูกค้าจะแสดงเป็นคิวว่าง
+   */
   return 'available';
 }
 
+/* =========================
+   MONTH NAVIGATION
+========================= */
 prevMonthBtn.onclick = () => {
   viewMonth--;
 
@@ -209,15 +301,26 @@ todayBtn.onclick = () => {
   renderSelectedStatus();
 };
 
+/* =========================
+   UTIL
+========================= */
 function getTodayTH() {
-  return new Date().toLocaleDateString('sv-SE', {
-    timeZone: 'Asia/Bangkok'
-  });
+  return new Date().toLocaleDateString(
+    'sv-SE',
+    {
+      timeZone: 'Asia/Bangkok'
+    }
+  );
 }
 
 function parseDate(dateString) {
-  const [year, month, day] =
-    dateString.split('-').map(Number);
+  const [
+    year,
+    month,
+    day
+  ] = dateString
+    .split('-')
+    .map(Number);
 
   return new Date(
     year,
@@ -226,7 +329,11 @@ function parseDate(dateString) {
   );
 }
 
-function formatDate(year, month, day) {
+function formatDate(
+  year,
+  month,
+  day
+) {
   return (
     `${year}-` +
     `${String(month).padStart(2, '0')}-` +
@@ -235,15 +342,16 @@ function formatDate(year, month, day) {
 }
 
 function formatDisplayDate(dateString) {
-  return parseDate(dateString).toLocaleDateString(
-    'th-TH',
-    {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    }
-  );
+  return parseDate(dateString)
+    .toLocaleDateString(
+      'th-TH',
+      {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      }
+    );
 }
 
 init();
