@@ -9,16 +9,28 @@
   --accent: #6ee7ff;
   --accent-2: #a78bfa;
 
-  --available: #6ee7ff;
+  /*
+   * available และ low ใช้สีเดียวกัน
+   */
+  --available: #2cff9c;
   --low: #2cff9c;
+
   --medium: #ffd166;
-  --high: #ff5c7a;
+
+  /*
+   * คิวแน่นใช้สีส้ม
+   * แยกจากร้านปิดที่เป็นสีแดง
+   */
+  --high: #ff983f;
   --closed: #ff5c7a;
 
   --shadow:
     0 24px 70px rgba(0, 0, 0, 0.44);
 }
 
+/* =========================
+   GLOBAL
+========================= */
 * {
   box-sizing: border-box;
 }
@@ -62,6 +74,13 @@ button {
   font: inherit;
 }
 
+.hidden {
+  display: none !important;
+}
+
+/* =========================
+   PAGE
+========================= */
 .queue-page {
   width: min(680px, 100%);
   margin: 0 auto;
@@ -71,7 +90,6 @@ button {
 /* =========================
    HEADER
 ========================= */
-
 .queue-header {
   display: grid;
   grid-template-columns: 66px 1fr;
@@ -130,7 +148,6 @@ h1 {
 /* =========================
    GLASS CARDS
 ========================= */
-
 .status-card,
 .calendar-card,
 .contact-card {
@@ -161,11 +178,11 @@ h1 {
 /* =========================
    SELECTED STATUS
 ========================= */
-
 .selected-date {
   margin: 0 0 12px;
 
   color: var(--muted);
+
   font-size: 13px;
   font-weight: 600;
 }
@@ -192,14 +209,15 @@ h1 {
     rgba(255, 255, 255, 0.045);
 }
 
+/*
+ * available และ low
+ * ใช้สีเขียวเดียวกัน
+ */
 .status-dot.available,
-.legend-dot.available {
-  background: var(--available);
-}
-
 .status-dot.low,
+.legend-dot.available,
 .legend-dot.low {
-  background: var(--low);
+  background: var(--available);
 }
 
 .status-dot.medium,
@@ -231,20 +249,14 @@ h1 {
   margin: 4px 0 0;
 
   color: var(--muted);
+
   font-size: 14px;
   line-height: 1.55;
 }
 
 /* =========================
-   CALENDAR
+   CALENDAR HEADER
 ========================= */
-
-.calendar-shell {
-  max-width: 360px;
-  margin: 0 auto;
-  padding: 4px;
-}
-
 .calendar-header {
   display: flex;
   align-items: center;
@@ -283,16 +295,16 @@ h1 {
   transform: scale(0.95);
 }
 
+/* =========================
+   CALENDAR GRID
+========================= */
 .calendar-grid {
   display: grid;
 
   grid-template-columns:
     repeat(7, minmax(0, 1fr));
 
-  justify-content: center;
-  gap: 12px;
-
-  text-align: center;
+  gap: 9px;
 }
 
 .calendar-days {
@@ -310,10 +322,12 @@ h1 {
 
 .day,
 .day-blank {
-  width: 48px;
-  height: 48px;
+  aspect-ratio: 1 / 1;
 }
 
+/* =========================
+   CALENDAR DAY
+========================= */
 .day {
   position: relative;
 
@@ -321,6 +335,8 @@ h1 {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+
+  gap: 4px;
 
   min-width: 0;
   padding: 0;
@@ -333,15 +349,9 @@ h1 {
   color: var(--text);
 
   background:
-    rgba(255, 255, 255, 0.04);
+    rgba(255, 255, 255, 0.045);
 
   cursor: pointer;
-
-  box-shadow:
-    inset 0 0 0 1px
-    rgba(255, 255, 255, 0.06),
-    0 6px 18px
-    rgba(0, 0, 0, 0.45);
 
   transition:
     transform 0.15s ease,
@@ -353,93 +363,116 @@ h1 {
 }
 
 .day.selected {
-  outline: none;
-
   box-shadow:
     0 0 0 2px var(--accent),
-    0 0 22px
-    rgba(110, 231, 255, 0.45);
+    0 0 24px
+    rgba(110, 231, 255, 0.28);
 }
 
 .day-number {
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1;
 }
 
-/* ไม่มีคิว */
-
-.day.available {
-  color: var(--text);
-
-  background:
-    rgba(255, 255, 255, 0.04);
+.density-mark {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
 }
 
-/* คิวว่าง */
-
+/* =========================
+   AVAILABLE / LOW
+   สีและพื้นหลังเดียวกัน
+========================= */
+.day.available,
 .day.low {
-  color: var(--low);
+  color: var(--available);
 
   background:
-    rgba(44, 255, 156, 0.15);
+    rgba(44, 255, 156, 0.12);
+
+  border-color:
+    rgba(44, 255, 156, 0.25);
 }
 
-/* คิวปานกลาง */
+.day.available .density-mark,
+.day.low .density-mark {
+  background: var(--available);
+}
 
+/* =========================
+   MEDIUM
+========================= */
 .day.medium {
   color: var(--medium);
 
   background:
-    rgba(255, 209, 102, 0.15);
+    rgba(255, 209, 102, 0.13);
+
+  border-color:
+    rgba(255, 209, 102, 0.25);
 }
 
-/* คิวค่อนข้างแน่น */
+.day.medium .density-mark {
+  background: var(--medium);
+}
 
+/* =========================
+   HIGH
+   สีส้ม แยกจากร้านปิด
+========================= */
 .day.high {
   color: var(--high);
 
   background:
-    rgba(255, 92, 122, 0.15);
+    rgba(255, 152, 63, 0.15);
+
+  border-color:
+    rgba(255, 152, 63, 0.32);
 }
 
-/* ร้านปิด — วงกลมสีแดงเหมือนหน้าแอดมิน */
+.day.high .density-mark {
+  background: var(--high);
+}
 
+/* =========================
+   CLOSED
+   วงกลมสีแดง
+========================= */
 .day.closed {
   gap: 2px;
 
-  color: #ffd9df;
+  color: #ffdbe1;
 
   background:
     linear-gradient(
       180deg,
-      rgba(255, 92, 122, 0.32),
-      rgba(120, 30, 50, 0.34)
+      rgba(255, 92, 122, 0.34),
+      rgba(125, 28, 52, 0.38)
     );
 
   border:
     1px solid
-    rgba(255, 92, 122, 0.65);
+    rgba(255, 92, 122, 0.7);
 
   box-shadow:
     inset 0 0 0 1px
     rgba(255, 255, 255, 0.07),
     0 6px 18px
-    rgba(0, 0, 0, 0.45);
+    rgba(0, 0, 0, 0.4);
 }
 
 .day.closed.selected {
   box-shadow:
     0 0 0 2px var(--accent),
-    0 0 22px
-    rgba(110, 231, 255, 0.45),
+    0 0 24px
+    rgba(110, 231, 255, 0.3),
     inset 0 0 0 1px
-    rgba(255, 92, 122, 0.4);
+    rgba(255, 92, 122, 0.45);
 }
 
 .closed-label {
-  margin-top: 2px;
-
   color: #ffffff;
 
   font-size: 8px;
@@ -451,7 +484,6 @@ h1 {
 /* =========================
    LEGEND
 ========================= */
-
 .legend {
   display: grid;
 
@@ -463,6 +495,7 @@ h1 {
   margin-top: 18px;
 
   color: var(--muted);
+
   font-size: 12px;
 }
 
@@ -477,6 +510,9 @@ h1 {
   height: 9px;
 }
 
+/* =========================
+   TODAY BUTTON
+========================= */
 .today-button {
   display: block;
   width: fit-content;
@@ -500,14 +536,9 @@ h1 {
   font-weight: 600;
 }
 
-.hidden {
-  display: none !important;
-}
-
 /* =========================
    CONTACT
 ========================= */
-
 .contact-heading {
   margin: 0 0 13px;
 
@@ -572,7 +603,6 @@ h1 {
 /* =========================
    MOBILE
 ========================= */
-
 @media (max-width: 520px) {
   .queue-page {
     padding:
@@ -598,22 +628,8 @@ h1 {
     border-radius: 21px;
   }
 
-  .calendar-shell {
-    max-width: 100%;
-    padding: 0;
-  }
-
   .calendar-grid {
-    grid-template-columns:
-      repeat(7, minmax(0, 1fr));
-
-    gap: 8px;
-  }
-
-  .day,
-  .day-blank {
-    width: 40px;
-    height: 40px;
+    gap: 7px;
   }
 
   .day-number {
@@ -626,21 +642,5 @@ h1 {
 
   .phone-actions {
     grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 370px) {
-  .calendar-grid {
-    gap: 5px;
-  }
-
-  .day,
-  .day-blank {
-    width: 37px;
-    height: 37px;
-  }
-
-  .day-label {
-    font-size: 11px;
   }
 }
