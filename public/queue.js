@@ -20,25 +20,30 @@ let viewYear = initialDate.getFullYear();
 
 const statusContent = {
   available: {
-    title: 'คิววันนี้ยังว่าง',
-    text: 'สามารถโทรสอบถามช่วงเวลาที่สะดวกกับทางร้านได้'
+    title: 'วันนี้ยังไม่มีคิว',
+    text: 'สามารถโทรสอบถามช่วงเวลาที่สะดวกกับทางร้านหรือสามารถ Walk-in ได้'
   },
+
   low: {
-    title: 'คิวยังไม่แน่น',
+    title: 'คิวว่าง',
     text: 'ยังมีโอกาสเลือกช่วงเวลาได้ กรุณาโทรสอบถามกับทางร้าน'
   },
+
   medium: {
     title: 'คิวปานกลาง',
     text: 'แนะนำให้โทรสอบถามช่วงเวลาว่างก่อนเข้ารับบริการ'
   },
+
   high: {
     title: 'คิวค่อนข้างแน่น',
-    text: 'กรุณาโทรตรวจสอบช่วงเวลาว่างกับทางร้านก่อนเดินทาง'
+    text: 'กรุณาโทรตรวจสอบช่วงเวลาว่างกับทางร้านก่อน ไม่แนะนำให้ Walk-in'
   },
+
   closed: {
     title: 'ร้านปิด',
     text: 'กรุณาเลือกวันอื่นเพื่อตรวจสอบความหนาแน่นของคิว'
   },
+
   unavailable: {
     title: 'ยังไม่มีข้อมูลคิว',
     text: 'กรุณาโทรสอบถามกับทางร้านเพื่อยืนยันช่วงเวลาว่าง'
@@ -60,7 +65,11 @@ async function loadCalendarStatus() {
     }
 
     const data = await res.json();
-    calendarStatus = data && typeof data === 'object' ? data : {};
+
+    calendarStatus =
+      data && typeof data === 'object'
+        ? data
+        : {};
   } catch (error) {
     console.error('[PublicQueue] Load error', error);
     calendarStatus = {};
@@ -72,12 +81,17 @@ function renderCalendar() {
 
   const firstDay = new Date(viewYear, viewMonth, 1);
   const startDay = firstDay.getDay();
-  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+  const daysInMonth = new Date(
+    viewYear,
+    viewMonth + 1,
+    0
+  ).getDate();
 
-  calendarTitle.textContent = firstDay.toLocaleDateString('th-TH', {
-    month: 'long',
-    year: 'numeric'
-  });
+  calendarTitle.textContent =
+    firstDay.toLocaleDateString('th-TH', {
+      month: 'long',
+      year: 'numeric'
+    });
 
   for (let i = 0; i < startDay; i++) {
     const blank = document.createElement('div');
@@ -86,13 +100,23 @@ function renderCalendar() {
   }
 
   for (let day = 1; day <= daysInMonth; day++) {
-    const date = formatDate(viewYear, viewMonth + 1, day);
+    const date = formatDate(
+      viewYear,
+      viewMonth + 1,
+      day
+    );
+
     const status = getStatus(date);
 
     const button = document.createElement('button');
+
     button.type = 'button';
     button.className = `day ${status}`;
-    button.setAttribute('aria-label', `${formatDisplayDate(date)} ${statusContent[status].title}`);
+
+    button.setAttribute(
+      'aria-label',
+      `${formatDisplayDate(date)} ${statusContent[status].title}`
+    );
 
     if (date === selectedDate) {
       button.classList.add('selected');
@@ -106,12 +130,12 @@ function renderCalendar() {
     } else {
       button.innerHTML = `
         <span class="day-number">${day}</span>
-        <span class="density-mark" aria-hidden="true"></span>
       `;
     }
 
     button.onclick = () => {
       selectedDate = date;
+
       renderCalendar();
       renderSelectedStatus();
     };
@@ -121,7 +145,8 @@ function renderCalendar() {
 
   todayBtn.classList.toggle(
     'hidden',
-    viewMonth === initialDate.getMonth() && viewYear === initialDate.getFullYear()
+    viewMonth === initialDate.getMonth() &&
+    viewYear === initialDate.getFullYear()
   );
 }
 
@@ -129,11 +154,17 @@ function renderSelectedStatus() {
   const status = getStatus(selectedDate);
   const content = statusContent[status];
 
-  selectedDateLabel.textContent = formatDisplayDate(selectedDate);
-  selectedStatusTitle.textContent = content.title;
-  selectedStatusText.textContent = content.text;
+  selectedDateLabel.textContent =
+    formatDisplayDate(selectedDate);
 
-  selectedStatusDot.className = `status-dot ${status}`;
+  selectedStatusTitle.textContent =
+    content.title;
+
+  selectedStatusText.textContent =
+    content.text;
+
+  selectedStatusDot.className =
+    `status-dot ${status}`;
 }
 
 function getStatus(date) {
@@ -170,6 +201,7 @@ todayBtn.onclick = () => {
   selectedDate = getTodayTH();
 
   const today = parseDate(selectedDate);
+
   viewMonth = today.getMonth();
   viewYear = today.getFullYear();
 
@@ -184,21 +216,34 @@ function getTodayTH() {
 }
 
 function parseDate(dateString) {
-  const [year, month, day] = dateString.split('-').map(Number);
-  return new Date(year, month - 1, day);
+  const [year, month, day] =
+    dateString.split('-').map(Number);
+
+  return new Date(
+    year,
+    month - 1,
+    day
+  );
 }
 
 function formatDate(year, month, day) {
-  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  return (
+    `${year}-` +
+    `${String(month).padStart(2, '0')}-` +
+    `${String(day).padStart(2, '0')}`
+  );
 }
 
 function formatDisplayDate(dateString) {
-  return parseDate(dateString).toLocaleDateString('th-TH', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric'
-  });
+  return parseDate(dateString).toLocaleDateString(
+    'th-TH',
+    {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    }
+  );
 }
 
 init();
