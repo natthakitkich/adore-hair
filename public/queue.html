@@ -34,58 +34,136 @@
 
     <section class="status-card" aria-live="polite">
       <p id="selectedDateLabel" class="selected-date">—</p>
+
       <div class="status-line">
-        <span id="selectedStatusDot" class="status-dot available"></span>
+        <span
+          id="selectedStatusDot"
+          class="status-dot available"
+        ></span>
+
         <div>
-          <h2 id="selectedStatusTitle">กำลังตรวจสอบคิว</h2>
-          <p id="selectedStatusText">กรุณารอสักครู่</p>
+          <h2 id="selectedStatusTitle">
+            กำลังตรวจสอบคิว
+          </h2>
+
+          <p id="selectedStatusText">
+            กรุณารอสักครู่
+          </p>
         </div>
       </div>
     </section>
 
     <section class="calendar-card">
-      <div class="calendar-header">
-        <button id="prevMonth" class="month-button" type="button" aria-label="เดือนก่อนหน้า">‹</button>
-        <div id="calendarTitle" class="calendar-title">—</div>
-        <button id="nextMonth" class="month-button" type="button" aria-label="เดือนถัดไป">›</button>
-      </div>
+      <div class="calendar-shell">
 
-      <div class="calendar-grid">
-        <div class="day-label">อา</div>
-        <div class="day-label">จ</div>
-        <div class="day-label">อ</div>
-        <div class="day-label">พ</div>
-        <div class="day-label">พฤ</div>
-        <div class="day-label">ศ</div>
-        <div class="day-label">ส</div>
-        <div id="calendarDays" class="calendar-days"></div>
-      </div>
+        <div class="calendar-header">
+          <button
+            id="prevMonth"
+            class="month-button"
+            type="button"
+            aria-label="เดือนก่อนหน้า"
+          >
+            ‹
+          </button>
 
-      <div class="legend" aria-label="คำอธิบายสถานะคิว">
-        <div><span class="legend-dot available"></span>คิวว่าง</div>
-        <div><span class="legend-dot low"></span>คิวยังไม่แน่น</div>
-        <div><span class="legend-dot medium"></span>ปานกลาง</div>
-        <div><span class="legend-dot high"></span>ค่อนข้างแน่น</div>
-        <div><span class="legend-dot closed"></span>ร้านปิด</div>
-      </div>
+          <div
+            id="calendarTitle"
+            class="calendar-title"
+          >
+            —
+          </div>
 
-      <button id="todayBtn" class="today-button" type="button">กลับมาวันนี้</button>
+          <button
+            id="nextMonth"
+            class="month-button"
+            type="button"
+            aria-label="เดือนถัดไป"
+          >
+            ›
+          </button>
+        </div>
+
+        <div class="calendar-grid">
+          <div class="day-label">อา</div>
+          <div class="day-label">จ</div>
+          <div class="day-label">อ</div>
+          <div class="day-label">พ</div>
+          <div class="day-label">พฤ</div>
+          <div class="day-label">ศ</div>
+          <div class="day-label">ส</div>
+
+          <div
+            id="calendarDays"
+            class="calendar-days"
+          ></div>
+        </div>
+
+        <div
+          class="legend"
+          aria-label="คำอธิบายสถานะคิว"
+        >
+          <div>
+            <span class="legend-dot available"></span>
+            ยังไม่มีคิว
+          </div>
+
+          <div>
+            <span class="legend-dot low"></span>
+            คิวว่าง
+          </div>
+
+          <div>
+            <span class="legend-dot medium"></span>
+            คิวปานกลาง
+          </div>
+
+          <div>
+            <span class="legend-dot high"></span>
+            คิวค่อนข้างแน่น
+          </div>
+
+          <div>
+            <span class="legend-dot closed"></span>
+            ร้านปิด
+          </div>
+        </div>
+
+        <button
+          id="todayBtn"
+          class="today-button"
+          type="button"
+        >
+          กลับมาวันนี้
+        </button>
+
+      </div>
     </section>
 
     <section class="contact-card">
-      <p class="contact-heading">โทรสอบถามและจองคิว</p>
+      <p class="contact-heading">
+        กดเพื่อโทรสอบถามและจองคิว
+      </p>
 
       <div class="phone-actions">
-        <a class="phone-button primary-phone" href="tel:0896532396">
+        <a
+          class="phone-button primary-phone"
+          href="tel:0896532396"
+        >
           <span>โทร 089-653-2396</span>
         </a>
-        <a class="phone-button" href="tel:0887830304">
+
+        <a
+          class="phone-button"
+          href="tel:0887830304"
+        >
           <span>โทร 088-783-0304</span>
         </a>
       </div>
 
       <p class="notice">
-        ตารางนี้เป็นเพียงภาพรวมของความหนาแน่นคิว เวลาว่างอาจเปลี่ยนแปลงได้ กรุณาโทรยืนยันกับทางร้านก่อนเข้ารับบริการ
+        ตารางนี้เป็นเพียงภาพรวมของความหนาแน่นคิว
+        เวลาว่างอาจเปลี่ยนแปลงได้
+        กรุณาโทรยืนยันกับทางร้านก่อนเข้ารับบริการ
       </p>
     </section>
   </main>
