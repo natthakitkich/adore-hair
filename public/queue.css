@@ -779,3 +779,320 @@ h1 {
 
   .queue-header {
     grid-template-columns:
+/* ======================================================
+   PUBLIC QUEUE — CONTACT CARD READABILITY FIX
+   ปรับปุ่มโทรให้ข้อความอ่านง่ายและไม่แน่นบนมือถือ
+====================================================== */
+
+.contact-card {
+  padding: 22px;
+}
+
+.contact-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  margin-bottom: 16px;
+}
+
+.contact-heading {
+  margin: 0;
+
+  color: var(--text);
+
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.contact-subtitle {
+  margin: 5px 0 0;
+
+  color: var(--muted);
+
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/*
+ * เปลี่ยนจาก 2 คอลัมน์
+ * เป็นการ์ดแนวตั้งเต็มความกว้าง
+ */
+.phone-actions {
+  display: flex;
+  flex-direction: column;
+
+  gap: 12px;
+}
+
+/*
+ * การ์ดโทรหลัก
+ */
+.phone-button {
+  display: grid;
+
+  grid-template-columns:
+    46px
+    minmax(0, 1fr)
+    auto;
+
+  align-items: center;
+
+  gap: 13px;
+
+  width: 100%;
+  min-width: 0;
+  min-height: 82px;
+
+  padding: 14px 15px;
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.12);
+
+  border-radius: 20px;
+
+  color: var(--text);
+
+  background:
+    rgba(255, 255, 255, 0.065);
+
+  text-decoration: none;
+
+  box-shadow:
+    inset 0 1px 0
+    rgba(255, 255, 255, 0.08),
+    0 10px 26px
+    rgba(0, 0, 0, 0.24);
+
+  transition:
+    transform 0.15s ease,
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+.phone-button:active {
+  transform: scale(0.98);
+}
+
+/*
+ * ปุ่มบริการทำสี / ยืด
+ */
+.phone-button.primary-phone {
+  color: var(--text);
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(110, 231, 255, 0.20),
+      rgba(167, 139, 250, 0.22)
+    );
+
+  border-color:
+    rgba(110, 231, 255, 0.30);
+}
+
+/*
+ * ปุ่มตัดผมชาย / หญิง
+ */
+.phone-button.secondary-phone {
+  background:
+    rgba(255, 255, 255, 0.065);
+}
+
+/*
+ * ไอคอนโทร
+ */
+.phone-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 46px;
+  height: 46px;
+
+  border-radius: 15px;
+
+  color: #07101d;
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--accent),
+      var(--accent-2)
+    );
+
+  font-size: 20px;
+
+  box-shadow:
+    0 8px 20px
+    rgba(110, 231, 255, 0.18);
+}
+
+.secondary-phone .phone-icon {
+  color: var(--text);
+
+  background:
+    rgba(255, 255, 255, 0.11);
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.12);
+
+  box-shadow: none;
+}
+
+/*
+ * กลุ่มข้อความกลาง
+ */
+.phone-content {
+  display: flex;
+  flex-direction: column;
+
+  min-width: 0;
+
+  gap: 3px;
+
+  text-align: left;
+}
+
+.phone-service {
+  min-width: 0;
+
+  color:
+    rgba(237, 243, 255, 0.76);
+
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+
+  overflow-wrap: anywhere;
+}
+
+.phone-number {
+  color: var(--text);
+
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.25;
+
+  letter-spacing: 0.01em;
+
+  white-space: nowrap;
+}
+
+/*
+ * ป้ายโทรด้านขวา
+ */
+.phone-call-label {
+  flex: 0 0 auto;
+
+  padding: 7px 10px;
+
+  border-radius: 999px;
+
+  color: var(--text);
+
+  background:
+    rgba(255, 255, 255, 0.09);
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.primary-phone .phone-call-label {
+  color: #07101d;
+
+  background:
+    rgba(255, 255, 255, 0.72);
+}
+
+/*
+ * หมายเหตุด้านล่าง
+ */
+.contact-card .notice {
+  margin: 16px 0 0;
+
+  padding-top: 15px;
+
+  border-top:
+    1px solid
+    rgba(255, 255, 255, 0.08);
+
+  color: var(--muted);
+
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+/* ======================================================
+   MOBILE
+====================================================== */
+
+@media (max-width: 520px) {
+  .contact-card {
+    padding: 18px;
+  }
+
+  .contact-heading {
+    font-size: 18px;
+  }
+
+  .phone-button {
+    grid-template-columns:
+      42px
+      minmax(0, 1fr)
+      auto;
+
+    gap: 11px;
+
+    min-height: 76px;
+
+    padding: 13px;
+  }
+
+  .phone-icon {
+    width: 42px;
+    height: 42px;
+
+    border-radius: 14px;
+
+    font-size: 18px;
+  }
+
+  .phone-service {
+    font-size: 12px;
+  }
+
+  .phone-number {
+    font-size: 18px;
+  }
+
+  .phone-call-label {
+    padding: 6px 9px;
+
+    font-size: 11px;
+  }
+}
+
+/*
+ * จอแคบมาก:
+ * ซ่อนคำว่า "โทร" ด้านขวา
+ * เพื่อเหลือพื้นที่ให้เบอร์โทร
+ */
+@media (max-width: 370px) {
+  .phone-button {
+    grid-template-columns:
+      40px
+      minmax(0, 1fr);
+  }
+
+  .phone-call-label {
+    display: none;
+  }
+
+  .phone-number {
+    font-size: 17px;
+  }
+}
