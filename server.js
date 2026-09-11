@@ -84,6 +84,41 @@ async function isShopClosed(date) {
 }
 
 /* =========================
+   BOOKING DATE READER
+   อ่านข้อมูล bookings แบบแบ่งหน้า
+   เพื่อไม่ให้จำนวนคิวหายเมื่อข้อมูลเกิน limit ของ Supabase
+========================= */
+async function readAllBookingDates() {
+  const PAGE_SIZE = 500;
+  let from = 0;
+  const allRows = [];
+
+  while (true) {
+    const { data, error } = await supabase
+      .from('bookings')
+      .select('id, date')
+      .order('id', { ascending: true })
+      .range(from, from + PAGE_SIZE - 1);
+
+    if (error) {
+      throw error;
+    }
+
+    const rows = Array.isArray(data) ? data : [];
+
+    allRows.push(...rows);
+
+    if (rows.length < PAGE_SIZE) {
+      break;
+    }
+
+    from += PAGE_SIZE;
+  }
+
+  return allRows;
+}
+
+/* =========================
    ROUTES
 ========================= */
 
@@ -102,20 +137,13 @@ app.get('/queue', (_, res) => {
    No customer count or personal data
 ---------------------------- */
 app.get('/public-calendar', async (_, res) => {
-  const { data, error } = await supabase
-    .from('bookings')
-    .select('date');
-
-  if (error) {
-    return res.status(500).json({
-      error: 'Unable to load queue status'
-    });
-  }
-
   try {
+    res.set('Cache-Control', 'no-store');
+
+    const data = await readAllBookingDates();
     const density = {};
 
-    (data || []).forEach(booking => {
+    data.forEach(booking => {
       density[booking.date] =
         (density[booking.date] || 0) + 1;
     });
@@ -425,22 +453,28 @@ app.get('/bookings', async (req, res) => {
    Get calendar density
 ---------------------------- */
 app.get('/calendar-days', async (_, res) => {
-  const { data, error } = await supabase
-    .from('bookings')
-    .select('date');
+  try {
+    res.set('Cache-Control', 'no-store');
 
-  if (error) {
-    return res.status(500).json(error);
+    const data = await readAllBookingDates();
+    const map = {};
+
+    data.forEach(booking => {
+      map[booking.date] =
+        (map[booking.date] || 0) + 1;
+    });
+
+    res.json(map);
+  } catch (error) {
+    console.error(
+      '[CalendarDays] Load error',
+      error
+    );
+
+    res.status(500).json({
+      error: 'Unable to load calendar'
+    });
   }
-
-  const map = {};
-
-  (data || []).forEach(booking => {
-    map[booking.date] =
-      (map[booking.date] || 0) + 1;
-  });
-
-  res.json(map);
 });
 
 /* ---------- BASIC ----------
