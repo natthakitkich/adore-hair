@@ -502,8 +502,39 @@ closeClosure.onclick = () => {
    CALENDAR
 ========================= */
 async function loadCalendar() {
-  const res = await fetch(`${API}/calendar-days`);
-  calendarDensity = await res.json();
+  try {
+    const res = await fetch(
+      `${API}/calendar-days?t=${Date.now()}`,
+      {
+        cache: 'no-store',
+        headers: {
+          Accept: 'application/json'
+        }
+      }
+    );
+
+    if (!res.ok) {
+      throw new Error(
+        `Calendar API error: ${res.status}`
+      );
+    }
+
+    const data = await res.json();
+
+    calendarDensity =
+      data &&
+      typeof data === 'object' &&
+      !Array.isArray(data)
+        ? data
+        : {};
+  } catch (error) {
+    console.error(
+      '[Calendar] Load error',
+      error
+    );
+
+    calendarDensity = {};
+  }
 
   renderCalendar();
   renderCalendarStats();
