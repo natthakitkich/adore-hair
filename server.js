@@ -1,717 +1,809 @@
 import express from 'express';
-import cors from 'cors';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import path from 'node:path';
+import { readFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+import {
+  createHmac,
+  randomBytes,
+  timingSafeEqual
+} from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
 
-/* =========================
-   BASIC SETUP
-========================= */
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const PUBLIC_DIR = path.join(__dirname, 'public');
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT || 3000);
 
-app.use(cors());
-app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+const APP_URL = new URL(process.env.APP_URL || 'http://localhost:3000');
+const OWNER_PASSWORD = process.env.OWNER_PASSWORD || '';
+const SESSION_SECRET = process.env.SESSION_SECRET || '';
+const LINE_SECRET = process.env.LINE_CHANNEL_SECRET || '';
+const LINE_TOKEN = process.env.LINE_CHANNEL_ACCESS_TOKEN || '';
+const LINE_TARGET = process.env.LINE_TARGET_ID || '';
 
-/* =========================
-   SUPABASE CLIENT
-========================= */
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
+const LINE_ADMINS = new Set(
+  (process.env.LINE_ADMIN_IDS || '')
+    .split(',')
+    .map(x => x.trim())
+    .filter(Boolean)
 );
 
-/* =========================
-   CLOSED DAYS — SUPABASE STORAGE
-========================= */
-function isValidDateString(value) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value || '')) return false;
+const STYLISTS = (process.env.ONLINE_STYLISTS || 'Bank')
+  .split(',')
+  .map(x => x.trim())
+  .filter(x => ['Bank', 'Sindy', 'Assist'].includes(x));
 
-  const date = new Date(`${value}T00:00:00Z`);
-
-  return (
-    !Number.isNaN(date.getTime()) &&
-    date.toISOString().slice(0, 10) === value
+if (
+  !process.env.SUPABASE_URL ||
+  !process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  OWNER_PASSWORD.length < 12 ||
+  SESSION_SECRET.length < 32
+) {
+  throw new Error(
+    'กรุณาตั้งค่า Supabase, OWNER_PASSWORD อย่างน้อย 12 ตัว ' +
+    'และ SESSION_SECRET อย่างน้อย 32 ตัว'
   );
 }
 
-async function readClosedDays() {
-  const { data, error } = await supabase
-    .from('closed_days')
-    .select('date')
-    .order('date', { ascending: true });
-
-  if (error) {
-    throw error;
-  }
-
-  return (data || [])
-    .map(item => item.date)
-    .filter(isValidDateString);
-}
-
-async function readPublicClosedDays() {
-  const { data, error } = await supabase
-    .from('public_closed_days')
-    .select('date')
-    .order('date', { ascending: true });
-
-  if (error) {
-    throw error;
-  }
-
-  return (data || [])
-    .map(item => item.date)
-    .filter(isValidDateString);
-}
-
-async function isShopClosed(date) {
-  const { data, error } = await supabase
-    .from('closed_days')
-    .select('date')
-    .eq('date', date)
-    .maybeSingle();
-
-  if (error) {
-    throw error;
-  }
-
-  return Boolean(data);
-}
-
-/* =========================
-   BOOKING DATE READER
-   อ่านข้อมูล bookings แบบแบ่งหน้า
-   เพื่อไม่ให้จำนวนคิวหายเมื่อข้อมูลเกิน limit ของ Supabase
-========================= */
-async function readAllBookingDates() {
-  const PAGE_SIZE = 500;
-  let from = 0;
-  const allRows = [];
-
-  while (true) {
-    const { data, error } = await supabase
-      .from('bookings')
-      .select('id, date')
-      .order('id', { ascending: true })
-      .range(from, from + PAGE_SIZE - 1);
-
-    if (error) {
-      throw error;
-    }
-
-    const rows = Array.isArray(data) ? data : [];
-
-    allRows.push(...rows);
-
-    if (rows.length < PAGE_SIZE) {
-      break;
-    }
-
-    from += PAGE_SIZE;
-  }
-
-  return allRows;
-}
-
-/* =========================
-   ROUTES
-========================= */
-
-// serve frontend
-app.get('/', (_, res) => {
-  res.sendFile(path.join(__dirname, 'public/index.html'));
-});
-
-// serve public queue overview
-app.get('/queue', (_, res) => {
-  res.sendFile(path.join(__dirname, 'public/queue.html'));
-});
-
-/* ---------- PUBLIC ----------
-   Get public calendar status
-   No customer count or personal data
----------------------------- */
-app.get('/public-calendar', async (_, res) => {
-  try {
-    res.set('Cache-Control', 'no-store');
-
-    const data = await readAllBookingDates();
-    const density = {};
-
-    data.forEach(booking => {
-      density[booking.date] =
-        (density[booking.date] || 0) + 1;
-    });
-
-    const [
-      closedDaysList,
-      publicClosedDaysList
-    ] = await Promise.all([
-      readClosedDays(),
-      readPublicClosedDays()
-    ]);
-
-    const closedDays = new Set(closedDaysList);
-    const publicClosedDays =
-      new Set(publicClosedDaysList);
-
-    const dates = new Set([
-      ...Object.keys(density),
-      ...closedDays,
-      ...publicClosedDays
-    ]);
-
-    const calendar = {};
-
-    dates.forEach(date => {
-      /*
-       * หน้าลูกค้าจะแสดงว่าปิด เมื่อ:
-       * 1. ปิดร้านทั้งระบบ
-       * 2. ปิดเฉพาะหน้าลูกค้า
-       */
-      if (
-        closedDays.has(date) ||
-        publicClosedDays.has(date)
-      ) {
-        calendar[date] = 'closed';
-        return;
-      }
-
-      const count = density[date] || 0;
-
-      if (count === 0) {
-        calendar[date] = 'available';
-      } else if (count <= 5) {
-        calendar[date] = 'low';
-      } else if (count <= 10) {
-        calendar[date] = 'medium';
-      } else {
-        calendar[date] = 'high';
-      }
-    });
-
-    res.json(calendar);
-  } catch (readError) {
-    console.error(
-      '[PublicCalendar] Load error',
-      readError
-    );
-
-    res.status(500).json({
-      error: 'Unable to load queue status'
-    });
-  }
-});
-
-/* ---------- DEVELOP ----------
-   Get closed days
----------------------------- */
-app.get('/closed-days', async (_, res) => {
-  try {
-    const closedDays = await readClosedDays();
-    res.json(closedDays);
-  } catch (error) {
-    console.error(
-      '[ClosedDays] Read error',
-      error
-    );
-
-    res.status(500).json({
-      error: 'Unable to load closed days'
-    });
-  }
-});
-
-/* ---------- DEVELOP ----------
-   Close shop on a date
----------------------------- */
-app.post('/closed-days', async (req, res) => {
-  const { date } = req.body;
-
-  if (!isValidDateString(date)) {
-    return res.status(400).json({
-      error: 'Invalid date'
-    });
-  }
-
-  try {
-    const { error } = await supabase
-      .from('closed_days')
-      .upsert(
-        [{ date }],
-        { onConflict: 'date' }
-      );
-
-    if (error) {
-      throw error;
-    }
-
-    const closedDays = await readClosedDays();
-
-    res.status(201).json({
-      success: true,
-      date,
-      closedDays
-    });
-  } catch (error) {
-    console.error(
-      '[ClosedDays] Write error',
-      error
-    );
-
-    res.status(500).json({
-      error: 'Unable to save closed day'
-    });
-  }
-});
-
-/* ---------- DEVELOP ----------
-   Reopen shop on a date
----------------------------- */
-app.delete('/closed-days/:date', async (req, res) => {
-  const { date } = req.params;
-
-  if (!isValidDateString(date)) {
-    return res.status(400).json({
-      error: 'Invalid date'
-    });
-  }
-
-  try {
-    const { error } = await supabase
-      .from('closed_days')
-      .delete()
-      .eq('date', date);
-
-    if (error) {
-      throw error;
-    }
-
-    const closedDays = await readClosedDays();
-
-    res.json({
-      success: true,
-      date,
-      closedDays
-    });
-  } catch (error) {
-    console.error(
-      '[ClosedDays] Delete error',
-      error
-    );
-
-    res.status(500).json({
-      error: 'Unable to remove closed day'
-    });
-  }
-});
-
-/* ---------- DEVELOP ----------
-   Get dates hidden as closed
-   on public page only
----------------------------- */
-app.get('/public-closed-days', async (_, res) => {
-  try {
-    const publicClosedDays =
-      await readPublicClosedDays();
-
-    res.json(publicClosedDays);
-  } catch (error) {
-    console.error(
-      '[PublicClosedDays] Read error',
-      error
-    );
-
-    res.status(500).json({
-      error: 'Unable to load public closed days'
-    });
-  }
-});
-
-/* ---------- DEVELOP ----------
-   Hide a date as closed
-   on public page only
----------------------------- */
-app.post('/public-closed-days', async (req, res) => {
-  const { date } = req.body;
-
-  if (!isValidDateString(date)) {
-    return res.status(400).json({
-      error: 'Invalid date'
-    });
-  }
-
-  try {
-    const { error } = await supabase
-      .from('public_closed_days')
-      .upsert(
-        [{ date }],
-        { onConflict: 'date' }
-      );
-
-    if (error) {
-      throw error;
-    }
-
-    const publicClosedDays =
-      await readPublicClosedDays();
-
-    res.status(201).json({
-      success: true,
-      date,
-      publicClosedDays
-    });
-  } catch (error) {
-    console.error(
-      '[PublicClosedDays] Write error',
-      error
-    );
-
-    res.status(500).json({
-      error: 'Unable to save public closed day'
-    });
-  }
-});
-
-/* ---------- DEVELOP ----------
-   Show a date as open
-   on public page again
----------------------------- */
-app.delete(
-  '/public-closed-days/:date',
-  async (req, res) => {
-    const { date } = req.params;
-
-    if (!isValidDateString(date)) {
-      return res.status(400).json({
-        error: 'Invalid date'
-      });
-    }
-
-    try {
-      const { error } = await supabase
-        .from('public_closed_days')
-        .delete()
-        .eq('date', date);
-
-      if (error) {
-        throw error;
-      }
-
-      const publicClosedDays =
-        await readPublicClosedDays();
-
-      res.json({
-        success: true,
-        date,
-        publicClosedDays
-      });
-    } catch (error) {
-      console.error(
-        '[PublicClosedDays] Delete error',
-        error
-      );
-
-      res.status(500).json({
-        error:
-          'Unable to remove public closed day'
-      });
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY,
+  {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false
     }
   }
 );
 
-/* ---------- BASIC ----------
-   Get bookings by date
----------------------------- */
-app.get('/bookings', async (req, res) => {
-  const { date } = req.query;
+app.disable('x-powered-by');
 
-  let query = supabase
-    .from('bookings')
+app.use(express.json({
+  limit: '1mb',
+  verify(req, res, buffer) {
+    req.rawBody = buffer;
+  }
+}));
+
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Referrer-Policy', 'same-origin');
+
+  if (!['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
+    if (
+      req.path !== '/line/webhook' &&
+      req.headers.origin &&
+      req.headers.origin !== APP_URL.origin
+    ) {
+      return res.status(403).json({ error: 'Origin ไม่ถูกต้อง' });
+    }
+  }
+
+  next();
+});
+
+function same(a, b) {
+  const aa = Buffer.from(String(a));
+  const bb = Buffer.from(String(b));
+  return aa.length === bb.length && timingSafeEqual(aa, bb);
+}
+
+function sign(value) {
+  return createHmac('sha256', SESSION_SECRET)
+    .update(value)
+    .digest('hex');
+}
+
+function hasSession(req) {
+  const raw = (req.headers.cookie || '')
+    .split(';')
+    .map(x => x.trim())
+    .find(x => x.startsWith('adore_session='))
+    ?.slice('adore_session='.length);
+
+  if (!raw) return false;
+
+  const [expires, nonce, signature] = raw.split('.');
+  if (!expires || !nonce || !signature) return false;
+  if (!Number.isFinite(Number(expires))) return false;
+  if (Number(expires) <= Date.now()) return false;
+
+  return same(signature, sign(`${expires}.${nonce}`));
+}
+
+function cookie(value, seconds) {
+  return [
+    `adore_session=${value}`,
+    'Path=/',
+    'HttpOnly',
+    'SameSite=Strict',
+    `Max-Age=${seconds}`,
+    APP_URL.protocol === 'https:' ? 'Secure' : ''
+  ].filter(Boolean).join('; ');
+}
+
+function owner(req, res, next) {
+  res.setHeader('Cache-Control', 'no-store');
+
+  if (!hasSession(req)) {
+    return res.status(401).json({
+      error: 'กรุณาเข้าสู่ระบบเจ้าของร้าน'
+    });
+  }
+
+  next();
+}
+
+function problem(message, status = 400) {
+  return Object.assign(new Error(message), { status });
+}
+
+const route = fn => async (req, res, next) => {
+  try {
+    await fn(req, res);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// จำกัดความถี่ต่อ IP ภายใน process นี้
+const rateBuckets = new Map();
+
+function limit(label, maximum, milliseconds) {
+  return (req, res, next) => {
+    const key = `${label}:${req.ip}`;
+    const now = Date.now();
+    let item = rateBuckets.get(key);
+
+    if (!item || item.until <= now) {
+      item = { count: 0, until: now + milliseconds };
+      rateBuckets.set(key, item);
+    }
+
+    item.count += 1;
+
+    if (item.count > maximum) {
+      res.setHeader(
+        'Retry-After',
+        String(Math.ceil((item.until - now) / 1000))
+      );
+
+      return res.status(429).json({
+        error: 'ทำรายการถี่เกินไป กรุณารอสักครู่'
+      });
+    }
+
+    next();
+  };
+}
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, item] of rateBuckets) {
+    if (item.until <= now) rateBuckets.delete(key);
+  }
+}, 60000).unref();
+
+function validDate(value) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value || '')) return false;
+  const d = new Date(`${value}T00:00:00Z`);
+  return !Number.isNaN(d.getTime()) &&
+    d.toISOString().slice(0, 10) === value;
+}
+
+function validTime(value) {
+  return /^(?:[01]\d|2[0-3]):[0-5]\d(?::00)?$/.test(value || '');
+}
+
+function phone(value) {
+  const raw = String(value || '').replace(/[^\d+]/g, '');
+  return raw.startsWith('+66') ? `0${raw.slice(3)}` : raw;
+}
+
+function lineReady() {
+  return Boolean(
+    LINE_SECRET &&
+    LINE_TOKEN &&
+    LINE_TARGET &&
+    LINE_ADMINS.size &&
+    STYLISTS.length
+  );
+}
+
+async function db(query) {
+  const { data, error } = await query;
+  if (error) throw error;
+  return data;
+}
+
+async function command(action, payload) {
+  return db(supabase.rpc('adore_command', {
+    p_action: action,
+    p: payload
+  }));
+}
+
+async function closedDates(table) {
+  const rows = await db(supabase.from(table).select('date'));
+  return (rows || []).map(x => x.date);
+}
+
+async function bookingDates() {
+  const dates = [];
+
+  for (let offset = 0; ; offset += 1000) {
+    const rows = await db(
+      supabase.from('bookings')
+        .select('date')
+        .order('id')
+        .range(offset, offset + 999)
+    );
+
+    dates.push(...(rows || []).map(x => x.date));
+    if (!rows || rows.length < 1000) break;
+  }
+
+  return dates;
+}
+
+function publicRequest(q) {
+  return {
+    booking_code: q.booking_code,
+    date: q.date,
+    time: q.time,
+    gender: q.gender,
+    duration_minutes: q.duration_minutes,
+    status: q.status,
+    notified: Boolean(q.line_sent_at)
+  };
+}
+
+function bookingPayload(body) {
+  const payload = {
+    date: String(body.date || ''),
+    time: String(body.time || ''),
+    stylist: String(body.stylist || ''),
+    name: String(body.name || '').trim(),
+    phone: phone(body.phone),
+    gender: String(body.gender || ''),
+    service: String(body.service || '').trim(),
+    note: String(body.note || '').trim() || null,
+    duration_minutes: Number(body.duration_minutes ?? 60)
+  };
+
+  if (
+    !validDate(payload.date) ||
+    !validTime(payload.time) ||
+    !['Bank', 'Sindy', 'Assist'].includes(payload.stylist) ||
+    !['male', 'female'].includes(payload.gender) ||
+    !payload.name ||
+    payload.name.length > 100 ||
+    payload.phone.length > 20 ||
+    payload.service.length > 200 ||
+    (payload.note || '').length > 2000 ||
+    !Number.isInteger(payload.duration_minutes) ||
+    payload.duration_minutes < 30 ||
+    payload.duration_minutes > 600 ||
+    payload.duration_minutes % 30 !== 0
+  ) {
+    throw problem('กรุณาตรวจสอบข้อมูลการจอง');
+  }
+
+  return payload;
+}
+
+// ---------- เข้าสู่ระบบ ----------
+app.post('/owner/login',
+  limit('login', 20, 15 * 60000),
+  route(async (req, res) => {
+    if (!same(req.body.password || '', OWNER_PASSWORD)) {
+      throw problem('รหัสผ่านไม่ถูกต้อง', 401);
+    }
+
+    const value = `${Date.now() + 12 * 3600000}.${randomBytes(16).toString('hex')}`;
+    res.setHeader('Set-Cookie', cookie(`${value}.${sign(value)}`, 12 * 3600));
+    res.setHeader('Cache-Control', 'no-store');
+    res.json({ success: true });
+  })
+);
+
+app.get('/owner/session', owner, (req, res) => {
+  res.json({ success: true, line_ready: lineReady() });
+});
+
+app.post('/owner/logout', (req, res) => {
+  res.setHeader('Set-Cookie', cookie('', 0));
+  res.json({ success: true });
+});
+
+// ---------- ส่งหน้าเดิม พร้อมโหลดส่วนเสริม ----------
+async function sendPage(res, filename, mode) {
+  let html = await readFile(path.join(PUBLIC_DIR, filename), 'utf8');
+
+  html = html.replace(
+    /<\/head\s*>/i,
+    '<link rel="stylesheet" href="/online.css"></head>'
+  );
+
+  if (mode === 'owner') {
+    html = html.replace(
+      /<\/body\s*>/i,
+      '<script src="/online-owner.js"></script></body>'
+    );
+  } else {
+    const entry = `
+      <section class="online-entry">
+        <a href="/book.html">จองคิวตัดผม / ตรวจสอบการจอง</a>
+        <p>ตัดผมชาย 1 ชั่วโมง · ตัดผมหญิง 2 ชั่วโมง</p>
+      </section>
+    `;
+
+    html = /<\/main\s*>/i.test(html)
+      ? html.replace(/<\/main\s*>/i, `${entry}</main>`)
+      : html.replace(/<\/body\s*>/i, `${entry}</body>`);
+  }
+
+  res.setHeader('Cache-Control', 'no-store');
+  res.type('html').send(html);
+}
+
+app.get(['/', '/index.html'], route(async (req, res) => {
+  await sendPage(res, 'index.html', 'owner');
+}));
+
+app.get(['/queue', '/queue.html'], route(async (req, res) => {
+  await sendPage(res, 'queue.html', 'public');
+}));
+
+// ---------- ปฏิทินลูกค้าเดิม ----------
+app.get('/public-calendar', route(async (req, res) => {
+  const [dates, closed, publicClosed] = await Promise.all([
+    bookingDates(),
+    closedDates('closed_days'),
+    closedDates('public_closed_days')
+  ]);
+
+  const counts = {};
+  const result = {};
+
+  for (const date of dates) {
+    counts[date] = (counts[date] || 0) + 1;
+  }
+
+  for (const [date, count] of Object.entries(counts)) {
+    result[date] = count <= 5 ? 'low' : count <= 10 ? 'medium' : 'high';
+  }
+
+  for (const date of [...closed, ...publicClosed]) {
+    result[date] = 'closed';
+  }
+
+  res.setHeader('Cache-Control', 'no-store');
+  res.json(result);
+}));
+
+// ---------- วันปิดร้านเดิม ----------
+for (const [base, table, closeAction, openAction] of [
+  ['/closed-days', 'closed_days', 'close', 'open'],
+  ['/public-closed-days', 'public_closed_days', 'public_close', 'public_open']
+]) {
+  app.get(base, owner, route(async (req, res) => {
+    res.json(await closedDates(table));
+  }));
+
+  app.post(base, owner, route(async (req, res) => {
+    if (!validDate(req.body.date)) throw problem('วันที่ไม่ถูกต้อง');
+    res.json(await command(closeAction, { date: req.body.date }));
+  }));
+
+  app.delete(`${base}/:date`, owner, route(async (req, res) => {
+    if (!validDate(req.params.date)) throw problem('วันที่ไม่ถูกต้อง');
+    res.json(await command(openAction, { date: req.params.date }));
+  }));
+}
+
+// ---------- คิว Owner เดิม ----------
+app.get('/bookings', owner, route(async (req, res) => {
+  let query = supabase.from('bookings')
     .select('*')
     .order('time', { ascending: true });
 
-  if (date) {
-    query = query.eq('date', date);
+  if (req.query.date) {
+    if (!validDate(req.query.date)) throw problem('วันที่ไม่ถูกต้อง');
+    query = query.eq('date', req.query.date);
   }
 
-  const { data, error } = await query;
+  res.json(await db(query) || []);
+}));
 
-  if (error) {
-    return res.status(500).json(error);
+app.get('/calendar-days', owner, route(async (req, res) => {
+  const result = {};
+  for (const date of await bookingDates()) {
+    result[date] = (result[date] || 0) + 1;
   }
+  res.json(result);
+}));
 
-  res.json(data || []);
-});
+app.post('/bookings', owner, route(async (req, res) => {
+  res.json(await command('booking_create', bookingPayload(req.body)));
+}));
 
-/* ---------- DEVELOP ----------
-   Get calendar density
----------------------------- */
-app.get('/calendar-days', async (_, res) => {
-  try {
-    res.set('Cache-Control', 'no-store');
-
-    const data = await readAllBookingDates();
-    const map = {};
-
-    data.forEach(booking => {
-      map[booking.date] =
-        (map[booking.date] || 0) + 1;
-    });
-
-    res.json(map);
-  } catch (error) {
-    console.error(
-      '[CalendarDays] Load error',
-      error
-    );
-
-    res.status(500).json({
-      error: 'Unable to load calendar'
-    });
-  }
-});
-
-/* ---------- BASIC ----------
-   Create booking (NOTE SUPPORT)
----------------------------- */
-app.post('/bookings', async (req, res) => {
-  const {
-    date,
-    time,
-    stylist,
-    name,
-    gender,
-    phone,
-    service,
-    note
-  } = req.body;
-
-  if (
-    !date ||
-    !time ||
-    !stylist ||
-    !name ||
-    !gender
-  ) {
-    return res.status(400).json({
-      error: 'Missing required fields'
-    });
-  }
-
-  try {
-    /*
-     * ตรวจเฉพาะ closed_days
-     * public_closed_days ไม่กระทบการรับคิว
-     */
-    if (await isShopClosed(date)) {
-      return res.status(403).json({
-        error: 'Shop closed'
-      });
-    }
-  } catch (error) {
-    console.error(
-      '[ClosedDays] Check error',
-      error
-    );
-
-    return res.status(500).json({
-      error: 'Unable to check shop status'
-    });
-  }
-
-  const {
-    data: exist,
-    error: existError
-  } = await supabase
-    .from('bookings')
-    .select('id')
-    .eq('date', date)
-    .eq('time', time)
-    .eq('stylist', stylist);
-
-  if (existError) {
-    return res.status(500).json(existError);
-  }
-
-  if (exist && exist.length > 0) {
-    return res.status(409).json({
-      error: 'Slot already booked'
-    });
-  }
-
-  const { data, error } = await supabase
-    .from('bookings')
-    .insert([
-      {
-        date,
-        time,
-        stylist,
-        name,
-        gender,
-        phone,
-        service,
-        note
-      }
-    ])
-    .select()
-    .single();
-
-  if (error) {
-    return res.status(500).json(error);
-  }
-
-  res.json(data);
-});
-
-/* ---------- DEVELOP ----------
-   Update booking
-   RESCHEDULE + NOTE SUPPORT
----------------------------- */
-app.put('/bookings/:id', async (req, res) => {
-  const { id } = req.params;
-
-  const {
-    date,
-    time,
-    name,
-    phone,
-    gender,
-    service,
-    note
-  } = req.body;
-
-  /*
-   * ดึง booking เดิมก่อน
-   * เพื่อรู้ stylist
-   */
-  const {
-    data: current,
-    error: fetchError
-  } = await supabase
-    .from('bookings')
-    .select('*')
-    .eq('id', id)
-    .single();
-
-  if (fetchError || !current) {
-    return res.status(404).json({
-      error: 'Booking not found'
-    });
-  }
-
-  const newDate = date || current.date;
-  const newTime = time || current.time;
-  const stylist = current.stylist;
-
-  try {
-    /*
-     * อนุญาตให้จัดการคิวเดิม
-     * ที่อยู่ในวันปิดได้
-     *
-     * แต่ไม่อนุญาตให้ย้ายคิว
-     * จากวันอื่นเข้ามาในวันที่
-     * ปิดร้านทั้งระบบ
-     *
-     * public_closed_days
-     * ไม่กระทบการย้ายคิว
-     */
-    if (
-      newDate !== current.date &&
-      await isShopClosed(newDate)
-    ) {
-      return res.status(403).json({
-        error: 'Shop closed'
-      });
-    }
-  } catch (error) {
-    console.error(
-      '[ClosedDays] Check error',
-      error
-    );
-
-    return res.status(500).json({
-      error: 'Unable to check shop status'
-    });
-  }
-
-  /*
-   * ตรวจว่ามีคิวอื่นชนหรือไม่
-   * ยกเว้น ID ของคิวตัวเอง
-   */
-  const {
-    data: conflict,
-    error: conflictError
-  } = await supabase
-    .from('bookings')
-    .select('id')
-    .eq('date', newDate)
-    .eq('time', newTime)
-    .eq('stylist', stylist)
-    .neq('id', id);
-
-  if (conflictError) {
-    return res.status(500).json(conflictError);
-  }
-
-  if (conflict && conflict.length > 0) {
-    return res.status(409).json({
-      error: 'Slot already booked'
-    });
-  }
-
-  const { error } = await supabase
-    .from('bookings')
-    .update({
-      date: newDate,
-      time: newTime,
-      name,
-      phone,
-      gender,
-      service,
-      note
-    })
-    .eq('id', id);
-
-  if (error) {
-    return res.status(500).json(error);
-  }
-
-  res.json({
-    success: true
-  });
-});
-
-/* ---------- BASIC ----------
-   Delete booking
----------------------------- */
-app.delete('/bookings/:id', async (req, res) => {
-  const { id } = req.params;
-
-  const { error } = await supabase
-    .from('bookings')
-    .delete()
-    .eq('id', id);
-
-  if (error) {
-    return res.status(500).json(error);
-  }
-
-  res.json({
-    success: true
-  });
-});
-
-/* =========================
-   START SERVER
-========================= */
-app.listen(PORT, () => {
-  console.log(
-    `Adore Hair server running on port ${PORT}`
+app.put('/bookings/:id', owner, route(async (req, res) => {
+  const current = await db(
+    supabase.from('bookings')
+      .select('*')
+      .eq('id', req.params.id)
+      .maybeSingle()
   );
+
+  if (!current) throw problem('ไม่พบรายการจอง', 404);
+
+  const payload = bookingPayload({
+    ...current,
+    ...req.body,
+    stylist: current.stylist
+  });
+
+  res.json(await command('booking_update', {
+    ...payload,
+    id: req.params.id
+  }));
+}));
+
+app.delete('/bookings/:id', owner, route(async (req, res) => {
+  res.json(await command('booking_delete', { id: req.params.id }));
+}));
+
+// ---------- จองออนไลน์ ----------
+app.get('/api/public/config', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  res.json({ ready: lineReady(), days_ahead: 60 });
 });
+
+app.get('/api/public/slots',
+  limit('slots', 90, 60000),
+  route(async (req, res) => {
+    if (!validDate(req.query.date)) throw problem('วันที่ไม่ถูกต้อง');
+    if (!['male', 'female'].includes(req.query.gender)) {
+      throw problem('กรุณาเลือกบริการ');
+    }
+
+    res.setHeader('Cache-Control', 'no-store');
+    res.json(await command('slots', {
+      date: req.query.date,
+      gender: req.query.gender,
+      pool: STYLISTS
+    }));
+  })
+);
+
+app.post('/api/public/requests',
+  limit('request', 10, 3600000),
+  route(async (req, res) => {
+    if (!lineReady()) {
+      throw problem('ร้านยังไม่เปิดรับจองออนไลน์ กรุณาโทรจอง', 503);
+    }
+
+    const key = String(req.body.key || '').toLowerCase();
+
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(key)) {
+      throw problem('รหัสคำขอไม่ถูกต้อง กรุณาโหลดหน้าใหม่');
+    }
+
+    if (!validDate(req.body.date) || !validTime(req.body.time)) {
+      throw problem('วันที่หรือเวลาไม่ถูกต้อง');
+    }
+
+    const bookingCode = `AD-${key.replaceAll('-', '').slice(0, 20).toUpperCase()}`;
+
+    const q = await command('request', {
+      key,
+      booking_code: bookingCode,
+      customer_name: String(req.body.customer_name || '').trim(),
+      phone: phone(req.body.phone),
+      gender: req.body.gender,
+      date: req.body.date,
+      time: req.body.time,
+      pool: STYLISTS
+    });
+
+    res.setHeader('Cache-Control', 'no-store');
+    res.json(publicRequest(q));
+    void notifyPending();
+  })
+);
+
+app.post('/api/public/status',
+  limit('status', 120, 60000),
+  route(async (req, res) => {
+    const code = String(req.body.code || '').trim().toUpperCase();
+    const customerPhone = phone(req.body.phone);
+
+    if (!/^AD-[0-9A-F]{20}$/.test(code) ||
+        !/^0[689]\d{8}$/.test(customerPhone)) {
+      throw problem('กรุณากรอกรหัสการจองและเบอร์มือถือให้ถูกต้อง');
+    }
+
+    const q = await db(
+      supabase.from('online_requests')
+        .select('*')
+        .eq('booking_code', code)
+        .eq('phone', customerPhone)
+        .maybeSingle()
+    );
+
+    if (!q) throw problem('ไม่พบการจองที่ตรงกับข้อมูลนี้', 404);
+
+    const result = publicRequest(q);
+
+    // ระยะเวลาอาจถูกเจ้าของร้านแก้ไขภายหลัง
+    if (q.status === 'confirmed') {
+      const booking = await db(
+        supabase.from('bookings')
+          .select('date,time,duration_minutes')
+          .eq('online_request_id', q.id)
+          .maybeSingle()
+      );
+
+      if (booking) Object.assign(result, booking);
+    }
+
+    res.setHeader('Cache-Control', 'no-store');
+    res.json(result);
+  })
+);
+
+// ---------- คำขอในหน้า Owner ----------
+app.get('/owner/requests', owner, route(async (req, res) => {
+  const rows = await db(
+    supabase.from('online_requests')
+      .select('*')
+      .eq('status', 'pending')
+      .order('created_at', { ascending: true })
+  );
+
+  res.json(rows || []);
+}));
+
+app.post('/owner/requests/:id/:action', owner, route(async (req, res) => {
+  if (!['approve', 'reject'].includes(req.params.action)) {
+    throw problem('คำสั่งไม่ถูกต้อง');
+  }
+
+  const q = await command(req.params.action, {
+    id: req.params.id,
+    actor: 'Owner website'
+  });
+
+  res.json({ status: q.status, booking_code: q.booking_code });
+}));
+
+// ---------- LINE ----------
+async function lineAPI(endpoint, body, retryKey) {
+  const headers = {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${LINE_TOKEN}`
+  };
+
+  if (retryKey) headers['X-Line-Retry-Key'] = retryKey;
+
+  const response = await fetch(
+    `https://api.line.me/v2/bot/message/${endpoint}`,
+    {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(8000)
+    }
+  );
+
+  const alreadyAccepted =
+    response.status === 409 &&
+    response.headers.has('x-line-accepted-request-id');
+
+  if (!response.ok && !alreadyAccepted) {
+    throw new Error(`LINE HTTP ${response.status}`);
+  }
+}
+
+function endTime(time, duration) {
+  const [h, m] = time.split(':').map(Number);
+  const total = h * 60 + m + duration;
+  return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+}
+
+let notifying = false;
+
+async function notifyPending() {
+  if (notifying || !lineReady()) return;
+  notifying = true;
+
+  try {
+    const requests = await db(
+      supabase.from('online_requests')
+        .select('*')
+        .eq('status', 'pending')
+        .is('line_sent_at', null)
+        .lte('notify_after', new Date().toISOString())
+        .order('created_at', { ascending: true })
+        .limit(10)
+    );
+
+    for (const q of requests || []) {
+      try {
+        const service = q.gender === 'female' ? 'ตัดผมหญิง' : 'ตัดผมชาย';
+
+        await lineAPI('push', {
+          to: LINE_TARGET,
+          messages: [{
+            type: 'template',
+            altText: `มีคำขอจองใหม่ ${q.date} ${q.time.slice(0, 5)}`,
+            template: {
+              type: 'buttons',
+              title: 'มีคำขอจองใหม่',
+              text: [
+                q.customer_name.slice(0, 45),
+                `${service} · ช่าง ${q.stylist}`,
+                `${q.date} ${q.time.slice(0, 5)}–${endTime(q.time, q.duration_minutes)}`,
+                q.phone
+              ].join('\n'),
+              actions: [
+                {
+                  type: 'postback',
+                  label: 'อนุมัติ',
+                  data: `action=approve&id=${q.id}`
+                },
+                {
+                  type: 'postback',
+                  label: 'ปฏิเสธ',
+                  data: `action=reject&id=${q.id}`
+                }
+              ]
+            }
+          }]
+        }, q.id);
+
+        await db(
+          supabase.from('online_requests')
+            .update({
+              line_sent_at: new Date().toISOString(),
+              line_error: null
+            })
+            .eq('id', q.id)
+        );
+      } catch (error) {
+        const attempts = q.notify_attempts + 1;
+        const wait = Math.min(3600, 30 * (2 ** Math.min(attempts, 7)));
+
+        await db(
+          supabase.from('online_requests')
+            .update({
+              notify_attempts: attempts,
+              line_error: String(error.message).slice(0, 200),
+              notify_after: new Date(Date.now() + wait * 1000).toISOString()
+            })
+            .eq('id', q.id)
+        );
+      }
+    }
+  } catch (error) {
+    console.error('[LINE notification]', error.code || error.message);
+  } finally {
+    notifying = false;
+  }
+}
+
+app.post('/line/webhook', route(async (req, res) => {
+  if (!LINE_SECRET) throw problem('LINE ยังไม่ได้ตั้งค่า', 503);
+
+  const expected = createHmac('sha256', LINE_SECRET)
+    .update(req.rawBody || Buffer.alloc(0))
+    .digest('base64');
+
+  if (!same(expected, req.headers['x-line-signature'] || '')) {
+    throw problem('Invalid LINE signature', 401);
+  }
+
+  for (const event of req.body.events || []) {
+    const source = event.source || {};
+
+    // พิมพ์ /id ใน LINE แล้วอ่าน ID จาก Server Logs
+    if (event.type === 'message' &&
+        event.message?.type === 'text' &&
+        event.message.text.trim() === '/id') {
+      console.log('[LINE setup IDs]', JSON.stringify({
+        userId: source.userId,
+        groupId: source.groupId,
+        roomId: source.roomId
+      }));
+      continue;
+    }
+
+    if (event.type !== 'postback') continue;
+
+    const origin = source.groupId || source.roomId || source.userId;
+
+    if (!LINE_ADMINS.has(source.userId) || origin !== LINE_TARGET) {
+      continue;
+    }
+
+    const params = new URLSearchParams(event.postback?.data || '');
+    const action = params.get('action');
+    const id = params.get('id');
+
+    if (!['approve', 'reject'].includes(action) ||
+        !/^[0-9a-f-]{36}$/i.test(id || '')) {
+      continue;
+    }
+
+    let text;
+
+    try {
+      const q = await command(action, {
+        id,
+        actor: `LINE:${source.userId}`
+      });
+
+      const labels = {
+        pending: 'รออนุมัติ',
+        confirmed: 'ยืนยันการจองแล้ว',
+        rejected: 'ปฏิเสธคำขอแล้ว',
+        cancelled: 'ยกเลิกแล้ว'
+      };
+
+      text = `${labels[q.status]}\n${q.customer_name}\n${q.date} ${q.time.slice(0, 5)}`;
+    } catch (error) {
+      if (error.code !== 'P0001') throw error;
+      text = error.message;
+    }
+
+    if (event.replyToken) {
+      try {
+        await lineAPI('reply', {
+          replyToken: event.replyToken,
+          messages: [{ type: 'text', text }]
+        });
+      } catch (error) {
+        console.error('[LINE reply]', error.message);
+      }
+    }
+  }
+
+  res.sendStatus(200);
+}));
+
+app.use(express.static(PUBLIC_DIR, {
+  index: false,
+  dotfiles: 'deny',
+  maxAge: 0
+}));
+
+app.use((error, req, res, next) => {
+  let status = error.status || 500;
+  let message = error.message || 'เกิดข้อผิดพลาด';
+
+  if (error.code === 'P0001') {
+    status = message === 'Shop closed' ? 403 : 409;
+  } else if (['23505', '23P01', '40001', '40P01'].includes(error.code)) {
+    status = 409;
+    message = 'มีการเปลี่ยนแปลงคิวพร้อมกัน กรุณาลองใหม่';
+  } else if (error.code?.startsWith('22')) {
+    status = 400;
+    message = 'รูปแบบข้อมูลไม่ถูกต้อง';
+  }
+
+  if (status >= 500) {
+    console.error('[Server]', error.code || error.message);
+    message = 'ระบบขัดข้องชั่วคราว กรุณาลองใหม่หรือติดต่อร้าน';
+  }
+
+  res.status(status).json({ error: message });
+});
+
+app.listen(PORT, () => {
+  console.log(`Adore Hair server running on port ${PORT}`);
+  console.log(`LINE configured: ${lineReady()}`);
+  void notifyPending();
+});
+
+setInterval(() => void notifyPending(), 30000).unref();
