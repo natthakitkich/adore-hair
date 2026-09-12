@@ -4,16 +4,22 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="referrer" content="same-origin">
+
   <title>จองคิวตัดผม — Adore Hair Studio</title>
+
   <link rel="stylesheet" href="/online.css">
 </head>
 
 <body class="online-page">
   <main class="online-shell">
-    <a class="online-back" href="/queue">‹ กลับหน้าปฏิทินคิว</a>
+
+    <a class="online-back" href="/queue">
+      ‹ กลับหน้าปฏิทินคิว
+    </a>
 
     <header class="online-heading">
       <img src="/logo.png" alt="Adore Hair Studio">
+
       <div>
         <p class="online-eyebrow">ADORE HAIR STUDIO</p>
         <h1>จองคิวตัดผม</h1>
@@ -25,28 +31,34 @@
       <h2>เลือกบริการและเวลา</h2>
 
       <p class="online-muted">
-        ตัดผมชาย 1 ชั่วโมง · ตัดผมหญิง 2 ชั่วโมง<br>
         ไม่มีค่ามัดจำ การจองสำเร็จเมื่อร้านกดอนุมัติแล้ว
       </p>
 
       <form id="requestForm">
         <label for="service">บริการ</label>
+
         <select id="service" required>
-          <option value="male">ตัดผมชาย — 1 ชั่วโมง</option>
-          <option value="female">ตัดผมหญิง — 2 ชั่วโมง</option>
+          <option value="male">ตัดผมชาย</option>
+          <option value="female">ตัดผมหญิง</option>
         </select>
 
         <label for="date">วันที่</label>
         <input id="date" type="date" required>
 
         <label for="time">เวลาเริ่ม</label>
+
         <select id="time" required disabled>
           <option value="">กำลังตรวจสอบเวลา</option>
         </select>
 
-        <p id="slotMessage" class="online-muted" aria-live="polite"></p>
+        <p
+          id="slotMessage"
+          class="online-muted"
+          aria-live="polite"
+        ></p>
 
         <label for="customerName">ชื่อลูกค้า</label>
+
         <input
           id="customerName"
           type="text"
@@ -57,6 +69,7 @@
         >
 
         <label for="customerPhone">เบอร์มือถือ</label>
+
         <input
           id="customerPhone"
           type="tel"
@@ -72,11 +85,20 @@
           หลังส่งคำขอ ระบบจะเก็บรหัสการจองไว้ในเบราว์เซอร์เครื่องนี้
         </p>
 
-        <button id="submitRequest" class="online-primary" type="submit" disabled>
+        <button
+          id="submitRequest"
+          class="online-primary"
+          type="submit"
+          disabled
+        >
           ส่งคำขอจอง
         </button>
 
-        <p id="requestMessage" class="online-message" aria-live="polite"></p>
+        <p
+          id="requestMessage"
+          class="online-message"
+          aria-live="polite"
+        ></p>
       </form>
     </section>
 
@@ -87,6 +109,7 @@
 
       <form id="statusForm">
         <label for="bookingCode">รหัสการจอง</label>
+
         <input
           id="bookingCode"
           type="text"
@@ -97,6 +120,7 @@
         >
 
         <label for="lookupPhone">เบอร์มือถือที่ใช้จอง</label>
+
         <input
           id="lookupPhone"
           type="tel"
@@ -111,11 +135,20 @@
         </button>
       </form>
 
-      <div id="statusResult" class="online-status" aria-live="polite">
+      <div
+        id="statusResult"
+        class="online-status"
+        aria-live="polite"
+      >
         กรอกรหัสการจองและเบอร์มือถือเพื่อตรวจสอบสถานะ
       </div>
 
-      <button id="copyCode" class="online-secondary" type="button" hidden>
+      <button
+        id="copyCode"
+        class="online-secondary"
+        type="button"
+        hidden
+      >
         คัดลอกรหัสการจอง
       </button>
 
@@ -128,13 +161,16 @@
 
     <section class="online-box">
       <h2>ติดต่อร้าน</h2>
+
       <a class="online-phone" href="tel:0887830304">
         ตัดผมชาย–หญิง · 088-783-0304
       </a>
+
       <a class="online-phone" href="tel:0896532396">
         ทำสี ยืด และบริการอื่น · 089-653-2396
       </a>
     </section>
+
   </main>
 
   <script src="/book.js"></script>
