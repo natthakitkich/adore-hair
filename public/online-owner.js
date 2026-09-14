@@ -3,7 +3,6 @@
 
   const originalFetch = window.fetch.bind(window);
   const $ = id => document.getElementById(id);
-
   const CREATE_DURATION = 60;
 
   let pending = [];
@@ -28,9 +27,6 @@
     const [hour, minute] = String(time).split(':').map(Number);
     return hour * 60 + minute;
   };
-
-  const timeText = total =>
-    `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
 
   function blocked(rows, date, time, duration, stylist, excludeId) {
     const start = minutes(time);
@@ -84,7 +80,6 @@
     return result;
   }
 
-  // คงระยะเวลาภายในระบบ โดยไม่สร้างช่องเลือกบนหน้าเว็บ
   window.fetch = async (input, options = {}) => {
     const inputURL =
       typeof input === 'string' || input instanceof URL
@@ -126,7 +121,6 @@
     return response;
   };
 
-  // ใช้การเข้าสู่ระบบที่ตรวจสอบจาก Server
   localStorage.removeItem('adore_logged_in');
 
   pinInput.removeAttribute('maxlength');
@@ -190,7 +184,6 @@
     }
   };
 
-  // ตรวจเวลาว่าง รวมช่วงเวลาของคำขอที่รออนุมัติ
   renderTimeOptions = function () {
     const previous = timeSelect.value;
     timeSelect.innerHTML = '';
@@ -250,7 +243,7 @@
     }
   };
 
-  // รายการคิวเดิม
+  // การ์ดแสดงเฉพาะเวลาเริ่มนัดและข้อมูลลูกค้า
   renderTable = function () {
     const expanded = new Set(
       [...listEl.querySelectorAll('.booking-card.expanded')]
@@ -268,10 +261,6 @@
       if (expanded.has(String(booking.id))) {
         card.classList.add('expanded');
       }
-
-      const start = minutes(booking.time);
-      const duration = Number(booking.duration_minutes || 60);
-      const end = start + duration;
 
       const cleanPhone =
         String(booking.phone || '').replace(/[^\d+]/g, '');
@@ -307,11 +296,6 @@
         </div>
 
         <div class="card-detail">
-          <div class="card-sub">
-            ${escapeHTML(timeText(start))}–${escapeHTML(timeText(end))}
-            · ${duration} นาที
-          </div>
-
           ${
             cleanPhone
               ? `
@@ -362,7 +346,6 @@
   const originalOpenEdit = openEditModal;
 
   openEditModal = function (booking) {
-    // เก็บระยะเวลาเดิมของคิวไว้เมื่อเปิดแก้ไข
     editDuration = Number(booking.duration_minutes || 60);
     originalOpenEdit(booking);
   };
@@ -443,116 +426,4 @@
       await call(
         `/bookings/${encodeURIComponent(editingBooking.id)}`,
         {
-          method: 'PUT',
-          body: JSON.stringify({
-            date: editDate.value,
-            time: editTime.value,
-            name: editName.value.trim(),
-            phone: editPhone.value.trim(),
-            gender:
-              document.querySelector('[name=editGender]:checked')
-                ?.value,
-            service: editService.value.trim(),
-            note: editNote.value.trim(),
-            duration_minutes: editDuration
-          })
-        }
-      );
-
-      editOverlay.classList.add('hidden');
-      showToast('บันทึกเรียบร้อยแล้ว');
-
-      await Promise.all([
-        loadBookings(),
-        loadCalendar()
-      ]);
-    } catch (error) {
-      showToast(error.message);
-    } finally {
-      button.disabled = false;
-    }
-  };
-
-  $('deleteEdit').onclick = () => {
-    if (!editingBooking) return;
-
-    const id = editingBooking.id;
-
-    openConfirm({
-      title: 'ลบคิว',
-      message:
-        'ยืนยันลบคิวนี้ใช่หรือไม่ หากเป็นคิวออนไลน์ ลูกค้าจะเห็นสถานะยกเลิก',
-
-      onConfirm: async () => {
-        try {
-          await call(
-            `/bookings/${encodeURIComponent(id)}`,
-            {
-              method: 'DELETE'
-            }
-          );
-
-          editOverlay.classList.add('hidden');
-          showToast('ลบคิวเรียบร้อยแล้ว');
-
-          await Promise.all([
-            loadBookings(),
-            loadCalendar()
-          ]);
-        } catch (error) {
-          showToast(error.message);
-        }
-      }
-    });
-  };
-
-  // โหลดคำขอไว้ตรวจเวลาซ้อนกัน โดยไม่แสดงการ์ดบนหน้าเจ้าของร้าน
-  async function loadRequests() {
-    const rows = await call('/owner/requests');
-    pending = rows;
-    renderTimeOptions();
-  }
-
-  async function refresh() {
-    if (!loggedIn || polling || document.hidden) return;
-
-    polling = true;
-
-    try {
-      await loadRequests();
-
-      if (editOverlay.classList.contains('hidden')) {
-        await Promise.all([
-          loadBookings(),
-          loadCalendar(),
-          loadClosedDays(),
-          loadPublicClosedDays()
-        ]);
-
-        renderCalendar();
-        renderBookingAvailability();
-      }
-    } catch (error) {
-      console.warn('อัปเดตข้อมูลคิวไม่สำเร็จ:', error.message);
-    } finally {
-      polling = false;
-    }
-  }
-
-  setInterval(refresh, 15000);
-
-  document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) {
-      void refresh();
-    }
-  });
-
-  document.addEventListener('DOMContentLoaded', async () => {
-    try {
-      await call('/owner/session');
-      await start();
-    } catch {
-      requireLogin();
-    }
-  });
-})();
+          method: 'PUT
