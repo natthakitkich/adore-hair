@@ -21,6 +21,11 @@ const APP_URL = new URL(
 const OWNER_PASSWORD = process.env.OWNER_PASSWORD || '';
 const SESSION_SECRET = process.env.SESSION_SECRET || '';
 
+// จำการเข้าสู่ระบบ 365 วัน
+// ต่ออายุเมื่อมีการใช้งานและผ่านการต่ออายุครั้งก่อนอย่างน้อย 1 วัน
+const SESSION_SECONDS = 365 * 24 * 60 * 60;
+const SESSION_RENEW_AFTER_MS = 24 * 60 * 60 * 1000;
+
 const LINE_SECRET =
   (process.env.LINE_CHANNEL_SECRET || '').trim();
 
@@ -121,7 +126,14 @@ function hasSession(req) {
   if (!Number.isFinite(Number(expires))) return false;
   if (Number(expires) <= Date.now()) return false;
 
-  return same(signature, sign(`${expires}.${nonce}`));
+  if (!same(signature, sign(`${expires}.${nonce}`))) {
+    return false;
+  }
+
+  return {
+    expires: Number(expires),
+    nonce
+  };
 }
 
 function cookie(value, seconds) {
@@ -138,10 +150,26 @@ function cookie(value, seconds) {
 function owner(req, res, next) {
   res.setHeader('Cache-Control', 'no-store');
 
-  if (!hasSession(req)) {
+  const session = hasSession(req);
+
+  if (!session) {
     return res.status(401).json({
       error: 'กรุณาเข้าสู่ระบบเจ้าของร้าน'
     });
+  }
+
+  // ต่ออายุอัตโนมัติ รวมถึงเซสชันเดิมที่ยังไม่หมดอายุ
+  if (
+    session.expires - Date.now() <=
+    SESSION_SECONDS * 1000 - SESSION_RENEW_AFTER_MS
+  ) {
+    const value =
+      `${Date.now() + SESSION_SECONDS * 1000}.${session.nonce}`;
+
+    res.setHeader(
+      'Set-Cookie',
+      cookie(`${value}.${sign(value)}`, SESSION_SECONDS)
+    );
   }
 
   next();
@@ -337,12 +365,12 @@ app.post(
     }
 
     const value =
-      `${Date.now() + 12 * 3600000}.` +
+      `${Date.now() + SESSION_SECONDS * 1000}.` +
       randomBytes(16).toString('hex');
 
     res.setHeader(
       'Set-Cookie',
-      cookie(`${value}.${sign(value)}`, 12 * 3600)
+      cookie(`${value}.${sign(value)}`, SESSION_SECONDS)
     );
 
     res.setHeader('Cache-Control', 'no-store');
@@ -375,6 +403,12 @@ async function sendPage(res, filename, mode) {
   );
 
   if (mode === 'owner') {
+    // ให้เบราว์เซอร์โหลดไฟล์ปิดเสียงฉบับใหม่
+    html = html.replace(
+      /alert-audio\.js(?:\?[^"']*)?/g,
+      'alert-audio.js?v=no-audio-1'
+    );
+
     html = html.replace(
       /<\/body\s*>/i,
       '<script src="/online-owner.js"></script></body>'
@@ -1031,3 +1065,5 @@ setInterval(
   () => void notifyPending(),
   30000
 ).unref();
+
+// END ADORE SERVER REMEMBER DEVICE
