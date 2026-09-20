@@ -1,1087 +1,818 @@
-body {
-  font-family:
-    'Inter',
-    'Noto Sans Thai',
-    -apple-system,
-    BlinkMacSystemFont,
-    'SF Pro Text',
-    'Segoe UI',
-    sans-serif;
-}
-/* ======================================================
-   FINAL GLASS CLEAR v1.0
-   iOS / visionOS inspired
-   SAFE MODE — NO LOGIC / NO LAYOUT IMPACT
-====================================================== */
-
-/* ======================================================
-   1. ROOT TOKENS — GLASS + READABILITY
-====================================================== */
-:root {
-  /* Glass transparency */
-  --glass-bg: rgba(255, 255, 255, 0.08);
-  --glass-bg-strong: rgba(255, 255, 255, 0.12);
-  --glass-border: rgba(255, 255, 255, 0.28);
-
-  /* Blur & saturation (key of clarity) */
-  --glass-blur: 30px;
-  --glass-saturate: 160%;
-  /* ======================================================
-   iOS TOAST — LIQUID GLASS
-====================================================== */
-
-.toast {
-  position: fixed;
-  bottom: 28px;
-  left: 50%;
-  transform: translateX(-50%);
-  min-width: 220px;
-  max-width: 90vw;
-
-  padding: 14px 18px;
-  border-radius: 18px;
-
-  background: rgba(40, 40, 50, 0.65);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-
-  color: #fff;
-  font-size: 0.95rem;
-  text-align: center;
-
-  box-shadow:
-    0 20px 40px rgba(0,0,0,0.45),
-    inset 0 1px 0 rgba(255,255,255,0.25);
-
-  opacity: 0;
-  pointer-events: none;
-
-  transition:
-    opacity 0.3s ease,
-    transform 0.3s ease;
-  z-index: 9999;
-}
-
-.toast.show {
-  opacity: 1;
-  transform: translateX(-50%) translateY(-6px);
-}
-
-/* ======================================================
-   CONFIRM MODAL (iOS)
-====================================================== */
-.modal.confirm {
-  max-width: 340px;
-  text-align: center;
-}
-
-.modal.confirm h3 {
-  margin-bottom: 6px;
-}
-
-.modal.confirm .row {
-  margin-top: 18px;
-  display: flex;
-  gap: 12px;
-}
-
-  /* Radius */
-  --radius-lg: 28px;
-  --radius-md: 22px;
-  --radius-sm: 14px;
-
-  /* Text colors (readable on glass) */
-  --text-primary: rgba(240, 248, 255, 0.95);
-  --text-secondary: rgba(210, 225, 240, 0.82);
-  --text-muted: rgba(180, 200, 220, 0.7);
-
-  /* Accent */
-  --accent-blue: rgba(140, 200, 255, 0.95);
-  --accent-pink: rgba(255, 170, 200, 0.95);
-
-  /* Shadows */
-  --shadow-outer: 0 30px 60px rgba(0, 0, 0, 0.45);
-  --shadow-inner:
-    inset 0 1px 0 rgba(255, 255, 255, 0.35),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.18);
-
-  /* Motion */
-  --ease-ios: cubic-bezier(0.22, 0.61, 0.36, 1);
-}
-
-/* ======================================================
-   2. GLOBAL SAFETY (iOS / Safari)
-====================================================== */
-* {
-  -webkit-tap-highlight-color: transparent;
-}
-
-body {
-  color: var(--text-primary);
-  background:
-    radial-gradient(circle at 20% 10%, #2e4c7a, transparent 45%),
-    radial-gradient(circle at 80% 30%, #6b4c8a, transparent 55%),
-    #05080f;
-  background-attachment: fixed;
-}
-
-/* ======================================================
-   3. GLASS SURFACE (CARDS / PANELS / MODAL)
-====================================================== */
-.card,
-.panel,
-.section,
-.booking-card,
-.modal,
-.popup {
-  position: relative;
-  background: var(--glass-bg);
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-  border-radius: var(--radius-md);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--shadow-outer), var(--shadow-inner);
-  overflow: hidden;
-}
-
-/* ======================================================
-   4. GLASS EDGE HIGHLIGHT (REFRACTION EDGE)
-====================================================== */
-.card::before,
-.booking-card::before,
-.modal::before,
-.popup::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: linear-gradient(
-    to bottom,
-    rgba(255,255,255,0.45),
-    rgba(255,255,255,0.05)
-  );
-  opacity: 0.35;
-  pointer-events: none;
-}
-
-/* ======================================================
-   5. REFRACTION LIGHT (GLASS DEPTH)
-====================================================== */
-.card::after,
-.booking-card::after,
-.modal::after,
-.popup::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(
-      circle at 30% 20%,
-      rgba(255,255,255,0.35),
-      transparent 60%
-    );
-  opacity: 0.35;
-  mix-blend-mode: screen;
-  pointer-events: none;
-}
-
-/* ======================================================
-   6. MODAL / POPUP — iOS SCROLL SAFE
-====================================================== */
-.modal,
-.popup {
-  background: var(--glass-bg-strong);
-  max-height: 88vh;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-}
-
-/* ======================================================
-   7. TEXT READABILITY (BOOKING CARD)
-====================================================== */
-.booking-card {
-  color: var(--text-secondary);
-}
-
-/* customer name */
-.booking-card .customer-name {
-  color: var(--text-primary);
-  font-weight: 600;
-  letter-spacing: 0.2px;
-}
-
-/* service / action */
-.booking-card .service {
-  color: var(--text-secondary);
-  font-size: 0.95rem;
-  margin-top: 4px;
-}
-
-/* phone / note */
-.booking-card .phone,
-.booking-card .note {
-  color: var(--text-muted);
-  font-size: 0.85rem;
-  margin-top: 6px;
-}
-
-/* ======================================================
-   8. INPUTS / SELECTS
-====================================================== */
-input,
-select,
-textarea {
-  background: rgba(255,255,255,0.22);
-  color: var(--text-primary);
-  border: 1px solid rgba(255,255,255,0.35);
-  border-radius: var(--radius-sm);
-}
-
-input::placeholder,
-textarea::placeholder {
-  color: var(--text-muted);
-}
-
-/* ======================================================
-   9. BUTTONS
-====================================================== */
-button,
-.btn,
-.manage-btn {
-  background: rgba(255,255,255,0.25);
-  color: var(--text-primary);
-  border-radius: var(--radius-sm);
-  border: 1px solid rgba(255,255,255,0.35);
-  transition: transform 0.15s var(--ease-ios);
-}
-
-button:active {
-  transform: scale(0.96);
-}
-
-/* ======================================================
-   10. GENDER SELECT — DOT ONLY (iOS STYLE)
-====================================================== */
-.gender-group {
-  display: flex;
-  gap: 20px;
-}
-
-.gender-option {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--text-secondary);
-}
-
-.gender-option input {
-  appearance: none;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  border: 2px solid rgba(255,255,255,0.6);
-  background: transparent;
-  position: relative;
-}
-
-.gender-option input:checked::after {
-  content: "";
-  position: absolute;
-  inset: 3px;
-  background: var(--accent-blue);
-  border-radius: 50%;
-}
-
-/* ======================================================
-   11. CALENDAR DAY
-====================================================== */
-.day {
-  background: rgba(255,255,255,0.18);
-  color: var(--text-primary);
-}
-
-.day.active {
-  box-shadow:
-    0 0 0 2px rgba(120,200,255,0.6),
-    var(--shadow-outer);
-}
-
-/* ======================================================
-   12. REDUCE MOTION
-====================================================== */
-@media (prefers-reduced-motion: reduce) {
-  * {
-    transition: none !important;
-    animation: none !important;
-  }
-}
-
-/* ======================================================
-   END — FINAL GLASS CLEAR v1.0
-====================================================== */
-.phone-call {
-  display: inline-block;
-  margin-top: 8px;
-  color: var(--text-accent-blue);
-  font-weight: 500;
-  text-decoration: none;
-}
-
-.phone-call:active {
-  opacity: 0.7;
-}
-/* ======================================================
-   TYPOGRAPHY SCALE — iOS READABLE (PRO)
-====================================================== */
-
-/* ---------- Form labels ---------- */
-label {
-  font-size: 1rem;           /* ~16px */
-  font-weight: 500;
-  margin-bottom: 6px;
-  display: block;
-}
-
-/* ---------- Inputs / Select / Textarea ---------- */
-input,
-select,
-textarea {
-  font-size: 1.05rem;        /* ~17px */
-  padding: 14px 16px;
-}
-
-/* ---------- Section titles (modal / panels) ---------- */
-.modal h2,
-.panel h2 {
-  font-size: 1.35rem;        /* ~22px */
-  font-weight: 600;
-  margin-bottom: 16px;
-}
-
-/* ---------- Booking card text ---------- */
-.booking-card {
-  font-size: 1rem;
-}
-
-/* ชื่อลูกค้า */
-.booking-card .customer-name,
-.booking-card .name {
-  font-size: 1.15rem;        /* ~18–19px */
-  font-weight: 600;
-}
-
-/* เวลา */
-.booking-card .time {
-  font-size: 1.05rem;
-  font-weight: 600;
-}
-
-/* บริการ / สิ่งที่ทำ */
-.booking-card .service {
-  font-size: 1rem;
-}
-
-/* เบอร์โทร / หมายเหตุ */
-.booking-card .phone,
-.booking-card .note,
-.booking-card .meta {
-  font-size: 0.95rem;
-}
-/* ======================================================
-   FORM READABILITY — iOS / PRO SIZE
-====================================================== */
-
-/* label / field title */
-.field-label {
-  display: block;
-  margin-bottom: 6px;
-  font-size: 1.05rem;     /* ⬅️ ใหญ่ขึ้น ~2 เท่า */
-  font-weight: 600;
-  letter-spacing: 0.3px;
-  color: var(--text-primary);
-  text-shadow: var(--text-shadow-soft);
-}
-
-/* input / select / textarea */
-input,
-select,
-textarea {
-  font-size: 1.05rem;     /* ⬅️ ใหญ่ขึ้น */
-  padding: 14px 16px;     /* ⬅️ นิ้วกดสบาย */
-  line-height: 1.4;
-}
-
-/* textarea สูงขึ้น */
-textarea {
-  min-height: 96px;
-}
-
-/* form section spacing */
-.grid > div {
-  margin-bottom: 18px;
-}
-/* ======================================================
-   STEP 7 — iOS FRIENDLY POPUP (FINAL OVERRIDE)
-   Safe override — paste at END of liquid-glass.css
-====================================================== */
-
-/* Overlay เต็มจอ + กันเด้ง */
-.overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  background: rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-
-  overscroll-behavior: contain;
-}
-
-/* กล่อง popup หลัก */
-.overlay .modal {
-  width: min(92vw, 520px);
-  max-height: 88vh;
-
-  display: flex;
-  flex-direction: column;
-
-  background: var(--glass-bg-strong);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--glass-border);
-
-  box-shadow:
-    0 30px 60px rgba(0,0,0,0.45),
-    inset 0 1px 0 rgba(255,255,255,0.35);
-
-  overflow: hidden; /* สำคัญ */
-}
-
-/* เนื้อหาใน popup — เลื่อนได้ */
-.overlay .modalBody {
-  flex: 1;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-
-  padding: 20px 20px 28px;
-}
-
-/* หัว popup */
-.overlay .modalBody h2 {
-  margin-bottom: 14px;
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-/* ปุ่มด้านล่าง — iOS style */
-.overlay .modalBody button {
-  margin-top: 12px;
-  min-height: 48px;
-  font-size: 1rem;
-}
-
-/* ปุ่มหลัก */
-.overlay .modalBody .primary {
-  background: linear-gradient(
-    180deg,
-    rgba(140,200,255,0.95),
-    rgba(90,160,220,0.95)
-  );
-  color: #fff;
-  border: none;
-}
-
-/* ปุ่มรอง */
-.overlay .modalBody .ghost {
-  background: rgba(255,255,255,0.18);
-  color: var(--text-primary);
-}
-
-/* กัน iOS zoom ตอน focus input */
-.overlay input,
-.overlay textarea,
-.overlay select {
-  font-size: 16px; /* iOS safe size */
-}
-
-/* ปิด bounce ทั้งหน้าเมื่อ popup เปิด */
-body.modal-open {
-  overflow: hidden;
-  position: fixed;
-  width: 100%;
-}
-
-/* Animation เข้าแบบ iOS */
-.overlay .modal {
-  animation: popupFloatIn 0.28s var(--ease-ios);
-}
-
-@keyframes popupFloatIn {
-  from {
-    opacity: 0;
-    transform: translateY(16px) scale(0.96);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-/* ======================================================
-   EDIT MODAL — LIQUID GLASS OVERRIDE (SCOPED ONLY)
-   Scope: #editOverlay
-====================================================== */
-
-/* คุมขนาด modal บน iOS */
-#editOverlay .modal {
-  max-height: 85vh;
-}
-
-/* body เลื่อนแบบ iOS แต่ไม่ยาวเกิน */
-#editOverlay .modalBody {
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  padding: 18px;
-}
-
-/* หัวข้อ */
-#editOverlay .modalBody h2 {
-  font-size: 1.15rem;
-  margin-bottom: 10px;
-}
-
-/* ปุ่มใน edit modal */
-#editOverlay button {
-  min-height: 44px;
-  font-size: 14px;
-}
-
-/* iPhone / iPad */
-@media (max-width: 834px) {
-  #editOverlay .modal {
-    max-height: 78vh;
-  }
-
-  #editOverlay .modalBody {
-    padding: 16px;
-  }
-
-  #editOverlay button {
-    min-height: 42px;
-    font-size: 13px;
-  }
-}
-/* ======================================================
-   CLOSURE MODAL — MOBILE OVERFLOW FIX
-   ป้องกันเมนูจัดการวันปิดร้านล้นจอ
-   เพิ่มส่วนนี้ไว้ท้ายสุดของ liquid-glass.css
-====================================================== */
-
-/*
- * จำกัดกล่อง Modal ให้อยู่ภายในพื้นที่หน้าจอจริง
- * ใช้ dvh เพื่อรองรับแถบ Address Bar ของ Safari / Chrome Mobile
- */
-#closureOverlay {
-  padding:
-    max(12px, env(safe-area-inset-top))
-    12px
-    max(12px, env(safe-area-inset-bottom));
-
-  align-items: center;
-  justify-content: center;
-
-  overflow: hidden;
-}
-
-/*
- * กล่อง Modal ต้องไม่สูงเกินหน้าจอ
- * และไม่ให้ตัว Modal ทั้งกล่องเลื่อน
- * เพราะเราจะให้เฉพาะ modalBody เป็นส่วนที่เลื่อน
- */
-#closureOverlay .modal {
-  width: min(430px, 100%);
-  max-width: 100%;
-
-  height: auto;
-  max-height: calc(
-    100dvh -
-    max(24px, env(safe-area-inset-top)) -
-    max(24px, env(safe-area-inset-bottom))
-  );
-
-  min-height: 0;
-
-  display: flex;
-  flex-direction: column;
-
-  overflow: hidden;
-}
-
-/*
- * จุดสำคัญ:
- * min-height: 0 ทำให้ลูกของ Flexbox หดลงได้
- * และ overflow-y: auto ทำให้เลื่อนบนมือถือได้จริง
- */
-#closureOverlay .modalBody {
-  width: 100%;
-  min-width: 0;
-  min-height: 0;
-
-  flex: 1 1 auto;
-
-  overflow-x: hidden;
-  overflow-y: auto;
-
-  overscroll-behavior-y: contain;
-  -webkit-overflow-scrolling: touch;
-  touch-action: pan-y;
-
-  align-items: stretch;
-  text-align: left;
-
-  padding:
-    20px
-    20px
-    calc(20px + env(safe-area-inset-bottom));
-}
-
-/*
- * จัดหัวข้อให้อยู่กึ่งกลาง
- * แต่เนื้อหาภายใน Section ยังอ่านง่ายแบบชิดซ้าย
- */
-#closureOverlay .modalBody > h2,
-#closureOverlay .closure-help {
-  text-align: center;
-}
-
-#closureOverlay .modalBody > h2 {
-  flex: 0 0 auto;
-  margin:
-    0
-    0
-    4px;
-}
-
-#closureOverlay .closure-help {
-  flex: 0 0 auto;
-
-  width: 100%;
-
-  margin:
-    0
-    0
-    2px;
-
-  line-height: 1.45;
-}
-
-/*
- * ป้องกันข้อความยาวดันกล่องออกด้านข้าง
- */
-#closureOverlay .closure-section,
-#closureOverlay .closure-section-header,
-#closureOverlay .closure-section-title,
-#closureOverlay .closure-section-description,
-#closureOverlay .closure-status {
-  min-width: 0;
-  max-width: 100%;
-
-  overflow-wrap: anywhere;
-  word-break: break-word;
-}
-
-/*
- * ลดระยะภายในแต่ละ Section
- * เพื่อให้ข้อมูลไม่แน่นและไม่กินความสูงเกินไป
- */
-#closureOverlay .closure-section {
-  flex: 0 0 auto;
-
-  padding: 14px;
-  margin: 0;
-
-  border-radius: 18px;
-}
-
-#closureOverlay .closure-section-header {
-  margin-bottom: 10px;
-}
-
-#closureOverlay .closure-section-title {
-  margin-bottom: 4px;
-
-  font-size: 14px;
-  line-height: 1.35;
-}
-
-#closureOverlay .closure-section-description {
-  font-size: 12px;
-  line-height: 1.45;
-}
-
-#closureOverlay .closure-status {
-  margin-bottom: 10px;
-  padding: 10px 12px;
-
-  font-size: 13px;
-  line-height: 1.4;
-}
-
-/*
- * ปุ่มควบคุมลดความสูงลงเล็กน้อย
- * แต่ยังมีพื้นที่กดมากพอบนมือถือ
- */
-#closureOverlay #toggleClosureBtn,
-#closureOverlay #togglePublicClosureBtn {
-  width: 100%;
-  min-height: 44px;
-
-  padding: 11px 13px;
-
-  font-size: 13px;
-  line-height: 1.35;
-
-  white-space: normal;
-  overflow-wrap: anywhere;
-}
-
-/*
- * ปุ่มปิดจะติดอยู่ด้านล่างของพื้นที่เลื่อน
- * ทำให้กดออกได้ตลอด แม้เนื้อหาจะยาว
- */
-#closureOverlay #closeClosure {
-  position: sticky;
-  bottom: 0;
-  z-index: 10;
-
-  flex: 0 0 auto;
-
-  width: 100%;
-  min-height: 44px;
-
-  margin-top: 2px;
-  padding: 11px 14px;
-
-  background:
-    linear-gradient(
-      180deg,
-      rgba(30, 36, 55, 0.96),
-      rgba(16, 20, 34, 0.98)
-    );
-
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-
-  border:
-    1px solid
-    rgba(255, 255, 255, 0.18);
-
-  box-shadow:
-    0 -12px 24px
-    rgba(5, 8, 15, 0.48),
-    inset 0 1px 0
-    rgba(255, 255, 255, 0.12);
-}
-
-/*
- * หน้าจอมือถือทั่วไป
- */
-@media (max-width: 600px) {
-  #closureOverlay {
-    padding:
-      max(8px, env(safe-area-inset-top))
-      10px
-      max(8px, env(safe-area-inset-bottom));
-  }
-
-  #closureOverlay .modal {
-    width: 100%;
-
-    max-height: calc(
-      100dvh -
-      max(16px, env(safe-area-inset-top)) -
-      max(16px, env(safe-area-inset-bottom))
-    );
-
-    border-radius: 22px;
-  }
-
-  #closureOverlay .modalBody {
-    gap: 12px;
-
-    padding:
-      16px
-      15px
-      calc(16px + env(safe-area-inset-bottom));
-  }
-
-  #closureOverlay .closure-section {
-    padding: 13px;
-    border-radius: 16px;
-  }
-
-  #closureOverlay .closure-section-description {
-    font-size: 11px;
-  }
-}
-
-/*
- * มือถือหน้าจอเตี้ย เช่น เปิดแนวนอน
- * หรือมี Keyboard / Browser Bar กินพื้นที่มาก
- */
-@media (max-height: 700px) {
-  #closureOverlay {
-    align-items: flex-start;
-  }
-
-  #closureOverlay .modalBody {
-    gap: 10px;
-
-    padding-top: 13px;
-    padding-bottom:
-      calc(13px + env(safe-area-inset-bottom));
-  }
-
-  #closureOverlay .modalBody > h2 {
-    font-size: 1.05rem;
-  }
-
-  #closureOverlay .closure-help {
-    font-size: 11px;
-    line-height: 1.35;
-  }
-
-  #closureOverlay .closure-section {
-    padding: 11px;
-  }
-
-  #closureOverlay .closure-section-header {
-    margin-bottom: 8px;
-  }
-
-  #closureOverlay .closure-status {
-    padding: 9px 10px;
-    margin-bottom: 8px;
-  }
-
-  #closureOverlay #toggleClosureBtn,
-  #closureOverlay #togglePublicClosureBtn,
-  #closureOverlay #closeClosure {
-    min-height: 40px;
-    padding: 9px 11px;
-  }
-}
-
-/*
- * มือถือจอแคบมาก
- */
-@media (max-width: 370px) {
-  #closureOverlay .modalBody {
-    padding-left: 12px;
-    padding-right: 12px;
-  }
-
-  #closureOverlay .closure-section {
-    padding: 10px;
-  }
-
-  #closureOverlay .closure-section-title {
-    font-size: 13px;
-  }
-
-  #closureOverlay .closure-section-description {
-    font-size: 10.5px;
-  }
-
-  #closureOverlay .closure-status,
-  #closureOverlay #toggleClosureBtn,
-  #closureOverlay #togglePublicClosureBtn {
-    font-size: 12px;
-  }
-}
-/* ======================================================
-   CLOSURE DATE INPUT — CROSS-BROWSER SAFE FIX
-   แก้เฉพาะช่องวันที่ในเมนูจัดการสถานะร้าน
-   ไม่กระทบ Input หรือ Modal ส่วนอื่น
-====================================================== */
-
-/*
- * พื้นที่ของหัวข้อวันที่และช่องวันที่
- * ใช้ align-self:stretch แทน width:100%
- * เพื่อลดปัญหา intrinsic width ของ Safari
- */
-#closureOverlay .field-label,
-#closureOverlay #closureDate {
-  align-self: stretch;
-
-  max-width: 100%;
-  min-width: 0;
-
-  box-sizing: border-box;
-}
-
-/*
- * ช่องวันที่หลัก
- *
- * ไม่ใช้ width:100% เพราะ Native Date Input ของ Safari
- * อาจคำนวณส่วนควบคุมภายในเกินพื้นที่จริง
- */
-#closureOverlay #closureDate {
-  display: block;
-
-  width: auto;
-  inline-size: auto;
-
-  height: 52px;
-  min-height: 52px;
+/* ADORE — iOS-inspired interface
+   Original fonts and calendar density colors preserved.
+*/
+
+/* =========================================
+   THEME
+========================================= */
+
+body:has(#bookingForm) {
+  color-scheme: light;
+
+  --ui-bg: #f2f2f7;
+  --ui-surface: #ffffff;
+  --ui-field: #f2f2f7;
+  --ui-text: #1c1c1e;
+  --ui-secondary: #636366;
+  --ui-line: rgba(60, 60, 67, .14);
+  --ui-blue: #007aff;
+  --ui-blue-soft: #e8f2ff;
+  --ui-glass: rgba(250, 250, 252, .88);
+  --ui-shadow: 0 3px 16px rgba(0, 0, 0, .045);
+
+  --ui-bank: #007b91;
+  --ui-sindy: #ad315f;
+  --ui-assist: #187047;
+
+  --text: var(--ui-text);
+  --muted: var(--ui-secondary);
+  --stroke: var(--ui-line);
+  --text-primary: var(--ui-text);
+  --text-secondary: var(--ui-secondary);
+  --text-muted: var(--ui-secondary);
 
   margin: 0;
-  padding: 0 14px;
-
-  color: var(--text-primary);
-
-  background:
-    rgba(255, 255, 255, 0.18);
-
-  border:
-    1px solid
-    rgba(255, 255, 255, 0.35);
-
-  border-radius: var(--radius-sm);
+  background: var(--ui-bg);
+  color: var(--ui-text);
 
   font-family:
-    'Inter',
-    'Noto Sans Thai',
+    "Inter",
+    "Noto Sans Thai",
     -apple-system,
     BlinkMacSystemFont,
-    'SF Pro Text',
-    'Segoe UI',
+    "SF Pro Text",
+    "Segoe UI",
     sans-serif;
 
   font-size: 16px;
-  font-weight: 500;
-  line-height: normal;
-
-  /*
-   * ห้ามซ่อน overflow
-   * เพราะทำให้วันที่ถูกตัดบน Safari macOS
-   */
-  overflow: visible;
-
-  transform: none;
-
-  /*
-   * คง Native Date Picker เดิมไว้
-   * ระบบ JavaScript และการเลือกวันที่ไม่เปลี่ยน
-   */
-  -webkit-appearance: auto;
-  appearance: auto;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
 }
 
-/*
- * ค่าแสดงวันที่ภายใน Safari / WebKit
- * รีเซ็ตเฉพาะ spacing ไม่บังคับ width ภายใน
- */
-#closureOverlay #closureDate::-webkit-date-and-time-value {
-  margin: 0;
+@media (prefers-color-scheme: dark) {
+  body:has(#bookingForm) {
+    color-scheme: dark;
+
+    --ui-bg: #000000;
+    --ui-surface: #1c1c1e;
+    --ui-field: #2c2c2e;
+    --ui-text: #f5f5f7;
+    --ui-secondary: #aeaeb2;
+    --ui-line: rgba(235, 235, 245, .16);
+    --ui-blue: #0a84ff;
+    --ui-blue-soft: #163454;
+    --ui-glass: rgba(28, 28, 30, .9);
+    --ui-shadow: 0 3px 16px rgba(0, 0, 0, .15);
+
+    --ui-bank: #6ee7ff;
+    --ui-sindy: #ff8fb1;
+    --ui-assist: #2cff9c;
+  }
+}
+
+body:has(#bookingForm) * {
+  box-sizing: border-box;
+}
+
+body:has(#bookingForm) .hidden,
+body:has(#bookingForm) [hidden] {
+  display: none !important;
+}
+
+/* =========================================
+   HEADER
+========================================= */
+
+body:has(#bookingForm) .topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+
+  padding:
+    14px
+    max(20px, env(safe-area-inset-right))
+    14px
+    max(20px, env(safe-area-inset-left));
+
+  background: var(--ui-glass);
+  border-bottom: 1px solid var(--ui-line);
+
+  backdrop-filter: blur(20px) saturate(135%);
+  -webkit-backdrop-filter: blur(20px) saturate(135%);
+}
+
+body:has(#bookingForm) .brand {
+  min-width: 0;
+  gap: 12px;
+}
+
+body:has(#bookingForm) .avatar {
+  flex-shrink: 0;
+  border-radius: 13px;
+  background: #ffffff;
+}
+
+body:has(#bookingForm) .title {
+  font-size: 17px;
+  font-weight: 650;
+  letter-spacing: -.3px;
+}
+
+body:has(#bookingForm) .subtitle {
+  font-size: 12px;
+  color: var(--ui-secondary);
+}
+
+body:has(#bookingForm) #logoutBtn {
+  flex-shrink: 0;
+  margin-left: 10px;
+  color: var(--ui-blue);
+}
+
+/* =========================================
+   PAGE LAYOUT
+========================================= */
+
+body:has(#bookingForm) .wrap {
+  max-width: 960px;
+  padding: 24px 20px;
+  margin: 0 auto 48px;
+}
+
+body:has(#bookingForm) .panel {
+  padding: 24px;
+  margin-bottom: 20px;
+  border: 1px solid var(--ui-line);
+  border-radius: 24px;
+  background: var(--ui-surface);
+  box-shadow: var(--ui-shadow);
+}
+
+/* =========================================
+   CALENDAR
+   ใช้สีสถานะจาก style.css เดิม
+   ไม่เปลี่ยน --low / --mid / --high
+========================================= */
+
+body:has(#bookingForm) .panel:has(.calendar-shell) {
+  background: #1c1c1e;
+  color: #f5f5f7;
+
+  --text: #f5f5f7;
+  --muted: #b0b0b8;
+  --stroke: rgba(255, 255, 255, .10);
+}
+
+body:has(#bookingForm) .calendar-shell {
+  max-width: 420px;
   padding: 0;
-
-  min-height: 50px;
-
-  line-height: 50px;
-  text-align: left;
 }
 
-#closureOverlay #closureDate::-webkit-datetime-edit {
-  margin: 0;
-  padding: 0;
-
-  line-height: normal;
+body:has(#bookingForm) .calendarHeader {
+  margin-bottom: 20px;
+  gap: 12px;
 }
 
-#closureOverlay #closureDate::-webkit-datetime-edit-fields-wrapper {
-  margin: 0;
-  padding: 0;
+body:has(#bookingForm) .calendarTitle {
+  font-size: 23px;
+  font-weight: 650;
+  letter-spacing: -.5px;
 }
 
-/*
- * ไอคอนเปิดปฏิทิน
- */
-#closureOverlay #closureDate::-webkit-calendar-picker-indicator {
-  margin: 0 0 0 8px;
-  padding: 2px;
+body:has(#bookingForm) .calendarGrid {
+  gap: 10px;
+}
 
+body:has(#bookingForm) .day {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  font-size: 17px;
+  font-weight: 600;
+  box-shadow: none;
   cursor: pointer;
 }
 
-/*
- * Safari บน iPhone / iPad
- *
- * ใช้ appearance:none เฉพาะอุปกรณ์สัมผัสของ WebKit
- * เพื่อตัด intrinsic width ที่ทำให้ช่องล้น
- * การแตะช่องยังเปิด Native Date Picker ตามเดิม
- */
-@supports (-webkit-touch-callout: none) {
-  #closureOverlay #closureDate {
-    width: auto;
-    inline-size: auto;
+/* เปลี่ยนพื้นเฉพาะวันที่ไม่มีคิวและไม่ใช่วันปิดร้าน */
+body:has(#bookingForm)
+.day:not(.low):not(.mid):not(.high):not(.closed) {
+  background: #2c2c2e;
+  color: #f5f5f7;
+}
 
-    max-width: 100%;
-    min-width: 0;
+/* วงวันที่เลือก ใช้สีเดิม */
+body:has(#bookingForm) .day.today {
+  box-shadow: 0 0 0 2px var(--accent);
+}
 
-    height: 52px;
-    min-height: 52px;
+body:has(#bookingForm) .calendarLegend {
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  font-size: 13px;
+}
 
-    padding:
-      0
-      13px;
+body:has(#bookingForm) .calendarStats {
+  box-shadow: none;
+  padding: 10px 14px;
+  line-height: 1.5;
+}
 
-    -webkit-appearance: none;
-    appearance: none;
+body:has(#bookingForm) .calendar-manage-row {
+  margin-top: 14px;
+}
 
-    overflow: hidden;
+body:has(#bookingForm) .calendar-shell button {
+  background: #2c2c2e;
+  color: #f5f5f7;
+  border-color: rgba(255, 255, 255, .12);
+}
+
+/* =========================================
+   SUMMARY
+========================================= */
+
+body:has(#bookingForm) .summary {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+body:has(#bookingForm) .summary .box {
+  padding: 16px 8px;
+  border-radius: 16px;
+  background: var(--ui-field);
+}
+
+body:has(#bookingForm) .summary strong {
+  display: block;
+  font-size: 30px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+/* =========================================
+   BUTTONS
+========================================= */
+
+body:has(#bookingForm) button {
+  min-height: 44px;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: 14px;
+  cursor: pointer;
+  box-shadow: none;
+
+  transition:
+    opacity .16s ease,
+    transform .16s ease;
+
+  -webkit-tap-highlight-color: transparent;
+}
+
+body:has(#bookingForm) button:active {
+  transform: scale(.98);
+}
+
+body:has(#bookingForm) button:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+body:has(#bookingForm) .primary {
+  background: var(--ui-blue);
+  color: #ffffff;
+  border: 0;
+  padding: 14px 18px;
+}
+
+body:has(#bookingForm) .ghost {
+  background: var(--ui-field);
+  color: var(--ui-text);
+  border: 1px solid var(--ui-line);
+}
+
+body:has(#bookingForm) .danger {
+  background: #d92d3a;
+  color: #ffffff;
+}
+
+/* =========================================
+   STYLIST TABS
+========================================= */
+
+body:has(#bookingForm) .tabs {
+  background: var(--ui-field);
+  padding: 4px;
+  border-radius: 15px;
+  gap: 4px;
+}
+
+body:has(#bookingForm) .tab {
+  background: transparent;
+  color: var(--ui-secondary);
+  border: 0;
+  padding: 10px 8px;
+}
+
+body:has(#bookingForm) .tab.active {
+  background: var(--ui-surface);
+  color: var(--ui-text);
+  box-shadow: 0 1px 5px rgba(0, 0, 0, .12);
+  font-weight: 650;
+}
+
+/* =========================================
+   FORM
+========================================= */
+
+body:has(#bookingForm) .grid {
+  gap: 20px 16px;
+}
+
+body:has(#bookingForm) .grid > div {
+  min-width: 0;
+}
+
+body:has(#bookingForm) label.field-label {
+  display: block;
+  margin: 0 0 8px;
+  color: var(--ui-text);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+body:has(#bookingForm) input:not([type=radio]):not([type=checkbox]),
+body:has(#bookingForm) select,
+body:has(#bookingForm) textarea {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+  min-height: 50px;
+  padding: 13px 14px;
+
+  border-radius: 13px;
+  border: 1px solid var(--ui-line);
+  background: var(--ui-field);
+  color: var(--ui-text);
+
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.5;
+  box-shadow: none;
+}
+
+body:has(#bookingForm) textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+body:has(#bookingForm) input::placeholder,
+body:has(#bookingForm) textarea::placeholder {
+  color: var(--ui-secondary);
+  opacity: .85;
+}
+
+body:has(#bookingForm) select + input {
+  margin-top: 10px;
+}
+
+body:has(#bookingForm)
+:is(button, input, select, textarea, a):focus-visible {
+  outline: 3px solid var(--ui-blue);
+  outline-offset: 3px;
+}
+
+body:has(#bookingForm) #pin {
+  letter-spacing: normal;
+  font-size: 16px;
+  font-weight: 400;
+}
+
+/* =========================================
+   GENDER SELECT
+========================================= */
+
+body:has(#bookingForm) .gender-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  background: var(--ui-field);
+  padding: 4px;
+  border-radius: 14px;
+}
+
+body:has(#bookingForm) .gender-option input {
+  display: block;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  padding: 0;
+  margin: 0;
+}
+
+body:has(#bookingForm) .gender-option label {
+  margin: 0;
+  min-height: 44px;
+  padding: 10px 6px;
+  border: 0;
+  border-radius: 11px;
+  font-size: 15px;
+  color: var(--ui-secondary);
+  background: transparent;
+}
+
+body:has(#bookingForm) .gender-option input:checked + label {
+  background: var(--ui-surface);
+  color: var(--ui-text);
+  box-shadow: 0 1px 5px rgba(0, 0, 0, .12);
+}
+
+body:has(#bookingForm) .gender-option input:focus-visible + label {
+  outline: 2px solid var(--ui-blue);
+}
+
+body:has(#bookingForm) #editOverlay input[type=radio] {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--ui-blue);
+  box-shadow: none;
+}
+
+/* =========================================
+   BOOKING CARDS
+========================================= */
+
+body:has(#bookingForm) .booking-list {
+  gap: 12px;
+}
+
+body:has(#bookingForm) .booking-card,
+body:has(#bookingForm) .booking-card.expanded {
+  padding: 18px;
+  border: 1px solid var(--ui-line);
+  border-radius: 18px;
+  background: var(--ui-field);
+  color: var(--ui-text);
+  box-shadow: none;
+  gap: 10px;
+}
+
+body:has(#bookingForm) .booking-card:active {
+  transform: none;
+}
+
+body:has(#bookingForm) .card-main {
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+body:has(#bookingForm) .card-main-info {
+  min-width: 0;
+}
+
+body:has(#bookingForm) .time-pill {
+  background: var(--ui-blue-soft);
+  color: var(--ui-blue);
+  box-shadow: none;
+  border-radius: 12px;
+  padding: 7px 12px;
+  font-size: 20px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+body:has(#bookingForm) .badge {
+  padding: 7px 11px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+body:has(#bookingForm) .badge.Bank {
+  color: var(--ui-bank);
+  background: rgba(0, 175, 200, .12);
+}
+
+body:has(#bookingForm) .badge.Sindy {
+  color: var(--ui-sindy);
+  background: rgba(220, 70, 130, .12);
+}
+
+body:has(#bookingForm) .badge.Assist {
+  color: var(--ui-assist);
+  background: rgba(44, 190, 120, .12);
+}
+
+body:has(#bookingForm) .card-sub {
+  font-size: 16px;
+  color: var(--ui-text);
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+body:has(#bookingForm) .card-detail {
+  display: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+body:has(#bookingForm) .booking-card.expanded .card-detail {
+  display: flex;
+  max-height: none;
+  overflow: visible;
+  opacity: 1;
+  transform: none;
+  border-top: 1px solid var(--ui-line);
+  margin-top: 4px;
+  padding-top: 14px;
+  gap: 10px;
+}
+
+body:has(#bookingForm) :is(.phone-call, .phone-link, .call-btn) {
+  color: var(--ui-blue);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+/* =========================================
+   MODALS
+========================================= */
+
+body:has(#bookingForm) .overlay {
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding:
+    max(16px, env(safe-area-inset-top))
+    16px
+    max(16px, env(safe-area-inset-bottom));
+
+  background: rgba(0, 0, 0, .4);
+  overscroll-behavior: contain;
+}
+
+body:has(#bookingForm) .overlay .modal {
+  width: min(100%, 480px);
+  max-height: 88vh;
+  max-height: 88dvh;
+
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  background: var(--ui-surface);
+  color: var(--ui-text);
+  border: 1px solid var(--ui-line);
+  border-radius: 26px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, .22);
+
+  animation: adore-sheet-in .2s ease-out;
+}
+
+body:has(#bookingForm) .overlay .modalBody {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+
+  padding: 24px;
+  align-items: stretch;
+  text-align: left;
+  gap: 12px;
+}
+
+body:has(#bookingForm) .modalBody h2 {
+  font-size: 22px;
+  margin: 0 0 8px;
+  font-weight: 650;
+}
+
+body:has(#bookingForm) #loginOverlay .modalBody,
+body:has(#bookingForm) #confirmOverlay .modalBody {
+  text-align: center;
+}
+
+body:has(#bookingForm) #loginOverlay .avatar {
+  align-self: center;
+}
+
+/* =========================================
+   SHOP CLOSURE CONTROLS
+========================================= */
+
+body:has(#bookingForm) .closure-section {
+  background: var(--ui-field);
+  border: 1px solid var(--ui-line);
+  box-shadow: none;
+  padding: 16px;
+  border-radius: 16px;
+}
+
+body:has(#bookingForm) .closure-section-title {
+  color: var(--ui-text);
+}
+
+body:has(#bookingForm) .closure-section-description {
+  font-size: 13px;
+}
+
+body:has(#bookingForm) .closure-status.open {
+  color: #146c43;
+  background: #daf5e7;
+}
+
+body:has(#bookingForm) .closure-status.closed {
+  color: #a52640;
+  background: #ffe7ec;
+}
+
+body:has(#bookingForm) #toggleClosureBtn.close-shop,
+body:has(#bookingForm) #togglePublicClosureBtn.public-close-shop {
+  background: #d92d3a;
+  color: #ffffff;
+  box-shadow: none;
+}
+
+body:has(#bookingForm) #toggleClosureBtn.open-shop,
+body:has(#bookingForm) #togglePublicClosureBtn.public-open-shop {
+  background: #198754;
+  color: #ffffff;
+  box-shadow: none;
+}
+
+body:has(#bookingForm) #closureDate {
+  min-width: 0;
+  max-width: 100%;
+}
+
+body:has(#bookingForm) .closed-day-banner {
+  background: #ffe7ec;
+  color: #a52640;
+}
+
+body:has(#bookingForm) .closed-day-banner strong {
+  color: #a52640;
+}
+
+body:has(#bookingForm) .closed-day-banner-icon {
+  background: #a52640;
+}
+
+/* =========================================
+   TOAST
+========================================= */
+
+body:has(#bookingForm) .toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(24px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 2000;
+
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  padding: 13px 20px;
+  border-radius: 18px;
+
+  background: var(--ui-text);
+  color: var(--ui-surface);
+  font-size: 15px;
+  text-align: center;
+  box-shadow: var(--ui-shadow);
+  pointer-events: none;
+
+  opacity: 0;
+  transition: opacity .18s ease;
+}
+
+body:has(#bookingForm) .toast.show {
+  opacity: 1;
+}
+
+@keyframes adore-sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
   }
 
-  #closureOverlay #closureDate::-webkit-date-and-time-value {
-    display: block;
-
-    width: auto;
-    min-width: 0;
-
-    min-height: 50px;
-
-    margin: 0;
-    padding: 0;
-
-    line-height: 50px;
-    text-align: left;
+  to {
+    opacity: 1;
+    transform: none;
   }
 }
 
-/*
- * มือถือจอแคบ
- */
+/* =========================================
+   MOBILE
+========================================= */
+
 @media (max-width: 600px) {
-  #closureOverlay #closureDate {
-    height: 50px;
-    min-height: 50px;
-
-    padding:
-      0
-      12px;
-
-    border-radius: 14px;
+  body:has(#bookingForm) .topbar {
+    padding: 12px 14px;
   }
 
-  #closureOverlay #closureDate::-webkit-date-and-time-value {
-    min-height: 48px;
-    line-height: 48px;
+  body:has(#bookingForm) .title {
+    font-size: 15px;
+  }
+
+  body:has(#bookingForm) .subtitle {
+    font-size: 11px;
+  }
+
+  body:has(#bookingForm) #logoutBtn {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  body:has(#bookingForm) .wrap {
+    padding: 16px 12px;
+  }
+
+  body:has(#bookingForm) .panel {
+    padding: 18px 14px;
+    border-radius: 22px;
+    margin-bottom: 16px;
+  }
+
+  body:has(#bookingForm) .calendarGrid {
+    gap: 7px;
+  }
+
+  body:has(#bookingForm) .calendarTitle {
+    font-size: 21px;
+  }
+
+  body:has(#bookingForm) .day {
+    font-size: 16px;
+  }
+
+  body:has(#bookingForm) .summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  body:has(#bookingForm) .booking-card {
+    padding: 15px 12px;
+  }
+
+  body:has(#bookingForm) :is(#editOverlay, #closureOverlay) {
+    align-items: flex-end;
+    padding: max(12px, env(safe-area-inset-top)) 0 0;
+  }
+
+  body:has(#bookingForm) :is(#editOverlay, #closureOverlay) .modal {
+    width: 100%;
+    max-height: 90dvh;
+    border-radius: 26px 26px 0 0;
+  }
+
+  body:has(#bookingForm) :is(#editOverlay, #closureOverlay) .modalBody {
+    padding:
+      22px
+      18px
+      calc(22px + env(safe-area-inset-bottom));
   }
 }
+
+@media (max-width: 360px) {
+  body:has(#bookingForm) .grid {
+    grid-template-columns: 1fr;
+  }
+
+  body:has(#bookingForm) .calendarGrid {
+    gap: 5px;
+  }
+
+  body:has(#bookingForm) .calendarLegend {
+    font-size: 12px;
+    gap: 8px;
+  }
+}
+
+/* =========================================
+   ACCESSIBILITY
+========================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  body:has(#bookingForm) *,
+  body:has(#bookingForm) *::before,
+  body:has(#bookingForm) *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  body:has(#bookingForm) .topbar {
+    background: var(--ui-surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+/* END ADORE IOS THEME */
