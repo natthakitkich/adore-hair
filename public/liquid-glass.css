@@ -1,120 +1,146 @@
-/* ADORE — Liquid Glass */
+/* =====================================================
+   ADORE · CLEAR GLASS
+   Replace public/liquid-glass.css
+   Original fonts and density color tokens preserved.
+   ===================================================== */
+
+/* ---------- Appearance ---------- */
 
 body:has(#bookingForm) {
   color-scheme: light;
 
-  --ui-bg: #dfe5ec;
-  --ui-surface: #ffffff;
-  --ui-field: rgba(255,255,255,.46);
-  --ui-text: #1c1c1e;
-  --ui-secondary: #636366;
-  --ui-line: rgba(55,70,90,.16);
-  --ui-blue: #007aff;
-  --ui-blue-soft: #e8f2ff;
-  --ui-glass: rgba(255,255,255,.58);
-  --ui-edge: rgba(255,255,255,.92);
-  --ui-card: rgba(255,255,255,.36);
-  --ui-panel: rgba(255,255,255,.48);
-  --ui-modal: rgba(248,250,253,.82);
+  --ag-bg: #e9edf2;
+  --ag-text: #182230;
+  --ag-secondary: #505e70;
+  --ag-line: rgba(48, 65, 85, .17);
+  --ag-edge: rgba(255, 255, 255, .94);
 
-  --ui-shadow:
-    0 18px 44px -24px rgba(24,45,72,.35),
-    inset 0 1px 0 var(--ui-edge),
-    inset 0 -1px 0 rgba(255,255,255,.22);
+  --ag-panel: rgba(255, 255, 255, .64);
+  --ag-card: rgba(255, 255, 255, .79);
+  --ag-field: rgba(255, 255, 255, .76);
+  --ag-track: rgba(91, 110, 133, .10);
+  --ag-selected: rgba(255, 255, 255, .96);
+  --ag-modal: rgba(247, 250, 253, .95);
+  --ag-solid: #f7f9fc;
 
-  --ui-bank: #007b91;
-  --ui-sindy: #ad315f;
-  --ui-assist: #187047;
+  --ag-blue: #075cc5;
+  --ag-time-bg: #e6efff;
+  --ag-time-text: #124c99;
 
-  --text: var(--ui-text);
-  --muted: var(--ui-secondary);
-  --stroke: var(--ui-line);
-  --text-primary: var(--ui-text);
-  --text-secondary: var(--ui-secondary);
-  --text-muted: var(--ui-secondary);
+  --ag-bank-bg: #dceff4;
+  --ag-bank-text: #075a70;
+  --ag-sindy-bg: #f9e5ed;
+  --ag-sindy-text: #92274c;
+  --ag-assist-bg: #def1e7;
+  --ag-assist-text: #176441;
+
+  --ag-danger: #b52343;
+  --ag-danger-bg: #fce8ed;
+  --ag-success: #176441;
+  --ag-success-bg: #def1e7;
+
+  --ag-panel-shadow:
+    0 18px 48px -30px rgba(29, 47, 70, .34),
+    0 3px 10px -6px rgba(29, 47, 70, .12),
+    inset 0 1px 0 var(--ag-edge);
+
+  --ag-card-shadow:
+    0 8px 24px -18px rgba(29, 47, 70, .30),
+    inset 0 1px 0 var(--ag-edge);
+
+  --text: var(--ag-text);
+  --muted: var(--ag-secondary);
+  --stroke: var(--ag-line);
+  --text-primary: var(--ag-text);
+  --text-secondary: var(--ag-secondary);
+  --text-muted: var(--ag-secondary);
 
   margin: 0;
+  min-height: 100vh;
+
   background:
     radial-gradient(
-      ellipse at 10% 8%,
-      rgba(255,255,255,.95),
-      transparent 48%
+      ellipse at 8% 0%,
+      rgba(255, 255, 255, .98),
+      transparent 55%
     ),
     radial-gradient(
-      ellipse at 95% 35%,
-      rgba(151,184,209,.48),
-      transparent 54%
+      ellipse at 100% 38%,
+      rgba(178, 198, 218, .34),
+      transparent 58%
     ),
-    radial-gradient(
-      ellipse at 15% 82%,
-      rgba(213,196,174,.32),
-      transparent 48%
-    ),
-    var(--ui-bg);
+    linear-gradient(155deg, #eef2f6, var(--ag-bg));
 
   background-attachment: fixed;
-  color: var(--ui-text);
+  color: var(--ag-text);
 
   font-family:
     "Inter",
     "Noto Sans Thai",
     -apple-system,
     BlinkMacSystemFont,
-    "SF Pro Text",
     "Segoe UI",
     sans-serif;
 
   font-size: 16px;
-  line-height: 1.55;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
-
-/* Dark appearance */
 
 @media (prefers-color-scheme: dark) {
   body:has(#bookingForm) {
     color-scheme: dark;
 
-    --ui-bg: #11151b;
-    --ui-surface: #1c1c1e;
-    --ui-field: rgba(255,255,255,.065);
-    --ui-text: #f5f5f7;
-    --ui-secondary: #aeaeb2;
-    --ui-line: rgba(235,235,245,.16);
-    --ui-blue: #0a84ff;
-    --ui-blue-soft: #163454;
-    --ui-glass: rgba(28,33,42,.65);
-    --ui-edge: rgba(255,255,255,.25);
-    --ui-card: rgba(255,255,255,.065);
-    --ui-panel: rgba(34,40,50,.60);
-    --ui-modal: rgba(27,32,40,.88);
+    --ag-bg: #111820;
+    --ag-text: #f1f5fb;
+    --ag-secondary: #bbc7d6;
+    --ag-line: rgba(214, 229, 248, .19);
+    --ag-edge: rgba(255, 255, 255, .25);
 
-    --ui-shadow:
-      0 20px 48px -22px rgba(0,0,0,.6),
-      inset 0 1px 0 var(--ui-edge),
-      inset 0 -1px 0 rgba(255,255,255,.04);
+    --ag-panel: rgba(37, 47, 61, .76);
+    --ag-card: rgba(52, 64, 80, .86);
+    --ag-field: rgba(17, 25, 36, .68);
+    --ag-track: rgba(9, 16, 26, .32);
+    --ag-selected: rgba(82, 99, 121, .86);
+    --ag-modal: rgba(29, 39, 53, .96);
+    --ag-solid: #202c3a;
 
-    --ui-bank: #6ee7ff;
-    --ui-sindy: #ff8fb1;
-    --ui-assist: #2cff9c;
+    --ag-blue: #1671e5;
+    --ag-time-bg: #244265;
+    --ag-time-text: #d6eaff;
+
+    --ag-bank-bg: #224c59;
+    --ag-bank-text: #a2e8f7;
+    --ag-sindy-bg: #573249;
+    --ag-sindy-text: #ffd0df;
+    --ag-assist-bg: #244d40;
+    --ag-assist-text: #b8f1d4;
+
+    --ag-danger: #ffc4d1;
+    --ag-danger-bg: #552b3b;
+    --ag-success: #b8f1d4;
+    --ag-success-bg: #244d40;
+
+    --ag-panel-shadow:
+      0 20px 46px -28px rgba(0, 0, 0, .70),
+      inset 0 1px 0 var(--ag-edge);
+
+    --ag-card-shadow:
+      0 8px 22px -16px rgba(0, 0, 0, .65),
+      inset 0 1px 0 var(--ag-edge);
 
     background:
       radial-gradient(
-        ellipse at 0% 0%,
-        rgba(119,144,164,.27),
-        transparent 50%
-      ),
-      radial-gradient(
-        ellipse at 100% 38%,
-        rgba(77,106,129,.26),
+        ellipse at 5% 0%,
+        rgba(129, 153, 180, .20),
         transparent 55%
       ),
       radial-gradient(
-        ellipse at 15% 85%,
-        rgba(126,116,104,.16),
-        transparent 50%
+        ellipse at 100% 45%,
+        rgba(93, 122, 149, .15),
+        transparent 60%
       ),
-      var(--ui-bg);
+      var(--ag-bg);
 
     background-attachment: fixed;
   }
@@ -129,22 +155,29 @@ body:has(#bookingForm) [hidden] {
   display: none !important;
 }
 
-/* Navigation */
+body:has(#bookingForm) .muted {
+  color: var(--ag-secondary);
+}
+
+/* ---------- Header ---------- */
 
 body:has(#bookingForm) .topbar {
   position: sticky;
   top: 0;
   z-index: 30;
 
+  gap: 12px;
   padding:
     14px max(20px, env(safe-area-inset-right))
     14px max(20px, env(safe-area-inset-left));
 
-  background: var(--ui-glass);
-  border-bottom: 1px solid var(--ui-line);
+  background: var(--ag-panel);
+  border-bottom: 1px solid var(--ag-line);
 
-  backdrop-filter: blur(20px) saturate(135%);
-  -webkit-backdrop-filter: blur(20px) saturate(135%);
+  box-shadow: inset 0 1px 0 var(--ag-edge);
+
+  -webkit-backdrop-filter: blur(24px) saturate(125%);
+  backdrop-filter: blur(24px) saturate(125%);
 }
 
 body:has(#bookingForm) .brand {
@@ -152,99 +185,103 @@ body:has(#bookingForm) .brand {
   gap: 12px;
 }
 
+body:has(#bookingForm) .brand > div {
+  min-width: 0;
+}
+
 body:has(#bookingForm) .avatar {
   flex-shrink: 0;
-  border-radius: 13px;
+  border-radius: 14px;
   background: #fff;
 }
 
 body:has(#bookingForm) .title {
+  color: var(--ag-text);
   font-size: 17px;
-  font-weight: 650;
-  letter-spacing: -.3px;
+  font-weight: 600;
+  line-height: 1.4;
 }
 
 body:has(#bookingForm) .subtitle {
+  margin-top: 3px;
+  color: var(--ag-secondary);
   font-size: 12px;
-  color: var(--ui-secondary);
+  line-height: 1.5;
 }
+
+body:has(#bookingForm) #logoutBtn {
+  flex-shrink: 0;
+  white-space: nowrap;
+  padding: 10px 16px;
+}
+
+/* ---------- Main glass surfaces ---------- */
 
 body:has(#bookingForm) .wrap {
-  max-width: 960px;
+  max-width: 980px;
+  margin: 0 auto 60px;
   padding: 24px 20px;
-  margin: 0 auto 48px;
 }
-
-/* Glass panels */
 
 body:has(#bookingForm) .panel {
-  position: relative;
-  isolation: isolate;
-
   padding: 24px;
-  margin-bottom: 20px;
-  border: 1px solid var(--ui-line);
-  border-radius: 24px;
+  margin-bottom: 22px;
 
-  background: var(--ui-panel);
+  border: 1px solid var(--ag-line);
+  border-radius: 28px;
 
-  backdrop-filter: blur(24px) saturate(130%);
-  -webkit-backdrop-filter: blur(24px) saturate(130%);
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 255, 255, .12),
+      transparent 45%
+    ),
+    var(--ag-panel);
 
-  box-shadow: var(--ui-shadow);
+  box-shadow: var(--ag-panel-shadow);
+
+  -webkit-backdrop-filter: blur(24px) saturate(115%);
+  backdrop-filter: blur(24px) saturate(115%);
 }
 
-body:has(#bookingForm) .panel::before,
-body:has(#bookingForm) .booking-card::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  z-index: -1;
-
-  background: linear-gradient(
-    145deg,
-    rgba(255,255,255,.16),
-    transparent 35%,
-    transparent 72%,
-    rgba(255,255,255,.045)
-  );
-}
-
-/* Calendar: original density colors remain in style.css */
-
-body:has(#bookingForm) .panel:has(.calendar-shell) {
-  background: rgba(28,28,30,.94);
-  color: #f5f5f7;
-
-  --text: #f5f5f7;
-  --muted: #b0b0b8;
-  --stroke: rgba(255,255,255,.10);
-}
-
-body:has(#bookingForm) .panel:has(.calendar-shell)::before {
-  content: none;
-}
+/* ---------- Calendar ---------- */
 
 body:has(#bookingForm) .calendar-shell {
   max-width: 420px;
-  padding: 0;
+  margin: 0 auto;
+  padding: 4px;
+  color: var(--ag-text);
 }
 
 body:has(#bookingForm) .calendarHeader {
-  margin-bottom: 20px;
   gap: 12px;
+  margin-bottom: 22px;
 }
 
 body:has(#bookingForm) .calendarTitle {
-  font-size: 23px;
-  font-weight: 650;
-  letter-spacing: -.5px;
+  color: var(--ag-text);
+  font-size: clamp(20px, 3.5vw, 25px);
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+body:has(#bookingForm) .calendarHeader button {
+  flex-shrink: 0;
+  min-width: 44px;
+  padding: 8px 12px;
+  border-radius: 50%;
 }
 
 body:has(#bookingForm) .calendarGrid {
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 10px;
+}
+
+body:has(#bookingForm) .dayLabel {
+  padding-bottom: 4px;
+  color: var(--ag-secondary);
+  font-size: 13px;
+  font-weight: 500;
 }
 
 body:has(#bookingForm) .day {
@@ -252,80 +289,157 @@ body:has(#bookingForm) .day {
   height: auto;
   aspect-ratio: 1;
 
+  border: 1px solid var(--ag-line);
   border-radius: 50%;
+
   font-size: 17px;
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
 
-  box-shadow: none;
+  background: var(--ag-field);
+  color: var(--ag-text);
+
+  box-shadow: inset 0 1px 0 var(--ag-edge);
   cursor: pointer;
 }
 
-body:has(#bookingForm) .day:not(.low):not(.mid):not(.high):not(.closed) {
-  background: #2c2c2e;
-  color: #f5f5f7;
+/*
+  Keep original status hues.
+  Dark backing only under status dates maintains contrast.
+*/
+
+body:has(#bookingForm) .day.low {
+  color: var(--low);
+  background:
+    linear-gradient(rgba(44,255,156,.10), rgba(44,255,156,.10)),
+    #22313b;
+  border-color: rgba(44,255,156,.32);
+}
+
+body:has(#bookingForm) .day.mid {
+  color: var(--mid);
+  background:
+    linear-gradient(rgba(255,209,102,.10), rgba(255,209,102,.10)),
+    #22313b;
+  border-color: rgba(255,209,102,.34);
+}
+
+body:has(#bookingForm) .day.high {
+  color: var(--high);
+  background:
+    linear-gradient(rgba(255,92,122,.08), rgba(255,92,122,.08)),
+    #22313b;
+  border-color: rgba(255,92,122,.36);
+}
+
+body:has(#bookingForm) .day.closed {
+  color: #ffd9df;
+  background: linear-gradient(160deg, #71384b, #492b38);
+  border-color: rgba(255,92,122,.55);
+}
+
+body:has(#bookingForm) .day-closed-label {
+  color: #fff;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0;
 }
 
 body:has(#bookingForm) .day.today {
-  box-shadow: 0 0 0 2px var(--accent);
+  outline: 2px solid var(--ag-time-text);
+  outline-offset: 3px;
+  box-shadow: inset 0 1px 0 var(--ag-edge);
 }
 
 body:has(#bookingForm) .calendarLegend {
   flex-wrap: wrap;
-  gap: 10px 18px;
+  gap: 8px 18px;
+  margin-top: 20px;
+  color: var(--ag-secondary);
   font-size: 13px;
 }
 
+body:has(#bookingForm) .dot {
+  width: 10px;
+  height: 10px;
+  box-shadow: 0 0 0 1px rgba(26,43,61,.24);
+}
+
 body:has(#bookingForm) .calendarStats {
+  flex-wrap: wrap;
+  gap: 8px 12px;
+
+  margin-top: 16px;
+  padding: 10px 16px;
+
+  background: var(--ag-track);
+  color: var(--ag-secondary);
+
+  border: 1px solid var(--ag-line);
+  border-radius: 18px;
   box-shadow: none;
-  padding: 10px 14px;
-  line-height: 1.5;
+
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+body:has(#bookingForm) .calendar-stat-item strong {
+  color: var(--ag-text);
+  font-weight: 600;
+}
+
+body:has(#bookingForm) .calendar-stat-divider {
+  background: var(--ag-line);
 }
 
 body:has(#bookingForm) .calendar-manage-row {
   margin-top: 14px;
 }
 
-body:has(#bookingForm) .calendar-shell button,
-body:has(#bookingForm) .calendar-shell .ghost {
-  background: #2c2c2e;
-  color: #f5f5f7;
-  border-color: rgba(255,255,255,.12);
+body:has(#bookingForm) .calendar-manage-btn {
+  color: var(--ag-text);
+  font-size: 13px;
 }
 
-/* Summary */
+/* ---------- Summary ---------- */
 
 body:has(#bookingForm) .summary {
-  grid-template-columns: repeat(4,minmax(0,1fr));
   gap: 12px;
 }
 
 body:has(#bookingForm) .summary .box {
-  padding: 16px 8px;
-  border-radius: 16px;
-  background: var(--ui-field);
+  padding: 18px 12px;
+  border: 1px solid var(--ag-line);
+  border-radius: 20px;
+
+  background: var(--ag-field);
+  color: var(--ag-text);
+
+  box-shadow: inset 0 1px 0 var(--ag-edge);
 }
 
 body:has(#bookingForm) .summary strong {
   display: block;
-  font-size: 30px;
-  font-weight: 650;
+  margin-top: 4px;
+  font-size: 32px;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 
-/* Buttons */
+/* ---------- Buttons ---------- */
 
 body:has(#bookingForm) button {
   min-height: 44px;
   font: inherit;
   font-size: 15px;
   font-weight: 600;
+  line-height: 1.4;
 
-  border-radius: 14px;
+  border-radius: 16px;
   cursor: pointer;
-  box-shadow: none;
 
-  transition: opacity .16s ease, transform .16s ease;
   -webkit-tap-highlight-color: transparent;
+  transition: transform .15s ease, opacity .15s ease;
 }
 
 body:has(#bookingForm) button:active {
@@ -337,74 +451,70 @@ body:has(#bookingForm) button:disabled {
   cursor: not-allowed;
 }
 
-body:has(#bookingForm) .primary {
-  background:
-    linear-gradient(
-      180deg,
-      rgba(255,255,255,.15),
-      transparent 70%
-    ),
-    var(--ui-blue);
-
-  color: #fff;
-  border: 0;
-  padding: 14px 18px;
+body:has(#bookingForm) .ghost {
+  padding: 10px 16px;
+  border: 1px solid var(--ag-line);
+  background: var(--ag-field);
+  color: var(--ag-text);
 
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.4),
-    0 6px 16px rgba(0,100,220,.15);
+    inset 0 1px 0 var(--ag-edge),
+    0 3px 8px -5px rgba(22,38,58,.18);
 }
 
-body:has(#bookingForm) .ghost {
-  background: var(--ui-card);
-  color: var(--ui-text);
-  border: 1px solid var(--ui-line);
+body:has(#bookingForm) .primary {
+  padding: 15px 18px;
+  border: 1px solid rgba(255,255,255,.18);
 
+  background:
+    linear-gradient(rgba(255,255,255,.07), transparent),
+    var(--ag-blue);
+
+  color: #fff;
   box-shadow:
-    inset 0 1px 0 var(--ui-edge),
-    0 3px 8px rgba(0,0,0,.035);
+    inset 0 1px 0 rgba(255,255,255,.20),
+    0 7px 18px -10px rgba(0,70,160,.5);
 }
 
 body:has(#bookingForm) .danger {
-  background: #d92d3a;
+  background: #b52343;
   color: #fff;
+  box-shadow: none;
 }
 
-body:has(#bookingForm) #logoutBtn {
-  flex-shrink: 0;
-  margin-left: 10px;
-  color: var(--ui-blue);
-}
+/* ---------- Segmented controls ---------- */
 
-/* Segmented controls */
-
-body:has(#bookingForm) .tabs {
-  background: var(--ui-field);
-  padding: 4px;
-  border-radius: 15px;
-  gap: 4px;
-  border: 1px solid var(--ui-line);
-  box-shadow: inset 0 1px 2px rgba(0,0,0,.045);
+body:has(#bookingForm) .tabs,
+body:has(#bookingForm) .gender-group {
+  padding: 5px;
+  gap: 5px;
+  border: 1px solid var(--ag-line);
+  border-radius: 19px;
+  background: var(--ag-track);
 }
 
 body:has(#bookingForm) .tab {
+  min-width: 0;
+  padding: 11px 8px;
+  border: 1px solid transparent;
+  border-radius: 14px;
   background: transparent;
-  color: var(--ui-secondary);
-  border: 0;
-  padding: 10px 8px;
+  color: var(--ag-secondary);
+  font-weight: 500;
 }
 
 body:has(#bookingForm) .tab.active {
-  background: var(--ui-glass);
-  color: var(--ui-text);
-  font-weight: 650;
+  background: var(--ag-selected);
+  color: var(--ag-text);
+  font-weight: 600;
+  border-color: var(--ag-line);
 
   box-shadow:
-    inset 0 1px 0 var(--ui-edge),
-    0 2px 8px rgba(0,0,0,.1);
+    inset 0 1px 0 var(--ag-edge),
+    0 3px 9px -5px rgba(16,31,49,.28);
 }
 
-/* Booking form */
+/* ---------- Form ---------- */
 
 body:has(#bookingForm) .grid {
   gap: 20px 16px;
@@ -417,9 +527,10 @@ body:has(#bookingForm) .grid > div {
 body:has(#bookingForm) label.field-label {
   display: block;
   margin: 0 0 8px;
-  color: var(--ui-text);
+  color: var(--ag-text);
   font-size: 14px;
   font-weight: 600;
+  line-height: 1.6;
   letter-spacing: 0;
   text-transform: none;
 }
@@ -428,68 +539,53 @@ body:has(#bookingForm) input:not([type=radio]):not([type=checkbox]),
 body:has(#bookingForm) select,
 body:has(#bookingForm) textarea {
   display: block;
-
+  width: 100%;
   min-width: 0;
   max-width: 100%;
-  width: 100%;
   min-height: 50px;
 
   padding: 13px 14px;
-  border-radius: 13px;
-  border: 1px solid var(--ui-line);
+  border: 1px solid var(--ag-line);
+  border-radius: 15px;
 
-  background: var(--ui-field);
-  color: var(--ui-text);
+  background: var(--ag-field);
+  color: var(--ag-text);
 
   font: inherit;
   font-size: 16px;
   line-height: 1.5;
-
-  box-shadow: none;
+  box-shadow: inset 0 1px 2px rgba(20,36,56,.035);
 }
 
 body:has(#bookingForm) textarea {
-  min-height: 96px;
+  min-height: 100px;
   resize: vertical;
 }
 
 body:has(#bookingForm) input::placeholder,
 body:has(#bookingForm) textarea::placeholder {
-  color: var(--ui-secondary);
-  opacity: .85;
+  color: var(--ag-secondary);
+  opacity: 1;
 }
 
 body:has(#bookingForm) select option {
-  background: var(--ui-surface);
-  color: var(--ui-text);
+  background: var(--ag-solid);
+  color: var(--ag-text);
 }
 
 body:has(#bookingForm) select + input {
   margin-top: 10px;
 }
 
-body:has(#bookingForm) :is(button,input,select,textarea,a):focus-visible {
-  outline: 3px solid var(--ui-blue);
-  outline-offset: 3px;
-}
-
 body:has(#bookingForm) #pin {
-  letter-spacing: normal;
   font-size: 16px;
   font-weight: 400;
+  letter-spacing: normal;
 }
 
-body:has(#bookingForm) .gender-group {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
-
-  background: var(--ui-field);
-  padding: 4px;
-  border-radius: 14px;
-  border: 1px solid var(--ui-line);
-
-  box-shadow: inset 0 1px 2px rgba(0,0,0,.045);
+body:has(#bookingForm) :is(button,input,select,textarea,a):focus-visible {
+  outline: 3px solid var(--ag-time-text);
+  outline-offset: 3px;
 }
 
 body:has(#bookingForm) .gender-option input {
@@ -498,62 +594,72 @@ body:has(#bookingForm) .gender-option input {
   width: 1px;
   height: 1px;
   opacity: 0;
-  padding: 0;
   margin: 0;
+  padding: 0;
 }
 
 body:has(#bookingForm) .gender-option label {
-  margin: 0;
   min-height: 44px;
+  margin: 0;
   padding: 10px 6px;
-  border: 0;
-  border-radius: 11px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+
+  background: transparent;
+  color: var(--ag-secondary);
 
   font-size: 15px;
-  color: var(--ui-secondary);
-  background: transparent;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 body:has(#bookingForm) .gender-option input:checked + label {
-  background: var(--ui-glass);
-  color: var(--ui-text);
+  background: var(--ag-selected);
+  color: var(--ag-text);
+  border-color: var(--ag-line);
 
   box-shadow:
-    inset 0 1px 0 var(--ui-edge),
-    0 2px 8px rgba(0,0,0,.1);
+    inset 0 1px 0 var(--ag-edge),
+    0 3px 9px -5px rgba(16,31,49,.28);
 }
 
 body:has(#bookingForm) .gender-option input:focus-visible + label {
-  outline: 2px solid var(--ui-blue);
+  outline: 3px solid var(--ag-time-text);
+  outline-offset: 2px;
 }
 
 body:has(#bookingForm) #editOverlay input[type=radio] {
   width: 20px;
   height: 20px;
-  accent-color: var(--ui-blue);
+  accent-color: var(--ag-blue);
   box-shadow: none;
 }
 
-/* Booking cards */
+/* ---------- Individual booking cards ---------- */
 
 body:has(#bookingForm) .booking-list {
-  gap: 12px;
+  gap: 14px;
 }
 
 body:has(#bookingForm) .booking-card,
 body:has(#bookingForm) .booking-card.expanded {
-  position: relative;
-  isolation: isolate;
+  padding: 20px;
+  gap: 14px;
 
-  padding: 18px;
-  border: 1px solid var(--ui-line);
-  border-radius: 18px;
+  border: 1px solid var(--ag-line);
+  border-radius: 24px;
 
-  background: var(--ui-card);
-  color: var(--ui-text);
-  box-shadow: var(--ui-shadow);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.07),
+      transparent 55%
+    ),
+    var(--ag-card);
 
-  gap: 10px;
+  color: var(--ag-text);
+  box-shadow: var(--ag-card-shadow);
 }
 
 body:has(#bookingForm) .booking-card:active {
@@ -561,102 +667,127 @@ body:has(#bookingForm) .booking-card:active {
 }
 
 body:has(#bookingForm) .card-main {
+  display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 10px;
-}
-
-body:has(#bookingForm) .card-main-info {
-  min-width: 0;
-}
-
-body:has(#bookingForm) .time-pill {
-  background: var(--ui-blue-soft);
-  color: var(--ui-blue);
-
-  border-radius: 12px;
-  padding: 7px 12px;
-
-  font-size: 20px;
-  font-weight: 650;
-  font-variant-numeric: tabular-nums;
-
-  box-shadow: inset 0 1px 0 var(--ui-edge);
-}
-
-body:has(#bookingForm) .badge {
-  padding: 7px 11px;
-  font-size: 13px;
   font-weight: 600;
 }
 
+body:has(#bookingForm) .card-main-info {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  min-width: 0;
+  gap: 8px;
+}
+
+body:has(#bookingForm) .card-main > button {
+  flex-shrink: 0;
+  margin-left: auto;
+  min-width: 54px;
+  padding: 9px 14px;
+  font-size: 14px;
+}
+
+body:has(#bookingForm) .time-pill {
+  flex-shrink: 0;
+  min-width: 86px;
+  padding: 9px 14px;
+
+  border: 1px solid var(--ag-line);
+  border-radius: 16px;
+
+  background: var(--ag-time-bg);
+  color: var(--ag-time-text);
+
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.3;
+  font-variant-numeric: tabular-nums;
+
+  box-shadow: inset 0 1px 0 var(--ag-edge);
+}
+
+body:has(#bookingForm) .badge {
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
 body:has(#bookingForm) .badge.Bank {
-  color: var(--ui-bank);
-  background: rgba(0,175,200,.12);
+  background: var(--ag-bank-bg);
+  color: var(--ag-bank-text);
 }
 
 body:has(#bookingForm) .badge.Sindy {
-  color: var(--ui-sindy);
-  background: rgba(220,70,130,.12);
+  background: var(--ag-sindy-bg);
+  color: var(--ag-sindy-text);
 }
 
 body:has(#bookingForm) .badge.Assist {
-  color: var(--ui-assist);
-  background: rgba(44,190,120,.12);
+  background: var(--ag-assist-bg);
+  color: var(--ag-assist-text);
 }
 
 body:has(#bookingForm) .card-sub {
-  font-size: 16px;
-  color: var(--ui-text);
-  line-height: 1.7;
+  color: var(--ag-text);
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1.8;
+
+  white-space: normal;
   overflow-wrap: anywhere;
+  word-break: normal;
 }
 
 body:has(#bookingForm) .card-detail {
-  display: none;
-  margin: 0;
-  padding: 0;
-  border: 0;
+  color: var(--ag-secondary);
+  font-size: 15px;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
 }
 
 body:has(#bookingForm) .booking-card.expanded .card-detail {
-  display: flex;
   max-height: none;
   overflow: visible;
   opacity: 1;
   transform: none;
 
-  border-top: 1px solid var(--ui-line);
-  margin-top: 4px;
-  padding-top: 14px;
+  margin-top: 2px;
+  padding-top: 16px;
+  border-top: 1px solid var(--ag-line);
   gap: 10px;
 }
 
-body:has(#bookingForm) :is(.phone-call,.phone-link,.call-btn) {
-  color: var(--ui-blue);
+body:has(#bookingForm) .card-actions {
+  margin-top: 8px;
+}
+
+body:has(#bookingForm) :is(.phone-link,.phone-call,.call-btn) {
+  color: var(--ag-time-text);
+  font-weight: 600;
   text-decoration: none;
   overflow-wrap: anywhere;
 }
 
-/* Glass dialogs */
+/* ---------- Dialogs ---------- */
 
 body:has(#bookingForm) .overlay {
   z-index: 1000;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
   padding:
     max(16px,env(safe-area-inset-top))
     16px
     max(16px,env(safe-area-inset-bottom));
 
-  background: rgba(0,0,0,.4);
+  background: rgba(10,18,30,.44);
   overscroll-behavior: contain;
 }
 
 body:has(#bookingForm) .overlay .modal {
-  width: min(100%,480px);
+  width: min(480px,100%);
   max-height: 88vh;
   max-height: 88dvh;
 
@@ -664,38 +795,39 @@ body:has(#bookingForm) .overlay .modal {
   flex-direction: column;
   overflow: hidden;
 
-  background: var(--ui-modal);
-  color: var(--ui-text);
+  border: 1px solid var(--ag-line);
+  border-radius: 30px;
 
-  border: 1px solid var(--ui-line);
-  border-radius: 26px;
-
-  backdrop-filter: blur(36px) saturate(145%);
-  -webkit-backdrop-filter: blur(36px) saturate(145%);
+  background: var(--ag-modal);
+  color: var(--ag-text);
 
   box-shadow:
-    0 24px 80px rgba(0,0,0,.28),
-    inset 0 1px 0 var(--ui-edge);
+    0 28px 90px rgba(0,0,0,.28),
+    inset 0 1px 0 var(--ag-edge);
 
-  animation: adore-sheet-in .2s ease-out;
+  -webkit-backdrop-filter: blur(28px) saturate(115%);
+  backdrop-filter: blur(28px) saturate(115%);
 }
 
 body:has(#bookingForm) .overlay .modalBody {
   min-height: 0;
+  padding: 26px;
+
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
 
-  padding: 24px;
   align-items: stretch;
   text-align: left;
-  gap: 12px;
+  gap: 14px;
 }
 
 body:has(#bookingForm) .modalBody h2 {
-  font-size: 22px;
   margin: 0 0 8px;
-  font-weight: 650;
+  color: var(--ag-text);
+  font-size: 23px;
+  font-weight: 600;
+  line-height: 1.5;
 }
 
 body:has(#bookingForm) #loginOverlay .modalBody,
@@ -707,45 +839,48 @@ body:has(#bookingForm) #loginOverlay .avatar {
   align-self: center;
 }
 
-/* Shop closure controls */
+/* ---------- Closure states ---------- */
 
 body:has(#bookingForm) .closure-section {
-  background: var(--ui-field);
-  border: 1px solid var(--ui-line);
-  box-shadow: none;
   padding: 16px;
-  border-radius: 16px;
+  border: 1px solid var(--ag-line);
+  border-radius: 20px;
+
+  background: var(--ag-field);
+  box-shadow: inset 0 1px 0 var(--ag-edge);
 }
 
 body:has(#bookingForm) .closure-section-title {
-  color: var(--ui-text);
+  color: var(--ag-text);
+  font-weight: 600;
 }
 
 body:has(#bookingForm) .closure-section-description {
+  color: var(--ag-secondary);
   font-size: 13px;
 }
 
 body:has(#bookingForm) .closure-status.open {
-  color: #146c43;
-  background: #daf5e7;
+  color: var(--ag-success);
+  background: var(--ag-success-bg);
 }
 
 body:has(#bookingForm) .closure-status.closed {
-  color: #a52640;
-  background: #ffe7ec;
+  color: var(--ag-danger);
+  background: var(--ag-danger-bg);
 }
 
 body:has(#bookingForm) #toggleClosureBtn.close-shop,
 body:has(#bookingForm) #togglePublicClosureBtn.public-close-shop {
-  background: #d92d3a;
   color: #fff;
+  background: #b52343;
   box-shadow: none;
 }
 
 body:has(#bookingForm) #toggleClosureBtn.open-shop,
 body:has(#bookingForm) #togglePublicClosureBtn.public-open-shop {
-  background: #198754;
   color: #fff;
+  background: #176441;
   box-shadow: none;
 }
 
@@ -755,44 +890,45 @@ body:has(#bookingForm) #closureDate {
 }
 
 body:has(#bookingForm) .closed-day-banner {
-  background: #ffe7ec;
-  color: #a52640;
+  color: var(--ag-danger);
+  background: var(--ag-danger-bg);
 }
 
 body:has(#bookingForm) .closed-day-banner strong {
-  color: #a52640;
+  color: var(--ag-danger);
 }
 
 body:has(#bookingForm) .closed-day-banner-icon {
-  background: #a52640;
+  color: #fff;
+  background: #b52343;
 }
 
-/* Toast */
+/* ---------- Notifications ---------- */
 
 body:has(#bookingForm) .toast {
   position: fixed;
   left: 50%;
   bottom: calc(24px + env(safe-area-inset-bottom));
-
-  transform: translateX(-50%);
   z-index: 2000;
+  transform: translateX(-50%);
 
   width: max-content;
   max-width: calc(100vw - 32px);
+  padding: 14px 20px;
 
-  padding: 13px 20px;
-  border-radius: 18px;
+  border: 1px solid var(--ag-line);
+  border-radius: 20px;
 
-  background: var(--ui-text);
-  color: var(--ui-surface);
+  background: var(--ag-solid);
+  color: var(--ag-text);
+  box-shadow: var(--ag-panel-shadow);
 
   font-size: 15px;
+  line-height: 1.6;
   text-align: center;
 
-  box-shadow: var(--ui-shadow);
-  pointer-events: none;
-
   opacity: 0;
+  pointer-events: none;
   transition: opacity .18s ease;
 }
 
@@ -800,18 +936,7 @@ body:has(#bookingForm) .toast.show {
   opacity: 1;
 }
 
-@keyframes adore-sheet-in {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-/* Mobile */
+/* ---------- Mobile ---------- */
 
 @media (max-width:600px) {
   body:has(#bookingForm) .topbar {
@@ -827,7 +952,7 @@ body:has(#bookingForm) .toast.show {
   }
 
   body:has(#bookingForm) #logoutBtn {
-    padding: 8px 12px;
+    padding: 9px 12px;
     font-size: 13px;
   }
 
@@ -836,47 +961,62 @@ body:has(#bookingForm) .toast.show {
   }
 
   body:has(#bookingForm) .panel {
-    padding: 18px 14px;
-    border-radius: 22px;
-    margin-bottom: 16px;
+    padding: 20px 15px;
+    margin-bottom: 18px;
+    border-radius: 25px;
   }
 
   body:has(#bookingForm) .calendarGrid {
-    gap: 7px;
-  }
-
-  body:has(#bookingForm) .calendarTitle {
-    font-size: 21px;
+    gap: 8px;
   }
 
   body:has(#bookingForm) .day {
     font-size: 16px;
   }
 
-  body:has(#bookingForm) .summary {
-    grid-template-columns: repeat(2,minmax(0,1fr));
+  body:has(#bookingForm) .calendarStats {
+    width: fit-content;
+    max-width: 100%;
   }
 
-  body:has(#bookingForm) .booking-card {
-    padding: 15px 12px;
+  body:has(#bookingForm) .booking-card,
+  body:has(#bookingForm) .booking-card.expanded {
+    padding: 17px 14px;
+    border-radius: 21px;
+  }
+
+  body:has(#bookingForm) .time-pill {
+    min-width: 78px;
+    padding: 9px 11px;
+    font-size: 20px;
+  }
+
+  body:has(#bookingForm) .card-sub {
+    font-size: 16px;
+  }
+
+  body:has(#bookingForm) .badge {
+    padding: 7px 10px;
+    font-size: 13px;
   }
 
   body:has(#bookingForm) :is(#editOverlay,#closureOverlay) {
-    align-items: flex-end;
+    align-items: end;
     padding: max(12px,env(safe-area-inset-top)) 0 0;
   }
 
   body:has(#bookingForm) :is(#editOverlay,#closureOverlay) .modal {
     width: 100%;
+    max-height: 90vh;
     max-height: 90dvh;
-    border-radius: 26px 26px 0 0;
+    border-radius: 28px 28px 0 0;
   }
 
   body:has(#bookingForm) :is(#editOverlay,#closureOverlay) .modalBody {
     padding:
-      22px
+      24px
       18px
-      calc(22px + env(safe-area-inset-bottom));
+      calc(24px + env(safe-area-inset-bottom));
   }
 }
 
@@ -886,16 +1026,24 @@ body:has(#bookingForm) .toast.show {
   }
 
   body:has(#bookingForm) .calendarGrid {
-    gap: 5px;
+    gap: 6px;
   }
 
   body:has(#bookingForm) .calendarLegend {
+    gap: 8px 10px;
     font-size: 12px;
+  }
+
+  body:has(#bookingForm) .card-main {
     gap: 8px;
+  }
+
+  body:has(#bookingForm) .card-main-info {
+    gap: 6px;
   }
 }
 
-/* Accessibility */
+/* ---------- Accessibility and fallbacks ---------- */
 
 @media (prefers-reduced-motion:reduce) {
   body:has(#bookingForm) *,
@@ -903,10 +1051,9 @@ body:has(#bookingForm) .toast.show {
   body:has(#bookingForm) *::after {
     animation: none !important;
     transition: none !important;
+    scroll-behavior: auto !important;
   }
 }
-
-/* Fallback for browsers without backdrop blur */
 
 @supports not (
   (backdrop-filter:blur(1px)) or
@@ -915,11 +1062,7 @@ body:has(#bookingForm) .toast.show {
   body:has(#bookingForm) .panel,
   body:has(#bookingForm) .topbar,
   body:has(#bookingForm) .overlay .modal {
-    background: var(--ui-surface);
-  }
-
-  body:has(#bookingForm) .panel:has(.calendar-shell) {
-    background: #1c1c1e;
+    background: var(--ag-solid);
   }
 }
 
@@ -928,19 +1071,16 @@ body:has(#bookingForm) .toast.show {
   body:has(#bookingForm) .booking-card,
   body:has(#bookingForm) .topbar,
   body:has(#bookingForm) .overlay .modal {
-    background: var(--ui-surface);
-    backdrop-filter: none;
+    background: var(--ag-solid);
     -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
 
-  body:has(#bookingForm) .panel:has(.calendar-shell) {
-    background: #1c1c1e;
-  }
-
-  body:has(#bookingForm) .panel::before,
-  body:has(#bookingForm) .booking-card::before {
-    content: none;
+  body:has(#bookingForm) .card-sub,
+  body:has(#bookingForm) .card-detail,
+  body:has(#bookingForm) .muted {
+    color: var(--ag-text);
   }
 }
 
-/* END ADORE LIQUID GLASS */
+/* END ADORE CLEAR GLASS */
