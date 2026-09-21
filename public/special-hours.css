@@ -1,0 +1,23 @@
+/* Additive styles: no calendar, density or existing booking form overrides. */
+.special-hours { --sh-text: var(--sg-text,var(--ag-text,var(--text,#eef5fc))); --sh-muted:var(--sg-muted,var(--ag-secondary,var(--muted,#bbcddd))); --sh-field:var(--sg-field,var(--ag-field,rgba(255,255,255,.09))); --sh-line:var(--sg-line,var(--ag-line,var(--stroke,rgba(255,255,255,.16)))); color:var(--sh-text); }
+.special-hours h2 { margin:0; font-size:20px; font-weight:600; }
+.special-hours p { margin:8px 0; line-height:1.65; overflow-wrap:anywhere; }
+.special-hours .sh-heading { display:flex; justify-content:space-between; gap:12px; align-items:center; }
+.special-hours .sh-rows { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+.special-hours .sh-stylist { padding:16px; border:1px solid var(--sh-line); border-radius:22px; background:var(--sh-field); min-width:0; }
+.special-hours .sh-rule { border-top:1px solid var(--sh-line); padding-top:10px; margin-top:12px; }
+.special-hours .sh-actions { display:flex; flex-wrap:wrap; gap:8px; }
+.special-hours button { min-height:44px; }
+.special-hours .sh-form { display:flex; flex-direction:column; gap:10px; width:100%; }
+.special-hours .sh-range { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.special-hours .sh-range > div { min-width:0; }
+.special-hours .sh-preview { padding:14px; border:1px solid var(--sh-line); border-radius:18px; background:var(--sh-field); }
+.special-hours [role=alert] { color:var(--sh-text); font-weight:600; }
+.special-hours .muted { color:var(--sh-muted); }
+.special-hours.overlay { z-index:1050; }
+body:has(#bookingForm) #confirmOverlay { z-index:1100; }
+.special-hours .modalBody { align-items:stretch; text-align:left; }
+.special-hours .modal { max-height:90vh; max-height:90dvh; overflow:auto; }
+.special-hours input,.special-hours select,.special-hours textarea { font:inherit; font-size:16px; }
+@media(max-width:720px){ .special-hours .sh-rows { grid-template-columns:1fr; } }
+@media(max-width:600px){ .special-hours.overlay { align-items:end; padding:12px 0 0; } .special-hours.overlay .modal { width:100%; border-radius:28px 28px 0 0; } .special-hours.overlay .modalBody { padding:22px 18px calc(22px + env(safe-area-inset-bottom)); } }
