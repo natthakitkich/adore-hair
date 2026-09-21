@@ -324,6 +324,33 @@ function bookingPayload(body) {
   return payload;
 }
 
+
+function minuteOf(time) {
+  const [hour, minute] = String(time).slice(0, 5).split(':').map(Number);
+  return hour * 60 + minute;
+}
+
+function overlapsRange(start, duration, otherStart, otherDuration) {
+  const end = start + duration;
+  const otherEnd = otherStart + otherDuration;
+  return start < otherEnd && end > otherStart;
+}
+
+function bookingConflict(rows, payload) {
+  const start = minuteOf(payload.time);
+
+  return (rows || []).find(row =>
+    row.date === payload.date &&
+    row.stylist === payload.stylist &&
+    overlapsRange(
+      start,
+      payload.duration_minutes,
+      minuteOf(row.time),
+      Number(row.duration_minutes || 60)
+    )
+  );
+}
+
 // เข้าสู่ระบบ
 app.post(
   '/owner/login',
@@ -536,6 +563,89 @@ app.post('/owner/special-hours/:action', owner, route(async (req, res) => {
 }));
 app.post('/owner/special-bookings', owner, route(async (req, res) => {
   res.json(await command('special_booking_create', bookingPayload(req.body)));
+}));
+
+
+// เพิ่มคิวพิเศษโดยตรง โดยไม่ต้องเปิดช่วงรับคิวล่วงหน้า
+app.post('/owner/special-bookings/direct', owner, route(async (req, res) => {
+  const payload = bookingPayload(req.body);
+  const start = minuteOf(payload.time);
+  const end = start + payload.duration_minutes;
+  const overrideBlock = req.body.override_block === true;
+
+  if (end > 1440) {
+    throw problem('เวลานัดต้องจบภายในวันเดียวกัน');
+  }
+
+  const hours = await command('hours_list', {
+    date: payload.date
+  });
+
+  if (hours?.shop_closed) {
+    throw problem(
+      'ร้านปิดทั้งวัน ต้องเปิดร้านก่อนจึงจะเพิ่มคิวใหม่ได้',
+      403
+    );
+  }
+
+  const blockingRule = (hours?.rules || []).find(rule =>
+    rule.kind === 'closed' &&
+    rule.stylist === payload.stylist &&
+    overlapsRange(
+      start,
+      payload.duration_minutes,
+      Number(rule.start_min),
+      Number(rule.end_min) - Number(rule.start_min)
+    )
+  );
+
+  if (blockingRule && !overrideBlock) {
+    return res.status(409).json({
+      error: 'ช่วงเวลานี้ถูกปิดคิวไว้',
+      code: 'STYLIST_BLOCKED',
+      block: {
+        id: blockingRule.id,
+        start_min: blockingRule.start_min,
+        end_min: blockingRule.end_min,
+        note: blockingRule.note || null
+      }
+    });
+  }
+
+  const [booked, pending] = await Promise.all([
+    db(
+      supabase.from('bookings')
+        .select('id,date,time,stylist,duration_minutes')
+        .eq('date', payload.date)
+        .eq('stylist', payload.stylist)
+    ),
+    db(
+      supabase.from('online_requests')
+        .select('id,date,time,stylist,duration_minutes')
+        .eq('status', 'pending')
+        .eq('date', payload.date)
+        .eq('stylist', payload.stylist)
+    )
+  ]);
+
+  const existingConflict = bookingConflict(booked, payload);
+  const pendingConflict = bookingConflict(pending, payload);
+
+  if (existingConflict || pendingConflict) {
+    return res.status(409).json({
+      error: 'ช่วงเวลานี้มีคิวอยู่แล้ว กรุณาเลือกเวลาอื่น',
+      code: 'BOOKING_CONFLICT'
+    });
+  }
+
+  const created = await db(
+    supabase.from('bookings')
+      .insert(payload)
+      .select('*')
+      .single()
+  );
+
+  res.status(201).json(created);
 }));
 
 app.use(express.static(PUBLIC_DIR, {
