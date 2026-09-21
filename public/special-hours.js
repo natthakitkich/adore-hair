@@ -1,190 +1,786 @@
-/* Owner-only special hours. Loaded AFTER online-owner.js. */
+/* Owner-only quick actions: direct special booking + stylist blocking.
+   Loaded AFTER online-owner.js. Calendar and normal booking behavior stay unchanged. */
 (() => {
   'use strict';
+
   const $ = id => document.getElementById(id);
-  const stylists = ['Bank', 'Sindy'];
-  const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const hh = n => `${String(Math.floor(n / 60)).padStart(2,'0')}:${String(n % 60).padStart(2,'0')}`;
-  const minute = t => Number(t.slice(0,2))*60+Number(t.slice(3,5));
-  let state = {date:'', rules:[], shop_closed:false};
-  let version = 0, dialogDate = '', dialogStylist = '', preview = null, busy = false, returnFocus = null;
-  let bookingRule = null, bookingLoadVersion = 0;
+  const STYLISTS = ['Bank', 'Sindy'];
+  const SPECIAL_DURATION = 60;
+
+  const esc = value => String(value ?? '').replace(
+    /[&<>"']/g,
+    c => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[c])
+  );
+
+  const hh = value => {
+    const hour = Math.floor(value / 60);
+    const minute = value % 60;
+    return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+  };
+
+  const toMinute = time => {
+    const [hour, minute] = String(time).slice(0, 5).split(':').map(Number);
+    return hour * 60 + minute;
+  };
+
+  const overlaps = (start, duration, otherStart, otherDuration) => {
+    const end = start + duration;
+    const otherEnd = otherStart + otherDuration;
+    return start < otherEnd && end > otherStart;
+  };
+
+  let state = {
+    date: '',
+    rules: [],
+    shop_closed: false
+  };
+
+  let refreshVersion = 0;
+  let bookingVersion = 0;
+  let busy = false;
+  let returnFocus = null;
+
+  /* =========================
+     QUICK ACTION PANEL
+  ========================= */
   const panel = document.createElement('section');
   panel.className = 'panel special-hours';
-  panel.innerHTML = `<details class="sh-disclosure"><summary><span class="sh-summary-title">คิวพิเศษรายช่าง</span><span id="shSummary" class="muted">Bank · Sindy</span></summary><div class="sh-content"><div class="sh-heading"><p id="shDate" class="muted"></p><button id="shRefresh" type="button" class="ghost">รีเฟรช</button></div><p id="shStatus" role="status" class="muted">กำลังโหลดสถานะ</p><div id="shRows" class="sh-rows"></div></div></details>`;
-  bookingForm.closest('.panel').before(panel);
-  document.body.insertAdjacentHTML('beforeend', `
-    <div id="shOverlay" class="overlay hidden special-hours" role="dialog" aria-modal="true" aria-labelledby="shTitle">
-      <div class="modal"><div class="modalBody">
-        <h2 id="shTitle"></h2><p id="shContext" class="muted"></p>
-        <form id="shRuleForm" class="sh-form">
-          <label class="field-label" for="shKind">การตั้งค่า</label>
-          <select id="shKind"><option value="partial">ปิดรับคิวบางช่วง</option><option value="day">ปิดรับคิวทั้งวัน</option><option value="extra">เปิดรับคิวนอกเวลาปกติ</option></select>
-          <div id="shRange" class="sh-range"><div><label class="field-label" for="shFrom">ตั้งแต่</label><select id="shFrom"></select></div><div><label class="field-label" for="shUntil">ถึงก่อนเวลา</label><select id="shUntil"></select></div></div>
-          <p class="muted">กำหนดเวลาเริ่มรับคิว ไม่ใช่ระยะเวลาบริการ เช่น ปิด 20:00–24:00 คือไม่รับคิวตั้งแต่ 20:00 เป็นต้นไป</p>
-          <label class="field-label" for="shNote">หมายเหตุ (ไม่บังคับ)</label><input id="shNote" maxlength="200" placeholder="เช่น ติดธุระ / เข้างานเร็ว">
-          <button id="shPreviewBtn" class="primary" type="submit">ตรวจสอบก่อนบันทึก</button>
-        </form>
-        <div id="shPreview" class="sh-preview hidden"><p id="shPreviewText"></p><ul id="shAffected"></ul><button id="shSave" class="primary" type="button">ยืนยันบันทึก</button></div>
-        <p id="shError" role="alert"></p>
-        <button id="shClose" type="button" class="ghost">ปิดหน้าต่าง</button>
-      </div></div>
+  panel.innerHTML = `
+    <div class="sh-heading sh-main-heading">
+      <div>
+        <h2>จัดการคิวช่าง</h2>
+        <p id="shDate" class="muted"></p>
+      </div>
+      <button id="shRefresh" type="button" class="ghost">รีเฟรช</button>
     </div>
-    <div id="shBookingOverlay" class="overlay hidden special-hours" role="dialog" aria-modal="true" aria-labelledby="shBookingTitle">
-      <div class="modal"><div class="modalBody">
-        <h2 id="shBookingTitle">จองช่วงพิเศษ</h2><p id="shBookingContext" class="muted"></p>
-        <form id="shBookingForm" class="sh-form">
-          <label class="field-label" for="shBookingTime">เวลา</label><select id="shBookingTime" required></select>
-          <label class="field-label" for="shName">ชื่อลูกค้า</label><input id="shName" maxlength="100" required>
-          <label class="field-label" for="shPhone">เบอร์โทร</label><input id="shPhone" type="tel" maxlength="20">
-          <label class="field-label" for="shGender">เพศ</label><select id="shGender" required><option value="">เลือกเพศ</option><option value="male">ชาย</option><option value="female">หญิง</option></select>
-          <label class="field-label" for="shService">ทำอะไร</label><select id="shService" required><option value="">เลือกบริการ</option><option>ตัดผมชาย</option><option>ตัดผมหญิง</option><option value="other">อื่น ๆ (พิมพ์เอง)</option></select>
-          <input id="shCustom" aria-label="รายละเอียดบริการ" class="hidden" maxlength="200" placeholder="ระบุบริการ">
-          <label class="field-label" for="shBookingNote">หมายเหตุ</label><textarea id="shBookingNote" maxlength="2000"></textarea>
-          <button id="shBook" class="primary" type="submit">จองคิวพิเศษ</button>
-        </form><p id="shBookingError" role="alert"></p><button id="shBookingClose" class="ghost" type="button">ปิดหน้าต่าง</button>
-      </div></div>
-    </div>`);
-  for(let n=0;n<=1440;n+=30) {
-    if(n<1440) $('shFrom').add(new Option(hh(n),String(n)));
-    if(n>0) $('shUntil').add(new Option(n===1440?'24:00 (สิ้นวัน)':hh(n),String(n)));
+
+    <div class="sh-quick-actions">
+      <button id="shOpenSpecial" type="button" class="primary">
+        ＋ เพิ่มคิวพิเศษ
+      </button>
+      <button id="shOpenBlock" type="button" class="ghost">
+        ปิดคิวช่าง
+      </button>
+    </div>
+
+    <p id="shStatus" role="status" class="muted"></p>
+    <div id="shRows" class="sh-rows"></div>
+  `;
+
+  bookingForm.closest('.panel').before(panel);
+
+  /* =========================
+     MODALS
+  ========================= */
+  document.body.insertAdjacentHTML('beforeend', `
+    <div id="shSpecialOverlay" class="overlay hidden special-hours" role="dialog" aria-modal="true" aria-labelledby="shSpecialTitle">
+      <div class="modal">
+        <div class="modalBody">
+          <h2 id="shSpecialTitle">เพิ่มคิวพิเศษ</h2>
+          <p class="muted">
+            เพิ่มนัดให้ช่างโดยตรง แม้อยู่นอกเวลาปกติ โดยจะไม่เปิดเวลาอื่นเพิ่ม
+          </p>
+
+          <form id="shSpecialForm" class="sh-form">
+            <label class="field-label" for="shSpecialStylist">ช่าง</label>
+            <select id="shSpecialStylist" required>
+              <option value="Bank">Bank</option>
+              <option value="Sindy">Sindy</option>
+            </select>
+
+            <label class="field-label" for="shSpecialDate">วันที่</label>
+            <input id="shSpecialDate" type="date" required>
+
+            <label class="field-label" for="shSpecialTime">เวลานัด</label>
+            <select id="shSpecialTime" required></select>
+            <p id="shSpecialTimeHelp" class="muted sh-inline-help"></p>
+
+            <label class="field-label" for="shSpecialName">ชื่อลูกค้า</label>
+            <input id="shSpecialName" maxlength="100" required>
+
+            <label class="field-label" for="shSpecialPhone">เบอร์โทร</label>
+            <input id="shSpecialPhone" type="tel" inputmode="tel" maxlength="20">
+
+            <label class="field-label" for="shSpecialGender">เพศ</label>
+            <select id="shSpecialGender" required>
+              <option value="">เลือกเพศ</option>
+              <option value="male">ชาย</option>
+              <option value="female">หญิง</option>
+            </select>
+
+            <label class="field-label" for="shSpecialService">ทำอะไร</label>
+            <select id="shSpecialService" required>
+              <option value="">เลือกบริการ</option>
+              <option value="ตัดผมชาย">ตัดผมชาย</option>
+              <option value="ตัดผมหญิง">ตัดผมหญิง</option>
+              <option value="other">อื่น ๆ (พิมพ์เอง)</option>
+            </select>
+
+            <input
+              id="shSpecialCustomService"
+              class="hidden"
+              maxlength="200"
+              aria-label="รายละเอียดบริการอื่น ๆ"
+              placeholder="ระบุบริการ เช่น ทำสี ดัดผม ยืดผม"
+            >
+
+            <label class="field-label" for="shSpecialNote">หมายเหตุ</label>
+            <textarea id="shSpecialNote" maxlength="2000"></textarea>
+
+            <button id="shSpecialSave" class="primary" type="submit">
+              บันทึกคิวพิเศษ
+            </button>
+          </form>
+
+          <p id="shSpecialError" role="alert"></p>
+          <button id="shSpecialClose" class="ghost" type="button">ปิดหน้าต่าง</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="shBlockOverlay" class="overlay hidden special-hours" role="dialog" aria-modal="true" aria-labelledby="shBlockTitle">
+      <div class="modal">
+        <div class="modalBody">
+          <h2 id="shBlockTitle">ปิดคิวช่าง</h2>
+          <p class="muted">
+            ปิดรับคิวใหม่เฉพาะช่างและช่วงเวลาที่เลือก คิวเดิมจะไม่ถูกลบ
+          </p>
+
+          <form id="shBlockForm" class="sh-form">
+            <label class="field-label" for="shBlockStylist">ช่าง</label>
+            <select id="shBlockStylist" required>
+              <option value="Bank">Bank</option>
+              <option value="Sindy">Sindy</option>
+            </select>
+
+            <label class="field-label" for="shBlockDate">วันที่</label>
+            <input id="shBlockDate" type="date" required>
+
+            <label class="field-label" for="shBlockKind">ปิดคิว</label>
+            <select id="shBlockKind" required>
+              <option value="partial">บางช่วง</option>
+              <option value="day">ทั้งวัน</option>
+            </select>
+
+            <div id="shBlockRange" class="sh-range">
+              <div>
+                <label class="field-label" for="shBlockFrom">ตั้งแต่</label>
+                <select id="shBlockFrom"></select>
+              </div>
+              <div>
+                <label class="field-label" for="shBlockUntil">ถึงก่อนเวลา</label>
+                <select id="shBlockUntil"></select>
+              </div>
+            </div>
+
+            <label class="field-label" for="shBlockNote">เหตุผล / หมายเหตุ</label>
+            <input id="shBlockNote" maxlength="200" placeholder="เช่น ติดธุระ">
+
+            <button id="shBlockSave" class="primary" type="submit">
+              บันทึกการปิดคิว
+            </button>
+          </form>
+
+          <p id="shBlockError" role="alert"></p>
+          <button id="shBlockClose" class="ghost" type="button">ปิดหน้าต่าง</button>
+        </div>
+      </div>
+    </div>
+  `);
+
+  /* =========================
+     TIME OPTIONS
+  ========================= */
+  for (let value = 0; value <= 1380; value += 30) {
+    $('shSpecialTime').add(new Option(hh(value), `${hh(value)}:00`));
   }
-  async function api(url, options={}) {
-    const res = await fetch(url,{credentials:'same-origin',...options,headers:{'Content-Type':'application/json',...(options.headers||{})}});
-    const data = await res.json().catch(()=>({}));
-    if(!res.ok) throw new Error(data.error || 'โหลดสถานะไม่สำเร็จ กรุณาลองใหม่');
+
+  for (let value = 0; value <= 1440; value += 30) {
+    if (value < 1440) {
+      $('shBlockFrom').add(new Option(hh(value), String(value)));
+    }
+
+    if (value > 0) {
+      $('shBlockUntil').add(
+        new Option(
+          value === 1440 ? '24:00 (สิ้นวัน)' : hh(value),
+          String(value)
+        )
+      );
+    }
+  }
+
+  /* =========================
+     API HELPERS
+  ========================= */
+  async function api(url, options = {}) {
+    const response = await fetch(url, {
+      credentials: 'same-origin',
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(options.headers || {})
+      }
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      const error = new Error(
+        data.error || 'ทำรายการไม่สำเร็จ กรุณาลองใหม่'
+      );
+      error.status = response.status;
+      error.code = data.code || '';
+      error.data = data;
+      throw error;
+    }
+
     return data;
   }
-  const post = (url, data) => api(url,{method:'POST',body:JSON.stringify(data)});
-  function label(r) {
-    if(r.kind==='closed' && r.start_min===0 && r.end_min===1440) return 'ปิดรับคิวทั้งวัน';
-    return `${r.kind==='extra'?'เปิดเพิ่ม':'ปิดรับคิว'} ${hh(r.start_min)}–${hh(r.end_min)} (ถึงก่อนเวลาสิ้นสุด)`;
-  }
-  function invalidate() { preview=null; $('shPreview').classList.add('hidden'); $('shError').textContent=''; }
+
+  const post = (url, data) => api(url, {
+    method: 'POST',
+    body: JSON.stringify(data)
+  });
+
   function setBusy(value) {
-    busy=value;
-    for(const id of ['shPreviewBtn','shSave','shClose','shBook','shBookingClose']) $(id).disabled=value;
-    for(const el of $('shRuleForm').elements) el.disabled=value;
+    busy = value;
+
+    for (const id of [
+      'shSpecialSave',
+      'shSpecialClose',
+      'shBlockSave',
+      'shBlockClose'
+    ]) {
+      const element = $(id);
+      if (element) element.disabled = value;
+    }
   }
-  function open(id, first) {
-    returnFocus=document.activeElement;
+
+  function openModal(id, focusId) {
+    returnFocus = document.activeElement;
     $(id).classList.remove('hidden');
-    requestAnimationFrame(()=>$(first).focus());
+    requestAnimationFrame(() => $(focusId)?.focus());
   }
-  function close(id) { if(busy)return; $(id).classList.add('hidden'); if(returnFocus?.isConnected)returnFocus.focus(); }
-  for(const id of ['shOverlay','shBookingOverlay']) {
-    $(id).addEventListener('keydown', e=>{
-      if(e.key==='Escape'){e.preventDefault();close(id);}
-      if(e.key==='Tab') {
-        const items=[...$(id).querySelectorAll('button,input,select,textarea,[tabindex="0"]')].filter(x=>!x.disabled&&!x.closest('.hidden')&&!x.hidden);
-        const first=items[0],last=items.at(-1);
-        if(e.shiftKey&&document.activeElement===first){e.preventDefault();last?.focus();}
-        else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus();}
+
+  function closeModal(id, force = false) {
+    if (busy && !force) return;
+    $(id).classList.add('hidden');
+
+    if (returnFocus?.isConnected) {
+      returnFocus.focus();
+    }
+  }
+
+  for (const id of ['shSpecialOverlay', 'shBlockOverlay']) {
+    $(id).addEventListener('keydown', event => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        closeModal(id);
+        return;
+      }
+
+      if (event.key !== 'Tab') return;
+
+      const items = [...$(id).querySelectorAll(
+        'button,input,select,textarea,[tabindex="0"]'
+      )].filter(element =>
+        !element.disabled &&
+        !element.hidden &&
+        !element.closest('.hidden')
+      );
+
+      const first = items[0];
+      const last = items.at(-1);
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last?.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first?.focus();
       }
     });
   }
+
+  /* =========================
+     RENDER CURRENT BLOCKS
+  ========================= */
+  function ruleLabel(rule) {
+    if (
+      rule.kind === 'closed' &&
+      Number(rule.start_min) === 0 &&
+      Number(rule.end_min) === 1440
+    ) {
+      return 'ปิดคิวทั้งวัน';
+    }
+
+    if (rule.kind === 'extra') {
+      return `ช่วงเปิดพิเศษเดิม ${hh(Number(rule.start_min))}–${hh(Number(rule.end_min))}`;
+    }
+
+    return `ปิดคิว ${hh(Number(rule.start_min))}–${hh(Number(rule.end_min))}`;
+  }
+
   function render() {
-    $('shDate').textContent=formatDisplayDate(state.date);
-    const count=state.rules.filter(r=>stylists.includes(r.stylist)).length;
-    $('shSummary').textContent=state.shop_closed?'ร้านปิดทั้งวัน':count?`${count} รายการ · Bank / Sindy`:'Bank · Sindy';
-    $('shStatus').textContent=state.shop_closed?'ร้านปิดทั้งวัน ต้องเปิดร้านก่อนจึงจะจองได้':'เวลาปกติ 13:00–22:00 · การตั้งค่ามีผลเฉพาะวันที่เลือก';
-    $('shRows').innerHTML=stylists.map(s=>{
-      const rows=state.rules.filter(r=>r.stylist===s);
-      return `<article class="sh-stylist"><div class="sh-heading"><span class="badge ${s}">${s}</span><button type="button" class="ghost" data-manage="${s}">จัดการ</button></div>${rows.length?rows.map(r=>`<div class="sh-rule"><p>${esc(label(r))}</p>${r.note?`<p class="muted">${esc(r.note)}</p>`:''}<div class="sh-actions">${r.kind==='extra'?`<button type="button" class="ghost" data-book="${r.id}" ${state.shop_closed?'disabled':''}>จองช่วงพิเศษ</button>`:''}<button type="button" class="ghost" data-remove="${r.id}">ยกเลิกการตั้งค่านี้</button></div></div>`).join(''):'<p class="muted">เวลาปกติ</p>'}</article>`;
+    $('shDate').textContent = formatDisplayDate(state.date || selectedDate);
+
+    if (state.shop_closed) {
+      $('shStatus').textContent =
+        'ร้านปิดทั้งวัน · ต้องเปิดร้านก่อนจึงจะเพิ่มคิวใหม่ได้';
+    } else {
+      $('shStatus').textContent =
+        'เพิ่มคิวพิเศษได้โดยตรง · การปิดคิวมีผลเฉพาะคิวใหม่';
+    }
+
+    $('shRows').innerHTML = STYLISTS.map(stylist => {
+      const rules = (state.rules || []).filter(
+        rule => rule.stylist === stylist
+      );
+
+      const content = rules.length
+        ? rules.map(rule => `
+            <div class="sh-rule ${rule.kind === 'extra' ? 'sh-legacy-rule' : ''}">
+              <p>${esc(ruleLabel(rule))}</p>
+              ${rule.note ? `<p class="muted">${esc(rule.note)}</p>` : ''}
+              ${rule.kind === 'extra' ? '<p class="muted">รายการเดิมจากระบบเปิดช่วงพิเศษ</p>' : ''}
+              <div class="sh-actions">
+                <button
+                  type="button"
+                  class="ghost"
+                  data-remove-rule="${esc(rule.id)}"
+                >
+                  ยกเลิกการตั้งค่านี้
+                </button>
+              </div>
+            </div>
+          `).join('')
+        : '<p class="muted">ไม่มีช่วงปิดคิว</p>';
+
+      return `
+        <article class="sh-stylist">
+          <div class="sh-heading">
+            <span class="badge ${esc(stylist)}">${esc(stylist)}</span>
+          </div>
+          ${content}
+        </article>
+      `;
     }).join('');
   }
+
   async function refresh() {
-    if(!loginOverlay.classList.contains('hidden'))return;
-    const date=selectedDate, v=++version;
-    if(state.date!==date){$('shRows').replaceChildren();$('shDate').textContent=formatDisplayDate(date);$('shStatus').textContent='กำลังโหลดสถานะ';$('shSummary').textContent='กำลังโหลดสถานะ';}
+    if (!loginOverlay.classList.contains('hidden')) return;
+
+    const date = selectedDate;
+    const version = ++refreshVersion;
+
+    $('shDate').textContent = formatDisplayDate(date);
+
     try {
-      const data=await api(`/owner/special-hours?date=${encodeURIComponent(date)}`);
-      if(v!==version||date!==selectedDate)return;
-      state={date,...data};render();
-    }catch(e){if(v===version){$('shRows').replaceChildren();$('shStatus').textContent=e.message;$('shSummary').textContent='โหลดสถานะไม่สำเร็จ';}}
+      const data = await api(
+        `/owner/special-hours?date=${encodeURIComponent(date)}`
+      );
+
+      if (version !== refreshVersion || date !== selectedDate) return;
+
+      state = {
+        date,
+        rules: Array.isArray(data.rules) ? data.rules : [],
+        shop_closed: Boolean(data.shop_closed)
+      };
+
+      render();
+    } catch (error) {
+      if (version !== refreshVersion) return;
+      $('shStatus').textContent = error.message;
+      $('shRows').replaceChildren();
+    }
   }
-  const previousLoad = loadBookings;
-  loadBookings = async function(){await previousLoad();await refresh();};
-  const previousClosure = saveClosureState;
-  saveClosureState = async function(...args){await previousClosure(...args);await refresh();};
-  $('shRefresh').onclick=refresh;
-  $('shRows').onclick=async e=>{
-    const btn=e.target.closest('button');if(!btn)return;
-    if(btn.dataset.manage){
-      dialogDate=state.date;dialogStylist=btn.dataset.manage;
-      $('shTitle').textContent=`จัดการคิว · ${dialogStylist}`;
-      $('shContext').textContent=formatDisplayDate(dialogDate);
-      $('shKind').value='partial';$('shFrom').value='1200';$('shUntil').value='1440';$('shNote').value='';$('shRange').classList.remove('hidden');invalidate();
-      open('shOverlay','shKind');
-    }else if(btn.dataset.remove){
-      const r=state.rules.find(x=>x.id===btn.dataset.remove);if(!r)return;
-      openConfirm({title:'ยกเลิกการตั้งค่ารายช่าง',message:`${r.stylist} · ${formatDisplayDate(r.date)} · ${label(r)} — คิวที่จองไว้จะยังอยู่ครบ`,onConfirm:async()=>{
-        try{await post('/owner/special-hours/delete',{id:r.id});await refresh();showToast('ยกเลิกการตั้งค่าแล้ว');}catch(err){showToast(err.message);}
-      }});
-    }else if(btn.dataset.book){
-      const r=state.rules.find(x=>x.id===btn.dataset.book);if(r)await openBooking(r);
+
+  $('shRefresh').onclick = refresh;
+
+  $('shRows').onclick = event => {
+    const button = event.target.closest('[data-remove-rule]');
+    if (!button) return;
+
+    const rule = (state.rules || []).find(
+      item => String(item.id) === String(button.dataset.removeRule)
+    );
+
+    if (!rule) return;
+
+    openConfirm({
+      title: 'ยกเลิกการตั้งค่าช่าง',
+      message:
+        `${rule.stylist} · ${formatDisplayDate(rule.date)} · ${ruleLabel(rule)} ` +
+        'คิวลูกค้าที่มีอยู่แล้วจะยังอยู่ครบ',
+      onConfirm: async () => {
+        try {
+          await post('/owner/special-hours/delete', { id: rule.id });
+          showToast('ยกเลิกการตั้งค่าแล้ว');
+          await refresh();
+        } catch (error) {
+          showToast(error.message);
+        }
+      }
+    });
+  };
+
+  /* =========================
+     DIRECT SPECIAL BOOKING
+  ========================= */
+  function specialServiceValue() {
+    return $('shSpecialService').value === 'other'
+      ? $('shSpecialCustomService').value.trim()
+      : $('shSpecialService').value;
+  }
+
+  $('shSpecialService').onchange = () => {
+    const custom = $('shSpecialService').value === 'other';
+    $('shSpecialCustomService').classList.toggle('hidden', !custom);
+    $('shSpecialCustomService').required = custom;
+
+    if (custom) {
+      $('shSpecialCustomService').focus();
     }
   };
-  $('shRuleForm').addEventListener('input',invalidate);
-  $('shKind').onchange=()=>{
-    invalidate();const kind=$('shKind').value;
-    $('shRange').classList.toggle('hidden',kind==='day');
-    $('shFrom').value=kind==='extra'?'660':'1200';$('shUntil').value=kind==='extra'?'780':'1440';
-  };
-  $('shRuleForm').onsubmit=async e=>{
-    e.preventDefault();if(busy)return;invalidate();
-    const day=$('shKind').value==='day';
-    const payload={date:dialogDate,stylist:dialogStylist,kind:$('shKind').value==='extra'?'extra':'closed',start_min:day?0:Number($('shFrom').value),end_min:day?1440:Number($('shUntil').value),note:$('shNote').value.trim()};
-    setBusy(true);
-    try{
-      const data=await post('/owner/special-hours/preview',payload);
-      preview={...payload,confirm_token:data.confirm_token};
-      $('shPreviewText').textContent=`${dialogStylist} · ${formatDisplayDate(dialogDate)} · ${label(payload)}${data.affected.length?` มีคิวเดิม ${data.affected.length} คิว คิวเหล่านี้จะไม่ถูกลบหรือยกเลิก`:payload.kind==='extra'?' · เพิ่มช่วงรับคิวสำหรับช่างคนนี้':' · ไม่มีคิวเดิมที่เริ่มในช่วงปิดนี้'}`;
-      $('shAffected').innerHTML=data.affected.map(b=>`<li>${esc(b.time.slice(0,5))} · ${esc(b.name)}</li>`).join('');
-      $('shPreview').classList.remove('hidden');
-    }catch(err){$('shError').textContent=err.message;}finally{setBusy(false);}
-  };
-  $('shSave').onclick=async()=>{
-    if(!preview||busy)return;setBusy(true);
-    try{await post('/owner/special-hours/add',preview);setBusy(false);close('shOverlay');await refresh();showToast('บันทึกคิวพิเศษแล้ว');}
-    catch(err){preview=null;$('shPreview').classList.add('hidden');$('shError').textContent=err.message;}
-    finally{setBusy(false);}
-  };
-  $('shClose').onclick=()=>close('shOverlay');
-  $('shBookingClose').onclick=()=>close('shBookingOverlay');
-  $('shService').onchange=()=>{
-    const other=$('shService').value==='other';$('shCustom').classList.toggle('hidden',!other);$('shCustom').required=other;
-  };
-  async function openBooking(rule) {
-    const requestVersion = ++bookingLoadVersion;
-    bookingRule={...rule};$('shBookingForm').reset();$('shCustom').classList.add('hidden');$('shCustom').required=false;
-    $('shBookingError').textContent='กำลังตรวจสอบคิวว่าง';$('shBookingTime').replaceChildren();$('shBook').disabled=true;
-    $('shBookingContext').textContent=`${rule.stylist} · ${formatDisplayDate(rule.date)} · ${label(rule)}`;
-    open('shBookingOverlay','shBookingClose');
-    try{
-      const [rows,pending,latest]=await Promise.all([api(`/bookings?date=${rule.date}`),api('/owner/requests'),api(`/owner/special-hours?date=${rule.date}`)]);
-      if(requestVersion !== bookingLoadVersion)return;
-      if(latest.shop_closed||!latest.rules.some(r=>r.id===rule.id))throw new Error('ช่วงพิเศษนี้ปิดแล้ว กรุณาโหลดสถานะใหม่');
-      const absolute=(d,t)=>Date.parse(`${d}T${t.slice(0,5)}:00+07:00`);
-      for(let m=rule.start_min;m<rule.end_min;m+=30){
-        const t=hh(m),start=absolute(rule.date,t),end=start+60*60000;
-        const occupied=[...rows,...pending].some(b=>b.stylist===rule.stylist&&start<absolute(b.date,b.time)+Number(b.duration_minutes||60)*60000&&end>absolute(b.date,b.time));
-        const opt=new Option(t,t+':00');opt.disabled=occupied;$('shBookingTime').add(opt);
-      }
-      const first=[...$('shBookingTime').options].find(o=>!o.disabled);
-      $('shBookingTime').value=first?.value||'';$('shBook').disabled=!first;
-      $('shBookingError').textContent=first?'':'ช่วงพิเศษนี้ไม่มีเวลาว่าง';
-    }catch(err){$('shBookingError').textContent=err.message;}
+
+  function rowConflicts(row, date, stylist, start) {
+    if (row.date !== date || row.stylist !== stylist) return false;
+
+    return overlaps(
+      start,
+      SPECIAL_DURATION,
+      toMinute(row.time),
+      Number(row.duration_minutes || 60)
+    );
   }
-  $('shBookingForm').onsubmit=async e=>{
-    e.preventDefault();if(busy||!bookingRule||!$('shBookingTime').value)return;
-    const service=$('shService').value==='other'?$('shCustom').value.trim():$('shService').value;
-    if(!service||!$('shName').value.trim()){$('shBookingError').textContent='กรุณากรอกชื่อและบริการ';return;}
-    setBusy(true);$('shBookingError').textContent='';
-    try{
-      await post('/owner/special-bookings',{date:bookingRule.date,stylist:bookingRule.stylist,time:$('shBookingTime').value,name:$('shName').value.trim(),phone:$('shPhone').value.trim(),gender:$('shGender').value,service,note:$('shBookingNote').value.trim(),duration_minutes:60});
-      setBusy(false);close('shBookingOverlay');showToast('จองคิวพิเศษสำเร็จ');await Promise.all([loadBookings(),loadCalendar()]);
-    }catch(err){$('shBookingError').textContent=err.message;}
-    finally{setBusy(false);}
+
+  function ruleBlocks(rule, stylist, start) {
+    if (rule.kind !== 'closed' || rule.stylist !== stylist) return false;
+
+    return overlaps(
+      start,
+      SPECIAL_DURATION,
+      Number(rule.start_min),
+      Number(rule.end_min) - Number(rule.start_min)
+    );
+  }
+
+  async function loadSpecialTimes() {
+    const date = $('shSpecialDate').value;
+    const stylist = $('shSpecialStylist').value;
+    const version = ++bookingVersion;
+
+    $('shSpecialError').textContent = '';
+    $('shSpecialTimeHelp').textContent = 'กำลังตรวจสอบคิว';
+    $('shSpecialTime').disabled = true;
+    $('shSpecialSave').disabled = true;
+
+    if (!date || !stylist) return;
+
+    try {
+      const [rows, pending, hours] = await Promise.all([
+        api(`/bookings?date=${encodeURIComponent(date)}`),
+        api('/owner/requests'),
+        api(`/owner/special-hours?date=${encodeURIComponent(date)}`)
+      ]);
+
+      if (version !== bookingVersion) return;
+
+      const oldValue = $('shSpecialTime').value;
+      $('shSpecialTime').replaceChildren();
+
+      const rules = Array.isArray(hours.rules) ? hours.rules : [];
+      let availableCount = 0;
+
+      for (let start = 0; start <= 1380; start += 30) {
+        const time = `${hh(start)}:00`;
+        const conflict = [...rows, ...pending].some(
+          row => rowConflicts(row, date, stylist, start)
+        );
+        const blocked = rules.some(
+          rule => ruleBlocks(rule, stylist, start)
+        );
+
+        const option = new Option(
+          `${hh(start)}${conflict ? ' · มีคิวแล้ว' : blocked ? ' · ปิดคิว' : ''}`,
+          time
+        );
+
+        option.disabled = conflict;
+        option.dataset.blocked = blocked ? '1' : '0';
+        $('shSpecialTime').add(option);
+
+        if (!conflict) availableCount += 1;
+      }
+
+      const enabled = [...$('shSpecialTime').options].filter(
+        option => !option.disabled
+      );
+
+      const preferred = enabled.find(option => option.value === oldValue)
+        || enabled.find(option => option.value === '13:00:00')
+        || enabled[0];
+
+      $('shSpecialTime').value = preferred?.value || '';
+
+      if (hours.shop_closed) {
+        $('shSpecialTimeHelp').textContent =
+          'วันนี้ร้านปิดทั้งวัน ต้องเปิดร้านก่อนจึงจะเพิ่มคิวได้';
+        $('shSpecialSave').disabled = true;
+      } else if (!availableCount) {
+        $('shSpecialTimeHelp').textContent = 'ไม่มีเวลาที่เพิ่มคิวได้';
+        $('shSpecialSave').disabled = true;
+      } else {
+        $('shSpecialTimeHelp').textContent =
+          'เวลาที่ขึ้นว่า “ปิดคิว” ยังเลือกได้ แต่ระบบจะขอให้ยืนยันก่อนบันทึก';
+        $('shSpecialSave').disabled = false;
+      }
+    } catch (error) {
+      if (version !== bookingVersion) return;
+      $('shSpecialTimeHelp').textContent = '';
+      $('shSpecialError').textContent = error.message;
+    } finally {
+      if (version === bookingVersion) {
+        $('shSpecialTime').disabled = false;
+      }
+    }
+  }
+
+  function openSpecialBooking() {
+    $('shSpecialForm').reset();
+    $('shSpecialCustomService').classList.add('hidden');
+    $('shSpecialCustomService').required = false;
+    $('shSpecialError').textContent = '';
+    $('shSpecialStylist').value = STYLISTS.includes(selectedStylist)
+      ? selectedStylist
+      : 'Bank';
+    $('shSpecialDate').value = selectedDate;
+
+    openModal('shSpecialOverlay', 'shSpecialStylist');
+    loadSpecialTimes();
+  }
+
+  $('shOpenSpecial').onclick = openSpecialBooking;
+  $('shSpecialClose').onclick = () => closeModal('shSpecialOverlay');
+  $('shSpecialStylist').onchange = loadSpecialTimes;
+  $('shSpecialDate').onchange = loadSpecialTimes;
+
+  async function saveDirectSpecial(payload) {
+    await post('/owner/special-bookings/direct', payload);
+    closeModal('shSpecialOverlay', true);
+    showToast('บันทึกคิวพิเศษแล้ว');
+
+    await Promise.all([
+      loadBookings(),
+      loadCalendar()
+    ]);
+  }
+
+  $('shSpecialForm').onsubmit = async event => {
+    event.preventDefault();
+    if (busy) return;
+
+    const service = specialServiceValue();
+
+    if (!service) {
+      $('shSpecialError').textContent = 'กรุณาเลือกหรือระบุบริการ';
+      return;
+    }
+
+    const payload = {
+      date: $('shSpecialDate').value,
+      time: $('shSpecialTime').value,
+      stylist: $('shSpecialStylist').value,
+      name: $('shSpecialName').value.trim(),
+      phone: $('shSpecialPhone').value.trim(),
+      gender: $('shSpecialGender').value,
+      service,
+      note: $('shSpecialNote').value.trim(),
+      duration_minutes: SPECIAL_DURATION,
+      override_block: false
+    };
+
+    if (
+      !payload.date ||
+      !payload.time ||
+      !payload.name ||
+      !payload.gender
+    ) {
+      $('shSpecialError').textContent = 'กรุณากรอกข้อมูลให้ครบถ้วน';
+      return;
+    }
+
+    setBusy(true);
+    $('shSpecialError').textContent = '';
+
+    try {
+      await saveDirectSpecial(payload);
+    } catch (error) {
+      if (error.code === 'STYLIST_BLOCKED') {
+        const time = payload.time.slice(0, 5);
+
+        openConfirm({
+          title: 'เวลานี้ถูกปิดคิวไว้',
+          message:
+            `${payload.stylist} ถูกปิดคิวในช่วง ${time} ` +
+            'ต้องการเพิ่มคิวพิเศษทับการปิดคิวนี้หรือไม่? การตั้งค่าปิดคิวเดิมจะยังคงอยู่',
+          onConfirm: async () => {
+            try {
+              setBusy(true);
+              await saveDirectSpecial({
+                ...payload,
+                override_block: true
+              });
+            } catch (confirmError) {
+              $('shSpecialError').textContent = confirmError.message;
+            } finally {
+              setBusy(false);
+            }
+          }
+        });
+      } else {
+        $('shSpecialError').textContent = error.message;
+        await loadSpecialTimes();
+      }
+    } finally {
+      setBusy(false);
+    }
   };
+
+  /* =========================
+     BLOCK STYLIST
+  ========================= */
+  $('shBlockKind').onchange = () => {
+    const wholeDay = $('shBlockKind').value === 'day';
+    $('shBlockRange').classList.toggle('hidden', wholeDay);
+    $('shBlockError').textContent = '';
+  };
+
+  function openBlockStylist() {
+    $('shBlockForm').reset();
+    $('shBlockError').textContent = '';
+    $('shBlockStylist').value = STYLISTS.includes(selectedStylist)
+      ? selectedStylist
+      : 'Bank';
+    $('shBlockDate').value = selectedDate;
+    $('shBlockKind').value = 'partial';
+    $('shBlockFrom').value = '1200';
+    $('shBlockUntil').value = '1440';
+    $('shBlockRange').classList.remove('hidden');
+
+    openModal('shBlockOverlay', 'shBlockStylist');
+  }
+
+  $('shOpenBlock').onclick = openBlockStylist;
+  $('shBlockClose').onclick = () => closeModal('shBlockOverlay');
+
+  async function commitBlock(payload, confirmToken) {
+    await post('/owner/special-hours/add', {
+      ...payload,
+      confirm_token: confirmToken
+    });
+
+    closeModal('shBlockOverlay', true);
+    showToast('บันทึกการปิดคิวแล้ว');
+
+    await Promise.all([
+      loadBookings(),
+      loadCalendar()
+    ]);
+  }
+
+  $('shBlockForm').onsubmit = async event => {
+    event.preventDefault();
+    if (busy) return;
+
+    const wholeDay = $('shBlockKind').value === 'day';
+    const start = wholeDay ? 0 : Number($('shBlockFrom').value);
+    const end = wholeDay ? 1440 : Number($('shBlockUntil').value);
+
+    if (!wholeDay && start >= end) {
+      $('shBlockError').textContent = 'เวลาสิ้นสุดต้องอยู่หลังเวลาเริ่ม';
+      return;
+    }
+
+    const payload = {
+      date: $('shBlockDate').value,
+      stylist: $('shBlockStylist').value,
+      kind: 'closed',
+      start_min: start,
+      end_min: end,
+      note: $('shBlockNote').value.trim()
+    };
+
+    setBusy(true);
+    $('shBlockError').textContent = '';
+
+    try {
+      const preview = await post(
+        '/owner/special-hours/preview',
+        payload
+      );
+
+      const affected = Array.isArray(preview.affected)
+        ? preview.affected
+        : [];
+
+      if (!affected.length) {
+        await commitBlock(payload, preview.confirm_token);
+        return;
+      }
+
+      const sample = affected
+        .slice(0, 3)
+        .map(item => `${String(item.time).slice(0, 5)} ${item.name || ''}`.trim())
+        .join(', ');
+
+      setBusy(false);
+
+      openConfirm({
+        title: 'ช่วงนี้มีคิวเดิมอยู่',
+        message:
+          `พบคิวเดิม ${affected.length} คิว${sample ? ` (${sample}${affected.length > 3 ? ', …' : ''})` : ''} ` +
+          'คิวเดิมจะยังอยู่ครบ และระบบจะปิดเฉพาะการรับคิวใหม่ ต้องการดำเนินการต่อหรือไม่?',
+        onConfirm: async () => {
+          try {
+            setBusy(true);
+            await commitBlock(payload, preview.confirm_token);
+          } catch (error) {
+            $('shBlockError').textContent = error.message;
+          } finally {
+            setBusy(false);
+          }
+        }
+      });
+    } catch (error) {
+      $('shBlockError').textContent = error.message;
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  /* =========================
+     KEEP PANEL IN SYNC
+  ========================= */
+  const previousLoadBookings = loadBookings;
+  loadBookings = async function () {
+    await previousLoadBookings();
+    await refresh();
+  };
+
+  const previousSaveClosureState = saveClosureState;
+  saveClosureState = async function (...args) {
+    await previousSaveClosureState(...args);
+    await refresh();
+  };
+
+  refresh();
 })();
