@@ -591,15 +591,10 @@ app.post('/owner/special-bookings/direct', owner, route(async (req, res) => {
   const blockingRule = (hours?.rules || []).find(rule =>
     rule.kind === 'closed' &&
     rule.stylist === payload.stylist &&
-    overlapsRange(
-      start,
-      payload.duration_minutes,
-      Number(rule.start_min),
-      Number(rule.end_min) - Number(rule.start_min)
-    )
+    start >= Number(rule.start_min) && start < Number(rule.end_min)
   );
 
-  if (blockingRule && !overrideBlock) {
+  if (blockingRule) {
     return res.status(409).json({
       error: 'ช่วงเวลานี้ถูกปิดคิวไว้',
       code: 'STYLIST_BLOCKED',
@@ -640,7 +635,7 @@ app.post('/owner/special-bookings/direct', owner, route(async (req, res) => {
 
   const created = await db(
     supabase.from('bookings')
-      .insert(payload)
+      .insert({ ...payload, is_special: true })
       .select('*')
       .single()
   );
