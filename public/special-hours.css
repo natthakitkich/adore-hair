@@ -99,3 +99,15 @@ body .special-hours textarea#shSpecialNote {
     min-height:64px !important;
   }
 }
+
+/* Daily queue status: scoped to new cards; calendar colors remain untouched. */
+.sh-daily-status {padding:16px 20px;margin:10px 0;border-radius:20px;border:1px solid;line-height:1.55;font:inherit;}
+.sh-daily-closed {background:rgba(255,228,230,.92);border-color:#e7a1ac;color:#84213b;border-inline-start:5px solid #bc3454;}
+.sh-daily-open {background:rgba(222,246,238,.92);border-color:#8dcdb7;color:#155941;border-inline-start:5px solid #218363;}
+.sh-daily-head {display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
+.sh-daily-status p {margin:6px 0;overflow-wrap:anywhere;}
+.sh-daily-status small {display:block;margin-top:6px;font-size:13px;}
+.sh-daily-range {font-weight:600;font-variant-numeric:tabular-nums;}
+.sh-daily-tag {display:inline-block;margin-inline-start:8px;padding:3px 9px;border-radius:20px;background:#d8f3e9;color:#16573f;border:1px solid #91cdb7;font-size:12px;font-weight:600;}
+.sh-time-hint {font-size:13px;margin:6px 0;}
+@media(max-width:600px){.sh-daily-status{padding:12px 14px;border-radius:16px}.sh-daily-head{font-size:15px}}
