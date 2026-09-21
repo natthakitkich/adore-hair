@@ -394,6 +394,7 @@
     $('shDate').textContent = displayDate;
     $('shSummary').textContent = displayDate;
 
+    if(state.date!==date){state={date:'',rules:[],shop_closed:false};renderTable();renderTimeOptions();}
     try {
       const data = await api(
         `/owner/special-hours?date=${encodeURIComponent(date)}`
@@ -408,10 +409,14 @@
       };
 
       render();
+      renderTable();
+      renderTimeOptions();
+      renderBookingAvailability();
     } catch (error) {
       if (version !== refreshVersion) return;
       $('shStatus').textContent = error.message;
       $('shRows').replaceChildren();
+      state={date:'',rules:[],shop_closed:false};renderTimeOptions();renderBookingAvailability();
     }
   }
 
@@ -477,12 +482,7 @@
   function ruleBlocks(rule, stylist, start) {
     if (rule.kind !== 'closed' || rule.stylist !== stylist) return false;
 
-    return overlaps(
-      start,
-      SPECIAL_DURATION,
-      Number(rule.start_min),
-      Number(rule.end_min) - Number(rule.start_min)
-    );
+    return start >= Number(rule.start_min) && start < Number(rule.end_min);
   }
 
   async function loadSpecialTimes() {
@@ -526,11 +526,11 @@
           time
         );
 
-        option.disabled = conflict;
+        option.disabled = conflict || blocked;
         option.dataset.blocked = blocked ? '1' : '0';
         $('shSpecialTime').add(option);
 
-        if (!conflict) availableCount += 1;
+        if (!conflict && !blocked) availableCount += 1;
       }
 
       const enabled = [...$('shSpecialTime').options].filter(
@@ -552,7 +552,7 @@
         $('shSpecialSave').disabled = true;
       } else {
         $('shSpecialTimeHelp').textContent =
-          'เวลาที่ขึ้นว่า “ปิดคิว” ยังเลือกได้ แต่ระบบจะขอให้ยืนยันก่อนบันทึก';
+          'เวลาที่ปิดคิวหรือมีคิวแล้วจะเลือกไม่ได้';
         $('shSpecialSave').disabled = false;
       }
     } catch (error) {
@@ -636,32 +636,9 @@
     try {
       await saveDirectSpecial(payload);
     } catch (error) {
-      if (error.code === 'STYLIST_BLOCKED') {
-        const time = payload.time.slice(0, 5);
-
-        openConfirm({
-          title: 'เวลานี้ถูกปิดคิวไว้',
-          message:
-            `${payload.stylist} ถูกปิดคิวในช่วง ${time} ` +
-            'ต้องการเพิ่มคิวพิเศษทับการปิดคิวนี้หรือไม่? การตั้งค่าปิดคิวเดิมจะยังคงอยู่',
-          onConfirm: async () => {
-            try {
-              setBusy(true);
-              await saveDirectSpecial({
-                ...payload,
-                override_block: true
-              });
-            } catch (confirmError) {
-              $('shSpecialError').textContent = confirmError.message;
-            } finally {
-              setBusy(false);
-            }
-          }
-        });
-      } else {
-        $('shSpecialError').textContent = error.message;
-        await loadSpecialTimes();
-      }
+      $('shSpecialError').textContent=error.message;
+      await loadSpecialTimes();
+      $('shSpecialError').textContent=error.message;
     } finally {
       setBusy(false);
     }
@@ -777,6 +754,87 @@
     } finally {
       setBusy(false);
     }
+  };
+
+  /* Daily status cards are presentation only: never append them to bookings. */
+  const timeHint=document.createElement('p');
+  timeHint.className='muted sh-time-hint';timeHint.setAttribute('role','status');
+  timeSelect.after(timeHint);
+  function startClosed(data,stylist,time) {
+    const m=toMinute(time);
+    return data.shop_closed || data.rules.some(r=>r.kind==='closed' && r.stylist===stylist && m>=Number(r.start_min) && m<Number(r.end_min));
+  }
+  const originalTimes=renderTimeOptions;
+  renderTimeOptions=function(){
+    const wanted=timeSelect.value;originalTimes();
+    for(const opt of timeSelect.options){
+      if(state.date!==selectedDate){opt.disabled=true;continue;}
+      if(startClosed(state,selectedStylist,opt.value)){
+        opt.disabled=true;opt.textContent=opt.value.slice(0,5)+' · '+selectedStylist+' ปิดคิว';
+      }
+    }
+    const available=[...timeSelect.options].filter(o=>!o.disabled);
+    timeSelect.value=available.find(o=>o.value===wanted)?.value || available[0]?.value || '';
+    timeHint.textContent=state.date!==selectedDate?'กำลังตรวจสอบเวลาเปิด–ปิด หากโหลดไม่สำเร็จให้กดรีเฟรช':available.length?'เวลาที่ปิดคิวจะเลือกไม่ได้':'ไม่มีเวลาว่างสำหรับช่างคนนี้';
+    timeSelect.disabled=state.date!==selectedDate || !timeSelect.value;
+    bookingSubmitBtn.disabled=!timeSelect.value;
+  };
+  const originalAvailability=renderBookingAvailability;
+  renderBookingAvailability=function(){originalAvailability();if(state.date!==selectedDate || !timeSelect.value){timeSelect.disabled=true;bookingSubmitBtn.disabled=true;}};
+  // Prevent a submit via Enter while rules are loading or a selected time was closed.
+  bookingForm.addEventListener('submit',event=>{
+    if(state.date!==selectedDate || !timeSelect.value || startClosed(state,selectedStylist,timeSelect.value)){
+      event.preventDefault();event.stopImmediatePropagation();showToast('กรุณาเลือกเวลาที่เปิดรับคิว');
+    }
+  },true);
+  const originalTable=renderTable;
+  renderTable=function(){
+    originalTable();
+    const entries=[];
+    for(const card of [...listEl.querySelectorAll('.booking-card')]){
+      const b=bookings.find(row=>String(row.id)===card.dataset.id);if(!b)continue;
+      const m=toMinute(b.time);
+      const special=b.is_special===true || m<780 || m>1320 || m%60!==0;
+      if(special){
+        card.classList.add('sh-special-appointment');
+        const tag=document.createElement('span');tag.className='sh-daily-tag';tag.textContent='คิวพิเศษ';
+        (card.querySelector('.card-main-info')||card).append(tag);
+      }
+      entries.push({node:card,time:m,order:1,stylist:b.stylist});
+    }
+    if(state.date===selectedDate){
+      const rules=state.shop_closed?[{kind:'closed',stylist:'ทั้งร้าน',start_min:0,end_min:1440,note:'คิวเดิมยังอยู่ครบ'},...state.rules]:state.rules;
+      for(const rule of rules){
+        if(!['closed','extra'].includes(rule.kind))continue;
+        const closed=rule.kind==='closed';const node=document.createElement('article');
+        node.className='sh-daily-status '+(closed?'sh-daily-closed':'sh-daily-open');
+        const range=Number(rule.start_min)===0&&Number(rule.end_min)===1440?'ทั้งวัน':`${hh(Number(rule.start_min))}–${hh(Number(rule.end_min))}`;
+        node.innerHTML=`<div class="sh-daily-head"><strong>${closed?'ปิดคิว':'เปิดช่วงพิเศษ'} · ${esc(rule.stylist)}</strong><span class="sh-daily-range">${esc(range)}</span></div>${rule.note?`<p>${esc(rule.note)}</p>`:''}<small>${closed?'ไม่รับคิวใหม่ในช่วงนี้ · คิวเดิมยังอยู่ครบ':state.shop_closed?'ร้านปิดทั้งวัน · ยังเพิ่มคิวไม่ได้':'ช่วงเปิดเพิ่มเติม · ยังไม่ใช่รายการจองลูกค้า'}</small>`;
+        entries.push({node,time:Number(rule.start_min),order:0,stylist:rule.stylist});
+      }
+    }
+    entries.sort((a,b)=>a.time-b.time || a.order-b.order || String(a.stylist).localeCompare(String(b.stylist)));
+    for(const e of entries)listEl.append(e.node);
+  };
+  const originalEditTimes=generateEditTimeOptions;
+  let statusEditVersion=0;
+  generateEditTimeOptions=async function(date){
+    const version=++statusEditVersion,current=editingBooking;if(!current||!date)return;
+    await originalEditTimes(date);
+    if(version!==statusEditVersion || current!==editingBooking)return;
+    editTime.disabled=true;$('saveEdit').disabled=true;
+    try{
+      const data=await api(`/owner/special-hours?date=${encodeURIComponent(date)}`);
+      if(version!==statusEditVersion || current!==editingBooking || editDate.value!==date)return;
+      const wanted=editTime.value;
+      for(const opt of editTime.options){
+        const unchanged=String(current.date).slice(0,10)===date && opt.value.slice(0,5)===current.time.slice(0,5);
+        if(!unchanged && startClosed(data,current.stylist,opt.value)){opt.disabled=true;opt.textContent=opt.value.slice(0,5)+' · ปิดคิว';}
+      }
+      const available=[...editTime.options].filter(o=>!o.disabled);
+      editTime.value=available.find(o=>o.value===wanted)?.value||available[0]?.value||'';
+      editTime.disabled=false;$('saveEdit').disabled=!editTime.value;
+    }catch(error){if(version===statusEditVersion)showToast(error.message);}
   };
 
   /* =========================
