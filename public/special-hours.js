@@ -52,25 +52,33 @@
   const panel = document.createElement('section');
   panel.className = 'panel special-hours';
   panel.innerHTML = `
-    <div class="sh-heading sh-main-heading">
-      <div>
-        <h2>จัดการคิวช่าง</h2>
-        <p id="shDate" class="muted"></p>
+    <details id="shDisclosure" class="sh-disclosure">
+      <summary>
+        <div class="sh-summary-copy">
+          <div class="sh-summary-title">เปิด-ปิดคิวพิเศษช่าง</div>
+          <div id="shSummary" class="muted"></div>
+        </div>
+      </summary>
+
+      <div class="sh-content">
+        <div class="sh-heading sh-main-heading">
+          <p id="shDate" class="muted"></p>
+          <button id="shRefresh" type="button" class="ghost">รีเฟรช</button>
+        </div>
+
+        <div class="sh-quick-actions">
+          <button id="shOpenSpecial" type="button" class="primary">
+            ＋ เพิ่มคิวพิเศษ
+          </button>
+          <button id="shOpenBlock" type="button" class="ghost">
+            ปิดคิวช่าง
+          </button>
+        </div>
+
+        <p id="shStatus" role="status" class="muted"></p>
+        <div id="shRows" class="sh-rows"></div>
       </div>
-      <button id="shRefresh" type="button" class="ghost">รีเฟรช</button>
-    </div>
-
-    <div class="sh-quick-actions">
-      <button id="shOpenSpecial" type="button" class="primary">
-        ＋ เพิ่มคิวพิเศษ
-      </button>
-      <button id="shOpenBlock" type="button" class="ghost">
-        ปิดคิวช่าง
-      </button>
-    </div>
-
-    <p id="shStatus" role="status" class="muted"></p>
-    <div id="shRows" class="sh-rows"></div>
+    </details>
   `;
 
   bookingForm.closest('.panel').before(panel);
@@ -329,7 +337,9 @@
   }
 
   function render() {
-    $('shDate').textContent = formatDisplayDate(state.date || selectedDate);
+    const displayDate = formatDisplayDate(state.date || selectedDate);
+    $('shDate').textContent = displayDate;
+    $('shSummary').textContent = displayDate;
 
     if (state.shop_closed) {
       $('shStatus').textContent =
@@ -380,7 +390,9 @@
     const date = selectedDate;
     const version = ++refreshVersion;
 
-    $('shDate').textContent = formatDisplayDate(date);
+    const displayDate = formatDisplayDate(date);
+    $('shDate').textContent = displayDate;
+    $('shSummary').textContent = displayDate;
 
     try {
       const data = await api(
