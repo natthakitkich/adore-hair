@@ -3,7 +3,7 @@
 .special-hours h2 { margin:0; font-size:20px; font-weight:600; }
 .special-hours p { margin:8px 0; line-height:1.65; overflow-wrap:anywhere; }
 .special-hours .sh-heading { display:flex; justify-content:space-between; gap:12px; align-items:center; }
-.special-hours .sh-rows { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+.special-hours .sh-rows { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
 .special-hours .sh-stylist { padding:16px; border:1px solid var(--sh-line); border-radius:22px; background:var(--sh-field); min-width:0; }
 .special-hours .sh-rule { border-top:1px solid var(--sh-line); padding-top:10px; margin-top:12px; }
 .special-hours .sh-actions { display:flex; flex-wrap:wrap; gap:8px; }
@@ -21,3 +21,31 @@ body:has(#bookingForm) #confirmOverlay { z-index:1100; }
 .special-hours input,.special-hours select,.special-hours textarea { font:inherit; font-size:16px; }
 @media(max-width:720px){ .special-hours .sh-rows { grid-template-columns:1fr; } }
 @media(max-width:600px){ .special-hours.overlay { align-items:end; padding:12px 0 0; } .special-hours.overlay .modal { width:100%; border-radius:28px 28px 0 0; } .special-hours.overlay .modalBody { padding:22px 18px calc(22px + env(safe-area-inset-bottom)); } }
+
+/* Compact owner controls; booking/calendar behavior is unchanged. */
+.panel.special-hours { padding:12px 16px; }
+.special-hours .sh-disclosure > summary { cursor:pointer; min-height:44px; display:flex; align-items:center; gap:10px; list-style:none; }
+.special-hours .sh-disclosure > summary::-webkit-details-marker { display:none; }
+.special-hours .sh-disclosure > summary::after { content:'⌄'; margin-left:auto; font-size:20px; transition:transform .15s; }
+.special-hours .sh-disclosure[open] > summary::after { transform:rotate(180deg); }
+.special-hours .sh-disclosure > summary:focus-visible { outline:2px solid currentColor; outline-offset:4px; border-radius:8px; }
+.special-hours .sh-summary-title { font-weight:600; font-size:17px; }
+.special-hours #shSummary { font-size:13px; }
+.special-hours .sh-content { padding-top:8px; }
+.special-hours .sh-stylist { padding:12px; border-radius:16px; }
+.special-hours .sh-content p { margin:5px 0; }
+/* Override only the note fields, retaining text and manual resizing. */
+body #bookingForm textarea#note,
+body textarea#editNote,
+body .special-hours textarea#shBookingNote { height:76px !important; min-height:76px !important; padding:10px 12px; resize:vertical; box-sizing:border-box; line-height:1.5; }
+@media(max-width:600px){
+  .panel.special-hours { padding:8px 12px; margin-block:12px; }
+  .special-hours .sh-disclosure > summary { flex-wrap:wrap; gap:4px 10px; }
+  .special-hours .sh-summary-title { font-size:16px; }
+  .special-hours #shSummary { font-size:12px; }
+  .special-hours .sh-rows { gap:8px; }
+  .special-hours .sh-form { gap:7px; }
+  body #bookingForm textarea#note,
+  body textarea#editNote,
+  body .special-hours textarea#shBookingNote { height:64px !important; min-height:64px !important; }
+}
