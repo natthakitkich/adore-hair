@@ -2,7 +2,7 @@
 (() => {
   'use strict';
   const $ = id => document.getElementById(id);
-  const stylists = ['Bank', 'Sindy', 'Assist'];
+  const stylists = ['Bank', 'Sindy'];
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const hh = n => `${String(Math.floor(n / 60)).padStart(2,'0')}:${String(n % 60).padStart(2,'0')}`;
   const minute = t => Number(t.slice(0,2))*60+Number(t.slice(3,5));
@@ -11,7 +11,7 @@
   let bookingRule = null, bookingLoadVersion = 0;
   const panel = document.createElement('section');
   panel.className = 'panel special-hours';
-  panel.innerHTML = `<div class="sh-heading"><div><h2>คิวพิเศษรายช่าง</h2><p id="shDate" class="muted"></p></div><button id="shRefresh" type="button" class="ghost">รีเฟรช</button></div><p id="shStatus" role="status" class="muted">กำลังโหลดสถานะ</p><div id="shRows" class="sh-rows"></div>`;
+  panel.innerHTML = `<details class="sh-disclosure"><summary><span class="sh-summary-title">คิวพิเศษรายช่าง</span><span id="shSummary" class="muted">Bank · Sindy</span></summary><div class="sh-content"><div class="sh-heading"><p id="shDate" class="muted"></p><button id="shRefresh" type="button" class="ghost">รีเฟรช</button></div><p id="shStatus" role="status" class="muted">กำลังโหลดสถานะ</p><div id="shRows" class="sh-rows"></div></div></details>`;
   bookingForm.closest('.panel').before(panel);
   document.body.insertAdjacentHTML('beforeend', `
     <div id="shOverlay" class="overlay hidden special-hours" role="dialog" aria-modal="true" aria-labelledby="shTitle">
@@ -85,6 +85,8 @@
   }
   function render() {
     $('shDate').textContent=formatDisplayDate(state.date);
+    const count=state.rules.filter(r=>stylists.includes(r.stylist)).length;
+    $('shSummary').textContent=state.shop_closed?'ร้านปิดทั้งวัน':count?`${count} รายการ · Bank / Sindy`:'Bank · Sindy';
     $('shStatus').textContent=state.shop_closed?'ร้านปิดทั้งวัน ต้องเปิดร้านก่อนจึงจะจองได้':'เวลาปกติ 13:00–22:00 · การตั้งค่ามีผลเฉพาะวันที่เลือก';
     $('shRows').innerHTML=stylists.map(s=>{
       const rows=state.rules.filter(r=>r.stylist===s);
@@ -94,12 +96,12 @@
   async function refresh() {
     if(!loginOverlay.classList.contains('hidden'))return;
     const date=selectedDate, v=++version;
-    if(state.date!==date){$('shRows').replaceChildren();$('shDate').textContent=formatDisplayDate(date);$('shStatus').textContent='กำลังโหลดสถานะ';}
+    if(state.date!==date){$('shRows').replaceChildren();$('shDate').textContent=formatDisplayDate(date);$('shStatus').textContent='กำลังโหลดสถานะ';$('shSummary').textContent='กำลังโหลดสถานะ';}
     try {
       const data=await api(`/owner/special-hours?date=${encodeURIComponent(date)}`);
       if(v!==version||date!==selectedDate)return;
       state={date,...data};render();
-    }catch(e){if(v===version){$('shRows').replaceChildren();$('shStatus').textContent=e.message;}}
+    }catch(e){if(v===version){$('shRows').replaceChildren();$('shStatus').textContent=e.message;$('shSummary').textContent='โหลดสถานะไม่สำเร็จ';}}
   }
   const previousLoad = loadBookings;
   loadBookings = async function(){await previousLoad();await refresh();};
