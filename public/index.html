@@ -26,12 +26,6 @@
 <!-- ======================
      ENABLE SOUND BANNER (iOS)
 ====================== -->
-<div id="soundBanner" class="sound-banner hidden">
-  <button id="enableSoundBtn" class="primary">
-    🔊 แตะเพื่อเปิดเสียงแจ้งเตือน
-  </button>
-</div>
-
 <!-- ======================
      LOGIN OVERLAY
 ====================== -->
@@ -162,8 +156,7 @@
       <h2>จัดการสถานะร้าน</h2>
 
       <p class="muted closure-help">
-        เลือกวันที่ แล้วกำหนดสถานะร้านสำหรับระบบหลังบ้าน
-        หรือหน้าเช็กคิวของลูกค้าได้แยกกัน
+        เลือกวันที่เพื่อเปิดหรือปิดรับคิวทั้งร้าน คิวเดิมจะยังอยู่ครบ
       </p>
 
       <label class="field-label">วันที่</label>
@@ -199,41 +192,6 @@
           type="button"
         >
           ปิดร้านทั้งระบบ
-        </button>
-
-      </div>
-
-      <!-- ======================
-           PUBLIC PAGE ONLY
-      ====================== -->
-      <div class="closure-section public-closure-section">
-
-        <div class="closure-section-header">
-          <div>
-            <div class="closure-section-title">
-              การแสดงผลหน้าลูกค้า
-            </div>
-
-            <div class="closure-section-description">
-              แสดงว่าร้านปิดเฉพาะหน้าเช็กคิว
-              แต่ระบบหลังบ้านยังสามารถเพิ่มและจัดการคิวได้ตามปกติ
-            </div>
-          </div>
-        </div>
-
-        <div
-          id="publicClosureStatus"
-          class="closure-status open"
-        >
-          สถานะหน้าลูกค้า: แสดงว่าเปิด
-        </div>
-
-        <button
-          id="togglePublicClosureBtn"
-          class="public-close-shop"
-          type="button"
-        >
-          แสดงว่าปิดเฉพาะหน้าลูกค้า
         </button>
 
       </div>
@@ -607,7 +565,7 @@
 ></div>
 
 <script src="app.js"></script>
-<script src="alert-audio.js"></script>
+
 
 <!-- DYNAMIC LIGHT (SCROLL SAFE) -->
 <script>
