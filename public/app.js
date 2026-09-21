@@ -35,7 +35,7 @@ const closureOverlay = document.getElementById('closureOverlay');
 const closureDate = document.getElementById('closureDate');
 const closureStatus = document.getElementById('closureStatus');
 const toggleClosureBtn = document.getElementById('toggleClosureBtn');
-const publicClosureStatus = document.getElementById('publicClosureStatus');
+
 const togglePublicClosureBtn = document.getElementById(
   'togglePublicClosureBtn'
 );
@@ -57,7 +57,7 @@ const editNote = document.getElementById('editNote');
 let bookings = [];
 let calendarDensity = {};
 let closedDays = new Set();
-let publicClosedDays = new Set();
+
 let selectedStylist = 'Bank';
 let selectedDate = getTodayTH();
 let editingBooking = null;
@@ -72,18 +72,7 @@ function isIOS() {
   return /iPad|iPhone|iPod/.test(navigator.userAgent);
 }
 
-function showSoundBannerIfNeeded() {
-  if (!isIOS()) return;
-  soundBanner?.classList.remove('hidden');
-}
-
-enableSoundBtn?.addEventListener('click', () => {
-  if (typeof window.enableAdoreAudio === 'function') {
-    window.enableAdoreAudio();
-  }
-
-  soundBanner.classList.add('hidden');
-});
+function showSoundBannerIfNeeded() {}
 
 /* =========================
    LOGIN
@@ -129,8 +118,7 @@ async function init() {
   bindStylistTabs();
 
   await Promise.all([
-    loadClosedDays(),
-    loadPublicClosedDays()
+    loadClosedDays()
   ]);
 
   loadCalendar();
@@ -156,31 +144,8 @@ async function loadClosedDays() {
   }
 }
 
-async function loadPublicClosedDays() {
-  try {
-    const res = await fetch(`${API}/public-closed-days`);
-
-    if (!res.ok) {
-      throw new Error('Unable to load public closed days');
-    }
-
-    const data = await res.json();
-
-    publicClosedDays = new Set(
-      Array.isArray(data) ? data : []
-    );
-  } catch (error) {
-    console.error('[PublicClosedDays] Load error', error);
-    publicClosedDays = new Set();
-  }
-}
-
 function isSelectedDateClosed() {
   return closedDays.has(selectedDate);
-}
-
-function isSelectedDatePublicClosed() {
-  return publicClosedDays.has(selectedDate);
 }
 
 function renderBookingAvailability() {
@@ -212,66 +177,15 @@ function openClosureModal() {
 
 function renderClosureModalState() {
   const date = closureDate.value;
-
-  if (!date) {
-    closureStatus.textContent = 'สถานะ: กรุณาเลือกวันที่';
-    publicClosureStatus.textContent =
-      'สถานะหน้าลูกค้า: กรุณาเลือกวันที่';
-
-    toggleClosureBtn.disabled = true;
-    togglePublicClosureBtn.disabled = true;
-    return;
-  }
-
-  toggleClosureBtn.disabled = false;
-  togglePublicClosureBtn.disabled = false;
-
-  const isClosed = closedDays.has(date);
-  const isPublicClosed = publicClosedDays.has(date);
-
-  /* ปิดร้านทั้งระบบ */
-  closureStatus.textContent = isClosed
-    ? `สถานะ: ปิดร้านทั้งระบบ · ${formatDisplayDate(date)}`
-    : `สถานะ: เปิดรับคิว · ${formatDisplayDate(date)}`;
-
-  closureStatus.classList.toggle('closed', isClosed);
-  closureStatus.classList.toggle('open', !isClosed);
-
-  toggleClosureBtn.textContent = isClosed
-    ? 'เปิดร้านทั้งระบบ'
-    : 'ปิดร้านทั้งระบบ';
-
-  toggleClosureBtn.classList.toggle('open-shop', isClosed);
-  toggleClosureBtn.classList.toggle('close-shop', !isClosed);
-
-  /* ปิดเฉพาะหน้าลูกค้า */
-  publicClosureStatus.textContent = isPublicClosed
-    ? `สถานะหน้าลูกค้า: แสดงว่าปิด · ${formatDisplayDate(date)}`
-    : `สถานะหน้าลูกค้า: แสดงว่าเปิด · ${formatDisplayDate(date)}`;
-
-  publicClosureStatus.classList.toggle(
-    'closed',
-    isPublicClosed
-  );
-
-  publicClosureStatus.classList.toggle(
-    'open',
-    !isPublicClosed
-  );
-
-  togglePublicClosureBtn.textContent = isPublicClosed
-    ? 'กลับมาแสดงว่าเปิด'
-    : 'แสดงว่าปิดเฉพาะหน้าลูกค้า';
-
-  togglePublicClosureBtn.classList.toggle(
-    'public-open-shop',
-    isPublicClosed
-  );
-
-  togglePublicClosureBtn.classList.toggle(
-    'public-close-shop',
-    !isPublicClosed
-  );
+  toggleClosureBtn.disabled = !date;
+  const closed = closedDays.has(date);
+  closureStatus.textContent = !date ? 'กรุณาเลือกวันที่' :
+    `${closed ? 'ปิดร้านทั้งวัน' : 'เปิดรับคิว'} · ${formatDisplayDate(date)}`;
+  closureStatus.classList.toggle('closed', closed);
+  closureStatus.classList.toggle('open', !closed);
+  toggleClosureBtn.textContent = closed ? 'เปิดร้านทั้งระบบ' : 'ปิดร้านทั้งระบบ';
+  toggleClosureBtn.classList.toggle('open-shop', closed);
+  toggleClosureBtn.classList.toggle('close-shop', !closed);
 }
 
 async function getBookingCountForDate(date) {
@@ -341,62 +255,6 @@ async function saveClosureState(date, shouldClose) {
   }
 }
 
-async function savePublicClosureState(
-  date,
-  shouldClose
-) {
-  try {
-    const res = await fetch(
-      shouldClose
-        ? `${API}/public-closed-days`
-        : `${API}/public-closed-days/${encodeURIComponent(date)}`,
-      {
-        method: shouldClose ? 'POST' : 'DELETE',
-
-        headers: shouldClose
-          ? {
-              'Content-Type': 'application/json'
-            }
-          : undefined,
-
-        body: shouldClose
-          ? JSON.stringify({ date })
-          : undefined
-      }
-    );
-
-    if (!res.ok) {
-      showToast(
-        'บันทึกสถานะหน้าลูกค้าไม่สำเร็จ'
-      );
-      return;
-    }
-
-    if (shouldClose) {
-      publicClosedDays.add(date);
-    } else {
-      publicClosedDays.delete(date);
-    }
-
-    renderClosureModalState();
-
-    showToast(
-      shouldClose
-        ? 'หน้าลูกค้าแสดงว่าปิดเรียบร้อยแล้ว'
-        : 'หน้าลูกค้ากลับมาแสดงว่าเปิดแล้ว'
-    );
-  } catch (error) {
-    console.error(
-      '[PublicClosedDays] Save error',
-      error
-    );
-
-    showToast(
-      'บันทึกสถานะหน้าลูกค้าไม่สำเร็จ'
-    );
-  }
-}
-
 manageClosedDaysBtn.onclick = () => {
   openClosureModal();
 };
@@ -451,46 +309,6 @@ toggleClosureBtn.onclick = async () => {
 
     onConfirm: () =>
       saveClosureState(date, true)
-  });
-};
-
-togglePublicClosureBtn.onclick = () => {
-  const date = closureDate.value;
-
-  if (!date) {
-    showToast('กรุณาเลือกวันที่');
-    return;
-  }
-
-  const isPublicClosed =
-    publicClosedDays.has(date);
-
-  if (isPublicClosed) {
-    openConfirm({
-      title: 'แสดงว่าเปิดบนหน้าลูกค้า',
-
-      message:
-        `ยืนยันให้หน้าลูกค้ากลับมาแสดงว่าเปิด ` +
-        `ในวันที่ ${formatDisplayDate(date)} ใช่หรือไม่`,
-
-      onConfirm: () =>
-        savePublicClosureState(date, false)
-    });
-
-    return;
-  }
-
-  openConfirm({
-    title: 'ปิดเฉพาะหน้าลูกค้า',
-
-    message:
-      `หน้าลูกค้าจะแสดงว่าร้านปิดในวันที่ ` +
-      `${formatDisplayDate(date)} ` +
-      `แต่ระบบหลังบ้านยังสามารถเพิ่มและจัดการคิวได้ตามปกติ ` +
-      `ยืนยันดำเนินการใช่หรือไม่`,
-
-    onConfirm: () =>
-      savePublicClosureState(date, true)
   });
 };
 
@@ -903,9 +721,8 @@ bookingForm.onsubmit = async event => {
   }
 
   if (res.status === 409) {
-    showToast(
-      'เวลานี้ถูกจองแล้ว'
-    );
+    const error = await res.json().catch(() => ({}));
+    showToast(error.error || 'เวลานี้ถูกจองแล้ว');
 
     return;
   }
