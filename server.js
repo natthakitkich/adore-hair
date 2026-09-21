@@ -26,27 +26,6 @@ const SESSION_SECRET = process.env.SESSION_SECRET || '';
 const SESSION_SECONDS = 365 * 24 * 60 * 60;
 const SESSION_RENEW_AFTER_MS = 24 * 60 * 60 * 1000;
 
-const LINE_SECRET =
-  (process.env.LINE_CHANNEL_SECRET || '').trim();
-
-const LINE_TOKEN =
-  (process.env.LINE_CHANNEL_ACCESS_TOKEN || '').trim();
-
-const LINE_TARGET =
-  (process.env.LINE_TARGET_ID || '').trim();
-
-const LINE_ADMINS = new Set(
-  (process.env.LINE_ADMIN_IDS || '')
-    .split(',')
-    .map(x => x.trim())
-    .filter(Boolean)
-);
-
-const STYLISTS = (process.env.ONLINE_STYLISTS || 'Bank')
-  .split(',')
-  .map(x => x.trim())
-  .filter(x => ['Bank', 'Sindy', 'Assist'].includes(x));
-
 if (
   !process.env.SUPABASE_URL ||
   !process.env.SUPABASE_SERVICE_ROLE_KEY ||
@@ -257,16 +236,6 @@ function phone(value) {
     : raw;
 }
 
-function lineReady() {
-  return Boolean(
-    LINE_SECRET &&
-    LINE_TOKEN &&
-    LINE_TARGET &&
-    LINE_ADMINS.size &&
-    STYLISTS.length
-  );
-}
-
 async function db(query) {
   const { data, error } = await query;
 
@@ -276,7 +245,7 @@ async function db(query) {
 }
 
 async function command(action, payload) {
-  return db(supabase.rpc('adore_command', {
+  return db(supabase.rpc('adore_owner_command', {
     p_action: action,
     p: payload
   }));
@@ -381,7 +350,7 @@ app.post(
 app.get('/owner/session', owner, (req, res) => {
   res.json({
     success: true,
-    line_ready: lineReady()
+    line_ready: false
   });
 });
 
@@ -399,7 +368,7 @@ async function sendPage(res, filename, mode) {
 
   html = html.replace(
     /<\/head\s*>/i,
-    '<link rel="stylesheet" href="/online.css"></head>'
+    '<link rel="stylesheet" href="/online.css"><link rel="stylesheet" href="/special-hours.css"></head>'
   );
 
   if (mode === 'owner') {
@@ -411,7 +380,7 @@ async function sendPage(res, filename, mode) {
 
     html = html.replace(
       /<\/body\s*>/i,
-      '<script src="/online-owner.js"></script></body>'
+      '<script src="/online-owner.js"></script><script src="/special-hours.js"></script></body>'
     );
   } else {
     const entry = `
@@ -439,50 +408,13 @@ app.get(
   })
 );
 
-app.get(
-  ['/queue', '/queue.html'],
-  route(async (req, res) => {
-    await sendPage(res, 'queue.html', 'public');
-  })
-);
-
-// ปฏิทินลูกค้า
-app.get('/public-calendar', route(async (req, res) => {
-  const [dates, closed, publicClosed] = await Promise.all([
-    bookingDates(),
-    closedDates('closed_days'),
-    closedDates('public_closed_days')
-  ]);
-
-  const counts = {};
-  const result = {};
-
-  for (const date of dates) {
-    counts[date] = (counts[date] || 0) + 1;
-  }
-
-  for (const [date, count] of Object.entries(counts)) {
-    result[date] =
-      count <= 5 ? 'low' : count <= 10 ? 'medium' : 'high';
-  }
-
-  for (const date of [...closed, ...publicClosed]) {
-    result[date] = 'closed';
-  }
-
-  res.setHeader('Cache-Control', 'no-store');
-  res.json(result);
-}));
+app.use(['/queue', '/queue.html', '/book.html', '/api/public', '/line/webhook', '/public-calendar', '/public-closed-days'], (req, res) => {
+  res.status(410).send('ร้านใช้ระบบจัดการคิวภายในเท่านั้น');
+});
 
 // วันปิดร้าน
 for (const [base, table, closeAction, openAction] of [
-  ['/closed-days', 'closed_days', 'close', 'open'],
-  [
-    '/public-closed-days',
-    'public_closed_days',
-    'public_close',
-    'public_open'
-  ]
+  ['/closed-days', 'closed_days', 'close', 'open']
 ]) {
   app.get(base, owner, route(async (req, res) => {
     res.json(await closedDates(table));
@@ -581,138 +513,6 @@ app.delete(
   })
 );
 
-// จองออนไลน์
-app.get('/api/public/config', (req, res) => {
-  res.setHeader('Cache-Control', 'no-store');
-
-  res.json({
-    ready: lineReady(),
-    days_ahead: 60
-  });
-});
-
-app.get(
-  '/api/public/slots',
-  limit('slots', 90, 60000),
-  route(async (req, res) => {
-    if (!validDate(req.query.date)) {
-      throw problem('วันที่ไม่ถูกต้อง');
-    }
-
-    if (!['male', 'female'].includes(req.query.gender)) {
-      throw problem('กรุณาเลือกบริการ');
-    }
-
-    res.setHeader('Cache-Control', 'no-store');
-
-    res.json(await command('slots', {
-      date: req.query.date,
-      gender: req.query.gender,
-      pool: STYLISTS
-    }));
-  })
-);
-
-app.post(
-  '/api/public/requests',
-  limit('request', 10, 3600000),
-  route(async (req, res) => {
-    if (!lineReady()) {
-      throw problem(
-        'ร้านยังไม่เปิดรับจองออนไลน์ กรุณาโทรจอง',
-        503
-      );
-    }
-
-    const key = String(req.body.key || '').toLowerCase();
-
-    if (
-      !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(key)
-    ) {
-      throw problem(
-        'รหัสคำขอไม่ถูกต้อง กรุณาโหลดหน้าใหม่'
-      );
-    }
-
-    if (
-      !validDate(req.body.date) ||
-      !validTime(req.body.time)
-    ) {
-      throw problem('วันที่หรือเวลาไม่ถูกต้อง');
-    }
-
-    const bookingCode =
-      `AD-${key.replaceAll('-', '').slice(0, 20).toUpperCase()}`;
-
-    const request = await command('request', {
-      key,
-      booking_code: bookingCode,
-      customer_name:
-        String(req.body.customer_name || '').trim(),
-      phone: phone(req.body.phone),
-      gender: req.body.gender,
-      date: req.body.date,
-      time: req.body.time,
-      pool: STYLISTS
-    });
-
-    res.setHeader('Cache-Control', 'no-store');
-    res.json(publicRequest(request));
-
-    void notifyPending();
-  })
-);
-
-app.post(
-  '/api/public/status',
-  limit('status', 120, 60000),
-  route(async (req, res) => {
-    const code =
-      String(req.body.code || '').trim().toUpperCase();
-
-    const customerPhone = phone(req.body.phone);
-
-    if (
-      !/^AD-[0-9A-F]{20}$/.test(code) ||
-      !/^0[689]\d{8}$/.test(customerPhone)
-    ) {
-      throw problem(
-        'กรุณากรอกรหัสการจองและเบอร์มือถือให้ถูกต้อง'
-      );
-    }
-
-    const request = await db(
-      supabase.from('online_requests')
-        .select('*')
-        .eq('booking_code', code)
-        .eq('phone', customerPhone)
-        .maybeSingle()
-    );
-
-    if (!request) {
-      throw problem('ไม่พบการจองที่ตรงกับข้อมูลนี้', 404);
-    }
-
-    const result = publicRequest(request);
-
-    if (request.status === 'confirmed') {
-      const booking = await db(
-        supabase.from('bookings')
-          .select('date,time,duration_minutes')
-          .eq('online_request_id', request.id)
-          .maybeSingle()
-      );
-
-      if (booking) {
-        Object.assign(result, booking);
-      }
-    }
-
-    res.setHeader('Cache-Control', 'no-store');
-    res.json(result);
-  })
-);
-
 // คำขอของเจ้าของร้าน
 app.get('/owner/requests', owner, route(async (req, res) => {
   const rows = await db(
@@ -725,294 +525,17 @@ app.get('/owner/requests', owner, route(async (req, res) => {
   res.json(rows || []);
 }));
 
-app.post(
-  '/owner/requests/:id/:action',
-  owner,
-  route(async (req, res) => {
-    if (!['approve', 'reject'].includes(req.params.action)) {
-      throw problem('คำสั่งไม่ถูกต้อง');
-    }
-
-    const request = await command(req.params.action, {
-      id: req.params.id,
-      actor: 'Owner website'
-    });
-
-    res.json({
-      status: request.status,
-      booking_code: request.booking_code
-    });
-  })
-);
-
-// LINE API
-async function lineAPI(endpoint, body, retryKey) {
-  const headers = {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${LINE_TOKEN}`
-  };
-
-  if (retryKey) {
-    headers['X-Line-Retry-Key'] = retryKey;
-  }
-
-  const response = await fetch(
-    `https://api.line.me/v2/bot/message/${endpoint}`,
-    {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(body),
-      signal: AbortSignal.timeout(8000)
-    }
-  );
-
-  const alreadyAccepted =
-    response.status === 409 &&
-    response.headers.has('x-line-accepted-request-id');
-
-  if (!response.ok && !alreadyAccepted) {
-    const detail = await response.text();
-
-    throw new Error(
-      `LINE HTTP ${response.status}: ${detail.slice(0, 1000)}`
-    );
-  }
-}
-
-function endTime(time, duration) {
-  const [hour, minute] = time.split(':').map(Number);
-  const total = hour * 60 + minute + Number(duration);
-
-  return (
-    `${String(Math.floor(total / 60)).padStart(2, '0')}:` +
-    String(total % 60).padStart(2, '0')
-  );
-}
-
-let notifying = false;
-
-async function notifyPending() {
-  if (notifying || !lineReady()) return;
-
-  notifying = true;
-
-  try {
-    const requests = await db(
-      supabase.from('online_requests')
-        .select('*')
-        .eq('status', 'pending')
-        .is('line_sent_at', null)
-        .lte('notify_after', new Date().toISOString())
-        .order('created_at', { ascending: true })
-        .limit(10)
-    );
-
-    for (const request of requests || []) {
-      try {
-        const service =
-          request.gender === 'female'
-            ? 'ตัดผมหญิง'
-            : 'ตัดผมชาย';
-
-        // ไม่ใส่ title หรือรูปภาพใน Buttons Template
-        // เพื่อใช้ข้อความได้สูงสุด 160 ตัวอักษร
-        const messageText = [
-          String(request.customer_name || '').slice(0, 45),
-          `${service} · ช่าง ${request.stylist}`,
-          `${request.date} ${request.time.slice(0, 5)}–${endTime(
-            request.time,
-            request.duration_minutes
-          )}`,
-          request.phone
-        ].join('\n');
-
-        await lineAPI(
-          'push',
-          {
-            to: LINE_TARGET,
-            messages: [{
-              type: 'template',
-              altText:
-                `มีคำขอจองใหม่ ${request.date} ` +
-                request.time.slice(0, 5),
-              template: {
-                type: 'buttons',
-                text: messageText,
-                actions: [
-                  {
-                    type: 'postback',
-                    label: 'อนุมัติ',
-                    data: `action=approve&id=${request.id}`
-                  },
-                  {
-                    type: 'postback',
-                    label: 'ปฏิเสธ',
-                    data: `action=reject&id=${request.id}`
-                  }
-                ]
-              }
-            }]
-          },
-          request.id
-        );
-
-        await db(
-          supabase.from('online_requests')
-            .update({
-              line_sent_at: new Date().toISOString(),
-              line_error: null
-            })
-            .eq('id', request.id)
-        );
-
-        console.log(
-          '[LINE sent]',
-          request.booking_code
-        );
-      } catch (error) {
-        console.error(
-          '[LINE push]',
-          request.booking_code,
-          error.message
-        );
-
-        const attempts =
-          Number(request.notify_attempts || 0) + 1;
-
-        const wait = Math.min(
-          3600,
-          30 * (2 ** Math.min(attempts, 7))
-        );
-
-        await db(
-          supabase.from('online_requests')
-            .update({
-              notify_attempts: attempts,
-              line_error:
-                String(error.message).slice(0, 1500),
-              notify_after:
-                new Date(Date.now() + wait * 1000).toISOString()
-            })
-            .eq('id', request.id)
-        );
-      }
-    }
-  } catch (error) {
-    console.error(
-      '[LINE notification]',
-      error.code || error.message
-    );
-  } finally {
-    notifying = false;
-  }
-}
-
-// รับคำสั่งจาก LINE
-app.post('/line/webhook', route(async (req, res) => {
-  if (!LINE_SECRET) {
-    throw problem('LINE ยังไม่ได้ตั้งค่า', 503);
-  }
-
-  const expected = createHmac('sha256', LINE_SECRET)
-    .update(req.rawBody || Buffer.alloc(0))
-    .digest('base64');
-
-  if (
-    !same(
-      expected,
-      req.headers['x-line-signature'] || ''
-    )
-  ) {
-    throw problem('Invalid LINE signature', 401);
-  }
-
-  for (const event of req.body.events || []) {
-    const source = event.source || {};
-
-    if (
-      event.type === 'message' &&
-      event.message?.type === 'text' &&
-      event.message.text.trim() === '/id'
-    ) {
-      console.log(
-        '[LINE setup IDs]',
-        JSON.stringify({
-          userId: source.userId,
-          groupId: source.groupId,
-          roomId: source.roomId
-        })
-      );
-
-      continue;
-    }
-
-    if (event.type !== 'postback') continue;
-
-    const origin =
-      source.groupId || source.roomId || source.userId;
-
-    if (
-      !LINE_ADMINS.has(source.userId) ||
-      origin !== LINE_TARGET
-    ) {
-      continue;
-    }
-
-    const params = new URLSearchParams(
-      event.postback?.data || ''
-    );
-
-    const action = params.get('action');
-    const id = params.get('id');
-
-    if (
-      !['approve', 'reject'].includes(action) ||
-      !/^[0-9a-f-]{36}$/i.test(id || '')
-    ) {
-      continue;
-    }
-
-    let text;
-
-    try {
-      const request = await command(action, {
-        id,
-        actor: `LINE:${source.userId}`
-      });
-
-      const labels = {
-        pending: 'รออนุมัติ',
-        confirmed: 'ยืนยันการจองแล้ว',
-        rejected: 'ปฏิเสธคำขอแล้ว',
-        cancelled: 'ยกเลิกแล้ว'
-      };
-
-      text = [
-        labels[request.status],
-        request.customer_name,
-        `${request.date} ${request.time.slice(0, 5)}`
-      ].join('\n');
-    } catch (error) {
-      if (error.code !== 'P0001') throw error;
-      text = error.message;
-    }
-
-    if (event.replyToken) {
-      try {
-        await lineAPI('reply', {
-          replyToken: event.replyToken,
-          messages: [{
-            type: 'text',
-            text
-          }]
-        });
-      } catch (error) {
-        console.error('[LINE reply]', error.message);
-      }
-    }
-  }
-
-  res.sendStatus(200);
+// Special hours: all mutations share the database transaction lock.
+app.get('/owner/special-hours', owner, route(async (req, res) => {
+  if (!validDate(req.query.date)) throw problem('วันที่ไม่ถูกต้อง');
+  res.json(await command('hours_list', { date: req.query.date }));
+}));
+app.post('/owner/special-hours/:action', owner, route(async (req, res) => {
+  if (!['preview', 'add', 'delete'].includes(req.params.action)) throw problem('คำสั่งไม่ถูกต้อง');
+  res.json(await command('hours_' + req.params.action, req.body));
+}));
+app.post('/owner/special-bookings', owner, route(async (req, res) => {
+  res.json(await command('special_booking_create', bookingPayload(req.body)));
 }));
 
 app.use(express.static(PUBLIC_DIR, {
@@ -1056,14 +579,4 @@ app.listen(PORT, () => {
     `Adore Hair server running on port ${PORT}`
   );
 
-  console.log(`LINE configured: ${lineReady()}`);
-
-  void notifyPending();
 });
-
-setInterval(
-  () => void notifyPending(),
-  30000
-).unref();
-
-// END ADORE SERVER REMEMBER DEVICE
