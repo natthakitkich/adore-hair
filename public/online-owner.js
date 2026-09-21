@@ -474,6 +474,10 @@
         editTime.appendChild(option);
       }
 
+      if (date === current.date && ![...editTime.options].some(x => x.value === current.time)) {
+        editTime.add(new Option(current.time.slice(0, 5) + ' · คิวพิเศษเดิม', current.time));
+      }
+
       const available =
         [...editTime.options].filter(x => !x.disabled);
 
@@ -582,8 +586,7 @@
         tasks.push(
           loadBookings(),
           loadCalendar(),
-          loadClosedDays(),
-          loadPublicClosedDays()
+          loadClosedDays()
         );
       }
 
