@@ -7,13 +7,44 @@
   color: var(--sh-text);
 }
 
-.panel.special-hours { padding:14px 16px; }
+/* Collapsed by default so the daily queue stays close to the top of the page. */
+.panel.special-hours { padding:8px 16px; }
+.special-hours .sh-disclosure > summary {
+  cursor:pointer;
+  min-height:54px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  list-style:none;
+  user-select:none;
+}
+.special-hours .sh-disclosure > summary::-webkit-details-marker { display:none; }
+.special-hours .sh-disclosure > summary::after {
+  content:'⌄';
+  margin-left:auto;
+  flex:0 0 auto;
+  font-size:22px;
+  line-height:1;
+  transition:transform .18s ease;
+}
+.special-hours .sh-disclosure[open] > summary::after { transform:rotate(180deg); }
+.special-hours .sh-disclosure > summary:focus-visible {
+  outline:2px solid currentColor;
+  outline-offset:4px;
+  border-radius:10px;
+}
+.special-hours .sh-summary-copy { min-width:0; }
+.special-hours .sh-summary-title { font-weight:600; font-size:18px; line-height:1.3; }
+.special-hours #shSummary { margin-top:3px; font-size:13px; line-height:1.35; }
+.special-hours .sh-content { padding:4px 0 8px; }
+
 .special-hours h2 { margin:0; font-size:20px; font-weight:600; }
 .special-hours p { margin:6px 0; line-height:1.55; overflow-wrap:anywhere; }
 .special-hours .muted { color:var(--sh-muted); }
 .special-hours .sh-heading { display:flex; justify-content:space-between; gap:12px; align-items:center; }
-.special-hours .sh-main-heading { margin-bottom:10px; }
-.special-hours .sh-quick-actions { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:10px 0 8px; }
+.special-hours .sh-main-heading { margin:0 0 8px; }
+.special-hours .sh-main-heading > p { margin:0; }
+.special-hours .sh-quick-actions { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:8px 0; }
 .special-hours .sh-quick-actions button { min-height:48px; }
 .special-hours .sh-rows { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:10px; }
 .special-hours .sh-stylist { padding:12px; border:1px solid var(--sh-line); border-radius:16px; background:var(--sh-field); min-width:0; }
@@ -51,7 +82,11 @@ body .special-hours textarea#shSpecialNote {
 }
 
 @media(max-width:600px) {
-  .panel.special-hours { padding:10px 12px; margin-block:12px; }
+  .panel.special-hours { padding:6px 12px; margin-block:10px; }
+  .special-hours .sh-disclosure > summary { min-height:50px; }
+  .special-hours .sh-summary-title { font-size:16px; }
+  .special-hours #shSummary { font-size:12px; }
+  .special-hours .sh-content { padding-top:2px; }
   .special-hours .sh-quick-actions { grid-template-columns:1fr; gap:8px; }
   .special-hours.overlay { align-items:end; padding:12px 0 0; }
   .special-hours.overlay .modal { width:100%; border-radius:28px 28px 0 0; }
